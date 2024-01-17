@@ -4,6 +4,7 @@ using BurnIn.Shared.Models.BurnInStationData;
 using CP.IO.Ports;
 using ReactiveMarbles.Extensions;
 using System.Collections.Concurrent;
+
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Reactive.Disposables;
@@ -11,18 +12,17 @@ using System.Reactive.Linq;
 using System.Text.Json;
 using BurnIn.Shared.Models.Configurations;
 using BurnIn.Shared.Controller;
+using BurnIn.UsbTesting;
 using ConsoleTools;
 using DataReceivedEventArgs=System.Diagnostics.DataReceivedEventArgs;
 
+ControllerTests tests = new ControllerTests();
+tests.Setup();
+tests.Connect();
+tests.Run();
 
-/*Console.WriteLine("Outputting Probe Configurations");
-await CreateAndOutputProbeConfig();
-Console.WriteLine("Done");*/
-Console.WriteLine("Waiting for Serial Input, press any key to quit");
-//await TestUsbController();
-Console.WriteLine();
-StartSerialRx();
-//await CreateAndOutputProbeConfigFile();
+
+
 
 async Task TestUsbController() {
     UsbController usb = new UsbController();

@@ -3,28 +3,45 @@ using MongoDB.Bson;
 
 namespace BurnIn.Shared.Models.BurnInStationData;
 
-public class HubCommandCarrier {
-    public ArduinoCommand Command { get; set; }
-}
 
-public sealed class ArduinoCommand : SmartEnum<ArduinoCommand,string> {
-    public static readonly ArduinoCommand Start = new ArduinoCommand(nameof(Start), "S");
-    public static readonly ArduinoCommand Pause = new ArduinoCommand(nameof(Pause),"P");
-    public static readonly ArduinoCommand Reset = new ArduinoCommand(nameof(Reset), "R");
-    public static readonly ArduinoCommand HeaterToggle = new ArduinoCommand(nameof(HeaterToggle), "H");
-    public static readonly ArduinoCommand CurrentToggle = new ArduinoCommand(nameof(CurrentToggle), "C");
-    public static readonly ArduinoCommand Test = new ArduinoCommand(nameof(Test), "T");
-    private ArduinoCommand(string name, string value) : base(name, value) {  }
+
+public sealed class ArduinoCommand : SmartEnum<ArduinoCommand,int> {
+    public static readonly ArduinoCommand Start = new ArduinoCommand(nameof(Start), 0);
+    public static readonly ArduinoCommand Pause = new ArduinoCommand(nameof(Pause),1);
+    public static readonly ArduinoCommand ToggleHeat = new ArduinoCommand(nameof(ToggleHeat), 2);
+    public static readonly ArduinoCommand CycleCurrent = new ArduinoCommand(nameof(CycleCurrent), 3);
+    public static readonly ArduinoCommand ProbeTest = new ArduinoCommand(nameof(ProbeTest), 4);
+    public static readonly ArduinoCommand ChangeModeATune = new ArduinoCommand(nameof(ProbeTest), 5);
+    public static readonly ArduinoCommand ChangeModeNormal = new ArduinoCommand(nameof(ProbeTest), 6);
+    public static readonly ArduinoCommand StartTune = new ArduinoCommand(nameof(ProbeTest), 7);
+    public static readonly ArduinoCommand StopTune = new ArduinoCommand(nameof(ProbeTest), 8);
+    public static readonly ArduinoCommand SaveATuneResult = new ArduinoCommand(nameof(ProbeTest), 9);
+    public static readonly ArduinoCommand Reset = new ArduinoCommand(nameof(Reset), 10);
+    private ArduinoCommand(string name, int value) : base(name, value) {  }
 }
 
 public sealed class ArduinoMsgPrefix : SmartEnum<ArduinoMsgPrefix,string> {
     public static readonly ArduinoMsgPrefix HeaterConfigPrefix= new ArduinoMsgPrefix(nameof(HeaterConfigPrefix), "CH");
     public static readonly ArduinoMsgPrefix ProbeConfigPrefix = new ArduinoMsgPrefix(nameof(ProbeConfigPrefix),"CP");
     public static readonly ArduinoMsgPrefix StationConfigPrefix = new ArduinoMsgPrefix(nameof(StationConfigPrefix), "CS");
+    public static readonly ArduinoMsgPrefix SaveSate = new ArduinoMsgPrefix(nameof(HeaterResponse), "ST");
     public static readonly ArduinoMsgPrefix MessagePrefix = new ArduinoMsgPrefix(nameof(MessagePrefix), "M");
     public static readonly ArduinoMsgPrefix DataPrefix = new ArduinoMsgPrefix(nameof(DataPrefix), "D");
-    public static readonly ArduinoMsgPrefix CommandPrefix = new ArduinoMsgPrefix(nameof(DataPrefix), "A");
+    public static readonly ArduinoMsgPrefix CommandPrefix = new ArduinoMsgPrefix(nameof(DataPrefix), "COM");
+    public static readonly ArduinoMsgPrefix HeaterResponse = new ArduinoMsgPrefix(nameof(HeaterResponse), "HRES");
+    public static readonly ArduinoMsgPrefix TestResponse = new ArduinoMsgPrefix(nameof(HeaterResponse), "TRES");
+    public static readonly ArduinoMsgPrefix HeaterRequest = new ArduinoMsgPrefix(nameof(HeaterResponse), "HREQ");
+    public static readonly ArduinoMsgPrefix TestRequest = new ArduinoMsgPrefix(nameof(HeaterResponse), "TREQ");
+    
     private ArduinoMsgPrefix(string name, string value) : base(name, value) {  }
+}
+
+public sealed class ArduinoResponse : SmartEnum<ArduinoResponse, int> {
+    public static readonly ArduinoResponse HeaterSave = new ArduinoResponse(nameof(HeaterSave), 0);
+    public static readonly ArduinoResponse HeaterCancel = new ArduinoResponse(nameof(HeaterSave), 1);
+    public static readonly ArduinoResponse TestContinue = new ArduinoResponse(nameof(HeaterSave), 2);
+    public static readonly ArduinoResponse TestCancel = new ArduinoResponse(nameof(HeaterSave), 3);
+    private ArduinoResponse(string name,int value):base(name,value){}
 }
 
 public sealed class StationCurrent : SmartEnum<StationCurrent, int> {
@@ -32,7 +49,7 @@ public sealed class StationCurrent : SmartEnum<StationCurrent, int> {
     public static readonly StationCurrent _120mA = new StationCurrent("120", 120);
     public static readonly StationCurrent _150mA = new StationCurrent("150", 150);
 
-    public StationCurrent(string name, int value) : base(name, value) {}
+    private StationCurrent(string name, int value) : base(name, value) {}
 }
 
 public record RawReading {

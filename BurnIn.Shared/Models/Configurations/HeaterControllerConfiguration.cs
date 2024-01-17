@@ -1,4 +1,6 @@
-﻿namespace BurnIn.Shared.Models.Configurations;
+﻿using BurnIn.Shared.Models.BurnInStationData;
+using System.Text.Json;
+namespace BurnIn.Shared.Models.Configurations;
 
 public class NtcConfiguration {
     public double ACoeff { get; set; } = 0;
@@ -6,6 +8,7 @@ public class NtcConfiguration {
     public double CCoeff { get; set; } = 0;
     public sbyte Pin { get; set; }
     public double fWeight { get; set; }
+    public NtcConfiguration(){}
     public NtcConfiguration(double a, double b, double c, sbyte pin, double filter) {
         this.ACoeff = a;
         this.BCoeff = b;
@@ -20,6 +23,7 @@ public class PidConfiguration {
     public double Ki { get; set; }
     public double Kd { get; set; }
     public ulong  WindowSizeMs { get; set; }
+    public PidConfiguration(){}
     public PidConfiguration(double kp, double ki, double kd, ulong window) {
         this.Kp = kp;
         this.Ki = ki;
@@ -34,6 +38,7 @@ public class HeaterConfiguration {
     public double TempDeviation { get; set; }
     public sbyte Pin { get; set; }
     public sbyte HeaterId { get; set; }
+    public HeaterConfiguration(){}
     public HeaterConfiguration(NtcConfiguration ntcConfig, PidConfiguration pidConfig,
         double tempDev, sbyte pin, sbyte id) {
         this.NtcConfig = ntcConfig;
@@ -47,5 +52,5 @@ public class HeaterConfiguration {
 public class HeaterControllerConfiguration {
     public List<HeaterConfiguration> HeaterConfigurations { get; set; }
     public ulong ReadInterval { get; set; }
-    
+    public HeaterControllerConfiguration(){}
 }

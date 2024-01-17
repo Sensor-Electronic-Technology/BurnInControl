@@ -7,16 +7,24 @@ public class HubCommandCarrier {
     public ArduinoCommand Command { get; set; }
 }
 
-public sealed class ArduinoCommand : SmartEnum<ArduinoCommand,string>
-{
+public sealed class ArduinoCommand : SmartEnum<ArduinoCommand,string> {
     public static readonly ArduinoCommand Start = new ArduinoCommand(nameof(Start), "S");
     public static readonly ArduinoCommand Pause = new ArduinoCommand(nameof(Pause),"P");
-    public static readonly ArduinoCommand Reset = new ArduinoCommand(nameof(Reset), "RR");
+    public static readonly ArduinoCommand Reset = new ArduinoCommand(nameof(Reset), "R");
     public static readonly ArduinoCommand HeaterToggle = new ArduinoCommand(nameof(HeaterToggle), "H");
-    public static readonly ArduinoCommand Update = new ArduinoCommand(nameof(Update),"U");
     public static readonly ArduinoCommand CurrentToggle = new ArduinoCommand(nameof(CurrentToggle), "C");
     public static readonly ArduinoCommand Test = new ArduinoCommand(nameof(Test), "T");
     private ArduinoCommand(string name, string value) : base(name, value) {  }
+}
+
+public sealed class ArduinoMsgPrefix : SmartEnum<ArduinoMsgPrefix,string> {
+    public static readonly ArduinoMsgPrefix HeaterConfigPrefix= new ArduinoMsgPrefix(nameof(HeaterConfigPrefix), "CH");
+    public static readonly ArduinoMsgPrefix ProbeConfigPrefix = new ArduinoMsgPrefix(nameof(ProbeConfigPrefix),"CP");
+    public static readonly ArduinoMsgPrefix StationConfigPrefix = new ArduinoMsgPrefix(nameof(StationConfigPrefix), "CS");
+    public static readonly ArduinoMsgPrefix MessagePrefix = new ArduinoMsgPrefix(nameof(MessagePrefix), "M");
+    public static readonly ArduinoMsgPrefix DataPrefix = new ArduinoMsgPrefix(nameof(DataPrefix), "D");
+    public static readonly ArduinoMsgPrefix CommandPrefix = new ArduinoMsgPrefix(nameof(DataPrefix), "A");
+    private ArduinoMsgPrefix(string name, string value) : base(name, value) {  }
 }
 
 public sealed class StationCurrent : SmartEnum<StationCurrent, int> {

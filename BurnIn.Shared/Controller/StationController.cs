@@ -29,7 +29,7 @@ public class StationController {
         
         this._logger = loggerFactory.CreateLogger<StationController>();
         this._usbController = usbController;
-        this._usbController.SerialDataReceived += this.DataReceivedHandler;
+        //this._usbController.SerialDataReceived += this.DataReceivedHandler;
         this._hubContext = hubContext;
     }
 
@@ -54,11 +54,11 @@ public class StationController {
         return Task.FromResult(new ControllerResult(result.State==UsbState.Disconnected,result.Message));
     }
 
-    public Task<ControllerResult> ExecuteCommand(ArduinoCommand command,string? commandstr=null) {
+    /*public Task<ControllerResult> ExecuteCommand(ArduinoCommand command,string? commandstr=null) {
             ControllerResult controllerResult=new ControllerResult(false,"Error: Invalid Command");
             command.When(ArduinoCommand.Start).Then(() => {
                 if (!this._reading.running) {
-                    var result = this._usbController.WriteCommand(command.Value);
+                    var result = this._usbController.Send(command.Value);
                     if (result.Success) {
                         //create log
                         this._logTimer = new Timer(this.Log, null, 5000, 5000);
@@ -69,49 +69,38 @@ public class StationController {
                 }
             }).When(ArduinoCommand.Pause).Then(() => {
                 if (this._reading is { running: true, paused: false }) {
-                    var result = this._usbController.WriteCommand(command.Value);
+                    var result = this._usbController.Send(command.Value);
                     controllerResult = new ControllerResult(result.Success, result.Message);
                 } else {
                     controllerResult = new ControllerResult(false, "Test isn't running or already paused");
                 }
             }).When(ArduinoCommand.Reset).Then(() => {
-                var result = this._usbController.WriteCommand(command.Value);
+                var result = this._usbController.Send(command.Value);
                 controllerResult = new ControllerResult(result.Success, result.Message);
             }).When(ArduinoCommand.Test).Then(() => {
                 if (this._reading is { running: false, paused: false }) {
-                    var result = this._usbController.WriteCommand(command.Value);
+                    var result = this._usbController.Send(command.Value);
                     controllerResult = new ControllerResult(result.Success, "Test Executing");
                 } else {
                     controllerResult = new ControllerResult(false, "Error: Test Running");
                 }
             }).When(ArduinoCommand.CurrentToggle).Then(() => {
                 if (this._reading is { running: false, paused: false }) {
-                    var result = this._usbController.WriteCommand(command.Value);
+                    var result = this._usbController.Send(command.Value);
                     controllerResult = new ControllerResult(result.Success, "Current Toggled");
                 } else {
                     controllerResult = new ControllerResult(false, "Error: Test running");
                 }
             }).When(ArduinoCommand.HeaterToggle).Then(() => {
                 if (this._reading is { running: false, paused: false }) {
-                    var result = this._usbController.WriteCommand(command.Value);
+                    var result = this._usbController.Send(command.Value);
                     controllerResult = new ControllerResult(result.Success, "Heater Toggled");
                 } else {
                     controllerResult = new ControllerResult(false, "Error: Test Running");
                 }
-            }).When(ArduinoCommand.Update).Then(() => {
-                if (!string.IsNullOrEmpty(commandstr)) {
-                    var usbResult=this._usbController.WriteCommand(commandstr);
-                    if (usbResult.Success) {
-                        controllerResult=new ControllerResult(true,"Settings Sent");
-                    } else {
-                        controllerResult=new ControllerResult(false,"Error: Settings Failed To Upload ");
-                    }
-                } else {
-                    controllerResult = new ControllerResult(false, "Error: Invalid Command String");
-                }
             });
             return Task.FromResult(controllerResult);
-    }
+    }*/
 
     /*public Task<ControllerResult> UpdateArduinoSettings(string command) {
         var usbResult=this._usbController.WriteCommand(command);

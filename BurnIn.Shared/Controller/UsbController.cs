@@ -1,10 +1,12 @@
-﻿using CP.IO.Ports;
+﻿using BurnIn.Shared.Models;
+using CP.IO.Ports;
 using ReactiveMarbles.Extensions;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text;
+using System.Text.Json;
 namespace BurnIn.Shared.Controller;
 
 public record UsbResult {
@@ -27,43 +29,72 @@ public record UsbWriteResult {
     }
 }
 
+public record UsbCommand(string Command);
+
 public enum UsbState {
     Connected,
     Disconnected,
     Disposed
 }
 
+public class UsbDataReceivedEventArgs : EventArgs {
+    public string? Data { get; set; }
+}
+
 public class UsbController {
-    public event SerialDataReceivedEventHandler? SerialDataReceived;
-    private SerialPort? _serialPort;
+    //public event SerialDataReceivedEventHandler? SerialDataReceived;
+    //private Action<string>? _dataReceivedDelegate;
+    public event EventHandler<UsbDataReceivedEventArgs>? SerialDataReceived;
+    private SerialPortRx? _serialPort;
     private string _portName="";
     private UsbState _state=UsbState.Disposed;
     private bool _portNameFound = false;
+    private IObservable<char> _startChar = Convert.ToInt32('{').AsObservable();
+    private IObservable<char> _endChar = Convert.ToInt32('\n').AsObservable();
+    private CompositeDisposable disposable=new CompositeDisposable();
     
     public bool IsConnected => this._serialPort?.IsOpen != null;
     
-    public UsbResult Connect() {
+    public UsbResult Connect(string? com=null) {
         StringBuilder builder=new StringBuilder();
         if (this._state != UsbState.Connected) {
-            this.FindPort();
+            /*if (string.IsNullOrEmpty(com)) {
+                this.FindPort();
+            } else {
+                this._portName = com;
+                this._portNameFound = true;
+            }*/
+            this._portNameFound = true;
+            
             if (this._portNameFound && this.SerialDataReceived!=null) {
-                this._serialPort = new SerialPort(this._portName, 38400);
-                this._serialPort.DataBits = 8;
-                this._serialPort.Parity = Parity.None;
-                this._serialPort.StopBits = StopBits.One;
-                this._serialPort.ReadTimeout = TimeSpan.FromSeconds(10).Seconds;
-                this._serialPort.DataReceived += this.SerialDataReceived;
+                this._serialPort = new SerialPortRx(com, 38400);
+                var portList = SerialPort.GetPortNames();
+                Console.WriteLine("Port List: ");
+                foreach (var port in portList) {
+                    Console.WriteLine(port);
+                }
+                this._serialPort.DisposeWith(this.disposable);
+                this._serialPort.ErrorReceived.Subscribe(Console.WriteLine)
+                    .DisposeWith(this.disposable);
+                this._serialPort.DataReceived.BufferUntil(this._startChar, this._endChar, 200)
+                    .Subscribe(data=>this.SerialDataReceived.Invoke(this,new UsbDataReceivedEventArgs(){Data=data}))
+                    .DisposeWith(this.disposable);
                 try {
                     this._serialPort.Open();
-                    if (this._serialPort.IsOpen) {
+                    //bool open=this._serialPort.IsOpenObservable.Wait();
+                        /*.Subscribe(data=>Console.WriteLine($"IsOpen: {data}"))
+                        .DisposeWith(this.disposable);*/
+                        Console.WriteLine($"IsOpen: {this._serialPort.IsOpen}");
+                    /*if (this._serialPort.IsOpen) {
                         builder.AppendLine("Usb Connected");
                         this._state = UsbState.Connected;
                         return new UsbResult(this._state, builder.ToString());
                     } else {
                         this._state = UsbState.Disconnected;
-                        builder.AppendLine("Error: Failed To Open Serial Port");
+                        builder.AppendLine("Error: Failed To Open Serial Port, no except");
                         return new UsbResult(this._state, builder.ToString());
-                    }
+                    }*/
+                    return new UsbResult(UsbState.Connected,"Maybe");
                 } catch(Exception e) {
                     this._state = UsbState.Disconnected;
                     builder.AppendLine("Error: Failed To Open Serial Port");
@@ -94,6 +125,7 @@ public class UsbController {
                         this._state = UsbState.Connected;
                         return new UsbResult(this._state,"Error: Serial Port Not Closed!");
                     } else {
+                        //this.disposable.Dispose();
                         this._state = UsbState.Disconnected;
                         return new UsbResult(this._state,"Serial Port Closed");
                     }
@@ -110,10 +142,13 @@ public class UsbController {
         }
         return new UsbResult(this._state, "Serial Port Not Initialized or Open");
     }
-    public UsbWriteResult WriteCommand(string command) {
+    public UsbWriteResult Send(MessagePacket msgPacket) {
         if (this._serialPort?.IsOpen != null) {
             try {
-                this._serialPort.WriteLine(command);
+                var serializedMsgPacket=JsonSerializer.Serialize(msgPacket);
+                this._serialPort.WriteLine(serializedMsgPacket);
+                //Console.WriteLine("MsgPacket Sent:");
+                //Console.WriteLine(serializedMsgPacket);
                 return new UsbWriteResult(true,this._state, "");
             } catch(Exception e) {
                 StringBuilder builder = new StringBuilder();

@@ -21,16 +21,19 @@ public class StationHub:Hub<IStationHub> {
     }
 
     public Task<ControllerResult> ExecuteCommand(ArduinoCommand command) {
-        return this._controller.ExecuteCommand(command);
+        //return this._controller.ExecuteCommand(command);
+        return null;
     }
     
     public Task<ControllerResult> ToggleHeater() {
-        return this._controller.ExecuteCommand(ArduinoCommand.HeaterToggle);
+        //return this._controller.ExecuteCommand(ArduinoCommand.HeaterToggle);
+        return null;
     }
 
     public Task<ControllerResult> UpdateArduinoSettings(StationConfiguration config) {
         int enabled = config.SwitchingEnabled ? 1 : 0;
         string command = $"U{enabled}{config.DefaultCurrent.Name}{config.TemperatureSetPoint}";
-        return this._controller.ExecuteCommand(ArduinoCommand.Update,command);
+        //return this._controller.ExecuteCommand(ArduinoCommand.Update,command);
+        return null;
     }
 }

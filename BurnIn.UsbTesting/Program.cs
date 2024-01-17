@@ -1,4 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
+using BurnIn.Shared.Models;
+using BurnIn.Shared.Models.BurnInStationData;
 using CP.IO.Ports;
 using ReactiveMarbles.Extensions;
 using System.Collections.Concurrent;
@@ -8,11 +10,44 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.Json;
 using BurnIn.Shared.Models.Configurations;
+using BurnIn.Shared.Controller;
+using ConsoleTools;
+using DataReceivedEventArgs=System.Diagnostics.DataReceivedEventArgs;
 
 
-Console.WriteLine("Outputting Probe Configurations");
+/*Console.WriteLine("Outputting Probe Configurations");
 await CreateAndOutputProbeConfig();
-Console.WriteLine("Done");
+Console.WriteLine("Done");*/
+Console.WriteLine("Waiting for Serial Input, press any key to quit");
+//await TestUsbController();
+Console.WriteLine();
+StartSerialRx();
+//await CreateAndOutputProbeConfigFile();
+
+async Task TestUsbController() {
+    UsbController usb = new UsbController();
+    usb.SerialDataReceived += DataReceivedHandler;
+    var response = usb.Connect("COM3");
+    if (response.State!=UsbState.Connected) {
+        Console.WriteLine(response.Message);
+        return;
+    }
+    Console.WriteLine("Usb Connected. See menu below");
+    CreateAndOutputHeaterConfig(usb);
+    
+    CreateAndOutputProbeConfig(usb);
+    while (true) {
+        Console.ReadLine();
+        break;
+    }
+    usb.Disconnect();
+}
+
+async void DataReceivedHandler(object? sender,UsbDataReceivedEventArgs args) {
+    Console.WriteLine("Data Received");
+    Console.WriteLine(args.Data);
+}
+
 
 
 string FindPort() {
@@ -50,11 +85,11 @@ string FindPort() {
 
 void StartSerialRx() {
     //var comPortName = FindPort();
-    /*var startChar = 0x21.AsObservable();
-    var endChar = 0x0D.AsObservable();*/
+    /*var startChar = 0x21.AsObservable();*/
+    //var endChar = 0x0D.AsObservable();
 
     var startChar = Convert.ToInt32('{').AsObservable();
-    var endChar = Convert.ToInt32('}').AsObservable();
+    var endChar = Convert.ToInt32('\n').AsObservable();
     
     var dis = new CompositeDisposable();
     var comdis = new CompositeDisposable();
@@ -63,17 +98,28 @@ void StartSerialRx() {
     port.DisposeWith(comdis);
     port.ErrorReceived.Subscribe(Console.WriteLine).DisposeWith(comdis);
     //port.IsOpenObservable.Subscribe(x => Console.WriteLine($"Port {comPortName} is {(x ? "Open" : "Closed")}")).DisposeWith(comdis);
-    port.DataReceived.BufferUntil(startChar, endChar, 100).Subscribe(HandleSerial).DisposeWith(comdis);
+    port.DataReceived.BufferUntil(startChar, endChar, 100).Subscribe(HandlerSerialConfig).DisposeWith(comdis);
     //port.DataReceived.Subscribe(data => Console.WriteLine(data)).DisposeWith(comdis);
+    
     port.Open();
-    Console.WriteLine();
+    Console.WriteLine("Press q to quite, anything else to send");
     while (true) {
-        port.WriteLine(CreateData());
-        Thread.Sleep(2000);
+        var key=Console.ReadKey();
+        if (key.KeyChar == 'q') {
+            break;
+        } else {
+            //string output = "x";
+            var output=CreateAndOutputProbeConfigOther();
+            Console.WriteLine(output);
+            port.Write(output);
+        }
+
+        //port.WriteLine(CreateData());
+        //Thread.Sleep(2000);
     }
     //Console.ReadLine();
-    comdis.Dispose();
-    dis.Dispose();
+    //comdis.Dispose();
+    //dis.Dispose();
 }
 
 string CreateData() {
@@ -99,7 +145,52 @@ string CreateData() {
     //await File.WriteAllTextAsync(@"C:\Users\aelmendo\Documents\SerialData.txt",output);
 }
 
-async Task CreateAndOutputProbeConfig() {
+void HandleSerial(string data) {
+    var aData=JsonSerializer.Deserialize<ArduinoSerialData>(data);
+    foreach (var runtTime in aData.ProbeRuntimes) {
+        Console.Write($"{runtTime} ,");
+    }
+    Console.WriteLine();
+    //Console.WriteLine(data);
+}
+
+void HandlerSerialConfig(string data) {
+    Console.WriteLine("Received:");
+    Console.WriteLine(data);
+    //data.Remove('\n');
+    /*var doc=JsonSerializer.Deserialize<JsonDocument>(data);
+    var prefix=doc.RootElement.GetProperty("Prefix").ToString();
+    if (!string.IsNullOrEmpty(prefix)) {
+        if (prefix == ArduinoMsgPrefix.ProbeConfigPrefix.Value) {
+            var received = doc.RootElement.GetProperty("Packet").Deserialize<ProbeControllerConfig>();
+            var output=JsonSerializer.Serialize(received, new JsonSerializerOptions(
+            new JsonSerializerOptions { WriteIndented = true }));
+            Console.WriteLine("Success!! See Probe Config Json Below ");
+            Console.WriteLine(output);
+        }else if (prefix == ArduinoMsgPrefix.HeaterConfigPrefix.Value) {
+            var received = doc.RootElement.GetProperty("Packet").Deserialize<HeaterControllerConfiguration>();
+            var output=JsonSerializer.Serialize(received, new JsonSerializerOptions(
+                new JsonSerializerOptions { WriteIndented = true }));
+            Console.WriteLine("Success!! See Heater Config Json Below ");
+            Console.WriteLine(output);
+        }else if (prefix == ArduinoMsgPrefix.StationConfigPrefix.Value) {
+            //var received = doc.RootElement.GetProperty("Packet").Deserialize<ProbeControllerConfig>();
+            Console.WriteLine("Error: Station configuration not implemented yet");
+        }else if (prefix == ArduinoMsgPrefix.MessagePrefix.Value) {
+            
+        }else if (prefix == ArduinoMsgPrefix.DataPrefix.Value) {
+            
+        }else {
+            Console.WriteLine("Error: Deserialization Failed. Invalid prefix");
+            Console.WriteLine(data);
+        }
+    } else {
+        Console.WriteLine("Error: Prefix missing,check input below");
+        Console.WriteLine(data);
+    }*/
+}
+
+string CreateAndOutputProbeConfigOther() {
     ProbeControllerConfig probeControllerConfig = new ProbeControllerConfig() {
         ProbeConfigurations = {
             new ProbeConfig(new VoltageSensorConfig(54, 0.1), new CurrentSensorConfig(63, 0.1)),
@@ -111,14 +202,79 @@ async Task CreateAndOutputProbeConfig() {
         },
         ReadInterval = 100
     };
-    
-    var output=JsonSerializer.Serialize<ProbeControllerConfig>(probeControllerConfig,
-    new JsonSerializerOptions { WriteIndented = true });
-    await File.WriteAllTextAsync(@"C:\Users\aelmendo\Documents\probe_config.txt",output);
-    Console.WriteLine("File Written");
+    MessagePacket msg = new MessagePacket() {
+        Prefix = ArduinoMsgPrefix.ProbeConfigPrefix.Value,
+        Packet = probeControllerConfig
+    };
+    var output=JsonSerializer.Serialize<MessagePacket>(msg,
+    new JsonSerializerOptions { WriteIndented = false });
+    return output;
+    //await File.WriteAllTextAsync(@"C:\Users\aelmendo\Documents\MessagePacket.txt",output);
+    //var doc=JsonSerializer.Deserialize<JsonDocument>(output);
+    //var prefix=doc.RootElement.GetProperty("Prefix").ToString();
+    /*if (prefix == ArduinoMsgPrefix.ProbeConfigPrefix.Value) {
+        var received = doc.RootElement.GetProperty("Packet").Deserialize<ProbeControllerConfig>();
+        Console.WriteLine($"Read Interval: {received.ReadInterval}");
+    }*/
 }
 
-async Task CreateAndOutputHeaterConfig() {
+async Task CreateAndOutputProbeConfigFile() {
+    ProbeControllerConfig probeControllerConfig = new ProbeControllerConfig() {
+        ProbeConfigurations = {
+            new ProbeConfig(new VoltageSensorConfig(54, 0.1), new CurrentSensorConfig(63, 0.1)),
+            new ProbeConfig(new VoltageSensorConfig(55, 0.1), new CurrentSensorConfig(64, 0.1)),
+            new ProbeConfig(new VoltageSensorConfig(56, 0.1), new CurrentSensorConfig(65, 0.1)),
+            new ProbeConfig(new VoltageSensorConfig(57, 0.1), new CurrentSensorConfig(66, 0.1)),
+            new ProbeConfig(new VoltageSensorConfig(58, 0.1), new CurrentSensorConfig(67, 0.1)),
+            new ProbeConfig(new VoltageSensorConfig(59, 0.1), new CurrentSensorConfig(68, 0.1))
+        },
+        ReadInterval = 100
+    };
+    MessagePacket msg = new MessagePacket() {
+        Prefix = ArduinoMsgPrefix.ProbeConfigPrefix.Value,
+        Packet = probeControllerConfig
+    };
+    var output=JsonSerializer.Serialize<MessagePacket>(msg,
+    new JsonSerializerOptions { WriteIndented = false });
+    //return output;
+    await File.WriteAllTextAsync(@"C:\Users\aelmendo\Documents\MessagePacket.txt",output);
+    //var doc=JsonSerializer.Deserialize<JsonDocument>(output);
+    //var prefix=doc.RootElement.GetProperty("Prefix").ToString();
+    /*if (prefix == ArduinoMsgPrefix.ProbeConfigPrefix.Value) {
+        var received = doc.RootElement.GetProperty("Packet").Deserialize<ProbeControllerConfig>();
+        Console.WriteLine($"Read Interval: {received.ReadInterval}");
+    }*/
+}
+
+void CreateAndOutputProbeConfig(UsbController usb) {
+    ProbeControllerConfig probeControllerConfig = new ProbeControllerConfig() {
+        ProbeConfigurations = {
+            new ProbeConfig(new VoltageSensorConfig(54, 0.1), new CurrentSensorConfig(63, 0.1)),
+            new ProbeConfig(new VoltageSensorConfig(55, 0.1), new CurrentSensorConfig(64, 0.1)),
+            new ProbeConfig(new VoltageSensorConfig(56, 0.1), new CurrentSensorConfig(65, 0.1)),
+            new ProbeConfig(new VoltageSensorConfig(57, 0.1), new CurrentSensorConfig(66, 0.1)),
+            new ProbeConfig(new VoltageSensorConfig(58, 0.1), new CurrentSensorConfig(67, 0.1)),
+            new ProbeConfig(new VoltageSensorConfig(59, 0.1), new CurrentSensorConfig(68, 0.1))
+        },
+        ReadInterval = 100
+    };
+    MessagePacket msg = new MessagePacket() {
+        Prefix = ArduinoMsgPrefix.ProbeConfigPrefix.Value,
+        Packet = probeControllerConfig
+    };
+    usb.Send(msg);
+    /*var output=JsonSerializer.Serialize<MessagePacket>(msg,
+    new JsonSerializerOptions { WriteIndented = true });*/
+    //await File.WriteAllTextAsync(@"C:\Users\aelmendo\Documents\MessagePacket.txt",output);
+    //var doc=JsonSerializer.Deserialize<JsonDocument>(output);
+    //var prefix=doc.RootElement.GetProperty("Prefix").ToString();
+    /*if (prefix == ArduinoMsgPrefix.ProbeConfigPrefix.Value) {
+        var received = doc.RootElement.GetProperty("Packet").Deserialize<ProbeControllerConfig>();
+        Console.WriteLine($"Read Interval: {received.ReadInterval}");
+    }*/
+}
+
+void CreateAndOutputHeaterConfig(UsbController controller) {
     NtcConfiguration ntcConfig1 = new NtcConfiguration(1.159e-3f, 1.429e-4f, 1.118e-6f, 60, 0.01);
     NtcConfiguration ntcConfig2 = new NtcConfiguration(1.173e-3f, 1.736e-4f, 7.354e-7f, 61, 0.01);
     NtcConfiguration ntcConfig3 = new NtcConfiguration(1.200e-3f, 1.604e-4f, 8.502e-7f, 62, 0.01);
@@ -132,26 +288,24 @@ async Task CreateAndOutputHeaterConfig() {
     HeaterConfiguration heaterConfig3 = new HeaterConfiguration(ntcConfig3, pidConfig3, 5, 5, 1);
 
     HeaterControllerConfiguration configuration = new HeaterControllerConfiguration();
-    configuration.HeaterConfigurations = new List<HeaterConfiguration>();
-    configuration.HeaterConfigurations.Add(heaterConfig1);
-    configuration.HeaterConfigurations.Add(heaterConfig1);
-    configuration.HeaterConfigurations.Add(heaterConfig2);
-
-    var output=JsonSerializer.Serialize<HeaterControllerConfiguration>(configuration,
-    new JsonSerializerOptions { WriteIndented = true });
-    await File.WriteAllTextAsync(@"C:\Users\aelmendo\Documents\HeaterConfig.txt",output);
-    Console.WriteLine("File Written");
+    configuration.HeaterConfigurations = [
+        heaterConfig1,
+        heaterConfig1,
+        heaterConfig2
+    ];
+    MessagePacket msgPacket = new MessagePacket {
+        Prefix = ArduinoMsgPrefix.HeaterConfigPrefix.Value,
+        Packet = configuration
+    };
+    var output=JsonSerializer.Serialize<MessagePacket>(msgPacket,
+    new JsonSerializerOptions { WriteIndented = false });
+    controller.Send(msgPacket);
+    //await File.WriteAllTextAsync(@"C:\Users\aelmendo\Documents\HeaterConfig.txt",output);
+    //Console.WriteLine("File Written");
 
 }
 
-void HandleSerial(string data) {
-    var aData=JsonSerializer.Deserialize<ArduinoSerialData>(data);
-    foreach (var runtTime in aData.ProbeRuntimes) {
-        Console.Write($"{runtTime} ,");
-    }
-    Console.WriteLine();
-    //Console.WriteLine(data);
-}
+
 
 public record ArduinoSerialData {
     public List<double> Voltages { get; set; } = new List<Double>();

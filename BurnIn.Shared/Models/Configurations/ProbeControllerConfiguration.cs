@@ -14,6 +14,8 @@ public class CurrentSelectorConfig {
         this.SetCurrent = current;
         this.SwitchEnabled = enabled;
     }
+    
+    public CurrentSelectorConfig(){}
 }
 
 public class VoltageSensorConfig {

@@ -49,8 +49,8 @@ public class HeaterConfiguration {
     }
 }
 
-public class HeaterControllerConfiguration {
+public class HeaterControllerConfig {
     public List<HeaterConfiguration> HeaterConfigurations { get; set; }
     public ulong ReadInterval { get; set; }
-    public HeaterControllerConfiguration(){}
+    public HeaterControllerConfig(){}
 }

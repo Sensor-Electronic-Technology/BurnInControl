@@ -2,6 +2,7 @@
 using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models.BurnInStationData;
 using HubServer;
+using HubTesting;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Text.Json;
@@ -23,10 +24,16 @@ var testObject = new TestObject() {
 };
 JsonSerializer.SerializeAsync<TestObject>(writer,testObject,new JsonSerializerOptions(){PropertyNameCaseInsensitive = true});
 Console.WriteLine($"Check File at {path}");*/
-await HubTest();
+//await RunHubTest();
+await RunControllerHubTests();
 
+async Task RunControllerHubTests() {
+    var controllerTests=new ControllerHubTests();
+    await controllerTests.Connect();
+    controllerTests.Run();
+}
 
-async Task HubTest() {
+async Task RunHubTest() {
     var connection = new HubConnectionBuilder()
         .WithUrl(HubConstants.HubAddress)
         .Build();
@@ -50,11 +57,11 @@ async Task HubTest() {
         Console.WriteLine($"Execute Command Status: {status}");
     });
     
-    connection.On<RawReading>(HubConstants.Events.OnSerialCom, reading => {
+    /*connection.On<RawReading>(HubConstants.Events.OnSerialCom, reading => {
         var output=JsonSerializer.Serialize<RawReading>(reading,
         new JsonSerializerOptions { WriteIndented = true });
         Console.WriteLine(output);
-    });
+    });*/
 
     connection.On<string>(HubConstants.Events.OnSerialComMessage, Console.WriteLine);
     
@@ -68,24 +75,11 @@ async Task HubTest() {
         await connection.StopAsync();
     }
     //Thread.Sleep(500);
-
-
-    
-    
-
 }
 
 Task WaitForStop(object obj,HubConnection connection) {
     Console.ReadKey();
     return connection.StopAsync();
-}
-
-async Task ConsumeChannel(ChannelReader<int> channel) {
-    while (await channel.WaitToReadAsync()) {
-        while (channel.TryRead(out var count)) {
-            Console.WriteLine($"Count: {count}");
-        }
-    }
 }
 
 public class TestObject {

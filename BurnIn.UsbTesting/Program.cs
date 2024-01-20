@@ -17,13 +17,17 @@ using BurnIn.UsbTesting;
 using ConsoleTools;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System.Threading.Channels;
 using DataReceivedEventArgs=System.Diagnostics.DataReceivedEventArgs;
 using StationConfiguration=BurnIn.Shared.Models.Configurations.StationConfiguration;
 
 
 //await CreateAndOutputProbeConfigFile();
 //await CreateStationDatabase("S01");
-RunControllerTests();
+//RunControllerTests();
+RunUsbControllerTests();
 void RunControllerTests() {
     ControllerTests tests = new ControllerTests();
     tests.Setup();
@@ -33,6 +37,22 @@ void RunControllerTests() {
         Console.WriteLine("Goodbye!!");
     }
 }
+
+void RunUsbControllerTests() {
+    UsbControllerTests tests = new UsbControllerTests();
+    if (tests.Connect()) {
+        tests.Run();
+    }
+}
+
+IHostBuilder CreateHostBuilder(string[] args) =>
+    Host.CreateDefaultBuilder().ConfigureServices((_, services) => {
+        var channel = Channel.CreateUnbounded<string>();
+        services.AddSingleton(channel.Reader);
+        services.AddSingleton(channel.Writer);
+        services.AddTransient<UsbController>();
+    });
+
 
 async Task CreateStationDatabase(string stationId) {
     Console.WriteLine($"Creating Station Config Database.  Config for {stationId}");

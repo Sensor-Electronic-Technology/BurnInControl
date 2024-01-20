@@ -21,8 +21,7 @@ public class StationHub:Hub<IStationHub> {
     }
 
     public Task<ControllerResult> ExecuteCommand(ArduinoCommand command) {
-        //return this._controller.ExecuteCommand(command);
-        return null;
+        return this._controller.ExecuteCommand(command);
     }
     
     public Task<ControllerResult> ToggleHeater() {

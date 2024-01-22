@@ -15,7 +15,7 @@ public record ControllerResult(bool Success, string? Message) {
     public string? Message { get; set; } = Message;
 }
 
-public class StationController {
+public class StationController:IDisposable {
     private readonly UsbController _usbController;
     private readonly ILogger<StationController> _logger;
     private readonly IHubContext<StationHub, IStationHub> _hubContext;
@@ -33,74 +33,73 @@ public class StationController {
         this._channelReader = channelReader;
         this._usbController = usbController;
         this._hubContext = hubContext;
+        this._usbController.UsbUnPlogHandler += this.UsbUnplugHandler;
     }
 
     public Task Start() {
-        if (this._usbController.Connect()) {
-            this._usbController.StartReadingAsync(this._cancellationTokenSource.Token)
-                .SafeFireAndForget(e => {
-                    this._logger.LogCritical("Usb read failed");
-                });
-            this.StartReaderAsync(this._cancellationTokenSource.Token)
-                .SafeFireAndForget(e => {
-                    this._logger.LogCritical("Channel read failed");
-                });
-            /*return Task.FromResult(new ControllerResult(
-            true,
-            "result.Message"));*/
-        }
-        return Task.CompletedTask;
+        return this.ConnectUsb();
     }
     
     public Task<ControllerResult> ConnectUsb() {
-        /*if (this._usbController.Connect()) {
-            this._usbController.StartReadingAsync(this._cancellationTokenSource.Token)
-                .SafeFireAndForget(e => {
-                    this._logger.LogCritical("Usb read failed");
-                });
-            this.StartReaderAsync(this._cancellationTokenSource.Token)
-                .SafeFireAndForget(e => {
-                    this._logger.LogCritical("Channel read failed");
-                });
-            return Task.FromResult(new ControllerResult(
-                true,
-                "result.Message"));
-        }*/
-        return Task.FromResult(new ControllerResult(
-            true,
-            "Already Connected"));
+        if (!this._usbController.Connected) {
+            var result=this._usbController.Connect();
+            if (result.State == UsbState.Connected) {
+                this.StartReaderAsync(this._cancellationTokenSource.Token)
+                    .SafeFireAndForget(e => {
+                        this._logger.LogCritical("Channel read failed");
+                    });
+                this._logger.LogInformation("Usb connected");
+                return Task.FromResult(new ControllerResult(true, "Usb Connected"));
+            } else {
+                this._logger.LogCritical($"Usb failed to connect.  Error\n {result.Message}");
+                return Task.FromResult(new ControllerResult(false, result.Message));
+            }
+        } else {
+            this._logger.LogWarning($"Usb already connected");
+            return Task.FromResult(new ControllerResult(false,"Usb already connected"));
+        }
     }
 
     public Task<ControllerResult> Disconnect() {
-        this._cancellationTokenSource.Cancel();
+        this._usbController.Disconnect();
         return Task.FromResult(new ControllerResult(true,"result.Message"));
     }
 
-    private async Task StartReaderAsync(CancellationToken token) {
-        await foreach (var message in this._channelReader.ReadAllAsync(token)) {
-            await this._hubContext.Clients.All.OnSerialComMessage(message);
-            Console.WriteLine(message);
-        }
-    }
-
-    public Task<ControllerResult> ExecuteCommand(ArduinoCommand command) {
-        MessagePacket msgPacket = new MessagePacket() {
-            Prefix = ArduinoMsgPrefix.CommandPrefix.Value,
-            Packet = command.Value
-        };
-        var output = JsonSerializer.Serialize<MessagePacket>(msgPacket,
-        new JsonSerializerOptions(){WriteIndented = false});
-        this._usbController.Send(msgPacket);
-        return Task.FromResult(new ControllerResult(true, ""));
-    }
-
-    /*public Task<ControllerResult> UpdateArduinoSettings(string command) {
-        var usbResult=this._usbController.WriteCommand(command);
-        if (usbResult.Success) {
-            return Task.FromResult(new ControllerResult(true,"Settings Sent"));
+    public Task<ControllerResult> Stop() {
+        var result=this._usbController.Disconnect();
+        this._cancellationTokenSource.Cancel();
+        if (result.State == UsbState.Disconnected) {
+            return Task.FromResult(new ControllerResult(true,result.Message)); 
         } else {
-            return Task.FromResult(new ControllerResult(false,"Error: Settings Failed To Upload "));
+            string message = "Error: Usb failed to disconnect.  Please remove usb";
+            message += $"\n Usb Message: {result.Message}";
+            return Task.FromResult(new ControllerResult(false,message));
         }
-    }*/
+    }
     
+    private async Task StartReaderAsync(CancellationToken token) {
+        while (await this._channelReader.WaitToReadAsync(token)) {
+            while (this._channelReader.TryRead(out var message)) {
+                await this._hubContext.Clients.All.OnSerialComMessage(message);
+            }
+        }
+    }
+
+    private void UsbUnplugHandler(object? sender,EventArgs args) {
+        Console.WriteLine("Usb was disconnected");
+        this._hubContext.Clients.All.OnUsbDisconnect(true);
+    }
+
+    public Task<ControllerResult> Send(MessagePacket packet) {
+        var result=this._usbController.Send(packet);
+        if (result.Success) {
+            return Task.FromResult(new ControllerResult(true, "Send Success"));
+        } else {
+            return Task.FromResult(new ControllerResult(false, result.Message));
+        }
+    }
+
+    public void Dispose() {
+        this._usbController.Dispose();
+    }
 }

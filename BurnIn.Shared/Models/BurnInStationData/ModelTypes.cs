@@ -1,10 +1,14 @@
 ﻿using Ardalis.SmartEnum;
 using MongoDB.Bson;
+using System.Globalization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace BurnIn.Shared.Models.BurnInStationData;
 
+public interface IBurnInConfiguration{}
 
-
+[JsonConverter(typeof(ArduinoCommandJsonConverter))]
 public sealed class ArduinoCommand : SmartEnum<ArduinoCommand,int> {
     public static readonly ArduinoCommand Start = new ArduinoCommand(nameof(Start), 0);
     public static readonly ArduinoCommand Pause = new ArduinoCommand(nameof(Pause),1);
@@ -17,8 +21,19 @@ public sealed class ArduinoCommand : SmartEnum<ArduinoCommand,int> {
     public static readonly ArduinoCommand StopTune = new ArduinoCommand(nameof(StopTune), 8);
     public static readonly ArduinoCommand SaveATuneResult = new ArduinoCommand(nameof(SaveATuneResult), 9);
     public static readonly ArduinoCommand Reset = new ArduinoCommand(nameof(Reset), 10);
-    
     private ArduinoCommand(string name, int value) : base(name, value) {  }
+}
+
+public class ArduinoCommandJsonConverter : JsonConverter<ArduinoCommand> {
+    public override ArduinoCommand Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options) {
+        return ArduinoCommand.FromValue(reader.GetInt32());
+    }
+    public override void Write(Utf8JsonWriter writer, ArduinoCommand value, JsonSerializerOptions options) {
+        writer.WriteNumberValue(value.Value);
+    }
 }
 
 public sealed class ArduinoMsgPrefix : SmartEnum<ArduinoMsgPrefix,string> {
@@ -35,8 +50,19 @@ public sealed class ArduinoMsgPrefix : SmartEnum<ArduinoMsgPrefix,string> {
     public static readonly ArduinoMsgPrefix TestRequest = new ArduinoMsgPrefix(nameof(HeaterResponse), "TREQ");
     public static readonly ArduinoMsgPrefix IdReceive = new ArduinoMsgPrefix(nameof(HeaterResponse), "IDREC");
     public static readonly ArduinoMsgPrefix IdRequest = new ArduinoMsgPrefix(nameof(HeaterResponse), "IDREQ");
-    
     private ArduinoMsgPrefix(string name, string value) : base(name, value) {  }
+}
+
+public class ArduinoMsgPrefixJsonConverter : JsonConverter<ArduinoMsgPrefix> {
+    public override ArduinoMsgPrefix Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options) {
+        return ArduinoMsgPrefix.FromValue(reader.GetString()!);
+    }
+    public override void Write(Utf8JsonWriter writer, ArduinoMsgPrefix value, JsonSerializerOptions options) {
+        writer.WriteStringValue(value.Value);
+    }
 }
 
 public sealed class ArduinoResponse : SmartEnum<ArduinoResponse, int> {

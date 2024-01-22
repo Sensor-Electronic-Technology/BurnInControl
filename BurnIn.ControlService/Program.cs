@@ -4,7 +4,10 @@ using BurnIn.Shared.Hubs;
 using System.Threading.Channels;
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(options => 
+{ 
+    options.EnableDetailedErrors = true;
+}); 
 var channel = Channel.CreateUnbounded<string>();
 builder.Services.AddSingleton(channel.Reader);
 builder.Services.AddSingleton(channel.Writer);

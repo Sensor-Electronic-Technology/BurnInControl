@@ -17,5 +17,11 @@
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
+    <ItemGroup>
+      <None Remove="Controller\ListUsbPorts.sh" />
+      <Resource Include="Controller\ListUsbPorts.sh">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+    </ItemGroup>
 
 </Project>

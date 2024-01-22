@@ -21,20 +21,38 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Threading.Channels;
 using DataReceivedEventArgs=System.Diagnostics.DataReceivedEventArgs;
-using StationConfiguration=BurnIn.Shared.Models.Configurations.StationConfiguration;
+
 
 
 //await CreateAndOutputProbeConfigFile();
 //await CreateStationDatabase("S01");
 //RunControllerTests();
 RunUsbControllerTests();
-void RunControllerTests() {
-    ControllerTests tests = new ControllerTests();
-    tests.Setup();
-    if (tests.Connect()) {
-        tests.Run();
-    } else {
-        Console.WriteLine("Goodbye!!");
+
+//TestMessageCasting();
+
+void TestMessageCasting() {
+    var probeConfig = CreateProbeControlConfig();
+    MessagePacket msgPacket = new MessagePacket() {
+        Prefix = ArduinoMsgPrefix.ProbeConfigPrefix,
+        Packet=probeConfig
+    };
+    Parse(msgPacket);
+    
+}
+
+void Parse(MessagePacket msgPacket) {
+    if (msgPacket.Prefix == ArduinoMsgPrefix.ProbeConfigPrefix.Value) {
+        if (msgPacket.Packet is ProbeControllerConfig config) {
+            Console.WriteLine(JsonSerializer.Serialize(msgPacket,new JsonSerializerOptions() {
+                Converters = {
+                    new ArduinoMsgPrefixJsonConverter()
+                },
+                WriteIndented = true
+            }));
+        } else {
+            Console.WriteLine("Failed to cast");
+        }
     }
 }
 

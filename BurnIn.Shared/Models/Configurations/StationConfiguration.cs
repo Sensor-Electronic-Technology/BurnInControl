@@ -1,4 +1,5 @@
-﻿namespace BurnIn.Shared.Models.Configurations;
+﻿using BurnIn.Shared.Models.BurnInStationData;
+namespace BurnIn.Shared.Models.Configurations;
 
 public class BurnTimerConfig {
     public ulong Time60mASec { get; set; }
@@ -13,7 +14,7 @@ public class BurnTimerConfig {
     public BurnTimerConfig(){}
 }
 
-public class StationConfiguration {
+public class StationConfiguration:IBurnInConfiguration {
     public BurnTimerConfig BurnTimerConfig { get; set; }
     public ulong ComInterval { get; set; }
     public ulong UpdateInterval { get; set; }

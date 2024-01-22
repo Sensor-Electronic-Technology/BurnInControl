@@ -1,5 +1,7 @@
 ﻿using BurnIn.Shared.Controller;
+using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
+using BurnIn.Shared.Models.Configurations;
 using Microsoft.AspNetCore.SignalR;
 using System.Text.RegularExpressions;
 namespace BurnIn.Shared.Hubs;
@@ -20,19 +22,40 @@ public class StationHub:Hub<IStationHub> {
         return this._controller.Disconnect();
     }
 
-    public Task<ControllerResult> ExecuteCommand(ArduinoCommand command) {
-        return this._controller.ExecuteCommand(command);
+    public Task<ControllerResult> Send(MessagePacket packet) {
+        return this._controller.Send(packet);
     }
     
-    public Task<ControllerResult> ToggleHeater() {
-        //return this._controller.ExecuteCommand(ArduinoCommand.HeaterToggle);
-        return null;
+    public Task<ControllerResult> SendCommand(ArduinoCommand command) {
+        MessagePacket msg = new MessagePacket() {
+            Prefix = ArduinoMsgPrefix.CommandPrefix,
+            Packet = command.Value
+        };
+        Console.WriteLine($"Received Command: {command.Name}");
+        return this._controller.Send(msg);
     }
 
-    public Task<ControllerResult> UpdateArduinoSettings(StationConfiguration config) {
-        int enabled = config.SwitchingEnabled ? 1 : 0;
-        string command = $"U{enabled}{config.DefaultCurrent.Name}{config.TemperatureSetPoint}";
-        //return this._controller.ExecuteCommand(ArduinoCommand.Update,command);
-        return null;
+    public Task<ControllerResult> SendProbeConfig(ProbeControllerConfig packet) {
+        MessagePacket msg = new MessagePacket() {
+            Prefix = ArduinoMsgPrefix.ProbeConfigPrefix,
+            Packet = packet
+        };
+        return this._controller.Send(msg);
+    }
+    
+    public Task<ControllerResult> SendHeaterConfig(HeaterControllerConfig packet) {
+        MessagePacket msg = new MessagePacket() {
+            Prefix = ArduinoMsgPrefix.HeaterConfigPrefix,
+            Packet = packet
+        };
+        return this._controller.Send(msg);
+    }
+    
+    public Task<ControllerResult> SendStationConfig(StationConfiguration packet) {
+        MessagePacket msg = new MessagePacket() {
+            Prefix = ArduinoMsgPrefix.StationConfigPrefix,
+            Packet = packet
+        };
+        return this._controller.Send(msg);
     }
 }

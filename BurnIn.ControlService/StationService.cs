@@ -5,19 +5,22 @@ public class StationService:IHostedService,IDisposable {
     private readonly StationController _stationController;
     private readonly ILogger<StationService> _logger;
 
-    public StationService(StationController stationController, ILoggerFactory loggerFactory) {
-        this._logger = loggerFactory.CreateLogger<StationService>();
+    public StationService(StationController stationController, ILogger<StationService> logger) {
+        this._logger = logger;
         this._stationController = stationController;
     }
 
     public Task StartAsync(CancellationToken cancellationToken) {
-        this._stationController.Start();
-        Console.WriteLine("Station Service Started");
-        return Task.CompletedTask;
+        return this._stationController.Start();
     }
     public async Task StopAsync(CancellationToken cancellationToken) {
         Console.WriteLine("Station Service Started");
-        await this._stationController.Disconnect();
+        var result=await this._stationController.Stop();
+        if (result.Success) {
+            this._logger.LogInformation("Service Stopped \n"+result.Message);
+        } else {
+            this._logger.LogCritical($"Internal Error \n {result.Message}");
+        }
     }
     public void Dispose() {
         

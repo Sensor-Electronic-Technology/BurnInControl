@@ -1,4 +1,5 @@
-﻿namespace BurnIn.Shared.Hubs;
+﻿using Ardalis.SmartEnum;
+namespace BurnIn.Shared.Hubs;
 
 public static class HubConstants {
     public static string HubAddress => "http://192.168.68.112:3000/hubs/station";
@@ -14,6 +15,12 @@ public static class HubConstants {
     public static class Methods {
         public static string ConnectUsb => "ConnectUsb";
         public static string Disconnect => "ConnectUsb";
-        public static string ExecuteCommand => "ExecuteCommand";
+        public static string Send => "Send";
+        public static string SendHeaterConfig => "SendHeaterConfig";
+        public static string SendProbeConfig => "SendProbeConfig";
+        public static string SendStationConfig => "SendStationConfig";
+        public static string SendCommand => "SendCommand";
+
     }
+
 }

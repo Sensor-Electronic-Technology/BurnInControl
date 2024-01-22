@@ -1,4 +1,5 @@
-﻿namespace BurnIn.Shared.Models.Configurations;
+﻿using BurnIn.Shared.Models.BurnInStationData;
+namespace BurnIn.Shared.Models.Configurations;
 
 public class CurrentSelectorConfig {
     public sbyte Pin120mA { get; set; }
@@ -48,7 +49,7 @@ public class ProbeConfig {
     }
 }
 
-public class ProbeControllerConfig {
+public class ProbeControllerConfig:IBurnInConfiguration {
     public CurrentSelectorConfig CurrentSelectConfig { get; set; }
     public List<ProbeConfig> ProbeConfigurations { get; set; } = new List<ProbeConfig>();
     public ulong ReadInterval { get; set; }

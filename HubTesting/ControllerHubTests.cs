@@ -35,14 +35,22 @@ public class ControllerHubTests {
         });
 
         this._connection.On<bool>(HubConstants.Events.OnUsbDisconnect, disconnected => {
-            string status = disconnected ? "Connected":"Not Connected";
-            Console.WriteLine(status);
+            if (disconnected) {
+                Console.WriteLine("Usb Disconnected, please try reconnecting");
+            } else {
+                Console.WriteLine("Usb failed to disconnect, please reset service");
+            }
+            
         });
 
         this._connection.On<bool>(HubConstants.Events.OnExecuteCommand, success => {
             string status = success ? "Success" : "Error Executing";
             Console.WriteLine($"Execute Command Status: {status}");
         });
+
+        this._connection.On<string>(HubConstants.Events.OnIdChanged, Console.WriteLine);
+
+        this._connection.On<StationSerialData>(HubConstants.Events.OnSerialCom, this.HandleSerialData);
             
         this._connection.On<string>(HubConstants.Events.OnSerialComMessage, Console.WriteLine);
         var result=await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.ConnectUsb);
@@ -55,6 +63,28 @@ public class ControllerHubTests {
         if (this._connection.State == HubConnectionState.Connected) {
             await this._connection.StopAsync();
         }
+    }
+
+    private void HandleSerialData(StationSerialData reading) {
+        StringBuilder builder = new StringBuilder();
+
+        builder.AppendFormat($"Elapsed: {reading.ElapsedSeconds} ");
+        
+        builder.Append("Voltages: ");
+        for (int i = 0; i < 6; i++) {
+            builder.AppendFormat($" V[{i}] {reading.Voltages[i]} ");
+        }
+        
+        builder.Append(" Currents: ");
+        for (int i = 0; i < 6; i++) {
+            builder.AppendFormat($" I[{i}] {reading.Currents[i]} ");
+        }
+        
+        builder.Append(" Temps: ");
+        for (int i = 0; i < 3; i++) {
+            builder.AppendFormat($" T[{i}] {reading.Temperatures[i]} ");
+        }
+        Console.WriteLine(builder.ToString());
     }
 
     public async Task Run() {
@@ -75,6 +105,7 @@ public class ControllerHubTests {
             if (key == '0') {
                 Console.Clear();
                 Console.WriteLine(builder.ToString());
+                this._connection.InvokeAsync(HubConstants.Methods.ConnectUsb).SafeFireAndForget();
             }
             if (key == '1') {
                 await this.SendHeaterConfig();
@@ -113,15 +144,11 @@ public class ControllerHubTests {
         
     }
     
-    private async Task SendCommand(ArduinoCommand command,bool newLine = false) {
-        MessagePacket packet = new MessagePacket() {
-            Prefix = ArduinoMsgPrefix.CommandPrefix,
-            Packet = command.Value
-        };
-        var result = await this._connection.InvokeAsync<ControllerResult>("SendCommand", command);
+    private async Task SendCommand(ArduinoCommand command) {
+        var result = await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.SendCommand, command);
     }
     
-    private async Task SendProbeConfig(bool newLine=false) {
+    private async Task SendProbeConfig() {
         ProbeControllerConfig probeControllerConfig = new ProbeControllerConfig() { 
             CurrentSelectConfig=new CurrentSelectorConfig(2,6,7,60,true),
             CurrentPercent = .80,
@@ -139,7 +166,7 @@ public class ControllerHubTests {
         await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.SendProbeConfig, probeControllerConfig);
     }
     
-    private async Task SendHeaterConfig(bool newLine=false) {
+    private async Task SendHeaterConfig() {
         NtcConfiguration ntcConfig1 = new NtcConfiguration(1.159e-3f, 1.429e-4f, 1.118e-6f, 60, 0.01);
         NtcConfiguration ntcConfig2 = new NtcConfiguration(1.173e-3f, 1.736e-4f, 7.354e-7f, 61, 0.01);
         NtcConfiguration ntcConfig3 = new NtcConfiguration(1.200e-3f, 1.604e-4f, 8.502e-7f, 62, 0.01);
@@ -170,19 +197,18 @@ public class ControllerHubTests {
     }
     
     private async Task SendId(bool newLine=false) {
-        MessagePacket msgPacket = new MessagePacket() {
+        /*MessagePacket msgPacket = new MessagePacket() {
             Prefix = ArduinoMsgPrefix.IdReceive,
             Packet = "S09"
-        };
-        await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.Send, msgPacket);
+        };*/
+        await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.SendId, "S11");
     }
     
-    private async Task RequestId(bool newLine=false) {
-        MessagePacket msgPacket = new MessagePacket() {
+    private async Task RequestId() {
+        /*MessagePacket msgPacket = new MessagePacket() {
             Prefix = ArduinoMsgPrefix.IdRequest,
-            Packet = "S02"
-        };
-        await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.Send, msgPacket);
+        };*/
+        await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.RequestId);
     }
     
 }

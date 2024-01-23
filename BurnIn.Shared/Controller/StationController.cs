@@ -2,6 +2,8 @@
 using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
+using BurnIn.Shared.Models.Configurations;
+using BurnIn.Shared.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -80,7 +82,17 @@ public class StationController:IDisposable {
     private async Task StartReaderAsync(CancellationToken token) {
         while (await this._channelReader.WaitToReadAsync(token)) {
             while (this._channelReader.TryRead(out var message)) {
-                await this._hubContext.Clients.All.OnSerialComMessage(message);
+                //await this._hubContext.Clients.All.OnSerialComMessage(message);
+                await this.HandleMessagePacket(message);
+                //this._logger.LogInformation(message);
+                /*this.HandleMessagePacket(message).SafeFireAndForget(e => {
+                    if (e.InnerException != null) {
+                        this._logger.LogError("Error while parsing msg packet.  " +
+                                              "Exception: {Message} \n Inner: {InnerMessage}",e.Message,e.InnerException.Message);
+                    } else {
+                        this._logger.LogError("Error while parsing msg packet. Exception: {Message}",e.Message);
+                    }
+                });*/
             }
         }
     }
@@ -90,13 +102,54 @@ public class StationController:IDisposable {
         this._hubContext.Clients.All.OnUsbDisconnect(true);
     }
 
-    public Task<ControllerResult> Send(MessagePacket packet) {
-        var result=this._usbController.Send(packet);
+    public Task<ControllerResult> SendV2<TPacket>(ArduinoMsgPrefix prefix,TPacket packet) where TPacket:IPacket {
+        MessagePacketV2<TPacket> msgPacket = new MessagePacketV2<TPacket>() {
+            Prefix = prefix,
+            Packet = packet
+        };
+        var result = this._usbController.SendV2(msgPacket);
         if (result.Success) {
-            return Task.FromResult(new ControllerResult(true, "Send Success"));
+            this._logger.LogInformation("Msg Sent of type {ArduinoMsgPrefix.Name}",msgPacket.Prefix.Name);
+            return Task.FromResult(new ControllerResult(result.Success,"Message Sent"));
         } else {
-            return Task.FromResult(new ControllerResult(false, result.Message));
+            this._logger.LogError("Failed to send {ArduinoMsgPrefix.Name}, Error {Error}",msgPacket.Prefix.Name,result.Message);
+            return Task.FromResult(new ControllerResult(result.Success, $"Failed to send message.  Internal Error: {result.Message}"));
         }
+    }
+    
+    public Task HandleMessagePacket(string message) {
+        
+        try {
+            var doc=JsonSerializer.Deserialize<JsonDocument>(message);
+            var prefixValue=doc.RootElement.GetProperty("Prefix").ToString();
+            if (!string.IsNullOrEmpty(prefixValue)) {
+                var prefix=ArduinoMsgPrefix.FromValue(prefixValue);
+                if (prefix != null) {
+                    var packetElem=doc.RootElement.GetProperty("Packet");
+                    prefix.When(ArduinoMsgPrefix.DataPrefix).Then(()=>this.HandleData(packetElem))
+                        .When(ArduinoMsgPrefix.MessagePrefix).Then(()=>this.HandleMessage(packetElem))
+                        .When(ArduinoMsgPrefix.IdRequest).Then(()=>this.HandleIdChanged(packetElem));
+                }
+            }
+        } catch {
+            Console.WriteLine($"Message had errors.  Message: {message}");
+        }
+        return Task.CompletedTask;
+    }
+
+    private void HandleData(JsonElement element) {
+        var serialData=element.Deserialize<StationSerialData>();
+        this._hubContext.Clients.All.OnSerialCom(serialData).SafeFireAndForget();
+    }
+
+    private void HandleMessage(JsonElement element) {
+        var message=element.GetProperty("Message").ToString();
+        this._hubContext.Clients.All.OnSerialComMessage(message).SafeFireAndForget();
+    }
+
+    private void HandleIdChanged(JsonElement element) {
+        var id = element.GetString();
+        this._hubContext.Clients.All.OnIdChanged(id);
     }
 
     public void Dispose() {

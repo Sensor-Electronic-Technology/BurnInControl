@@ -31,9 +31,6 @@ public class UsbControllerTests {
     }
 
     public void Run() {
-        /*this._usbController.StartReadingAsync(this._cancellationTokenSource.Token).SafeFireAndForget(e => {
-            Console.WriteLine($"Error: {e.Message}");
-        });*/
         this.Reader(this._cancellationTokenSource.Token).SafeFireAndForget(e => {
             Console.WriteLine($"Read Error: {e.Message}");
         });
@@ -110,34 +107,33 @@ public class UsbControllerTests {
     }
     
     private void SendCommand(ArduinoCommand command,bool newLine = false) {
-        MessagePacket msgPacket = new MessagePacket() {
+        MessagePacketV2<ArduinoCommand> msgPacket = new MessagePacketV2<ArduinoCommand>() {
             Prefix = ArduinoMsgPrefix.CommandPrefix,
-            Packet = command.Value
+            Packet = command
         };
-        var output = JsonSerializer.Serialize<MessagePacket>(msgPacket,
+        var output = JsonSerializer.Serialize<MessagePacketV2<ArduinoCommand>>(msgPacket,
                 new JsonSerializerOptions(){WriteIndented = false});
-        this._usbController.Send(msgPacket);
-        Console.WriteLine($"Sent: {output}");
+        this._usbController.SendV2(msgPacket);
     }
 
     private void SendId(bool newLine=false) {
-        MessagePacket msgPacket = new MessagePacket() {
+        MessagePacketV2<StationIdPacket> msgPacket = new MessagePacketV2<StationIdPacket>() {
             Prefix = ArduinoMsgPrefix.IdReceive,
-            Packet = "S09"
+            Packet = new StationIdPacket(){StationId = "S22"}
         };
-        var output = JsonSerializer.Serialize<MessagePacket>(msgPacket,
+        var output = JsonSerializer.Serialize<MessagePacketV2<StationIdPacket>>(msgPacket,
         new JsonSerializerOptions(){WriteIndented = false});
-        this._usbController.Send(msgPacket);
+        this._usbController.SendV2(msgPacket);
     }
     
     private void RequestId(bool newLine=false) {
-        MessagePacket msgPacket = new MessagePacket() {
+        MessagePacketV2<ArduinoMsgPrefix> msgPacket =new MessagePacketV2<ArduinoMsgPrefix>(){
             Prefix = ArduinoMsgPrefix.IdRequest,
-            Packet = "S02"
+            Packet = ArduinoMsgPrefix.IdRequest
         };
         /*var output = JsonSerializer.Serialize<MessagePacket>(msgPacket,
         new JsonSerializerOptions(){WriteIndented = false});*/
-        this._usbController.Send(msgPacket);
+        this._usbController.SendV2(msgPacket);
     }
     
     private void SendProbeConfig(bool newLine=false) {
@@ -155,13 +151,13 @@ public class UsbControllerTests {
                 new ProbeConfig(new VoltageSensorConfig(59, 0.1), new CurrentSensorConfig(68, 0.1))
             }
         };
-        MessagePacket msgPacket = new MessagePacket() {
+        MessagePacketV2<ProbeControllerConfig> msgPacket = new MessagePacketV2<ProbeControllerConfig>() {
             Prefix = ArduinoMsgPrefix.ProbeConfigPrefix,
             Packet = probeControllerConfig
         };
         /*var output=JsonSerializer.Serialize<MessagePacket>(msgPacket,
         new JsonSerializerOptions { WriteIndented = false });*/
-        this._usbController.Send(msgPacket);
+        this._usbController.SendV2(msgPacket);
     }
     
     public void SaveProbeConfigFile() {
@@ -208,25 +204,23 @@ public class UsbControllerTests {
             heaterConfig2
         ];
         config.ReadInterval = 250;
-        MessagePacket msgPacket = new MessagePacket {
+        MessagePacketV2<HeaterControllerConfig> msgPacket = new MessagePacketV2<HeaterControllerConfig>() {
             Prefix = ArduinoMsgPrefix.HeaterConfigPrefix,
             Packet = config
         };
         /*var output=JsonSerializer.Serialize<MessagePacket>(msgPacket,
         new JsonSerializerOptions { WriteIndented = false });*/
-        this._usbController.Send(msgPacket);
+        this._usbController.SendV2(msgPacket);
     }
 
     private void SendStationConfiguration(bool newLine=false) {
         var configuration =new StationConfiguration(1000, 500, 60000);
         var burnTimerConfig = new BurnTimerConfig(72000, 72000, 25200);
         configuration.BurnTimerConfig = burnTimerConfig;
-        MessagePacket msgPacket = new MessagePacket {
+        MessagePacketV2<StationConfiguration> msgPacket = new MessagePacketV2<StationConfiguration> {
             Prefix = ArduinoMsgPrefix.StationConfigPrefix,
             Packet = configuration
         };
-        /*var output=JsonSerializer.Serialize<MessagePacket>(msgPacket,
-        new JsonSerializerOptions { WriteIndented = false });*/
-        this._usbController.Send(msgPacket);
+        this._usbController.SendV2(msgPacket);
     }
 }

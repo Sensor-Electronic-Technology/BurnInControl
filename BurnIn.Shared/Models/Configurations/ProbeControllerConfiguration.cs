@@ -49,7 +49,7 @@ public class ProbeConfig {
     }
 }
 
-public class ProbeControllerConfig:IBurnInConfiguration {
+public class ProbeControllerConfig:IPacket {
     public CurrentSelectorConfig CurrentSelectConfig { get; set; }
     public List<ProbeConfig> ProbeConfigurations { get; set; } = new List<ProbeConfig>();
     public ulong ReadInterval { get; set; }

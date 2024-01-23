@@ -158,9 +158,7 @@ public class UsbController:IDisposable {
                 var startIndex=line.IndexOf('{');
                 if (startIndex >= 0) {
                     var input=line.Substring(startIndex, line.Length-startIndex);
-                    if (this._channelWriter.TryWrite(input)) {
-                        this.Log("Channel Write Successful",false);
-                    } else {
+                    if (!this._channelWriter.TryWrite(input)) {
                         this.Log("Channel Write Failed",true);
                     }
                 }
@@ -170,26 +168,21 @@ public class UsbController:IDisposable {
                  $"Thread = {Thread.CurrentThread.ManagedThreadId} " +
                  $": Closing",false);
     }
-    public UsbWriteResult Send(MessagePacket msgPacket) {
-        var output = JsonSerializer.Serialize<MessagePacket>(msgPacket,
+    public UsbWriteResult SendV2<TPacket>(MessagePacketV2<TPacket> msgPacket) where TPacket:IPacket {
+        var output = JsonSerializer.Serialize(msgPacket,
         new JsonSerializerOptions() {
             PropertyNamingPolicy =null,
-            Converters = {
-                new ArduinoMsgPrefixJsonConverter()
-            },
             WriteIndented = false
         });
-        if (Monitor.TryEnter(this._serialPort, 1000)) {
-            try {
-                this._serialPort.Write(output);
-            } catch(Exception e) {
-                return new UsbWriteResult(false,this._state, $"Exception Caught: {e.Message}");
-            }finally {
-                Monitor.Exit(this._serialPort);
-            }
-            return new UsbWriteResult(true,this._state, "");
+        Monitor.Enter(this._serialPort);
+        try {
+            this._serialPort.Write(output);
+        } catch(Exception e) {
+            return new UsbWriteResult(false,this._state, $"Exception Caught: {e.Message}");
+        }finally {
+            Monitor.Exit(this._serialPort);
         }
-        return new UsbWriteResult(false, this._state, "Failed to lock serial port in main thread");
+        return new UsbWriteResult(true,this._state, "");
     }
     private string FindPort() {
         Process process = new Process();

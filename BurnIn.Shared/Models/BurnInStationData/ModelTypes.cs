@@ -6,10 +6,8 @@ using System.Text.Json.Serialization;
 
 namespace BurnIn.Shared.Models.BurnInStationData;
 
-public interface IBurnInConfiguration{}
-
 [JsonConverter(typeof(ArduinoCommandJsonConverter))]
-public sealed class ArduinoCommand : SmartEnum<ArduinoCommand,int> {
+public class ArduinoCommand : SmartEnum<ArduinoCommand,int>,IPacket {
     public static readonly ArduinoCommand Start = new ArduinoCommand(nameof(Start), 0);
     public static readonly ArduinoCommand Pause = new ArduinoCommand(nameof(Pause),1);
     public static readonly ArduinoCommand ToggleHeat = new ArduinoCommand(nameof(ToggleHeat), 2);
@@ -36,20 +34,21 @@ public class ArduinoCommandJsonConverter : JsonConverter<ArduinoCommand> {
     }
 }
 
-public sealed class ArduinoMsgPrefix : SmartEnum<ArduinoMsgPrefix,string> {
+[JsonConverter(typeof(ArduinoMsgPrefixJsonConverter))]
+public class ArduinoMsgPrefix : SmartEnum<ArduinoMsgPrefix,string>,IPacket {
     public static readonly ArduinoMsgPrefix HeaterConfigPrefix= new ArduinoMsgPrefix(nameof(HeaterConfigPrefix), "CH");
     public static readonly ArduinoMsgPrefix ProbeConfigPrefix = new ArduinoMsgPrefix(nameof(ProbeConfigPrefix),"CP");
     public static readonly ArduinoMsgPrefix StationConfigPrefix = new ArduinoMsgPrefix(nameof(StationConfigPrefix), "CS");
-    public static readonly ArduinoMsgPrefix SaveSate = new ArduinoMsgPrefix(nameof(HeaterResponse), "ST");
+    public static readonly ArduinoMsgPrefix SaveState = new ArduinoMsgPrefix(nameof(SaveState), "ST");
     public static readonly ArduinoMsgPrefix MessagePrefix = new ArduinoMsgPrefix(nameof(MessagePrefix), "M");
     public static readonly ArduinoMsgPrefix DataPrefix = new ArduinoMsgPrefix(nameof(DataPrefix), "D");
-    public static readonly ArduinoMsgPrefix CommandPrefix = new ArduinoMsgPrefix(nameof(DataPrefix), "COM");
+    public static readonly ArduinoMsgPrefix CommandPrefix = new ArduinoMsgPrefix(nameof(CommandPrefix), "COM");
     public static readonly ArduinoMsgPrefix HeaterResponse = new ArduinoMsgPrefix(nameof(HeaterResponse), "HRES");
-    public static readonly ArduinoMsgPrefix TestResponse = new ArduinoMsgPrefix(nameof(HeaterResponse), "TRES");
+    public static readonly ArduinoMsgPrefix TestResponse = new ArduinoMsgPrefix(nameof(TestResponse), "TRES");
     public static readonly ArduinoMsgPrefix HeaterRequest = new ArduinoMsgPrefix(nameof(HeaterResponse), "HREQ");
-    public static readonly ArduinoMsgPrefix TestRequest = new ArduinoMsgPrefix(nameof(HeaterResponse), "TREQ");
-    public static readonly ArduinoMsgPrefix IdReceive = new ArduinoMsgPrefix(nameof(HeaterResponse), "IDREC");
-    public static readonly ArduinoMsgPrefix IdRequest = new ArduinoMsgPrefix(nameof(HeaterResponse), "IDREQ");
+    public static readonly ArduinoMsgPrefix TestRequest = new ArduinoMsgPrefix(nameof(TestResponse), "TREQ");
+    public static readonly ArduinoMsgPrefix IdReceive = new ArduinoMsgPrefix(nameof(IdReceive), "IDREC");
+    public static readonly ArduinoMsgPrefix IdRequest = new ArduinoMsgPrefix(nameof(IdRequest), "IDREQ");
     private ArduinoMsgPrefix(string name, string value) : base(name, value) {  }
 }
 

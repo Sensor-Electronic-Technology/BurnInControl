@@ -14,7 +14,7 @@ public class BurnTimerConfig {
     public BurnTimerConfig(){}
 }
 
-public class StationConfiguration:IBurnInConfiguration {
+public class StationConfiguration:IPacket {
     public BurnTimerConfig BurnTimerConfig { get; set; }
     public ulong ComInterval { get; set; }
     public ulong UpdateInterval { get; set; }

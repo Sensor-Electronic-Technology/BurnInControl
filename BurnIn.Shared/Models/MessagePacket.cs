@@ -1,5 +1,7 @@
 ﻿using BurnIn.Shared.Models.BurnInStationData;
 using BurnIn.Shared.Models.Configurations;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 namespace BurnIn.Shared.Models;
 
 
@@ -8,23 +10,29 @@ public class MessagePacket {
     public object Packet { get; set; }
 }
 
+public interface IPacket { }
 
-public interface IMsgPacket<TValue> {
-    public string Prefix { get; set; }
-    public TValue Packet { get; set; }
-
-    public string Serialize();
+public class MessagePacketV2<TPacket> where TPacket:IPacket{
+    public ArduinoMsgPrefix  Prefix { get; set; }
+    public TPacket? Packet { get; set; }
 }
 
-public class HeaterConfigMsgPacket : IMsgPacket<HeaterControllerConfig> {
+[JsonConverter(typeof(StationIdPacketJsonConverter))]
+public class StationIdPacket : IPacket {
+    public string StationId { get; set; }
+}
 
-    public string Prefix { get; set; }
-    public HeaterControllerConfig Packet { get; set; }
-    public String Serialize() {
-        throw new NotImplementedException();
+public class StationIdPacketJsonConverter : JsonConverter<StationIdPacket> {
+    public override StationIdPacket Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options) {
+        return new StationIdPacket() { StationId = reader.GetString()! };
+    }
+    public override void Write(Utf8JsonWriter writer, StationIdPacket value, JsonSerializerOptions options) {
+        writer.WriteStringValue(value.StationId);
     }
 }
-
 
 
 /*public abstract class Serializable

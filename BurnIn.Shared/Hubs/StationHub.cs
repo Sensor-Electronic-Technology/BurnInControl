@@ -21,41 +21,28 @@ public class StationHub:Hub<IStationHub> {
     public Task<ControllerResult> DisconnectUsb() {
         return this._controller.Disconnect();
     }
-
-    public Task<ControllerResult> Send(MessagePacket packet) {
-        return this._controller.Send(packet);
-    }
     
     public Task<ControllerResult> SendCommand(ArduinoCommand command) {
-        MessagePacket msg = new MessagePacket() {
-            Prefix = ArduinoMsgPrefix.CommandPrefix,
-            Packet = command.Value
-        };
-        Console.WriteLine($"Received Command: {command.Name}");
-        return this._controller.Send(msg);
+        return this._controller.SendV2(ArduinoMsgPrefix.CommandPrefix,command);
+    }
+
+    public Task<ControllerResult> SendId(string newId) {
+        return this._controller.SendV2(ArduinoMsgPrefix.IdReceive,new StationIdPacket() { StationId = newId });
+    }
+    
+    public Task<ControllerResult> RequestId() {
+        return this._controller.SendV2(ArduinoMsgPrefix.IdRequest,ArduinoMsgPrefix.IdRequest);
     }
 
     public Task<ControllerResult> SendProbeConfig(ProbeControllerConfig packet) {
-        MessagePacket msg = new MessagePacket() {
-            Prefix = ArduinoMsgPrefix.ProbeConfigPrefix,
-            Packet = packet
-        };
-        return this._controller.Send(msg);
+        return this._controller.SendV2(ArduinoMsgPrefix.ProbeConfigPrefix,packet);
     }
     
     public Task<ControllerResult> SendHeaterConfig(HeaterControllerConfig packet) {
-        MessagePacket msg = new MessagePacket() {
-            Prefix = ArduinoMsgPrefix.HeaterConfigPrefix,
-            Packet = packet
-        };
-        return this._controller.Send(msg);
+        return this._controller.SendV2(ArduinoMsgPrefix.HeaterConfigPrefix,packet);
     }
     
     public Task<ControllerResult> SendStationConfig(StationConfiguration packet) {
-        MessagePacket msg = new MessagePacket() {
-            Prefix = ArduinoMsgPrefix.StationConfigPrefix,
-            Packet = packet
-        };
-        return this._controller.Send(msg);
+        return this._controller.SendV2(ArduinoMsgPrefix.StationConfigPrefix,packet);
     }
 }

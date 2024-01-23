@@ -49,7 +49,7 @@ public class HeaterConfiguration {
     }
 }
 
-public class HeaterControllerConfig:IBurnInConfiguration {
+public class HeaterControllerConfig:IPacket {
     public List<HeaterConfiguration> HeaterConfigurations { get; set; }
     public ulong ReadInterval { get; set; }
     public HeaterControllerConfig(){}

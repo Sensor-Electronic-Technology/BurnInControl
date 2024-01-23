@@ -10,6 +10,7 @@ public static class HubConstants {
         public static string OnUsbConnect => "OnUsbConnect";
         public static string OnUsbDisconnect => "OnUsbDisconnect";
         public static string OnExecuteCommand => "OnExecuteCommand";
+        public static string OnIdChanged => "OnIdChanged";
     }
 
     public static class Methods {
@@ -20,6 +21,8 @@ public static class HubConstants {
         public static string SendProbeConfig => "SendProbeConfig";
         public static string SendStationConfig => "SendStationConfig";
         public static string SendCommand => "SendCommand";
+        public static string SendId => "SendId";
+        public static string RequestId => "RequestId";
 
     }
 

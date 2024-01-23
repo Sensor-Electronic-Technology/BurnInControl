@@ -27,9 +27,19 @@ using DataReceivedEventArgs=System.Diagnostics.DataReceivedEventArgs;
 //await CreateAndOutputProbeConfigFile();
 //await CreateStationDatabase("S01");
 //RunControllerTests();
-RunUsbControllerTests();
+//RunUsbControllerTests();
 
 //TestMessageCasting();
+
+void TestDeserialize() {
+    var probeConfig = CreateProbeControlConfig();
+    MessagePacketV2<ProbeControllerConfig> msgPacket = new MessagePacketV2<ProbeControllerConfig>() {
+        Prefix = ArduinoMsgPrefix.ProbeConfigPrefix,
+        Packet=probeConfig
+    };
+    var output = JsonSerializer.Serialize(msgPacket);
+    
+}
 
 void TestMessageCasting() {
     var probeConfig = CreateProbeControlConfig();

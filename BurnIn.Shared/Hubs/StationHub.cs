@@ -33,6 +33,14 @@ public class StationHub:Hub<IStationHub> {
     public Task<ControllerResult> RequestId() {
         return this._controller.SendV2(ArduinoMsgPrefix.IdRequest,ArduinoMsgPrefix.IdRequest);
     }
+    
+    public Task<ControllerResult> SendVersion(string newVersion) {
+        return this._controller.SendV2(ArduinoMsgPrefix.VersionReceive,new StationVersionPacket() { Version = newVersion });
+    }
+    
+    public Task<ControllerResult> RequestVersion() {
+        return this._controller.SendV2(ArduinoMsgPrefix.VersionRequest,ArduinoMsgPrefix.VersionRequest);
+    }
 
     public Task<ControllerResult> SendProbeConfig(ProbeControllerConfig packet) {
         return this._controller.SendV2(ArduinoMsgPrefix.ProbeConfigPrefix,packet);

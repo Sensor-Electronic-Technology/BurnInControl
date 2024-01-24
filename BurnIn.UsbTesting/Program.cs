@@ -19,8 +19,13 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting.Internal;
 using System.Threading.Channels;
+using Octokit;
+using System.Net;
+using System.Runtime.InteropServices;
 using DataReceivedEventArgs=System.Diagnostics.DataReceivedEventArgs;
+using FileMode=System.IO.FileMode;
 
 
 
@@ -30,6 +35,21 @@ using DataReceivedEventArgs=System.Diagnostics.DataReceivedEventArgs;
 //RunUsbControllerTests();
 
 //TestMessageCasting();
+await TestGithubClient();
+
+async Task TestGithubClient() {
+    var github = new GitHubClient(new ProductHeaderValue("Sensor-Electronic-Technology"));
+    var result=await github.Repository.Release.GetLatest("Sensor-Electronic-Technology", "BurnInFirmware");
+    Console.WriteLine($"Tag: {result.TagName}");
+    var release = await github.Repository.Release.Get("Sensor-Electronic-Technology", "BurnInFirmware", result.TagName);
+    HttpClient client = new HttpClient();
+
+    var uri = new Uri(release.Assets[0].BrowserDownloadUrl);
+    var stream = await client.GetStreamAsync(uri);
+    Console.WriteLine($"Location: {Environment.CurrentDirectory.ToString()}");
+    await using var fs = new FileStream(@"\\192.168.68.112\source\ControlUpload\"+release.Assets[0].Name, FileMode.Create);
+    await stream.CopyToAsync(fs);
+}
 
 void TestDeserialize() {
     var probeConfig = CreateProbeControlConfig();

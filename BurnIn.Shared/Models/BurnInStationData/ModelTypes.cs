@@ -49,6 +49,8 @@ public class ArduinoMsgPrefix : SmartEnum<ArduinoMsgPrefix,string>,IPacket {
     public static readonly ArduinoMsgPrefix TestRequest = new ArduinoMsgPrefix(nameof(TestResponse), "TREQ");
     public static readonly ArduinoMsgPrefix IdReceive = new ArduinoMsgPrefix(nameof(IdReceive), "IDREC");
     public static readonly ArduinoMsgPrefix IdRequest = new ArduinoMsgPrefix(nameof(IdRequest), "IDREQ");
+    public static readonly ArduinoMsgPrefix VersionReceive = new ArduinoMsgPrefix(nameof(VersionReceive), "VERREC");
+    public static readonly ArduinoMsgPrefix VersionRequest = new ArduinoMsgPrefix(nameof(VersionRequest), "VERREQ");
     private ArduinoMsgPrefix(string name, string value) : base(name, value) {  }
 }
 

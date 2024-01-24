@@ -14,8 +14,9 @@ public class ControllerHubTests {
     private readonly HubConnection _connection;
     public ControllerHubTests() {
         this._connection = new HubConnectionBuilder()
-            .WithUrl("http://localhost:5066/hubs/station")
+            .WithUrl("http://192.168.68.112:3000/hubs/station")
             .Build();
+        //.WithUrl("http://localhost:5066/hubs/station")
     }
 
     public async Task Connect() {
@@ -197,17 +198,18 @@ public class ControllerHubTests {
     }
     
     private async Task SendId(bool newLine=false) {
-        /*MessagePacket msgPacket = new MessagePacket() {
-            Prefix = ArduinoMsgPrefix.IdReceive,
-            Packet = "S09"
-        };*/
         await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.SendId, "S11");
     }
     
     private async Task RequestId() {
-        /*MessagePacket msgPacket = new MessagePacket() {
-            Prefix = ArduinoMsgPrefix.IdRequest,
-        };*/
+        await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.RequestId);
+    }
+    
+    private async Task SendVersion(bool newLine=false) {
+        await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.SendId, "S11");
+    }
+    
+    private async Task RequestVersion() {
         await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.RequestId);
     }
     

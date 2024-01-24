@@ -76,7 +76,7 @@ public class UsbController:IDisposable {
         }
         string portName = string.Empty;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
-            portName=this.FindPort();
+            portName = "/dev/ttyACM0";
             if (!string.IsNullOrEmpty(portName)) {
                 this._portNameFound = true;
             }
@@ -183,6 +183,14 @@ public class UsbController:IDisposable {
             Monitor.Exit(this._serialPort);
         }
         return new UsbWriteResult(true,this._state, "");
+    }
+
+    public void RequestFirmwareVersion() {
+        MessagePacketV2<ArduinoMsgPrefix> msgPacket = new MessagePacketV2<ArduinoMsgPrefix>() {
+            Prefix = ArduinoMsgPrefix.TestRequest,
+            Packet = ArduinoMsgPrefix.TestRequest
+        };
+        this.SendV2(msgPacket);
     }
     private string FindPort() {
         Process process = new Process();

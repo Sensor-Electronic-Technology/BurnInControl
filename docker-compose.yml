@@ -1,0 +1,7 @@
+﻿services:
+  burnin.controlservice:
+    image: aelmendorf234/burnin.controlservice:dev
+    ports:
+      - 8080:8080
+    devices:
+      - /dev/burn_control:/dev/burn_control

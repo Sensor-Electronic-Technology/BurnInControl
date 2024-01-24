@@ -22,6 +22,11 @@ public class StationIdPacket : IPacket {
     public string StationId { get; set; }
 }
 
+[JsonConverter(typeof(StationVersionPacket))]
+public class StationVersionPacket : IPacket {
+    public string Version { get; set; }
+}
+
 public class StationIdPacketJsonConverter : JsonConverter<StationIdPacket> {
     public override StationIdPacket Read(
         ref Utf8JsonReader reader,
@@ -31,6 +36,18 @@ public class StationIdPacketJsonConverter : JsonConverter<StationIdPacket> {
     }
     public override void Write(Utf8JsonWriter writer, StationIdPacket value, JsonSerializerOptions options) {
         writer.WriteStringValue(value.StationId);
+    }
+}
+
+public class StationVersionPacketJsonConverter : JsonConverter<StationVersionPacket> {
+    public override StationVersionPacket Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options) {
+        return new StationVersionPacket() { Version = reader.GetString()! };
+    }
+    public override void Write(Utf8JsonWriter writer, StationVersionPacket value, JsonSerializerOptions options) {
+        writer.WriteStringValue(value.Version);
     }
 }
 

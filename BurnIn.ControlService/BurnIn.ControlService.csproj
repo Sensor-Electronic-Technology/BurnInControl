@@ -5,10 +5,32 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <AssemblyName>StationController</AssemblyName>
+        <RuntimeIdentifier>linux-arm64</RuntimeIdentifier>
+        <DockerDefaultTargetOS>linux-arm64</DockerDefaultTargetOS>
+        <ContainerRepository>aelmendorf234/burnin.controlservice</ContainerRepository>
+        <ContainerBaseImage>mcr.microsoft.com/dotnet/sdk:8.0</ContainerBaseImage>
+        <ContainerRuntimeIdentifier>linux-arm64</ContainerRuntimeIdentifier>
+        <ContainerRegistry>docker.io</ContainerRegistry>
+        <ContainerImageTag>dev</ContainerImageTag>
+        
+    </PropertyGroup>
+    <ItemGroup>
+        <ContainerPort Include="80" Type="tcp" />
+    </ItemGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <PlatformTarget>ARM64</PlatformTarget>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\BurnIn.Shared\BurnIn.Shared.csproj" />
+        <ProjectReference Include="..\BurnIn.Shared\BurnIn.Shared.csproj" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
     </ItemGroup>
 
 </Project>

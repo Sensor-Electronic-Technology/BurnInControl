@@ -10,4 +10,14 @@ public interface IStationHub {
     Task OnIdChanged(string Id);
     Task OnSerialComMessage(string message);
     Task OnSettingsUploaded(bool uploaded);
+    
+    //Test Related
+    Task OnTestStarted(string message);
+    Task OnTestStartedFailed(string message);
+    Task OnTestPaused(string message);
+    Task OnTestPausedFailed(string message);
+    Task OnTestContinued(string message);
+    Task OnTestContinuedFailed(string message);
+    Task OnTestCompleted(string message);
+    Task OnTestCompletedFailed(string message);
 }

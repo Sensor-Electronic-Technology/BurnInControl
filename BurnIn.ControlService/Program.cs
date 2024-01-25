@@ -1,10 +1,14 @@
 using BurnIn.ControlService;
+using BurnIn.Shared.AppSettings;
 using BurnIn.Shared.Controller;
 using BurnIn.Shared.Hubs;
+using BurnIn.Shared.Services;
 using Microsoft.Extensions.Hosting.Systemd;
 using System.Threading.Channels;
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.Configure<FirmwareVersionSettings>(builder.Configuration.GetSection(nameof(FirmwareVersionSettings)));
+builder.Services.Configure<DatabaseConnections>(builder.Configuration.GetSection(nameof(DatabaseConnections)));
 builder.Services.AddSignalR(options => 
 { 
     options.EnableDetailedErrors = true;

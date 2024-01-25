@@ -19,11 +19,13 @@ public class StationConfiguration:IPacket {
     public ulong ComInterval { get; set; }
     public ulong UpdateInterval { get; set; }
     public ulong LogInterval { get; set; }
+    public ulong VersionInterval { get; set; }
 
-    public StationConfiguration(ulong comInterval, ulong uInterval, ulong logInterval) {
+    public StationConfiguration(ulong comInterval, ulong uInterval, ulong logInterval,ulong verInterval) {
         this.ComInterval = comInterval;
         this.UpdateInterval = uInterval;
         this.LogInterval = logInterval;
+        this.VersionInterval = verInterval;
     }
     
     public StationConfiguration(){}

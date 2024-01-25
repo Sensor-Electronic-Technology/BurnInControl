@@ -1,30 +1,86 @@
 ﻿namespace BurnIn.Shared;
 
-public readonly struct Result<TValue,TError> {
-    private readonly TValue? _value;
-    private readonly TError? _error;
-    
-    public bool IsError { get; }
 
-    private Result(TValue value) {
-        this.IsError = false;
-        this._value = value;
-        this._error = default;
+
+public abstract class Result {
+    public bool Success { get; protected set; }
+    public bool Failure => !Success;
+}
+
+public abstract class Result<T> : Result {
+    private T _data;
+    protected Result(T data) {
+        this.Data = data;
     }
 
-    private Result(TError error) {
-        this.IsError = true;
-        this._value = default;
-        this._error = error;
+    public T Data {
+        get => this.Success ? this._data : 
+            throw new Exception($"You can't access {nameof(Data)} when {nameof(Success)} is false");
+        set => this._data=value;
+    }
+}
+
+public class SuccessResult : Result,ISuccessResult {
+    public string Message { get; }
+    public SuccessResult(string? message=null) {
+        this.Message = message ?? "";
+        this.Success = true;
+    }
+}
+
+public class SuccessResult<T> : Result<T>,ISuccessResult {
+    public string Message { get; }
+    public SuccessResult(T data,string? message=null) : base(data) {
+        this.Message = message ?? "";
+        this.Success = true;
+    }
+}
+
+public class ErrorResult : Result, IErrorResult {
+    public string Message { get; }
+    public IReadOnlyCollection<Error> Errors { get; }
+    public ErrorResult(string message, IReadOnlyCollection<Error> errors) {
+        this.Message = message;
+        this.Success = false;
+        this.Errors = errors ?? Array.Empty<Error>();
+    }
+    public ErrorResult(string message):this(message,Array.Empty<Error>()){
+        
+    }
+}
+
+public class ErrorResult<T>:Result<T>,IErrorResult{
+    public string Message { get; }
+    public IReadOnlyCollection<Error> Errors { get; }
+    public ErrorResult(string message, IReadOnlyCollection<Error> errors) : base(default) {
+        this.Message = message;
+        this.Success = false;
+        this.Errors = errors ?? Array.Empty<Error>();
+    }
+    public ErrorResult(string message) : this(message, Array.Empty<Error>()) {
+        
+    }
+}
+
+
+public class Error {
+    public string? Code { get; }
+    public string Details { get; }
+    public Error(string details) : this(null, details) {
+        
     }
 
-    public static implicit operator Result<TValue, TError>(TValue value) => new(value);
-    public static implicit operator Result<TValue, TError>(TError error) => new(error);
+    public Error(string? code, string details) {
+        this.Code = code;
+        this.Details = details;
+    }
+}
 
-    public TResult Match<TResult>(
-        Func<TValue, TResult> success,
-        Func<TError, TResult> failure) =>
-        !this.IsError ? success(this._value!) : failure(this._error!);
+internal interface IErrorResult {
+    string Message { get; }
+    IReadOnlyCollection<Error> Errors { get; }
+}
 
-
+internal interface ISuccessResult {
+    string Message { get; }
 }

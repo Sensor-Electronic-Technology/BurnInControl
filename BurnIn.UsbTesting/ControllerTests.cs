@@ -214,7 +214,7 @@ public class UsbControllerTests {
     }
 
     private void SendStationConfiguration(bool newLine=false) {
-        var configuration =new StationConfiguration(1000, 500, 60000);
+        var configuration =new StationConfiguration(1000,500,300000,3600000);
         var burnTimerConfig = new BurnTimerConfig(72000, 72000, 25200);
         configuration.BurnTimerConfig = burnTimerConfig;
         MessagePacketV2<StationConfiguration> msgPacket = new MessagePacketV2<StationConfiguration> {

@@ -11,6 +11,17 @@ public static class HubConstants {
         public static string OnUsbDisconnect => "OnUsbDisconnect";
         public static string OnExecuteCommand => "OnExecuteCommand";
         public static string OnIdChanged => "OnIdChanged";
+
+        public static string OnTestStarted => "OnTestStarted";
+        public static string OnTestPaused => "OnTestPaused";
+        public static string OnTestContinued => "OnTestContinued";
+        public static string OnTestCompleted => "OnTestCompleted";
+        
+        public static string OnTestStartedFailed => "OnTestStartedFailed";
+        public static string OnTestPausedFailed => "OnTestPausedFailed";
+        public static string OnTestContinuedFailed => "OnTestContinuedFailed";
+        public static string OnTestCompletedFailed => "OnTestCompletedFailed";
+        
     }
 
     public static class Methods {

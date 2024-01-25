@@ -24,6 +24,7 @@ using System.Threading.Channels;
 using Octokit;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using DataReceivedEventArgs=System.Diagnostics.DataReceivedEventArgs;
 using FileMode=System.IO.FileMode;
 
@@ -35,7 +36,61 @@ using FileMode=System.IO.FileMode;
 //RunUsbControllerTests();
 
 //TestMessageCasting();
-await TestGithubClient();
+//await TestGithubClient();
+Console.WriteLine("Checking With V01");
+TestVersionCheck("V01");
+
+Console.WriteLine("Checking With V2.01");
+TestVersionCheck("V2.01");
+
+Console.WriteLine("Checking With P01");
+TestVersionCheck("P01");
+
+Console.WriteLine("Checking With V1.02");
+TestVersionCheck("V1.02");
+
+void TestVersionCheck(string fromController) {
+    string latest = "V1.02";
+    Regex regex = new Regex("^V[0-9]+\\.\\d\\d$", RegexOptions.IgnoreCase);
+    var controlMatch=regex.IsMatch(fromController);
+    var latestMatch = regex.IsMatch(latest);
+    if (!controlMatch || !latestMatch) {
+        string msg = (!controlMatch) ? 
+            $"Controller version doesn't fit version pattern, Correct: V#.## Latest: {fromController}" 
+            : $"Latest doesn't fit version pattern, Correct: V#.## Latest: {latest}";
+        Console.WriteLine(msg);
+        return;
+    }
+    if (latest == fromController) {
+        Console.WriteLine("Versions are the same, No updates available");
+        return;
+    }
+    string control = fromController.ToUpper();
+    latest = latest.ToUpper();
+    var latestSpan = latest.AsSpan();
+    var controlSpan = control.AsSpan();
+    bool majorMatch = false;
+    bool sub1Match = false;
+    bool sub2Match = false;
+    for (int i = 0; i < latestSpan.Length;i++) {
+        if (i == 1 || i==3 || i==4) {
+            int latestV = Convert.ToInt16(latestSpan[i]);
+            int controlV = Convert.ToInt16(controlSpan[i]);
+            if (latestV > controlV) {
+                if (i == 1) {
+                    Console.WriteLine("Success! New Major Version Available");
+                    break;
+                } 
+                if (i == 3 || i==4) {
+                    Console.WriteLine($"Success! New Sub{i-2} Version Available");
+                    break;
+                }
+            } else {
+                Console.WriteLine(" are the same");
+            }
+        }
+    }
+}
 
 async Task TestGithubClient() {
     var github = new GitHubClient(new ProductHeaderValue("Sensor-Electronic-Technology"));
@@ -118,7 +173,7 @@ async Task CreateStationDatabase(string stationId) {
 }
 
 StationConfiguration CreateStationConfig() {
-    var configuration =new StationConfiguration(1000, 500, 60000);
+    var configuration =new StationConfiguration(1000, 500, 300000,3600000);
     var burnTimerConfig = new BurnTimerConfig(72000, 72000, 25200);
     configuration.BurnTimerConfig = burnTimerConfig;
     return configuration;

@@ -13,6 +13,7 @@ public class StationService:IHostedService,IDisposable {
     public Task StartAsync(CancellationToken cancellationToken) {
         return this._stationController.Start();
     }
+    
     public async Task StopAsync(CancellationToken cancellationToken) {
         Console.WriteLine("Station Service Started");
         var result=await this._stationController.Stop();

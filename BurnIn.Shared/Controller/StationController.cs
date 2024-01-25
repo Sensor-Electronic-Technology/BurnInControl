@@ -26,26 +26,32 @@ public class StationController:IDisposable {
     private readonly IHubContext<StationHub, IStationHub> _hubContext;
     private readonly ChannelReader<string> _channelReader;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
-    private readonly GitHubClient _github;
-    private bool _running = false;
+    private readonly FirmwareVersionService _firmwareService;
+    private readonly BurnInTestService _testService;
+    //private readonly GitHubClient _github;
     private string _latestVersion=string.Empty;
-    
+    private bool _initMessageSent = false;
+    private bool _receivedVersion = false;
 
     public StationController(IHubContext<StationHub,
             IStationHub> hubContext, 
             UsbController usbController,
             ChannelReader<string> channelReader,
+            FirmwareVersionService firmwareService,
+            BurnInTestService testService,
             ILogger<StationController> logger) {
         this._logger = logger;
         this._channelReader = channelReader;
         this._usbController = usbController;
         this._hubContext = hubContext;
         this._usbController.UsbUnPlogHandler += this.UsbUnplugHandler;
-        this._github=new GitHubClient(new ProductHeaderValue("Sensor-Electronic-Technology"));
+        this._firmwareService = firmwareService;
+        this._testService = testService;
+        //this._github=new GitHubClient(new ProductHeaderValue("Sensor-Electronic-Technology"));
     }
 
     public Task Start() {
-        this.GetLatestFirmwareVersion().Wait();
+        this._firmwareService.GetLatestVersion().SafeFireAndForget();
         return this.ConnectUsb();
     }
     
@@ -89,17 +95,7 @@ public class StationController:IDisposable {
     private async Task StartReaderAsync(CancellationToken token) {
         while (await this._channelReader.WaitToReadAsync(token)) {
             while (this._channelReader.TryRead(out var message)) {
-                //await this._hubContext.Clients.All.OnSerialComMessage(message);
                 await this.HandleMessagePacket(message);
-                //this._logger.LogInformation(message);
-                /*this.HandleMessagePacket(message).SafeFireAndForget(e => {
-                    if (e.InnerException != null) {
-                        this._logger.LogError("Error while parsing msg packet.  " +
-                                              "Exception: {Message} \n Inner: {InnerMessage}",e.Message,e.InnerException.Message);
-                    } else {
-                        this._logger.LogError("Error while parsing msg packet. Exception: {Message}",e.Message);
-                    }
-                });*/
             }
         }
     }
@@ -108,7 +104,7 @@ public class StationController:IDisposable {
         Console.WriteLine("Usb was disconnected");
         this._hubContext.Clients.All.OnUsbDisconnect(true);
     }
-
+    
     public Task<ControllerResult> SendV2<TPacket>(ArduinoMsgPrefix prefix,TPacket packet) where TPacket:IPacket {
         MessagePacketV2<TPacket> msgPacket = new MessagePacketV2<TPacket>() {
             Prefix = prefix,
@@ -124,8 +120,7 @@ public class StationController:IDisposable {
         }
     }
     
-    public Task HandleMessagePacket(string message) {
-        
+    private Task HandleMessagePacket(string message) {
         try {
             var doc=JsonSerializer.Deserialize<JsonDocument>(message);
             var prefixValue=doc.RootElement.GetProperty("Prefix").ToString();
@@ -134,23 +129,48 @@ public class StationController:IDisposable {
                 if (prefix != null) {
                     var packetElem=doc.RootElement.GetProperty("Packet");
                     prefix.When(ArduinoMsgPrefix.DataPrefix).Then(()=>this.HandleData(packetElem))
-                        .When(ArduinoMsgPrefix.MessagePrefix).Then(()=>this.HandleMessage(packetElem))
+                        .When(ArduinoMsgPrefix.MessagePrefix).Then(()=>this.HandleMessage(packetElem,false))
+                        .When(ArduinoMsgPrefix.InitMessage).Then(()=>this.HandleMessage(packetElem,true))
                         .When(ArduinoMsgPrefix.IdRequest).Then(()=>this.HandleIdChanged(packetElem))
                         .When(ArduinoMsgPrefix.VersionRequest).Then(()=>this.HandleReceiveVersion(packetElem));
                 }
             }
         } catch {
-            Console.WriteLine($"Message had errors.  Message: {message}");
+            this._logger.LogWarning($"Message had errors.  Message: {message}");
         }
         return Task.CompletedTask;
     }
 
     private void HandleData(JsonElement element) {
-        var serialData=element.Deserialize<StationSerialData>();
-        this._hubContext.Clients.All.OnSerialCom(serialData).SafeFireAndForget();
+        try {
+            var serialData=element.Deserialize<StationSerialData>();
+            if (serialData != null) {
+                if (!this._testService.IsRunning && serialData.Running) {
+                    var result = this._testService.Log(serialData);
+                    if (result is SuccessResult successResult) {
+                        this._hubContext.Clients.All.OnTestStarted(successResult.Message);
+                    }else if (result is ErrorResult errorResult) {
+                        this._hubContext.Clients.All.OnTestStartedFailed($"Failed start logging test.  " +
+                                                                         $"Message {errorResult.Message}");
+                    }
+                }
+                this._hubContext.Clients.All.OnSerialCom(serialData).SafeFireAndForget();
+                
+            }
+        } catch(Exception e) {
+            this._logger.LogWarning("Failed to deserialize station data");
+        }
     }
 
-    private void HandleMessage(JsonElement element) {
+    private void HandleMessage(JsonElement element,bool isInit) {
+        if (isInit) {
+            this._initMessageSent = true;
+        } else {
+            this._initMessageSent = false;
+            if (!this._receivedVersion) {
+                
+            }
+        }
         var message=element.GetProperty("Message").ToString();
         this._hubContext.Clients.All.OnSerialComMessage(message).SafeFireAndForget();
     }
@@ -161,58 +181,23 @@ public class StationController:IDisposable {
     }
 
     private void HandleReceiveVersion(JsonElement element) {
-        var version = element.GetString();
-        if (version != this._latestVersion) {
-            this.GetFirmwareUpdate().Wait();
-            this._usbController.Disconnect();
-            this.UploadFirmware();
-            this._usbController.Connect();
-        }
-        
-    }
-
-    private void UploadFirmware() {
-        /*avrdude -C avrdude.conf -v -p m2560 -c stk500v2 -P /dev/ttyACM0 -b 115200 -D -U flash:w:BurnInFirmwareV3.ino.hex*/
-        using (Process process = new Process()) {
-            process.StartInfo.FileName = "avrdude";
-            process.StartInfo.Arguments = "-C /source/ControlUpload/avrdude.conf -v -p m2560 -c stk500v2 -P /dev/ttyACM0 " +
-                                          "-b 115200 -D -U flash:w:/source/ControlUpload/BurnInFirmwareV3.ino.hex";
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.CreateNoWindow = true;
-            process.Start();
-            Console.WriteLine(process.StandardOutput.ReadToEnd());
-            process.WaitForExit();
-        }
-    }
-
-    private async Task GetLatestFirmwareVersion() {
-        var result=await this._github.Repository.Release.GetLatest("Sensor-Electronic-Technology", "BurnInFirmware");
-        this._latestVersion = result.TagName;
-    }
-
-    private async Task GetFirmwareUpdate() {
-        var release = await this._github.Repository.Release.Get("Sensor-Electronic-Technology", "BurnInFirmware",this._latestVersion);
-        HttpClient client = new HttpClient();
-        if (release.Assets.Any()) {
-            var asset = release.Assets.FirstOrDefault(e => e.Name == "BurnInFirmwareV3.ino.hex");
-            if (asset != null) {
-                var uri = new Uri(asset.BrowserDownloadUrl);
-                var stream = await client.GetStreamAsync(uri);
-                var filename = @"/source/ControlUpload/" + release.Assets[0].Name;
-                if (File.Exists(@"/source/ControlUpload/" + release.Assets[0].Name)) {
-                    File.Delete(@"/source/ControlUpload/" + release.Assets[0].Name);
-                    this._logger.LogInformation("Old firmware file deleted");
+        try {
+            var version = element.GetString();
+            if (!string.IsNullOrEmpty(version)) {
+                this._receivedVersion = true;
+                var status=this._firmwareService.CheckNewerVersion(version);
+                if (status.UpdateReady) {
+                    this._usbController.Disconnect();
+                    //this._firmwareService.
                 }
-                await using var fs = new FileStream(@"/source/ControlUpload/"+release.Assets[0].Name, FileMode.Create);
-                await stream.CopyToAsync(fs);
             } else {
-                this._logger.LogError("Failed to download, file {file} not found","BurnInFirmwareV3.ino.hex");
+                this._logger.LogInformation("Failed to check firmware version. Version string was null or empty");
             }
 
-        } else {
-            this._logger.LogError("Failed to download latest firmware");
+        } catch(Exception e) {
+            
         }
+
     }
 
     public void Dispose() {

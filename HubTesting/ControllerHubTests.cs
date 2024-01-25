@@ -191,7 +191,7 @@ public class ControllerHubTests {
     }
     
     private async Task SendStationConfiguration(bool newLine=false) {
-        var configuration =new StationConfiguration(1000, 500, 60000);
+        var configuration =new StationConfiguration(1000, 500, 300000,3600000);
         var burnTimerConfig = new BurnTimerConfig(72000, 72000, 25200);
         configuration.BurnTimerConfig = burnTimerConfig;
         await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.SendStationConfig,configuration);

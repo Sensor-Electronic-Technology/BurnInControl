@@ -21,6 +21,10 @@ public class StationHub:Hub<IStationHub> {
     public Task<ControllerResult> DisconnectUsb() {
         return this._controller.Disconnect();
     }
+
+    public Task<ControllerResult> SendStartTest() {
+        return this._controller.SendV2(ArduinoMsgPrefix.CommandPrefix, ArduinoCommand.Start);
+    }
     
     public Task<ControllerResult> SendCommand(ArduinoCommand command) {
         return this._controller.SendV2(ArduinoMsgPrefix.CommandPrefix,command);

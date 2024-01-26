@@ -22,7 +22,7 @@ public class StationIdPacket : IPacket {
     public string StationId { get; set; }
 }
 
-[JsonConverter(typeof(StationVersionPacket))]
+[JsonConverter(typeof(StationVersionPacketJsonConverter))]
 public class StationVersionPacket : IPacket {
     public string Version { get; set; }
 }

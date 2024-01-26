@@ -168,7 +168,7 @@ public class UsbController:IDisposable {
                  $"Thread = {Thread.CurrentThread.ManagedThreadId} " +
                  $": Closing",false);
     }
-    public UsbWriteResult SendV2<TPacket>(MessagePacketV2<TPacket> msgPacket) where TPacket:IPacket {
+    public UsbWriteResult Send<TPacket>(MessagePacketV2<TPacket> msgPacket) where TPacket:IPacket {
         var output = JsonSerializer.Serialize(msgPacket,
         new JsonSerializerOptions() {
             PropertyNamingPolicy =null,
@@ -185,12 +185,12 @@ public class UsbController:IDisposable {
         return new UsbWriteResult(true,this._state, "");
     }
 
-    public void RequestFirmwareVersion() {
+    public UsbWriteResult RequestFirmwareVersion() {
         MessagePacketV2<ArduinoMsgPrefix> msgPacket = new MessagePacketV2<ArduinoMsgPrefix>() {
-            Prefix = ArduinoMsgPrefix.TestRequest,
-            Packet = ArduinoMsgPrefix.TestRequest
+            Prefix = ArduinoMsgPrefix.VersionRequest,
+            Packet = ArduinoMsgPrefix.VersionRequest
         };
-        this.SendV2(msgPacket);
+        return this.Send(msgPacket);
     }
     private string FindPort() {
         Process process = new Process();

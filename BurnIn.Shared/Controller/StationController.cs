@@ -47,11 +47,9 @@ public class StationController:IDisposable {
         this._usbController.UsbUnPlogHandler += this.UsbUnplugHandler;
         this._firmwareService = firmwareService;
         this._testService = testService;
-        //this._github=new GitHubClient(new ProductHeaderValue("Sensor-Electronic-Technology"));
     }
 
     public Task Start() {
-        this._firmwareService.GetLatestVersion().SafeFireAndForget();
         return this.ConnectUsb();
     }
     
@@ -91,6 +89,30 @@ public class StationController:IDisposable {
             return Task.FromResult(new ControllerResult(false,message));
         }
     }
+
+    public async Task<ControllerResult> CheckForUpdate() {
+        await this._firmwareService.GetLatestVersion();
+        var result=this._usbController.RequestFirmwareVersion();
+        if (result.Success) {
+            return new ControllerResult(result.Success,"Requested Version");
+        } else {
+            return new ControllerResult(result.Success, $"Error Requesting Version.  " +
+                                                        $"Error Message: {result.Message}");
+        }
+    }
+
+    public async Task<ControllerResult> UpdateFirmware() {
+        var result=this._usbController.Disconnect();
+        if (result.State == UsbState.Disconnected) {
+            await this._firmwareService.DownloadFirmwareUpdate();
+            this._firmwareService.UploadFirmwareUpdate();
+            this._usbController.Connect();
+            await this._hubContext.Clients.All.OnFirmwareUpdated(true, this._firmwareService.Version, "Updated");
+            return new ControllerResult(true,"Firmware Updated");
+        }
+        await this._hubContext.Clients.All.OnFirmwareUpdated(false, this._firmwareService.Version, "Update Failed");
+        return new ControllerResult(false, $"Firmware update failed.  Usb Error Message: {result.Message}");
+    }
     
     private async Task StartReaderAsync(CancellationToken token) {
         while (await this._channelReader.WaitToReadAsync(token)) {
@@ -99,18 +121,17 @@ public class StationController:IDisposable {
             }
         }
     }
-
     private void UsbUnplugHandler(object? sender,EventArgs args) {
         Console.WriteLine("Usb was disconnected");
         this._hubContext.Clients.All.OnUsbDisconnect(true);
     }
     
-    public Task<ControllerResult> SendV2<TPacket>(ArduinoMsgPrefix prefix,TPacket packet) where TPacket:IPacket {
+    public Task<ControllerResult> Send<TPacket>(ArduinoMsgPrefix prefix,TPacket packet) where TPacket:IPacket {
         MessagePacketV2<TPacket> msgPacket = new MessagePacketV2<TPacket>() {
             Prefix = prefix,
             Packet = packet
         };
-        var result = this._usbController.SendV2(msgPacket);
+        var result = this._usbController.Send(msgPacket);
         if (result.Success) {
             this._logger.LogInformation("Msg Sent of type {ArduinoMsgPrefix.Name}",msgPacket.Prefix.Name);
             return Task.FromResult(new ControllerResult(result.Success,"Message Sent"));
@@ -128,11 +149,11 @@ public class StationController:IDisposable {
                 var prefix=ArduinoMsgPrefix.FromValue(prefixValue);
                 if (prefix != null) {
                     var packetElem=doc.RootElement.GetProperty("Packet");
-                    prefix.When(ArduinoMsgPrefix.DataPrefix).Then(()=>this.HandleData(packetElem))
-                        .When(ArduinoMsgPrefix.MessagePrefix).Then(()=>this.HandleMessage(packetElem,false))
-                        .When(ArduinoMsgPrefix.InitMessage).Then(()=>this.HandleMessage(packetElem,true))
-                        .When(ArduinoMsgPrefix.IdRequest).Then(()=>this.HandleIdChanged(packetElem))
-                        .When(ArduinoMsgPrefix.VersionRequest).Then(()=>this.HandleReceiveVersion(packetElem));
+                    prefix.When(ArduinoMsgPrefix.DataPrefix).Then(() => this.HandleData(packetElem))
+                        .When(ArduinoMsgPrefix.MessagePrefix).Then(() => this.HandleMessage(packetElem, false))
+                        .When(ArduinoMsgPrefix.InitMessage).Then(() => this.HandleMessage(packetElem, true))
+                        .When(ArduinoMsgPrefix.IdRequest).Then(() => this.HandleIdChanged(packetElem))
+                        .When(ArduinoMsgPrefix.VersionRequest).Then(()=>this.HandleVersionRequest(packetElem));
                 }
             }
         } catch {
@@ -155,7 +176,6 @@ public class StationController:IDisposable {
                     }
                 }
                 this._hubContext.Clients.All.OnSerialCom(serialData).SafeFireAndForget();
-                
             }
         } catch(Exception e) {
             this._logger.LogWarning("Failed to deserialize station data");
@@ -179,27 +199,32 @@ public class StationController:IDisposable {
         var id = element.GetString();
         this._hubContext.Clients.All.OnIdChanged(id);
     }
-
-    private void HandleReceiveVersion(JsonElement element) {
+    
+    private void HandleVersionRequest(JsonElement element) {
         try {
             var version = element.GetString();
             if (!string.IsNullOrEmpty(version)) {
                 this._receivedVersion = true;
-                var status=this._firmwareService.CheckNewerVersion(version);
-                if (status.UpdateReady) {
-                    this._usbController.Disconnect();
-                    //this._firmwareService.
-                }
+                FirmwareUpdateStatus status = this._firmwareService.CheckNewerVersion(version);
+                this._hubContext.Clients.All.OnUpdateChecked(status);
             } else {
-                this._logger.LogInformation("Failed to check firmware version. Version string was null or empty");
+                this._hubContext.Clients.All.OnUpdateChecked(new FirmwareUpdateStatus() {
+                    Message = "Failed to check firmware version. Version string was null or empty",
+                    UpdateReady = false,
+                    Type=UpdateType.None
+                });
+                this._logger.LogError("Failed to check firmware version. Version string was null or empty");
             }
-
         } catch(Exception e) {
-            
+            this._hubContext.Clients.All.OnUpdateChecked(new FirmwareUpdateStatus() {
+                Message =$"Update check failed Exception: {e.Message}",
+                UpdateReady = false,
+                Type=UpdateType.None
+            });
+            this._logger.LogError("Update check failed Exception: {Error}",e.Message);
         }
-
     }
-
+    
     public void Dispose() {
         this._usbController.Dispose();
     }

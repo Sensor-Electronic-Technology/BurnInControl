@@ -23,38 +23,42 @@ public class StationHub:Hub<IStationHub> {
     }
 
     public Task<ControllerResult> SendStartTest() {
-        return this._controller.SendV2(ArduinoMsgPrefix.CommandPrefix, ArduinoCommand.Start);
+        return this._controller.Send(ArduinoMsgPrefix.CommandPrefix, ArduinoCommand.Start);
     }
     
     public Task<ControllerResult> SendCommand(ArduinoCommand command) {
-        return this._controller.SendV2(ArduinoMsgPrefix.CommandPrefix,command);
+        return this._controller.Send(ArduinoMsgPrefix.CommandPrefix,command);
     }
 
     public Task<ControllerResult> SendId(string newId) {
-        return this._controller.SendV2(ArduinoMsgPrefix.IdReceive,new StationIdPacket() { StationId = newId });
+        return this._controller.Send(ArduinoMsgPrefix.IdReceive,new StationIdPacket() { StationId = newId });
     }
     
     public Task<ControllerResult> RequestId() {
-        return this._controller.SendV2(ArduinoMsgPrefix.IdRequest,ArduinoMsgPrefix.IdRequest);
+        return this._controller.Send(ArduinoMsgPrefix.IdRequest,ArduinoMsgPrefix.IdRequest);
     }
-    
-    public Task<ControllerResult> SendVersion(string newVersion) {
-        return this._controller.SendV2(ArduinoMsgPrefix.VersionReceive,new StationVersionPacket() { Version = newVersion });
+
+    public async Task<ControllerResult> CheckForUpdate() {
+        return await this._controller.CheckForUpdate();
     }
-    
-    public Task<ControllerResult> RequestVersion() {
-        return this._controller.SendV2(ArduinoMsgPrefix.VersionRequest,ArduinoMsgPrefix.VersionRequest);
+
+    public async Task<ControllerResult> UpdateFirmware() {
+        return await this._controller.UpdateFirmware();
     }
 
     public Task<ControllerResult> SendProbeConfig(ProbeControllerConfig packet) {
-        return this._controller.SendV2(ArduinoMsgPrefix.ProbeConfigPrefix,packet);
+        return this._controller.Send(ArduinoMsgPrefix.ProbeConfigPrefix,packet);
     }
     
     public Task<ControllerResult> SendHeaterConfig(HeaterControllerConfig packet) {
-        return this._controller.SendV2(ArduinoMsgPrefix.HeaterConfigPrefix,packet);
+        return this._controller.Send(ArduinoMsgPrefix.HeaterConfigPrefix,packet);
     }
     
     public Task<ControllerResult> SendStationConfig(StationConfiguration packet) {
-        return this._controller.SendV2(ArduinoMsgPrefix.StationConfigPrefix,packet);
+        return this._controller.Send(ArduinoMsgPrefix.StationConfigPrefix,packet);
+    }
+
+    public Task<ControllerResult> SendFirmwareVersion(string newVersion) {
+        return this._controller.Send(ArduinoMsgPrefix.VersionReceive,new StationVersionPacket() { Version = newVersion });
     }
 }

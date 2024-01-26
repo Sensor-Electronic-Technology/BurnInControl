@@ -1,5 +1,7 @@
 ﻿using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
+using BurnIn.Shared.Services;
+using System.Data;
 namespace BurnIn.Shared.Hubs;
 
 public interface IStationHub {
@@ -10,6 +12,9 @@ public interface IStationHub {
     Task OnIdChanged(string Id);
     Task OnSerialComMessage(string message);
     Task OnSettingsUploaded(bool uploaded);
+
+    Task OnUpdateChecked(FirmwareUpdateStatus firmwareUpdateStatus);
+    Task OnFirmwareUpdated(bool completed,string newVersion,string message);
     
     //Test Related
     Task OnTestStarted(string message);

@@ -4,6 +4,7 @@ using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
 using BurnIn.Shared.Models.Configurations;
+using BurnIn.Shared.Services;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Runtime.Intrinsics.X86;
 using System.Text;
@@ -14,9 +15,10 @@ public class ControllerHubTests {
     private readonly HubConnection _connection;
     public ControllerHubTests() {
         this._connection = new HubConnectionBuilder()
-            .WithUrl("http://192.168.68.112:3000/hubs/station")
+            .WithUrl("http://172.20.1.15:3000/hubs/station")
             .Build();
         //.WithUrl("http://localhost:5066/hubs/station")
+        //.WithUrl("http://192.168.68.112:3000/hubs/station")
     }
 
     public async Task Connect() {
@@ -54,6 +56,13 @@ public class ControllerHubTests {
         this._connection.On<StationSerialData>(HubConstants.Events.OnSerialCom, this.HandleSerialData);
             
         this._connection.On<string>(HubConstants.Events.OnSerialComMessage, Console.WriteLine);
+
+        this._connection.On<FirmwareUpdateStatus>(HubConstants.Events.OnUpdateChecked, status => {
+            Console.WriteLine($"Ready?: {status.UpdateReady} Type: {nameof(status.Type)} Message: {status.Message}");
+        });
+
+        this._connection.On<bool, string, string>(HubConstants.Events.OnFirmwareUpdated, this.OnUpdateCheckedHandler);
+        
         var result=await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.ConnectUsb);
         string msg = result.Success ? "Connected" : "Connection Failed";
         Console.WriteLine($"USB {msg}");
@@ -64,6 +73,10 @@ public class ControllerHubTests {
         if (this._connection.State == HubConnectionState.Connected) {
             await this._connection.StopAsync();
         }
+    }
+
+    private void OnUpdateCheckedHandler(bool completed, string newVersion, string message) {
+        Console.WriteLine($"Completed?: {completed} Version: {newVersion} Message: {message}");
     }
 
     private void HandleSerialData(StationSerialData reading) {
@@ -91,9 +104,12 @@ public class ControllerHubTests {
     public async Task Run() {
         StringBuilder builder = new StringBuilder();
         builder.AppendLine("Select an option");
-        builder.AppendLine("1: Send HeaterConfig");
+        /*builder.AppendLine("1: Send HeaterConfig");
         builder.AppendLine("2: Send ProbeConfig");
-        builder.AppendLine("3: Send StationConfig");
+        builder.AppendLine("3: Send StationConfig");*/
+        builder.AppendLine("1: Send Version");
+        builder.AppendLine("2: Check Updates");
+        builder.AppendLine("3: Update");
         builder.AppendLine("4: Start");
         builder.AppendLine("5: Pause");
         builder.AppendLine("6: Reset");
@@ -108,7 +124,7 @@ public class ControllerHubTests {
                 Console.WriteLine(builder.ToString());
                 this._connection.InvokeAsync(HubConstants.Methods.ConnectUsb).SafeFireAndForget();
             }
-            if (key == '1') {
+            /*if (key == '1') {
                 await this.SendHeaterConfig();
                 Console.Clear(); 
             }else if (key == '2') {
@@ -116,6 +132,16 @@ public class ControllerHubTests {
                 Console.Clear(); 
             }else if (key == '3') {
                 await this.SendStationConfiguration();
+                Console.Clear(); 
+                Console.WriteLine($"Key= {key}");*/
+            if (key == '1') {
+                await this.SendFirmwareVersion();
+                Console.Clear(); 
+            }else if (key == '2') {
+                await this.SendCheckUpdate();
+                Console.Clear(); 
+            }else if (key == '3') {
+                await this.UpdateFirmware();
                 Console.Clear(); 
                 Console.WriteLine($"Key= {key}");
             }else if (key == '4') {
@@ -165,6 +191,18 @@ public class ControllerHubTests {
             }
         };
         await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.SendProbeConfig, probeControllerConfig);
+    }
+
+    private async Task SendCheckUpdate() {
+        await this._connection.InvokeAsync(HubConstants.Methods.CheckForUpdate);
+    }
+
+    private async Task SendFirmwareVersion() {
+        await this._connection.InvokeAsync(HubConstants.Methods.SendFirmwareVersion, "V1.0.0");
+    }
+
+    private async Task UpdateFirmware() {
+        await this._connection.InvokeAsync(HubConstants.Methods.UpdateFirmware);
     }
     
     private async Task SendHeaterConfig() {

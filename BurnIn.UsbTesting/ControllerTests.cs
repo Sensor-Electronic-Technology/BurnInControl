@@ -113,7 +113,7 @@ public class UsbControllerTests {
         };
         var output = JsonSerializer.Serialize<MessagePacketV2<ArduinoCommand>>(msgPacket,
                 new JsonSerializerOptions(){WriteIndented = false});
-        this._usbController.SendV2(msgPacket);
+        this._usbController.Send(msgPacket);
     }
 
     private void SendId(bool newLine=false) {
@@ -123,7 +123,7 @@ public class UsbControllerTests {
         };
         var output = JsonSerializer.Serialize<MessagePacketV2<StationIdPacket>>(msgPacket,
         new JsonSerializerOptions(){WriteIndented = false});
-        this._usbController.SendV2(msgPacket);
+        this._usbController.Send(msgPacket);
     }
     
     private void RequestId(bool newLine=false) {
@@ -133,7 +133,7 @@ public class UsbControllerTests {
         };
         /*var output = JsonSerializer.Serialize<MessagePacket>(msgPacket,
         new JsonSerializerOptions(){WriteIndented = false});*/
-        this._usbController.SendV2(msgPacket);
+        this._usbController.Send(msgPacket);
     }
     
     private void SendProbeConfig(bool newLine=false) {
@@ -157,7 +157,7 @@ public class UsbControllerTests {
         };
         /*var output=JsonSerializer.Serialize<MessagePacket>(msgPacket,
         new JsonSerializerOptions { WriteIndented = false });*/
-        this._usbController.SendV2(msgPacket);
+        this._usbController.Send(msgPacket);
     }
     
     public void SaveProbeConfigFile() {
@@ -210,7 +210,7 @@ public class UsbControllerTests {
         };
         /*var output=JsonSerializer.Serialize<MessagePacket>(msgPacket,
         new JsonSerializerOptions { WriteIndented = false });*/
-        this._usbController.SendV2(msgPacket);
+        this._usbController.Send(msgPacket);
     }
 
     private void SendStationConfiguration(bool newLine=false) {
@@ -221,6 +221,6 @@ public class UsbControllerTests {
             Prefix = ArduinoMsgPrefix.StationConfigPrefix,
             Packet = configuration
         };
-        this._usbController.SendV2(msgPacket);
+        this._usbController.Send(msgPacket);
     }
 }

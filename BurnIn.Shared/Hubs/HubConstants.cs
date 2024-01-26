@@ -21,7 +21,10 @@ public static class HubConstants {
         public static string OnTestPausedFailed => "OnTestPausedFailed";
         public static string OnTestContinuedFailed => "OnTestContinuedFailed";
         public static string OnTestCompletedFailed => "OnTestCompletedFailed";
-        
+
+        public static string OnUpdateChecked => "OnUpdateChecked";
+        public static string OnFirmwareUpdated => "OnFirmwareUpdated";
+
     }
 
     public static class Methods {
@@ -34,6 +37,10 @@ public static class HubConstants {
         public static string SendCommand => "SendCommand";
         public static string SendId => "SendId";
         public static string RequestId => "RequestId";
+        public static string CheckForUpdate => "CheckForUpdate";
+        public static string UpdateFirmware => "UpdateFirmware";
+        public static string SendFirmwareVersion => "SendFirmwareVersion";
+
 
     }
 

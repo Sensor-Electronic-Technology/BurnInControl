@@ -16,16 +16,16 @@ public enum UpdateType {
     
 }
 
-public class UpdateStatus {
+public class FirmwareUpdateStatus {
     public bool UpdateReady { get; set; }
     public UpdateType Type { get; set; }
     public string Message { get; set; }
-    public UpdateStatus() {
+    public FirmwareUpdateStatus() {
         this.UpdateReady = false;
         this.Type = UpdateType.None;
         this.Message = "";
     }
-    public UpdateStatus(bool ready, UpdateType type, string message) {
+    public FirmwareUpdateStatus(bool ready, UpdateType type, string message) {
         this.UpdateReady = ready;
         this.Type = type;
         this.Message = message;
@@ -45,11 +45,11 @@ public class UpdateStatus {
 }
 
 public class FirmwareVersionService {
-    private readonly Regex _regex = new Regex("^V[0-9]+\\.\\d\\d$", RegexOptions.IgnoreCase);
+    private readonly Regex _regex = new Regex("^V\\d\\.\\d\\.\\d$", RegexOptions.IgnoreCase);
     private readonly ILogger<FirmwareVersionService> _logger;
     private readonly GitHubClient _github;
     private string _latestVersion = string.Empty;
-    private UpdateStatus _updateStatus=new UpdateStatus();
+    private FirmwareUpdateStatus _firmwareUpdateStatus=new FirmwareUpdateStatus();
     
     private readonly string _org;
     private readonly string _repo;
@@ -58,6 +58,8 @@ public class FirmwareVersionService {
     private readonly string _avrDudeCommand;
     private readonly string _avrDudeFileName;
     private readonly string _firmwareFullPath;
+
+    public string Version => (!string.IsNullOrEmpty(this._latestVersion) ? this._latestVersion : "V0.0.0");
 
     public FirmwareVersionService(ILogger<FirmwareVersionService> logger,IOptions<FirmwareVersionSettings> options) {
         this._logger = logger;
@@ -72,7 +74,6 @@ public class FirmwareVersionService {
     }
 
     public async Task CreateNewDraftRelease(string versionTag,string name,string description) {
-        
         //Create Draft Release
         var newRelease = new NewRelease(versionTag) {
             Name = name,
@@ -110,7 +111,7 @@ public class FirmwareVersionService {
         this._latestVersion = result.TagName;
     }
 
-    private async Task GetFirmwareUpdate() {
+    public async Task DownloadFirmwareUpdate() {
         var release = await this._github.Repository.Release.Get(this._org, this._repo,this._latestVersion);
         HttpClient client = new HttpClient();
         if (release.Assets.Any()) {
@@ -132,22 +133,22 @@ public class FirmwareVersionService {
         }
     }
     
-    public UpdateStatus CheckNewerVersion(string fromController) {
-        string latest = "V1.02";
+    public FirmwareUpdateStatus CheckNewerVersion(string fromController) {
+        string latest = this._latestVersion;
         var controlMatch=this._regex.IsMatch(fromController);
         var latestMatch = this._regex.IsMatch(latest);
         if (!controlMatch || !latestMatch) {
             string msg = (!controlMatch) ? 
                 $"Controller version doesn't fit version pattern, Correct: V#.## Latest: {fromController}" 
                 : $"Latest doesn't fit version pattern, Correct: V#.## Latest: {latest}";
-            this._updateStatus.UpdateReady = false;
-            this._updateStatus.Message = msg;
-            this._updateStatus.Type = UpdateType.None;
-            return this._updateStatus;
+            this._firmwareUpdateStatus.UpdateReady = false;
+            this._firmwareUpdateStatus.Message = msg;
+            this._firmwareUpdateStatus.Type = UpdateType.None;
+            return this._firmwareUpdateStatus;
         }
         if (latest == fromController) {
-            this._updateStatus.SetNone("Firmware is up to data");
-            return this._updateStatus;
+            this._firmwareUpdateStatus.SetNone("Firmware is up to data");
+            return this._firmwareUpdateStatus;
         }
         string control = fromController.ToUpper();
         latest = latest.ToUpper();
@@ -157,29 +158,29 @@ public class FirmwareVersionService {
         int latestV = Convert.ToInt16(latestSpan[1]);
         int controlV = Convert.ToInt16(controlSpan[1]);
         if (latestV > controlV) {
-            this._updateStatus.Set(UpdateType.Minor,"Firmware major update is available");
-            return this._updateStatus;
+            this._firmwareUpdateStatus.Set(UpdateType.Minor,"Firmware major update is available");
+            return this._firmwareUpdateStatus;
         }
         
         latestV = Convert.ToInt16(latestSpan[3]);
         controlV = Convert.ToInt16(controlSpan[3]);
         if (latestV > controlV) {
-            this._updateStatus.Set(UpdateType.Minor,"Firmware minor update is available");
-            return this._updateStatus;
+            this._firmwareUpdateStatus.Set(UpdateType.Minor,"Firmware minor update is available");
+            return this._firmwareUpdateStatus;
         }
         
         latestV = Convert.ToInt16(latestSpan[4]);
         controlV = Convert.ToInt16(controlSpan[5]);
         if (latestV > controlV) {
-            this._updateStatus.Set(UpdateType.Patch,"Firmware patch is available");
-            return this._updateStatus;
+            this._firmwareUpdateStatus.Set(UpdateType.Patch,"Firmware patch is available");
+            return this._firmwareUpdateStatus;
         }
         
-        this._updateStatus.SetNone("No Updates Available");
-        return this._updateStatus;
+        this._firmwareUpdateStatus.SetNone("No Updates Available");
+        return this._firmwareUpdateStatus;
     }
     
-    private void UploadFirmware() {
+    public void UploadFirmwareUpdate() {
         /*avrdude -C avrdude.conf -v -p m2560 -c stk500v2 -P /dev/ttyACM0 -b 115200 -D -U flash:w:BurnInFirmwareV3.ino.hex*/
         using Process process = new Process();
         process.StartInfo.FileName = this._avrDudeFileName;

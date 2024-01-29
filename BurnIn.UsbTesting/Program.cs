@@ -1,31 +1,17 @@
 ﻿// See https://aka.ms/new-console-template for more information
+using BurnIn.ControlService.Services;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
-using CP.IO.Ports;
-using ReactiveMarbles.Extensions;
-using System.Collections.Concurrent;
-
-using System.Diagnostics;
-using System.IO.Ports;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using System.Text.Json;
 using BurnIn.Shared.Models.Configurations;
-using BurnIn.Shared.Controller;
-using BurnIn.Shared.Services;
 using BurnIn.UsbTesting;
-using ConsoleTools;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Hosting.Internal;
 using System.Threading.Channels;
 using Octokit;
-using System.Net;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using DataReceivedEventArgs=System.Diagnostics.DataReceivedEventArgs;
 using FileMode=System.IO.FileMode;
 
 

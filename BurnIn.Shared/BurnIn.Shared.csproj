@@ -20,9 +20,9 @@
     </ItemGroup>
     <ItemGroup>
       <None Remove="Controller\ListUsbPorts.sh" />
-      <Resource Include="Controller\ListUsbPorts.sh">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Resource>
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Services\" />
     </ItemGroup>
 
 </Project>

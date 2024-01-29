@@ -33,4 +33,10 @@
       </Content>
     </ItemGroup>
 
+    <ItemGroup>
+      <Resource Include="Services\ListUsbPorts.sh">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+    </ItemGroup>
+
 </Project>

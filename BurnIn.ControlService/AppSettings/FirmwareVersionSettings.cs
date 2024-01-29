@@ -1,4 +1,4 @@
-﻿namespace BurnIn.Shared.AppSettings;
+﻿namespace BurnIn.ControlService.AppSettings;
 
 public class FirmwareVersionSettings {
     public string GithubOrg { get; set; }

@@ -1,10 +1,9 @@
 ﻿using AsyncAwaitBestPractices;
-using BurnIn.Shared.Controller;
+using BurnIn.ControlService.Services;
 using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
 using BurnIn.Shared.Models.Configurations;
-using BurnIn.Shared.Services;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Runtime.Intrinsics.X86;
 using System.Text;
@@ -59,6 +58,10 @@ public class ControllerHubTests {
 
         this._connection.On<FirmwareUpdateStatus>(HubConstants.Events.OnUpdateChecked, status => {
             Console.WriteLine($"Ready?: {status.UpdateReady} Type: {nameof(status.Type)} Message: {status.Message}");
+        });
+
+        this._connection.On<string>(HubConstants.Events.OnReceiveFirmwareUploadText, message => {
+            Console.WriteLine($"On Firmware Process Text: {message}");
         });
 
         this._connection.On<bool, string, string>(HubConstants.Events.OnFirmwareUpdated, this.OnUpdateCheckedHandler);
@@ -141,7 +144,7 @@ public class ControllerHubTests {
                 await this.SendCheckUpdate();
                 Console.Clear(); 
             }else if (key == '3') {
-                await this.UpdateFirmware();
+                this.UpdateFirmware().SafeFireAndForget();
                 Console.Clear(); 
                 Console.WriteLine($"Key= {key}");
             }else if (key == '4') {

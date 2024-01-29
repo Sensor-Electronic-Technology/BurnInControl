@@ -21,6 +21,7 @@ public static class HubConstants {
         public static string OnTestPausedFailed => "OnTestPausedFailed";
         public static string OnTestContinuedFailed => "OnTestContinuedFailed";
         public static string OnTestCompletedFailed => "OnTestCompletedFailed";
+        public static string OnReceiveFirmwareUploadText => "OnReceiveFirmwareUploadText";
 
         public static string OnUpdateChecked => "OnUpdateChecked";
         public static string OnFirmwareUpdated => "OnFirmwareUpdated";

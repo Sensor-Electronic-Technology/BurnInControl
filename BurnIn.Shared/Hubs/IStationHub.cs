@@ -1,6 +1,5 @@
 ﻿using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
-using BurnIn.Shared.Services;
 using System.Data;
 namespace BurnIn.Shared.Hubs;
 
@@ -25,4 +24,5 @@ public interface IStationHub {
     Task OnTestContinuedFailed(string message);
     Task OnTestCompleted(string message);
     Task OnTestCompletedFailed(string message);
+    Task OnReceiveFirmwareUploadText(string output);
 }

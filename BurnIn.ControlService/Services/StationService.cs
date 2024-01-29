@@ -1,5 +1,4 @@
-﻿using BurnIn.Shared.Controller;
-namespace BurnIn.ControlService;
+﻿namespace BurnIn.ControlService.Services;
 
 public class StationService:IHostedService,IDisposable {
     private readonly StationController _stationController;

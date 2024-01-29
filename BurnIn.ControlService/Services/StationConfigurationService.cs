@@ -1,6 +1,6 @@
 ﻿using BurnIn.Shared.Models.Configurations;
 using MongoDB.Driver;
-namespace BurnIn.Shared.Services;
+namespace BurnIn.ControlService.Services;
 
 public class StationConfigurationService {
     private readonly IMongoDatabase _database;

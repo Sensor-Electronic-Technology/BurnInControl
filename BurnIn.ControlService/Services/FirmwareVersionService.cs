@@ -1,54 +1,25 @@
-﻿using BurnIn.Shared.AppSettings;
+﻿using BurnIn.ControlService.AppSettings;
+using BurnIn.ControlService.Hubs;
+using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using Octokit;
 using System.Diagnostics;
+using System.Text;
 using System.Text.RegularExpressions;
 using FileMode=System.IO.FileMode;
-namespace BurnIn.Shared.Services;
+namespace BurnIn.ControlService.Services;
 
-public enum UpdateType {
-    Major,
-    Minor,
-    Patch,
-    None
-    
-}
 
-public class FirmwareUpdateStatus {
-    public bool UpdateReady { get; set; }
-    public UpdateType Type { get; set; }
-    public string Message { get; set; }
-    public FirmwareUpdateStatus() {
-        this.UpdateReady = false;
-        this.Type = UpdateType.None;
-        this.Message = "";
-    }
-    public FirmwareUpdateStatus(bool ready, UpdateType type, string message) {
-        this.UpdateReady = ready;
-        this.Type = type;
-        this.Message = message;
-    }
-
-    public void SetNone(string? msg=null) {
-        this.UpdateReady = false;
-        this.Type = UpdateType.None;
-        this.Message = !string.IsNullOrEmpty(msg) ? msg : "";
-    }
-
-    public void Set(UpdateType type, string msg) {
-        this.UpdateReady = true;
-        this.Type = type;
-        this.Message = msg;
-    }
-}
 
 public class FirmwareVersionService {
     private readonly Regex _regex = new Regex("^V\\d\\.\\d\\.\\d$", RegexOptions.IgnoreCase);
     private readonly ILogger<FirmwareVersionService> _logger;
+    private readonly IHubContext<StationHub, IStationHub> _hubContext;
     private readonly GitHubClient _github;
     private string _latestVersion = string.Empty;
+    public StringBuilder _output;
     private FirmwareUpdateStatus _firmwareUpdateStatus=new FirmwareUpdateStatus();
     
     private readonly string _org;
@@ -61,7 +32,9 @@ public class FirmwareVersionService {
 
     public string Version => (!string.IsNullOrEmpty(this._latestVersion) ? this._latestVersion : "V0.0.0");
 
-    public FirmwareVersionService(ILogger<FirmwareVersionService> logger,IOptions<FirmwareVersionSettings> options) {
+    public FirmwareVersionService(ILogger<FirmwareVersionService> logger,
+        IOptions<FirmwareVersionSettings> options,
+        IHubContext<StationHub, IStationHub> hubContext) {
         this._logger = logger;
         this._org = options.Value.GithubOrg;
         this._repo = options.Value.GithubRepo;
@@ -70,6 +43,8 @@ public class FirmwareVersionService {
         this._avrDudeCommand = options.Value.AvrDudeCmd;
         this._avrDudeFileName = options.Value.AvrDudeFileName;
         this._firmwareFullPath = this._firmwarePath + this._firmwareFileName;
+        this._hubContext = hubContext;
+        this._output = new StringBuilder();
         this._github=new GitHubClient(new ProductHeaderValue(this._org));
     }
 
@@ -140,7 +115,7 @@ public class FirmwareVersionService {
         if (!controlMatch || !latestMatch) {
             string msg = (!controlMatch) ? 
                 $"Controller version doesn't fit version pattern, Correct: V#.## Latest: {fromController}" 
-                : $"Latest doesn't fit version pattern, Correct: V#.## Latest: {latest}";
+                : $"Github version doesn't fit version pattern, Correct: V#.## Latest: {latest}";
             this._firmwareUpdateStatus.UpdateReady = false;
             this._firmwareUpdateStatus.Message = msg;
             this._firmwareUpdateStatus.Type = UpdateType.None;
@@ -158,21 +133,21 @@ public class FirmwareVersionService {
         int latestV = Convert.ToInt16(latestSpan[1]);
         int controlV = Convert.ToInt16(controlSpan[1]);
         if (latestV > controlV) {
-            this._firmwareUpdateStatus.Set(UpdateType.Minor,"Firmware major update is available");
+            this._firmwareUpdateStatus.Set(UpdateType.Major,$"Firmware major update is available. Controller: {fromController} Latest: {latest}");
             return this._firmwareUpdateStatus;
         }
         
         latestV = Convert.ToInt16(latestSpan[3]);
         controlV = Convert.ToInt16(controlSpan[3]);
         if (latestV > controlV) {
-            this._firmwareUpdateStatus.Set(UpdateType.Minor,"Firmware minor update is available");
+            this._firmwareUpdateStatus.Set(UpdateType.Minor,$"Firmware minor update is available. Controller: {fromController} Latest: {latest}");
             return this._firmwareUpdateStatus;
         }
         
-        latestV = Convert.ToInt16(latestSpan[4]);
+        latestV = Convert.ToInt16(latestSpan[5]);
         controlV = Convert.ToInt16(controlSpan[5]);
         if (latestV > controlV) {
-            this._firmwareUpdateStatus.Set(UpdateType.Patch,"Firmware patch is available");
+            this._firmwareUpdateStatus.Set(UpdateType.Patch,$"Firmware patch update is available. Controller: {fromController} Latest: {latest}");
             return this._firmwareUpdateStatus;
         }
         
@@ -181,16 +156,33 @@ public class FirmwareVersionService {
     }
     
     public void UploadFirmwareUpdate() {
-        /*avrdude -C avrdude.conf -v -p m2560 -c stk500v2 -P /dev/ttyACM0 -b 115200 -D -U flash:w:BurnInFirmwareV3.ino.hex*/
         using Process process = new Process();
         process.StartInfo.FileName = this._avrDudeFileName;
         process.StartInfo.Arguments = this._avrDudeCommand;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.UseShellExecute = false;
-        process.StartInfo.CreateNoWindow = true;
+        //process.StartInfo.CreateNoWindow = true;
+        process.OutputDataReceived += new DataReceivedEventHandler((sender, e) =>
+        {
+            if (!String.IsNullOrEmpty(e.Data)) {
+                //this._output.AppendLine(e.Data);
+                this._hubContext.Clients.All.OnReceiveFirmwareUploadText(this._output.ToString());
+            }
+        });
         process.Start();
-        Console.WriteLine(process.StandardOutput.ReadToEnd());
+        // Asynchronously read the standard output of the spawned process.
+        // This raises OutputDataReceived events for each line of output.
+        process.BeginOutputReadLine();
         process.WaitForExit();
+        
+        //Console.WriteLine(this._output);
+        
+        process.WaitForExit();
+        process.Close();
+        this._output.Clear();
+        /*//this._channelWriter.TryWrite(process.StandardOutput.ReadToEnd());
+        //Console.WriteLine(process.StandardOutput.ReadToEnd());
+        process.WaitForExit();*/
     }
 
 }

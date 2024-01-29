@@ -1,14 +1,12 @@
 ﻿using BurnIn.Shared.Models;
-using Microsoft.Extensions.Logging;
+using BurnIn.Shared.Models.BurnInStationData;
 using System.Diagnostics;
 using System.IO.Ports;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Channels;
-using AsyncAwaitBestPractices;
-using BurnIn.Shared.Models.BurnInStationData;
-using System.Runtime.InteropServices;
 using ThreadState=System.Threading.ThreadState;
-namespace BurnIn.Shared.Controller;
+namespace BurnIn.ControlService.Services;
 
 public class UpperCaseNamingPolicy : JsonNamingPolicy
 {
@@ -111,6 +109,28 @@ public class UsbController:IDisposable {
     }
 
     public UsbResult Disconnect() {
+        if (!this._serialPort.IsOpen) {
+            this._continue = false;
+            if (this._readThread.ThreadState==ThreadState.Running) {
+                this._readThread.Join();
+            }
+            this._state = UsbState.Disconnected;
+            return new UsbResult(this._state, "Usb already disconnected");
+        }
+        try {
+            this._continue = false;
+            this._readThread.Join();
+            this._serialPort.Close();
+            this._state = this._serialPort.IsOpen ? 
+                UsbState.Connected : UsbState.Disconnected;
+            return new UsbResult(this._state, "Usb should be disconnected");
+        } catch {
+            this._state = UsbState.Unknown;
+            return new UsbResult(this._state,"Error: Usb disconnect failed, state unknown!");
+        }
+    }
+    
+    public UsbResult Stop() {
         if (!this._serialPort.IsOpen) {
             this._continue = false;
             if (this._readThread.ThreadState==ThreadState.Running) {

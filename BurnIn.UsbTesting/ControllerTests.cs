@@ -1,5 +1,5 @@
 ﻿using AsyncAwaitBestPractices;
-using BurnIn.Shared.Controller;
+using BurnIn.ControlService.Services;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
 using BurnIn.Shared.Models.Configurations;

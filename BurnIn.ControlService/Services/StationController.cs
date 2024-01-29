@@ -1,19 +1,13 @@
 ﻿using AsyncAwaitBestPractices;
+using BurnIn.ControlService.Hubs;
+using BurnIn.Shared;
 using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
-using BurnIn.Shared.Models.Configurations;
-using BurnIn.Shared.Services;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Logging;
-using Octokit;
-using System.Diagnostics;
-using System.IO.Ports;
 using System.Text.Json;
 using System.Threading.Channels;
-using FileMode=System.IO.FileMode;
-namespace BurnIn.Shared.Controller;
+namespace BurnIn.ControlService.Services;
 
 public record ControllerResult(bool Success, string? Message) {
     public bool Success { get; set; } = Success;
@@ -33,8 +27,7 @@ public class StationController:IDisposable {
     private bool _initMessageSent = false;
     private bool _receivedVersion = false;
 
-    public StationController(IHubContext<StationHub,
-            IStationHub> hubContext, 
+    public StationController(IHubContext<StationHub, IStationHub> hubContext, 
             UsbController usbController,
             ChannelReader<string> channelReader,
             FirmwareVersionService firmwareService,
@@ -79,7 +72,7 @@ public class StationController:IDisposable {
     }
 
     public Task<ControllerResult> Stop() {
-        var result=this._usbController.Disconnect();
+        var result=this._usbController.Stop();
         this._cancellationTokenSource.Cancel();
         if (result.State == UsbState.Disconnected) {
             return Task.FromResult(new ControllerResult(true,result.Message)); 
@@ -101,17 +94,17 @@ public class StationController:IDisposable {
         }
     }
 
-    public async Task<ControllerResult> UpdateFirmware() {
+    public async Task UpdateFirmware() {
         var result=this._usbController.Disconnect();
         if (result.State == UsbState.Disconnected) {
             await this._firmwareService.DownloadFirmwareUpdate();
             this._firmwareService.UploadFirmwareUpdate();
             this._usbController.Connect();
             await this._hubContext.Clients.All.OnFirmwareUpdated(true, this._firmwareService.Version, "Updated");
-            return new ControllerResult(true,"Firmware Updated");
+            //return new ControllerResult(true,"Firmware Updated");
         }
         await this._hubContext.Clients.All.OnFirmwareUpdated(false, this._firmwareService.Version, "Update Failed");
-        return new ControllerResult(false, $"Firmware update failed.  Usb Error Message: {result.Message}");
+        //return new ControllerResult(false, $"Firmware update failed.  Usb Error Message: {result.Message}");
     }
     
     private async Task StartReaderAsync(CancellationToken token) {
@@ -143,19 +136,24 @@ public class StationController:IDisposable {
     
     private Task HandleMessagePacket(string message) {
         try {
-            var doc=JsonSerializer.Deserialize<JsonDocument>(message);
-            var prefixValue=doc.RootElement.GetProperty("Prefix").ToString();
-            if (!string.IsNullOrEmpty(prefixValue)) {
-                var prefix=ArduinoMsgPrefix.FromValue(prefixValue);
-                if (prefix != null) {
-                    var packetElem=doc.RootElement.GetProperty("Packet");
-                    prefix.When(ArduinoMsgPrefix.DataPrefix).Then(() => this.HandleData(packetElem))
-                        .When(ArduinoMsgPrefix.MessagePrefix).Then(() => this.HandleMessage(packetElem, false))
-                        .When(ArduinoMsgPrefix.InitMessage).Then(() => this.HandleMessage(packetElem, true))
-                        .When(ArduinoMsgPrefix.IdRequest).Then(() => this.HandleIdChanged(packetElem))
-                        .When(ArduinoMsgPrefix.VersionRequest).Then(()=>this.HandleVersionRequest(packetElem));
+            if (message.Contains("Prefix")) {
+                var doc=JsonSerializer.Deserialize<JsonDocument>(message);
+                var prefixValue=doc.RootElement.GetProperty("Prefix").ToString();
+                if (!string.IsNullOrEmpty(prefixValue)) {
+                    var prefix=ArduinoMsgPrefix.FromValue(prefixValue);
+                    if (prefix != null) {
+                        var packetElem=doc.RootElement.GetProperty("Packet");
+                        prefix.When(ArduinoMsgPrefix.DataPrefix).Then(() => this.HandleData(packetElem))
+                            .When(ArduinoMsgPrefix.MessagePrefix).Then(() => this.HandleMessage(packetElem, false))
+                            .When(ArduinoMsgPrefix.InitMessage).Then(() => this.HandleMessage(packetElem, true))
+                            .When(ArduinoMsgPrefix.IdRequest).Then(() => this.HandleIdChanged(packetElem))
+                            .When(ArduinoMsgPrefix.VersionRequest).Then(()=>this.HandleVersionRequest(packetElem));
+                    }
                 }
+            } else {
+                this._hubContext.Clients.All.OnSerialComMessage(message);
             }
+
         } catch {
             this._logger.LogWarning($"Message had errors.  Message: {message}");
         }

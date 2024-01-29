@@ -1,11 +1,13 @@
-using BurnIn.ControlService;
-using BurnIn.Shared.AppSettings;
-using BurnIn.Shared.Controller;
+using BurnIn.ControlService.Services;
+using BurnIn.ControlService.AppSettings;
+using BurnIn.ControlService.Hubs;
 using BurnIn.Shared.Hubs;
-using BurnIn.Shared.Services;
 using Microsoft.Extensions.Hosting.Systemd;
 using MongoDB.Driver;
 using System.Threading.Channels;
+using StationController=BurnIn.ControlService.Services.StationController;
+using UsbController=BurnIn.ControlService.Services.UsbController;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<FirmwareVersionSettings>(builder.Configuration.GetSection(nameof(FirmwareVersionSettings)));

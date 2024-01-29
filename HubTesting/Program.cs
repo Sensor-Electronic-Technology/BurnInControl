@@ -1,10 +1,8 @@
 ﻿using BurnIn.Shared;
-using BurnIn.Shared.Controller;
 using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
 using BurnIn.Shared.Models.Configurations;
-using HubServer;
 using HubTesting;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.SignalR.Client;

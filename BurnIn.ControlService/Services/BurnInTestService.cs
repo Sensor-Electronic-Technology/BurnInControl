@@ -1,7 +1,7 @@
-﻿using BurnIn.Shared.Models;
-using Microsoft.Extensions.Logging;
+﻿using BurnIn.Shared;
+using BurnIn.Shared.Models;
 using MongoDB.Driver;
-namespace BurnIn.Shared.Services;
+namespace BurnIn.ControlService.Services;
 
 public class StationStatus {
     public bool Running { get; set; }

@@ -1,13 +1,12 @@
-﻿using BurnIn.Shared.Controller;
+﻿using BurnIn.ControlService.Services;
+using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
 using BurnIn.Shared.Models.Configurations;
 using Microsoft.AspNetCore.SignalR;
-using System.Text.RegularExpressions;
-namespace BurnIn.Shared.Hubs;
+namespace BurnIn.ControlService.Hubs;
 
 public class StationHub:Hub<IStationHub> {
-
     private readonly StationController _controller;
 
     public StationHub(StationController controller) {
@@ -42,8 +41,8 @@ public class StationHub:Hub<IStationHub> {
         return await this._controller.CheckForUpdate();
     }
 
-    public async Task<ControllerResult> UpdateFirmware() {
-        return await this._controller.UpdateFirmware();
+    public async Task UpdateFirmware() {
+        await this._controller.UpdateFirmware();
     }
 
     public Task<ControllerResult> SendProbeConfig(ProbeControllerConfig packet) {

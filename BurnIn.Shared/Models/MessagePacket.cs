@@ -51,6 +51,13 @@ public class StationVersionPacketJsonConverter : JsonConverter<StationVersionPac
     }
 }
 
+public class StationMessage:IPacket {
+    public string Message { get; set; }
+    public StationMessage() {
+        
+    }
+}
+
 
 /*public abstract class Serializable
 

@@ -15,12 +15,14 @@ public class StationController:IDisposable {
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly FirmwareVersionService _firmwareService;
     private readonly BurnInTestService _testService;
+    private readonly MessageHandler _messageHandler;
 
     public StationController(IHubContext<StationHub, IStationHub> hubContext, 
             UsbController usbController,
             ChannelReader<string> channelReader,
             FirmwareVersionService firmwareService,
             BurnInTestService testService,
+            MessageHandler messageHandler,
             ILogger<StationController> logger) {
         this._logger = logger;
         this._channelReader = channelReader;
@@ -29,6 +31,7 @@ public class StationController:IDisposable {
         this._usbController.UsbUnPlugHandler += this.UsbUnplugHandler;
         this._firmwareService = firmwareService;
         this._testService = testService;
+        this._messageHandler = messageHandler;
     }
 
     public Task Start() {
@@ -97,12 +100,13 @@ public class StationController:IDisposable {
     private async Task StartReaderAsync(CancellationToken token) {
         while (await this._channelReader.WaitToReadAsync(token)) {
             while (this._channelReader.TryRead(out var message)) {
-                await this.HandleMessagePacket(message);
+                await this._messageHandler.Handle(message);
             }
         }
     }
+    
     private void UsbUnplugHandler(object? sender,EventArgs args) {
-        Console.WriteLine("Usb was disconnected");
+        this._logger.LogWarning("Usb Disconnected");
         this._hubContext.Clients.All.OnUsbDisconnect(true);
     }
     
@@ -118,86 +122,6 @@ public class StationController:IDisposable {
         } else {
             this._logger.LogError("Failed to send {ArduinoMsgPrefix.Name}, Error {Error}",msgPacket.Prefix.Name,result.Message);
             return Task.FromResult(ResultFactory.Error($"Failed to send message.  Internal Error: {result.Message}"));
-        }
-    }
-    
-    private Task HandleMessagePacket(string message) {
-        try {
-            if (message.Contains("Prefix")) {
-                var doc=JsonSerializer.Deserialize<JsonDocument>(message);
-                var prefixValue=doc.RootElement.GetProperty("Prefix").ToString();
-                if (!string.IsNullOrEmpty(prefixValue)) {
-                    var prefix=ArduinoMsgPrefix.FromValue(prefixValue);
-                    if (prefix != null) {
-                        var packetElem=doc.RootElement.GetProperty("Packet");
-                        prefix.When(ArduinoMsgPrefix.DataPrefix).Then(() => this.HandleData(packetElem))
-                            .When(ArduinoMsgPrefix.MessagePrefix).Then(() => this.HandleMessage(packetElem, false))
-                            .When(ArduinoMsgPrefix.InitMessage).Then(() => this.HandleMessage(packetElem, true))
-                            .When(ArduinoMsgPrefix.IdRequest).Then(() => this.HandleIdChanged(packetElem))
-                            .When(ArduinoMsgPrefix.VersionRequest).Then(()=>this.HandleVersionRequest(packetElem));
-                    }
-                }
-            } else {
-                this._hubContext.Clients.All.OnSerialComMessage(message);
-            }
-
-        } catch {
-            this._logger.LogWarning($"Message had errors.  Message: {message}");
-        }
-        return Task.CompletedTask;
-    }
-
-    private void HandleData(JsonElement element) {
-        try {
-            var serialData=element.Deserialize<StationSerialData>();
-            if (serialData != null) {
-                if (!this._testService.IsRunning && serialData.Running) {
-                    var result = this._testService.Log(serialData);
-                    if (result.IsSuccess) {
-                        this._hubContext.Clients.All.OnTestStarted();
-                    }else{
-                        this._hubContext.Clients.All.OnTestStartedFailed($"Failed start logging test. " +
-                                                                         $"Message {result.Error}");
-                    }
-                }
-                this._hubContext.Clients.All.OnSerialCom(serialData).SafeFireAndForget();
-            }
-        } catch(Exception e) {
-            this._logger.LogWarning("Failed to deserialize station data");
-        }
-    }
-
-    private void HandleMessage(JsonElement element,bool isInit) {
-        var message=element.GetProperty("Message").ToString();
-        this._hubContext.Clients.All.OnSerialComMessage(message).SafeFireAndForget();
-    }
-
-    private void HandleIdChanged(JsonElement element) {
-        var id = element.GetString();
-        this._hubContext.Clients.All.OnIdChanged(id);
-    }
-    
-    private void HandleVersionRequest(JsonElement element) {
-        try {
-            var version = element.GetString();
-            if (!string.IsNullOrEmpty(version)) {
-                FirmwareUpdateStatus status = this._firmwareService.CheckNewerVersion(version);
-                this._hubContext.Clients.All.OnUpdateChecked(status);
-            } else {
-                this._hubContext.Clients.All.OnUpdateChecked(new FirmwareUpdateStatus() {
-                    Message = "Failed to check firmware version. Version string was null or empty",
-                    UpdateReady = false,
-                    Type=UpdateType.None
-                });
-                this._logger.LogError("Failed to check firmware version. Version string was null or empty");
-            }
-        } catch(Exception e) {
-            this._hubContext.Clients.All.OnUpdateChecked(new FirmwareUpdateStatus() {
-                Message =$"Update check failed Exception: {e.Message}",
-                UpdateReady = false,
-                Type=UpdateType.None
-            });
-            this._logger.LogError("Update check failed Exception: {Error}",e.Message);
         }
     }
     

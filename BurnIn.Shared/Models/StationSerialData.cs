@@ -1,6 +1,11 @@
 ﻿namespace BurnIn.Shared.Models;
 
-public record StationSerialData {
+public class StationReading {
+    public DateTime TimeStamp { get; set; }
+    public StationSerialData Data { get; set; }
+}
+
+public class StationSerialData {
     public List<double> Voltages { get; set; } = new List<double>(){0,0,0,0,0,0};
     public List<double> Currents { get; set; } = new List<double>(){0,0,0,0,0,0};
     public List<double> Temperatures { get; set; } = new List<double>(){0,0,0};
@@ -14,4 +19,7 @@ public record StationSerialData {
     public long ElapsedSeconds { get; set; }
     public bool Running { get; set; }
     public bool Paused { get; set; }
+    public StationSerialData() {
+        //for json serialization
+    }
 }

@@ -1,11 +1,14 @@
 ﻿using BurnIn.Shared.Models;
+using BurnIn.Shared.Models.BurnInStationData;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 namespace BurnIn.Shared.Services;
 public class BurnInTestService {
-    public event EventHandler TestCompleteHandler;
     public event EventHandler TestStartedHandler;
+    public event EventHandler TestCompleteHandler;
+    
     private StationSerialData _latestData;
+    private BurnInTestLog _runningTest=new BurnInTestLog();
     private bool _testSetupComplete=false;
     private bool _testRunning = false;
     private bool _testPaused = false;
@@ -23,24 +26,34 @@ public class BurnInTestService {
         //this._collection=database.getCollection
     }
 
-    public void SetupTest(/*Wafers,pads,etc*/) {
-        this._testSetupComplete = true;
-        //TODO setup test
-        //TODO log
+    public Result SetupTest(List<WaferSetup> setup) {
+        if (!this.IsRunning) {
+            this._testSetupComplete = false;
+            this._runningTest.StartNew(setup);
+            return ResultFactory.Success();
+        }
+        return ResultFactory.Error("Cannot create a new test while a test is running");
+    }
+
+    public void SetSetupComplete() {
+        this._testSetupComplete=true;
     }
     
     public Result Log(StationSerialData data) {
         if (!this.IsRunning && data.Running) {
             //start
             return this.LogStart(data);
-        }else if (this.IsRunning && !data.Running) {
+        }
+        if (this.IsRunning && !data.Running) {
             //stop
             return this.LogFinished(data);
-        } else if(this.IsRunning && data.Running){
+        }
+        if(this.IsRunning && data.Running){
             //log
             this._latestData = data;
             this._testRunning = data.Running;
             this._testPaused = data.Paused;
+            this._runningTest.AddReading(data);
             if (!this._testPaused && !this._disableLogging) {
                 var now = DateTime.Now;
                 if ((now - this._lastLog >= this._interval)) {
@@ -49,15 +62,16 @@ public class BurnInTestService {
                 }
             }
             return ResultFactory.Success();
-        } else {
-            this._latestData = data;
-            return ResultFactory.Success();
         }
+        
+        this._latestData = data;
+        return ResultFactory.Success();
     }
 
     private Result LogStart(StationSerialData data) {
         this._latestData = data;
         if (this._testSetupComplete) {
+            this._runningTest.SetStart(DateTime.Now,data);
             this._testRunning = this._latestData.Running;
             this._testPaused = this._latestData.Paused;
             this._disableLogging = false;
@@ -97,6 +111,7 @@ public class BurnInTestService {
         this._testSetupComplete = false;
         this._disableLogging = false;
         this._latestData = data;
+        this._runningTest.SetCompleted(DateTime.Now);
         //TODO: Log to database
         return ResultFactory.Success("Test Completed");
     }

@@ -24,6 +24,7 @@ public static class HubConstants {
         public static string OnTestContinuedFailed => "OnTestContinuedFailed";
         public static string OnTestCompletedFailed => "OnTestCompletedFailed";
         public static string OnReceiveFirmwareUploadText => "OnReceiveFirmwareUploadText";
+        public static string SetupTest => "SetupTest";
 
         public static string OnUpdateChecked => "OnUpdateChecked";
         public static string OnFirmwareUpdated => "OnFirmwareUpdated";
@@ -43,6 +44,8 @@ public static class HubConstants {
         public static string CheckForUpdate => "CheckForUpdate";
         public static string UpdateFirmware => "UpdateFirmware";
         public static string SendFirmwareVersion => "SendFirmwareVersion";
+        public static string OnTestSetupSucceeded => "OnTestSetupSucceeded";
+        public static string OnTestSetupFailed => "OnTestSetupFailed";
 
 
     }

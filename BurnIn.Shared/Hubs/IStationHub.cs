@@ -7,7 +7,7 @@ public interface IStationHub {
     Task OnUsbConnect(bool connected);
     Task OnUsbDisconnect(bool disconnected);
     Task OnExecuteCommand(bool executed);
-    Task OnSerialCom(StationSerialData reading);
+    Task OnSerialCom(StationSerialData serialData);
     Task OnIdChanged(string Id);
     Task OnSerialComMessage(string message);
     Task OnSettingsUploaded(bool uploaded);
@@ -25,4 +25,6 @@ public interface IStationHub {
     Task OnTestCompleted(string message);
     Task OnTestCompletedFailed(string message);
     Task OnReceiveFirmwareUploadText(string output);
+    Task OnTestSetupSucceeded();
+    Task OnTestSetupFailed(string? message);
 }

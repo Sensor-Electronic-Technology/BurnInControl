@@ -1,5 +1,4 @@
 ﻿using AsyncAwaitBestPractices;
-using BurnIn.ControlService.Services;
 using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
@@ -78,24 +77,24 @@ public class ControllerHubTests {
         Console.WriteLine($"Completed?: {completed} Version: {newVersion} Message: {message}");
     }
 
-    private void HandleSerialData(StationSerialData reading) {
+    private void HandleSerialData(StationSerialData serialData) {
         StringBuilder builder = new StringBuilder();
 
-        builder.AppendFormat($"Elapsed: {reading.ElapsedSeconds} ");
+        builder.AppendFormat($"Elapsed: {serialData.ElapsedSeconds} ");
         
         builder.Append("Voltages: ");
         for (int i = 0; i < 6; i++) {
-            builder.AppendFormat($" V[{i}] {reading.Voltages[i]} ");
+            builder.AppendFormat($" V[{i}] {serialData.Voltages[i]} ");
         }
         
         builder.Append(" Currents: ");
         for (int i = 0; i < 6; i++) {
-            builder.AppendFormat($" I[{i}] {reading.Currents[i]} ");
+            builder.AppendFormat($" I[{i}] {serialData.Currents[i]} ");
         }
         
         builder.Append(" Temps: ");
         for (int i = 0; i < 3; i++) {
-            builder.AppendFormat($" T[{i}] {reading.Temperatures[i]} ");
+            builder.AppendFormat($" T[{i}] {serialData.Temperatures[i]} ");
         }
         Console.WriteLine(builder.ToString());
     }
@@ -171,7 +170,7 @@ public class ControllerHubTests {
     }
     
     private async Task SendCommand(ArduinoCommand command) {
-        var result = await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.SendCommand, command);
+        await this._connection.InvokeAsync(HubConstants.Methods.SendCommand, command);
     }
     
     private async Task SendProbeConfig() {
@@ -189,7 +188,7 @@ public class ControllerHubTests {
                 new ProbeConfig(new VoltageSensorConfig(59, 0.1), new CurrentSensorConfig(68, 0.1))
             }
         };
-        await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.SendProbeConfig, probeControllerConfig);
+        await this._connection.InvokeAsync(HubConstants.Methods.SendProbeConfig, probeControllerConfig);
     }
 
     private async Task SendCheckUpdate() {
@@ -224,30 +223,30 @@ public class ControllerHubTests {
             heaterConfig2
         ];
         config.ReadInterval = 250;
-        await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.SendHeaterConfig, config);
+        await this._connection.InvokeAsync(HubConstants.Methods.SendHeaterConfig, config);
     }
     
     private async Task SendStationConfiguration(bool newLine=false) {
         var configuration =new StationConfiguration(1000, 500, 300000,3600000);
         var burnTimerConfig = new BurnTimerConfig(72000, 72000, 25200);
         configuration.BurnTimerConfig = burnTimerConfig;
-        await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.SendStationConfig,configuration);
+        await this._connection.InvokeAsync(HubConstants.Methods.SendStationConfig,configuration);
     }
     
     private async Task SendId(bool newLine=false) {
-        await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.SendId, "S11");
+        await this._connection.InvokeAsync(HubConstants.Methods.SendId, "S11");
     }
     
     private async Task RequestId() {
-        await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.RequestId);
+        await this._connection.InvokeAsync(HubConstants.Methods.RequestId);
     }
     
     private async Task SendVersion(bool newLine=false) {
-        await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.SendId, "S11");
+        await this._connection.InvokeAsync(HubConstants.Methods.SendId, "S11");
     }
     
     private async Task RequestVersion() {
-        await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.RequestId);
+        await this._connection.InvokeAsync(HubConstants.Methods.RequestId);
     }
     
 }

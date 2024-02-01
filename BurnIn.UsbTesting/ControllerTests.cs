@@ -1,14 +1,8 @@
 ﻿using AsyncAwaitBestPractices;
-using BurnIn.ControlService.Services;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
 using BurnIn.Shared.Models.Configurations;
-using CP.IO.Ports;
-using ReactiveMarbles.Extensions;
-using System.Collections.Concurrent;
-using System.IO.Ports;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
+using BurnIn.Shared.Services;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;

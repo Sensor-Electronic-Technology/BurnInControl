@@ -105,6 +105,10 @@
 
         this._hubConnection.On<StationSerialData>(HubConstants.Events.OnSerialCom,this.OnSerialComReceived);
         this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
+        this._hubConnection.On(HubConstants.Events.OnTestStarted, () => {
+            this.OnSerialComMessageReceived("Test Started");
+        });
+        this._hubConnection.On<string>(HubConstants.Events.OnTestStartedFailed, this.OnSerialComMessageReceived);
         try {
             await this._hubConnection.StartAsync();
             this._logger.LogInformation("Hub Connected");

@@ -1,9 +1,9 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using BurnIn.ControlService.Services;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
 using System.Text.Json;
 using BurnIn.Shared.Models.Configurations;
+using BurnIn.Shared.Services;
 using BurnIn.UsbTesting;
 using MongoDB.Bson;
 using MongoDB.Driver;

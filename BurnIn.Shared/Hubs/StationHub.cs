@@ -7,17 +7,32 @@ namespace BurnIn.Shared.Hubs;
 
 public class StationHub:Hub<IStationHub> {
     private readonly StationController _controller;
-
-    public StationHub(StationController controller) {
+    private readonly BurnInTestService _testService;
+    public StationHub(StationController controller,BurnInTestService testService) {
         this._controller = controller;
+        this._testService = testService;
     }
     
     public Task ConnectUsb() {
         return this._controller.ConnectUsb();
     }
-
+    
     public Task DisconnectUsb() {
         return this._controller.Disconnect();
+    }
+    public Task SetupTest(List<WaferSetup> testSetup) {
+        Monitor.Enter(this._testService);
+        try {
+            var result=this._testService.SetupTest(testSetup);
+            if (result.IsSuccess) {
+                this.Clients.Caller.OnTestSetupSucceeded();
+            } else {
+                this.Clients.Caller.OnTestSetupFailed(result.Error);
+            }
+        } finally {
+            Monitor.Exit(this._testService);
+        }
+        return Task.CompletedTask;
     }
 
     public Task SendStartTest() {

@@ -27,6 +27,14 @@ public class StationVersionPacket : IPacket {
     public string Version { get; set; }
 }
 
+public class StartTestStatus : IPacket {
+    public bool Success { get; set; }
+    public string Message { get; set; }
+    public StartTestStatus() {
+        //for json serialization
+    }
+}
+
 public class StationIdPacketJsonConverter : JsonConverter<StationIdPacket> {
     public override StationIdPacket Read(
         ref Utf8JsonReader reader,
@@ -50,6 +58,7 @@ public class StationVersionPacketJsonConverter : JsonConverter<StationVersionPac
         writer.WriteStringValue(value.Version);
     }
 }
+
 
 public class StationMessage:IPacket {
     public string Message { get; set; }

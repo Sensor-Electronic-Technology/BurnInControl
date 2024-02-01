@@ -26,10 +26,12 @@ builder.Services.AddSingleton(channel.Reader);
 builder.Services.AddSingleton(channel.Writer);
 builder.Services.AddLogging();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://172.20.3.41:28080"));
-builder.Services.AddTransient<BurnInTestService>();
-builder.Services.AddTransient<FirmwareVersionService>();
+builder.Services.AddSingleton<BurnInTestService>();
+builder.Services.AddSingleton<FirmwareVersionService>();
 builder.Services.AddSingleton<StationController>();
 builder.Services.AddSingleton<UsbController>();
+builder.Services.AddSingleton<MessageHandler>();
+
 builder.Services.AddHostedService<StationService>();
 
 var app = builder.Build();

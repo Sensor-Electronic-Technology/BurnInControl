@@ -1,15 +1,15 @@
-﻿using BurnIn.ControlService.AppSettings;
-using BurnIn.ControlService.Hubs;
+﻿using BurnIn.Shared.AppSettings;
 using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Octokit;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using FileMode=System.IO.FileMode;
-namespace BurnIn.ControlService.Services;
+namespace BurnIn.Shared.Services;
 
 public class FirmwareVersionService {
     private readonly Regex _regex = new Regex("^V\\d\\.\\d\\.\\d$", RegexOptions.IgnoreCase);

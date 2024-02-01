@@ -1,4 +1,6 @@
-﻿namespace BurnIn.ControlService.Services;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+namespace BurnIn.Shared.Services;
 
 public class StationService:IHostedService,IDisposable {
     private readonly StationController _stationController;

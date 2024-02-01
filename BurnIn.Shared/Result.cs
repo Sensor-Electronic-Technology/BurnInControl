@@ -1,86 +1,29 @@
 ﻿namespace BurnIn.Shared;
 
+public class Result {
+    public bool IsSuccess { get; }
+    public string? Error { get; }
+    public string? Message { get; }
 
-
-public abstract class Result {
-    public bool Success { get; protected set; }
-    public bool Failure => !Success;
-}
-
-public abstract class Result<T> : Result {
-    private T _data;
-    protected Result(T data) {
-        this.Data = data;
-    }
-
-    public T Data {
-        get => this.Success ? this._data : 
-            throw new Exception($"You can't access {nameof(Data)} when {nameof(Success)} is false");
-        set => this._data=value;
-    }
-}
-
-public class SuccessResult : Result,ISuccessResult {
-    public string Message { get; }
-    public SuccessResult(string? message=null) {
-        this.Message = message ?? "";
-        this.Success = true;
-    }
-}
-
-public class SuccessResult<T> : Result<T>,ISuccessResult {
-    public string Message { get; }
-    public SuccessResult(T data,string? message=null) : base(data) {
-        this.Message = message ?? "";
-        this.Success = true;
-    }
-}
-
-public class ErrorResult : Result, IErrorResult {
-    public string Message { get; }
-    public IReadOnlyCollection<Error> Errors { get; }
-    public ErrorResult(string message, IReadOnlyCollection<Error> errors) {
+    internal protected Result(bool isSuccess, string? error=null,string? message=null) {
+        this.IsSuccess = isSuccess;
+        this.Error = error;
         this.Message = message;
-        this.Success = false;
-        this.Errors = errors ?? Array.Empty<Error>();
-    }
-    public ErrorResult(string message):this(message,Array.Empty<Error>()){
-        
     }
 }
 
-public class ErrorResult<T>:Result<T>,IErrorResult{
-    public string Message { get; }
-    public IReadOnlyCollection<Error> Errors { get; }
-    public ErrorResult(string message, IReadOnlyCollection<Error> errors) : base(default) {
-        this.Message = message;
-        this.Success = false;
-        this.Errors = errors ?? Array.Empty<Error>();
-    }
-    public ErrorResult(string message) : this(message, Array.Empty<Error>()) {
-        
+public class Result<TValue> : Result {
+    public TValue Value { get; }
+
+    internal protected Result(TValue value, bool isSuccess, string? error = null,string? message=null)
+        :base(isSuccess,error,message) {
+        this.Value = value;
     }
 }
 
-
-public class Error {
-    public string? Code { get; }
-    public string Details { get; }
-    public Error(string details) : this(null, details) {
-        
-    }
-
-    public Error(string? code, string details) {
-        this.Code = code;
-        this.Details = details;
-    }
-}
-
-internal interface IErrorResult {
-    string Message { get; }
-    IReadOnlyCollection<Error> Errors { get; }
-}
-
-internal interface ISuccessResult {
-    string Message { get; }
+public static class ResultFactory {
+    public static Result Success(string? message=null) => new Result(true,message:message);
+    public static Result Error(string? error = null) => new Result(false, error: error);
+    public static Result<TValue> Success<TValue>(TValue value, string? message = null) => new Result<TValue>(value, true, message: message);
+    public static Result<TValue> Error<TValue>(TValue value, string? error) => new Result<TValue>(value, false, error: error);
 }

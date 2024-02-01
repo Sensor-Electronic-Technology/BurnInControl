@@ -1,10 +1,10 @@
 ﻿namespace BurnIn.Shared.Models;
 
 public record StationSerialData {
-    public List<double> Voltages { get; set; } = new List<double>();
-    public List<double> Currents { get; set; } = new List<double>();
-    public List<double> Temperatures { get; set; } = new List<double>();
-    public List<long> ProbeRuntimes { get; set; } = new List<long>();
+    public List<double> Voltages { get; set; } = new List<double>(){0,0,0,0,0,0};
+    public List<double> Currents { get; set; } = new List<double>(){0,0,0,0,0,0};
+    public List<double> Temperatures { get; set; } = new List<double>(){0,0,0};
+    public List<long> ProbeRuntimes { get; set; } = new List<long>(){0,0,0,0,0,0};
     public bool Heater1State { get; set; }
     public bool Heater2State { get; set; }
     public bool Heater3State { get; set; }

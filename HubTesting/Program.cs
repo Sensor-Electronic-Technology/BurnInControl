@@ -1,13 +1,12 @@
-﻿using BurnIn.Shared;
+﻿
 using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
 using BurnIn.Shared.Models.Configurations;
 using HubTesting;
-using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Text.Json;
-using System.Threading.Channels;
+
 
 
 /*string path = @"C:\Users\aelmendo\Documents\test.json";

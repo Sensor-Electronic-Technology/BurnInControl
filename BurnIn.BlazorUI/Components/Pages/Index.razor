@@ -1,15 +1,140 @@
 ﻿@page "/"
-<PageTitle>Burn-in COM Testing</PageTitle>
+@using BurnIn.BlazorUI.Components.AppComponents
+@using BurnIn.BlazorUI.Components.AppComponents.TestSetupComponents
+@using BurnIn.Shared.Hubs
+@using BurnIn.Shared.Models
+@using BurnIn.Shared.Models.BurnInStationData
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Text
+@inject ILogger<Index> _logger
 
-<div class="row">
-    <DxButton></DxButton>
-</div>
+@attribute [StreamRendering(true)]
+@rendermode InteractiveServer
 
+<style>
+    .button-row{
+        height: 150px;
+        width: 150px;
+        padding: 1rem;
+    }
+</style>
 
+<DxGridLayout>
+    <Rows>
+        <DxGridLayoutRow Areas="timer header header" Height="100px" />
+        <DxGridLayoutRow Areas="left-bar content content" />
+        <DxGridLayoutRow Areas="left-bar footer footer" />
+    </Rows>
+    <Columns>
+        <DxGridLayoutColumn Width="10%" />
+        <DxGridLayoutColumn Width="90%"/>
+    </Columns>
+     <Items>
+         <DxGridLayoutItem Area="header">
+             <Template>
+                 <h1 class="gridlayout-item">
+                     Burn-In Main App
+                 </h1>
+             </Template>
+         </DxGridLayoutItem>
+         <DxGridLayoutItem Area="timer">
+             <Template>
+                 <div class="gridlayout-item">
+                      @if (this._data == null) {
+                          <h3>Loading...</h3>
+                      } else {
+                          <DigitalDisplay Label="RunTime" Value="@this._data.ElapsedSeconds"/>
+                      }
+                 </div>
+
+             </Template>
+         </DxGridLayoutItem>
+         <DxGridLayoutItem Area="left-bar">
+             <Template>
+                 <div class="gridlayout-item">
+                     <div class="row button-row">
+                         <DxButton Text=@this._startButtonText
+                                   Click="@this.StartHandler"
+                                   RenderStyle="ButtonRenderStyle.Danger"/>
+                     </div>
+                     <div class="row button-row">
+                         <DxButton Text="Reset"
+                                   Click="@this.ResetHandler"
+                                   RenderStyle="ButtonRenderStyle.Danger"/>
+                     </div>
+                 </div>
+             </Template>
+         </DxGridLayoutItem>
+         <DxGridLayoutItem Area="content" CssClass="padding">
+             <Template>
+                 <DxTabs RenderMode="TabsRenderMode.OnDemand">
+                     <DxTabPage Text="Main">
+                         <MainView Data="@this._data"></MainView>
+                     </DxTabPage>
+                     <DxTabPage Text="Running Test Plots">
+                         <div class="row text-center">
+                             <h1>Running Test Plots Coming Soon!</h1>
+                         </div>
+                     </DxTabPage>
+                     <DxTabPage Text="Test Setup">
+                         <TestSetup/>
+                     </DxTabPage>
+                 </DxTabs>
+             </Template>
+         </DxGridLayoutItem>
+         <DxGridLayoutItem Area="footer">
+             <Template>
+                 <div class="gridlayout-item">
+                     <BurnInConsole Text="@this._textAreaBuilder.ToString()"/>
+                 </div>
+                 
+             </Template>
+         </DxGridLayoutItem>
+     </Items>
+</DxGridLayout>
 @code {
-    
+    private StationSerialData? _data;
+    private HubConnection? _hubConnection;
+    private StringBuilder _textAreaBuilder=new StringBuilder();
+    private string _startButtonText = "Start";
 
     protected override async Task OnInitializedAsync(){
-        
+        this._hubConnection = new HubConnectionBuilder()
+            .WithUrl(HubConstants.HubAddress)
+            .Build();
+
+        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnSerialCom,this.OnSerialComReceived);
+        this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
+        try {
+            await this._hubConnection.StartAsync();
+            this._logger.LogInformation("Hub Connected");
+        } catch {
+            this._logger.LogError("Hub Connection Failed");
+        }
+    }
+
+    private async Task ResetHandler() {
+        await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, ArduinoCommand.Reset);
+    }
+
+    private async Task StartHandler() {
+        if (this._startButtonText == "Start") {
+            await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, ArduinoCommand.Start);
+        } else {
+            this._startButtonText = "Pause";
+            await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, ArduinoCommand.Pause);
+        }
+    }
+    
+   
+
+    private void OnSerialComReceived(StationSerialData data) {
+        this._data = data;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnSerialComMessageReceived(string message) {
+        this._textAreaBuilder.AppendFormat($"{DateTime.Now:d/M h:mm:ss tt zz}::{message}").AppendLine();
+        //this._textAreaBuilder.AppendLine(message);
     }
 }

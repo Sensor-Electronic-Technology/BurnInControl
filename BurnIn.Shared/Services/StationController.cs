@@ -1,19 +1,12 @@
 ﻿using AsyncAwaitBestPractices;
-using BurnIn.ControlService.Hubs;
-using BurnIn.Shared;
 using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Threading.Channels;
-namespace BurnIn.ControlService.Services;
-
-public record ControllerResult(bool Success, string? Message) {
-    public bool Success { get; set; } = Success;
-    public string? Message { get; set; } = Message;
-}
-
+namespace BurnIn.Shared.Services;
 public class StationController:IDisposable {
     private readonly UsbController _usbController;
     private readonly ILogger<StationController> _logger;
@@ -22,10 +15,6 @@ public class StationController:IDisposable {
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly FirmwareVersionService _firmwareService;
     private readonly BurnInTestService _testService;
-    //private readonly GitHubClient _github;
-    private string _latestVersion=string.Empty;
-    private bool _initMessageSent = false;
-    private bool _receivedVersion = false;
 
     public StationController(IHubContext<StationHub, IStationHub> hubContext, 
             UsbController usbController,
@@ -179,14 +168,6 @@ public class StationController:IDisposable {
     }
 
     private void HandleMessage(JsonElement element,bool isInit) {
-        if (isInit) {
-            this._initMessageSent = true;
-        } else {
-            this._initMessageSent = false;
-            if (!this._receivedVersion) {
-                
-            }
-        }
         var message=element.GetProperty("Message").ToString();
         this._hubContext.Clients.All.OnSerialComMessage(message).SafeFireAndForget();
     }
@@ -200,7 +181,6 @@ public class StationController:IDisposable {
         try {
             var version = element.GetString();
             if (!string.IsNullOrEmpty(version)) {
-                this._receivedVersion = true;
                 FirmwareUpdateStatus status = this._firmwareService.CheckNewerVersion(version);
                 this._hubContext.Clients.All.OnUpdateChecked(status);
             } else {

@@ -27,7 +27,7 @@ public class UsbControllerTests {
     }
 
     public bool Connect() {
-        return this._usbController.Connect().State==UsbState.Connected;
+        return this._usbController.Connect().IsSuccess;
     }
 
     public void Run() {
@@ -53,7 +53,7 @@ public class UsbControllerTests {
                 Console.Clear();
                 Console.WriteLine("Reconnecting");
                 var result=this._usbController.Connect();
-                if (result.State == UsbState.Connected) {
+                if (result.IsSuccess) {
                     Console.WriteLine("Usb Connected Successfully");
                     Console.WriteLine(builder.ToString());
                 } else {

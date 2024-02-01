@@ -1,10 +1,9 @@
-﻿using BurnIn.ControlService.Services;
-using BurnIn.Shared.Hubs;
-using BurnIn.Shared.Models;
+﻿using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
 using BurnIn.Shared.Models.Configurations;
+using BurnIn.Shared.Services;
 using Microsoft.AspNetCore.SignalR;
-namespace BurnIn.ControlService.Hubs;
+namespace BurnIn.Shared.Hubs;
 
 public class StationHub:Hub<IStationHub> {
     private readonly StationController _controller;

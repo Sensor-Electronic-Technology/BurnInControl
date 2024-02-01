@@ -16,7 +16,7 @@ public interface IStationHub {
     Task OnFirmwareUpdated(bool completed,string newVersion,string message);
     
     //Test Related
-    Task OnTestStarted(string message);
+    Task OnTestStarted();
     Task OnTestStartedFailed(string message);
     Task OnTestPaused(string message);
     Task OnTestPausedFailed(string message);

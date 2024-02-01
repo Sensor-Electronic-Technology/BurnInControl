@@ -1,93 +1,35 @@
-﻿.welcome {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-::deep .welcome-gridlayout {
-    margin: auto;
-    width: auto;
-    height: auto;
-}
-
-    ::deep .welcome-gridlayout .dxbl-gridlayout-root {
-        align-content: center;
-        justify-content: center;
-    }
-
-::deep .welcome-title {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.welcome-title .welcome-title-header {
-    font-size: 2.5rem;
-    font-weight: 600;
-    letter-spacing: 0em;
-    text-align: center;
-}
-
-.welcome-title .welcome-title-content {
-    font-size: 2rem;
-    font-weight: 400;
-    letter-spacing: 0em;
-    text-align: center;
-}
-
-::deep .welcome-cards {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    justify-content: center;
-}
-
-::deep .welcome-card {
-    width: 26.25rem;
-    height: 15rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -2px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.2s;
-    border-radius: 1rem;
-    color: var(--bs-link-color-rgb);
-    gap: 1.5rem;
-    text-decoration: none;
-    position: relative;
-}
-
-    ::deep .welcome-card:hover {
-        box-shadow: 0px 20px 25px -5px rgba(0, 0, 0, 0.1), 0px 8px 10px -6px rgba(0, 0, 0, 0.1);
-    }
-
-    ::deep .welcome-card .welcome-card-img {
-        width: 6.5rem;
-        height: 6.5rem;
-    }
-
-    ::deep .welcome-card .welcome-card-text {
-        font-size: 1.75rem;
-        font-weight: 600;
-        letter-spacing: 0em;
-        text-align: center;
-        text-decoration: unset;
-    }
-
-::deep .icon-fill {
-    fill: var(--bs-primary);
-}
-
-::deep .welcome-card .welcome-card-back {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--bs-body-color);
-    opacity: 0.05;
-    border-radius: 1rem;
-    z-index: -2;
-}
+﻿ textarea {
+     overflow-y: scroll;
+     padding: 2rem;
+     resize: none; /* Remove this if you want the user to resize the textarea */
+     cursor: pointer;
+ }
+ .gridlayout-item {
+     font-size: 1.2em;
+     font-weight: 500;
+     text-align: center;
+     height: 100%;
+     padding: 0.5rem;
+     text-align: center;
+     position: relative;
+     z-index: 0;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+ }
+ .gridlayout-item:before {
+     content: " ";
+     position: absolute;
+     z-index: -1;
+     width: 100%;
+     height: 100%;
+     left: 0;
+     top: 0;
+     opacity: 0.4;
+ }
+ 
+ @media (max-width: 575.98px) {
+     .gridlayout-item {
+         font-size: 0.9em;
+     }
+ }

@@ -1,8 +1,10 @@
-﻿using BurnIn.Shared;
-using BurnIn.Shared.Models;
+﻿using BurnIn.Shared.Models;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-namespace BurnIn.ControlService.Services;
+namespace BurnIn.Shared.Services;
 public class BurnInTestService {
+    public event EventHandler TestCompleteHandler;
+    public event EventHandler TestStartedHandler;
     private StationSerialData _latestData;
     private bool _testSetupComplete=false;
     private bool _testRunning = false;

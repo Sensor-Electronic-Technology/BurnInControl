@@ -5,7 +5,6 @@ using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
 using BurnIn.Shared.Models.Configurations;
 using Microsoft.AspNetCore.SignalR.Client;
-using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Text.Json;
 namespace HubTesting;
@@ -31,19 +30,18 @@ public class ControllerHubTests {
                 Thread.Sleep(500);
             }
         }
-        this._connection.On<bool>(HubConstants.Events.OnUsbConnect, connected => {
+        /*this._connection.On<bool>(HubConstants.Events.OnUsbConnect, connected => {
             string status = connected ? "Connected":"Not Connected";
             Console.WriteLine($"Usb {status}");
-        });
+        });*/
 
-        this._connection.On<bool>(HubConstants.Events.OnUsbDisconnect, disconnected => {
+        /*this._connection.On<bool>(HubConstants.Events.OnUsbDisconnect, disconnected => {
             if (disconnected) {
                 Console.WriteLine("Usb Disconnected, please try reconnecting");
             } else {
                 Console.WriteLine("Usb failed to disconnect, please reset service");
             }
-            
-        });
+        });*/
 
         this._connection.On<bool>(HubConstants.Events.OnExecuteCommand, success => {
             string status = success ? "Success" : "Error Executing";
@@ -66,9 +64,7 @@ public class ControllerHubTests {
 
         this._connection.On<bool, string, string>(HubConstants.Events.OnFirmwareUpdated, this.OnUpdateCheckedHandler);
         
-        var result=await this._connection.InvokeAsync<ControllerResult>(HubConstants.Methods.ConnectUsb);
-        string msg = result.Success ? "Connected" : "Connection Failed";
-        Console.WriteLine($"USB {msg}");
+        await this._connection.InvokeAsync(HubConstants.Methods.ConnectUsb);
     }
 
     public async Task Disconnect() {

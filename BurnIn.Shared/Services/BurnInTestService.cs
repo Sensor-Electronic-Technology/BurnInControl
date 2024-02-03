@@ -6,7 +6,7 @@ namespace BurnIn.Shared.Services;
 public class BurnInTestService {
     public event EventHandler TestStartedHandler;
     public event EventHandler TestCompleteHandler;
-    //last check
+    //last check check
     
     private StationSerialData _latestData;
     private BurnInTestLog _runningTest=new BurnInTestLog();

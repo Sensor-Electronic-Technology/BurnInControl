@@ -1,7 +1,9 @@
 ﻿using AsyncAwaitBestPractices;
+using BurnIn.ControlService.Infrastructure.Commands;
 using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
+using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -14,15 +16,15 @@ public class StationController:IDisposable {
     private readonly ChannelReader<string> _channelReader;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly FirmwareVersionService _firmwareService;
-    private readonly BurnInTestService _testService;
-    private readonly MessageHandler _messageHandler;
+    // private readonly MessageHandler _messageHandler;
+    private readonly IMediator _mediator;
+    
 
     public StationController(IHubContext<StationHub, IStationHub> hubContext, 
             UsbController usbController,
             ChannelReader<string> channelReader,
             FirmwareVersionService firmwareService,
-            BurnInTestService testService,
-            MessageHandler messageHandler,
+            IMediator mediator,
             ILogger<StationController> logger) {
         this._logger = logger;
         this._channelReader = channelReader;
@@ -30,8 +32,9 @@ public class StationController:IDisposable {
         this._hubContext = hubContext;
         this._usbController.UsbUnPlugHandler += this.UsbUnplugHandler;
         this._firmwareService = firmwareService;
-        this._testService = testService;
-        this._messageHandler = messageHandler;
+        this._mediator = mediator;
+        /*this._testService = testService;
+        this._messageHandler = messageHandler;*/
     }
 
     public Task Start() {
@@ -100,7 +103,10 @@ public class StationController:IDisposable {
     private async Task StartReaderAsync(CancellationToken token) {
         while (await this._channelReader.WaitToReadAsync(token)) {
             while (this._channelReader.TryRead(out var message)) {
-                await this._messageHandler.Handle(message);
+                await this._mediator.Send(new ProcessSerialCommand() {
+                    Message = message
+                });
+                //await this._messageHandler.Handle(message);
             }
         }
     }

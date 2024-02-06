@@ -1,7 +1,8 @@
 using BurnIn.BlazorUI.Components;
+using BurnIn.ControlService.Hubs;
+using BurnIn.ControlService.Services;
 using BurnIn.Shared.AppSettings;
-using BurnIn.Shared.Hubs;
-using BurnIn.Shared.Services;
+using DevExpress.Xpo.Logger;
 using MongoDB.Driver;
 using System.Threading.Channels;
 
@@ -30,7 +31,6 @@ builder.Services.AddSingleton<BurnInTestService>();
 builder.Services.AddSingleton<FirmwareVersionService>();
 builder.Services.AddSingleton<StationController>();
 builder.Services.AddSingleton<UsbController>();
-builder.Services.AddSingleton<MessageHandler>();
 
 builder.Services.AddHostedService<StationService>();
 

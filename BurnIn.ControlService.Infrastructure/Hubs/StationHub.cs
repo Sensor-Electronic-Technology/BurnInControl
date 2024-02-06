@@ -1,16 +1,26 @@
-﻿using BurnIn.Shared.Models;
+﻿using BurnIn.ControlService.Infrastructure.Commands;
+using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
 using BurnIn.Shared.Models.Configurations;
 using BurnIn.Shared.Services;
+using MediatR;
 using Microsoft.AspNetCore.SignalR;
 namespace BurnIn.Shared.Hubs;
 
 public class StationHub:Hub<IStationHub> {
     private readonly StationController _controller;
-    private readonly BurnInTestService _testService;
-    public StationHub(StationController controller,BurnInTestService testService) {
+    private readonly IMediator _mediator;
+    //private readonly BurnInTestService _testService;
+    
+    /*public StationHub(StationController controller,BurnInTestService testService) {
         this._controller = controller;
-        this._testService = testService;
+        //this._testService = testService;
+    }*/
+    
+    public StationHub(StationController controller,IMediator mediator) {
+        this._controller = controller;
+        this._mediator = mediator;
+        //this._testService = testService;
     }
     
     public Task ConnectUsb() {
@@ -20,21 +30,16 @@ public class StationHub:Hub<IStationHub> {
     public Task DisconnectUsb() {
         return this._controller.Disconnect();
     }
-    public Task SetupTest(List<WaferSetup> testSetup) {
-        Monitor.Enter(this._testService);
-        try {
-            var result=this._testService.SetupTest(testSetup);
-            if (result.IsSuccess) {
-                this.Clients.Caller.OnTestSetupSucceeded();
-            } else {
-                this.Clients.Caller.OnTestSetupFailed(result.Error);
-            }
-        } finally {
-            Monitor.Exit(this._testService);
+    
+    public async Task SetupTest(List<WaferSetup> testSetup) {
+        var result=await this._mediator.Send(new TestSetupCommand() { TestSetup = testSetup });
+        if (result.IsSuccess) {
+            await this.Clients.Caller.OnTestSetupSucceeded();
+        } else {
+            await this.Clients.Caller.OnTestSetupFailed(result.Error);
         }
-        return Task.CompletedTask;
     }
-
+    
     public Task SendStartTest() {
         return this._controller.Send(ArduinoMsgPrefix.CommandPrefix, ArduinoCommand.Start);
     }

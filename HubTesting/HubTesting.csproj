@@ -12,6 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\BurnIn.ControlService.Infrastructure\BurnIn.ControlService.Infrastructure.csproj" />
       <ProjectReference Include="..\BurnIn.ControlService\BurnIn.ControlService.csproj" />
       <ProjectReference Include="..\BurnIn.Shared\BurnIn.Shared.csproj" />
     </ItemGroup>

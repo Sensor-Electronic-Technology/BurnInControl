@@ -1,8 +1,8 @@
 ﻿using AsyncAwaitBestPractices;
+using BurnIn.ControlService.Infrastructure.Services;
 using BurnIn.Shared.Models;
-using BurnIn.Shared.Models.BurnInStationData;
 using BurnIn.Shared.Models.Configurations;
-using BurnIn.Shared.Services;
+using BurnIn.Shared.Models.StationData;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;

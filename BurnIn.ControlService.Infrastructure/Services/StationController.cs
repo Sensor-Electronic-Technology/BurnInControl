@@ -1,15 +1,15 @@
 ﻿using AsyncAwaitBestPractices;
 using BurnIn.ControlService.Infrastructure.Commands;
-using BurnIn.ControlService.Infrastructure.Services;
+using BurnIn.ControlService.Infrastructure.Hubs;
+using BurnIn.Shared;
 using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
-using BurnIn.Shared.Models.BurnInStationData;
+using BurnIn.Shared.Models.StationData;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 using System.Threading.Channels;
-namespace BurnIn.Shared.Services;
+namespace BurnIn.ControlService.Infrastructure.Services;
 public class StationController:IDisposable {
     private readonly UsbController _usbController;
     private readonly ILogger<StationController> _logger;
@@ -85,9 +85,9 @@ public class StationController:IDisposable {
     public async Task UpdateFirmware() {
         var result=this._usbController.Disconnect();
         if (result.IsSuccess) {
-            var response=await this._mediator.Send(new UpdateCommand());
+            await this._mediator.Send(new UpdateCommand());
             this._usbController.Connect();
-            await this._hubContext.Clients.All.OnFirmwareUpdated(true, response.Version, "Updated",response.UploadText);
+            //await this._hubContext.Clients.All.OnFirmwareUpdated(true, response.Version, "Updated",response.UploadText);
         }
         await this._hubContext.Clients.All.OnFirmwareUpdated(false, "", "Update Failed","");
     }

@@ -1,9 +1,12 @@
-﻿using BurnIn.Shared.Models;
-using BurnIn.Shared.Models.BurnInStationData;
+﻿using BurnIn.Shared;
+using BurnIn.Shared.Models;
+using BurnIn.Shared.Models.StationData;
+using BurnIn.Shared.Services;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-namespace BurnIn.Shared.Services;
+namespace BurnIn.ControlService.Infrastructure.Services;
 public class BurnInTestService {
+    private readonly TestLogDataService _testLogDataService;
     private StationSerialData _latestData;
     private BurnInTestLog _runningTest=new BurnInTestLog();
     private bool _controllerStartedTest=false;
@@ -16,20 +19,19 @@ public class BurnInTestService {
 
     public bool IsRunning => this._testRunning || this._testPaused;
 
-    public BurnInTestService(ILogger<BurnInTestService> logger,IMongoClient client) {
+    public BurnInTestService(TestLogDataService testLogDataService,ILogger<BurnInTestService> logger) {
         this._logger = logger;
-        //TODO: setup database connection
-        //var database=client.GetDatabase("database")
-        //this._collection=database.getCollection
+        this._testLogDataService = testLogDataService;
     }
-
-    public Result SetupTest(List<WaferSetup> setup) {
+    
+    public Task<Result> SetupTest(List<WaferSetup> setup) {
         if (!this.IsRunning) {
             this._controllerStartedTest = false;
             this._runningTest.StartNew(setup);
-            return ResultFactory.Success();
+            
+            return Task.FromResult(ResultFactory.Success());
         }
-        return ResultFactory.Error("Cannot create a new test while a test is running");
+        return Task.FromResult(ResultFactory.Error("Cannot create a new test while a test is running"));
     }
 
     public void StartTestLogging() {
@@ -69,6 +71,7 @@ public class BurnInTestService {
         this._latestData = data;
         if (this._controllerStartedTest) {
             this._runningTest.SetStart(DateTime.Now,data);
+            
             this._testRunning = this._latestData.Running;
             this._testPaused = this._latestData.Paused;
             this._disableLogging = false;

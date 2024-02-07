@@ -1,5 +1,5 @@
-﻿using BurnIn.Shared.Models.BurnInStationData;
-using BurnIn.Shared.Models.Configurations;
+﻿using BurnIn.Shared.Models.Configurations;
+using BurnIn.Shared.Models.StationData;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 namespace BurnIn.Shared.Models;

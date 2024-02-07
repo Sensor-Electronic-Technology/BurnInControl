@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO.Ports;
 using System.Runtime.InteropServices;
-namespace BurnIn.Shared.Services;
+namespace BurnIn.ControlService.Infrastructure.Services;
 
 public class SerialPortFactory {
     private const int BaudRate = 38400;

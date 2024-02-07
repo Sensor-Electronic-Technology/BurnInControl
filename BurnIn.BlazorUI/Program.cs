@@ -1,14 +1,15 @@
 using BurnIn.BlazorUI.Components;
-using BurnIn.ControlService.Hubs;
-using BurnIn.ControlService.Services;
+using BurnIn.ControlService.Infrastructure.Services;
 using BurnIn.Shared.AppSettings;
+using BurnIn.ControlService.Infrastructure.HostedServices;
+using BurnIn.ControlService.Infrastructure.Hubs;
 using DevExpress.Xpo.Logger;
 using MongoDB.Driver;
 using System.Threading.Channels;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<FirmwareVersionSettings>(builder.Configuration.GetSection(nameof(FirmwareVersionSettings)));
-builder.Services.Configure<DatabaseConnections>(builder.Configuration.GetSection(nameof(DatabaseConnections)));
+builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
 builder.Services.AddSignalR(options => { 
     options.EnableDetailedErrors = true;
 }); 
@@ -28,7 +29,7 @@ builder.Services.AddSingleton(channel.Writer);
 builder.Services.AddLogging();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://172.20.3.41:28080"));
 builder.Services.AddSingleton<BurnInTestService>();
-builder.Services.AddSingleton<FirmwareVersionService>();
+builder.Services.AddSingleton<FirmwareUpdateService>();
 builder.Services.AddSingleton<StationController>();
 builder.Services.AddSingleton<UsbController>();
 

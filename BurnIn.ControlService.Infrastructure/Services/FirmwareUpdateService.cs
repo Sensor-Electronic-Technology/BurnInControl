@@ -156,6 +156,7 @@ public class FirmwareUpdateService {
         process.WaitForExit();
         return Task.FromResult(new UpdateResponse(this.Version, result));
     }
+    
     /*public async Task DownloadFirmwareUpdate() {
     var release = await this._github.Repository.Release.Get(this._org, this._repo,this._latestVersion);
     HttpClient client = new HttpClient();

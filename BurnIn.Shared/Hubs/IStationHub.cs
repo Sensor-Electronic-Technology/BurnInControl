@@ -1,5 +1,4 @@
 ﻿using BurnIn.Shared.Models;
-using BurnIn.Shared.Models.BurnInStationData;
 using System.Data;
 namespace BurnIn.Shared.Hubs;
 

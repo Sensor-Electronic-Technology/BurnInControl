@@ -12,14 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BurnIn.ControlService.Infrastructure\BurnIn.ControlService.Infrastructure.csproj" />
     <ProjectReference Include="..\BurnIn.Shared\BurnIn.Shared.csproj" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="StationController">
-      <HintPath>..\BurnIn.ControlService\bin\Debug\net8.0\linux-arm64\StationController.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

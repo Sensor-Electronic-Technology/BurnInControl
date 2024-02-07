@@ -1,10 +1,5 @@
 ﻿using Ardalis.SmartEnum;
-using MongoDB.Bson;
-using System.Globalization;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
-namespace BurnIn.Shared.Models.BurnInStationData;
+namespace BurnIn.Shared.Models.StationData;
 
 public sealed class ArduinoResponse : SmartEnum<ArduinoResponse, int> {
     public static readonly ArduinoResponse HeaterSave = new ArduinoResponse(nameof(HeaterSave), 0);

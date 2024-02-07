@@ -1,4 +1,4 @@
-﻿using BurnIn.Shared.Services;
+﻿using BurnIn.ControlService.Infrastructure.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 namespace BurnIn.ControlService.Infrastructure.HostedServices;
@@ -11,6 +11,7 @@ public class StationService:IHostedService,IDisposable {
         this._logger = logger;
         this._stationController = stationController;
     }
+    
 
     public Task StartAsync(CancellationToken cancellationToken) {
         return this._stationController.Start();

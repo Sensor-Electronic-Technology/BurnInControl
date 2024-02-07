@@ -1,5 +1,4 @@
-﻿using BurnIn.Shared.Models.BurnInStationData;
-using System.Text.Json;
+﻿using System.Text.Json;
 namespace BurnIn.Shared.Models.Configurations;
 
 public class NtcConfiguration {

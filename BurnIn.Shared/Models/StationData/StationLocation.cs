@@ -1,6 +1,5 @@
-﻿using Ardalis.SmartEnum;
-using MongoDB.Bson;
-namespace BurnIn.Shared.Models.BurnInStationData;
+﻿using MongoDB.Bson;
+namespace BurnIn.Shared.Models.StationData;
 
 public class StationPosition {
     public ObjectId _id { get; set; }

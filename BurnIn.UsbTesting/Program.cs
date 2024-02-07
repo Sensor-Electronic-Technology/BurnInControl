@@ -1,8 +1,9 @@
 ﻿// See https://aka.ms/new-console-template for more information
+using BurnIn.ControlService.Infrastructure.Services;
 using BurnIn.Shared.Models;
-using BurnIn.Shared.Models.BurnInStationData;
 using System.Text.Json;
 using BurnIn.Shared.Models.Configurations;
+using BurnIn.Shared.Models.StationData;
 using BurnIn.Shared.Services;
 using BurnIn.UsbTesting;
 using MongoDB.Bson;
@@ -23,7 +24,7 @@ using FileMode=System.IO.FileMode;
 
 //TestMessageCasting();
 //await TestGithubClient();
-Console.WriteLine("Checking With V01");
+/*Console.WriteLine("Checking With V01");
 TestVersionCheck("V01");
 
 Console.WriteLine("Checking With V2.01");
@@ -33,7 +34,144 @@ Console.WriteLine("Checking With P01");
 TestVersionCheck("P01");
 
 Console.WriteLine("Checking With V1.02");
-TestVersionCheck("V1.02");
+TestVersionCheck("V1.02");*/
+
+/*Console.WriteLine("Create Station Database");
+await CreateStationDatabase();*/
+Console.WriteLine("Testing logs");
+await TestLogDataServiceTesting();
+Console.WriteLine("Test Completed");
+/*Console.WriteLine("Stopped without marking complete, Press any key to continue test");
+Console.ReadKey();
+await ContinueFrom();*/
+
+async Task CreateStationDatabase() {
+    StationDataService service = new StationDataService(new MongoClient("mongodb://172.20.3.41:27017/"));
+    TestConfiguration config150 = new TestConfiguration() {
+        _id = ObjectId.GenerateNewId(),
+        TestName = "150mA_7hrs",
+        SetCurrent = StationCurrent._150mA,
+        RunTime = 25200,
+    };
+    
+    TestConfiguration config120 = new TestConfiguration() {
+        _id = ObjectId.GenerateNewId(),
+        TestName = "120mA_20Hrs",
+        SetCurrent = StationCurrent._120mA,
+        RunTime = 25200,
+    };
+    
+    TestConfiguration config60 = new TestConfiguration() {
+        _id = ObjectId.GenerateNewId(),
+        TestName = "60mA_20Hrs",
+        SetCurrent = StationCurrent._60mA,
+        RunTime = 25200,
+    };
+    await service.InsertTestConfiguration(config150);
+    await service.InsertTestConfiguration(config120);
+    await service.InsertTestConfiguration(config60);
+    Console.WriteLine("Test Configuration Created, Creating Stations");
+    Station station = new Station();
+    station.StationId = "S01";
+    station.StationPosition = "P20";
+    station.FirmwareVersion = "V1.1.2";
+    station.State= StationState.Idle;
+    station.Configuration = new BurnStationConfiguration() {
+        HeaterConfig = CreateHeaterControlConfig(),
+        ProbesConfiguration = CreateProbeControlConfig(),
+        StationConfiguration = CreateStationConfig()
+    };
+    await service.InsertStation(station);
+    Console.WriteLine("Station Created");
+}
+
+async Task TestLogDataServiceTesting(CancellationToken token=default) {
+    var client = new MongoClient("mongodb://172.20.3.41:27017/");
+    StationDataService stationService = new StationDataService(client);
+    TestLogDataService service = new TestLogDataService(client,stationService);
+    BurnInTestLog log = new BurnInTestLog();
+    log.StationId = "S01";
+    var testSetup=new List<WaferSetup>() {
+        new WaferSetup() {
+            WaferId = "W01",
+            BurnNumber = 1,
+            Probe1=StationProbe.Probe1,
+            Probe2=StationProbe.Probe2,
+            Probe1Pad = "a",
+            Probe2Pad = "l"
+        },
+        new WaferSetup() {
+            WaferId = "3",
+            BurnNumber = 1,
+            Probe1=StationProbe.Probe3,
+            Probe2=StationProbe.Probe4,
+            Probe1Pad = "a",
+            Probe2Pad = "l"
+        },
+        new WaferSetup() {
+            WaferId = "W03",
+            BurnNumber = 1,
+            Probe1=StationProbe.Probe5,
+            Probe2=StationProbe.Probe6,
+            Probe1Pad = "a",
+            Probe2Pad = "l"
+        }
+    };
+    log.StartNew(testSetup);
+    await service.StartNew(log, StationCurrent._150mA);
+    int count = 0;
+    PeriodicTimer timer=new PeriodicTimer(new TimeSpan(0,0,0,0,500));
+    CancellationTokenSource source = new CancellationTokenSource();
+    var tokenSource = source.Token;
+    await service.SetStart(log._id,DateTime.Now,GenerateSerialData());
+    while(await timer.WaitForNextTickAsync(source.Token) && count<10) {
+        var data = GenerateSerialData();
+        log.AddReading(data);
+        await service.InsertReading(log._id, data);
+        count++;
+        Console.WriteLine($"Logged Data, Log Count: {count}");
+    }
+
+    await service.SetCompleted(log._id,log.StationId,DateTime.Now);
+    Console.WriteLine("Test Complete");
+}
+
+async Task ContinueFrom() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017/");
+    StationDataService stationService = new StationDataService(client);
+    TestLogDataService service = new TestLogDataService(client,stationService);
+    var log=await service.CheckContinue("S01");
+    if (log != null) {
+        int count = 0;
+        PeriodicTimer timer=new PeriodicTimer(new TimeSpan(0,0,0,0,500));
+        CancellationTokenSource source = new CancellationTokenSource();
+        var tokenSource = source.Token;
+        while(await timer.WaitForNextTickAsync(source.Token) && count<10) {
+            var data = GenerateSerialData();
+            log.AddReading(data);
+            await service.InsertReading(log._id, data);
+            count++;
+            Console.WriteLine($"Logged Data, Log Count: {count}");
+        }
+
+        await service.SetCompleted(log._id,log.StationId,DateTime.Now);
+        Console.WriteLine("Test Complete");
+    } else {
+        Console.WriteLine("Test not found");
+    }
+}
+
+StationSerialData GenerateSerialData() {
+    StationSerialData data = new StationSerialData();
+    for (int i = 0; i < 6; i++) {
+        data.Voltages[i]=5.0;
+        data.Currents[i] = 1.0;
+        if (i < 3) {
+            data.Temperatures[i] = 85;
+        }
+    }
+    return data;
+}
 
 void TestVersionCheck(string fromController) {
     string latest = "V1.02";
@@ -143,10 +281,10 @@ IHostBuilder CreateHostBuilder(string[] args) =>
     });
 
 
-async Task CreateStationDatabase(string stationId) {
+/*async Task CreateStationDatabase(string stationId) {
     Console.WriteLine($"Creating Station Config Database.  Config for {stationId}");
     var client=new MongoClient("mongodb://172.20.3.41");
-    StationConfigurationService configService = new StationConfigurationService(client);
+    StationDataService configService = new StationDataService(client);
     BurnStationConfiguration configuration = new BurnStationConfiguration();
     configuration.StationId = stationId;
     configuration.StationPosition = "P20";
@@ -156,7 +294,7 @@ async Task CreateStationDatabase(string stationId) {
     configuration._id = ObjectId.GenerateNewId();
     await configService.InsertConfiguration(configuration);
     Console.WriteLine("Check Database");
-}
+}*/
 
 StationConfiguration CreateStationConfig() {
     var configuration =new StationConfiguration(1000, 500, 300000,3600000);
@@ -219,6 +357,11 @@ public record ArduinoSerialData {
     public long ElapsedSeconds { get; set; }
     public bool Running { get; set; }
     public bool Paused { get; set; }
+}
+
+public class TestRef {
+    public int Id { get; set; }
+    public string Message { get; set; }
 }
 
 

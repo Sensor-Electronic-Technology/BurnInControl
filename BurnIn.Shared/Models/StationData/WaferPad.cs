@@ -1,7 +1,6 @@
-﻿
-using Ardalis.SmartEnum; 
+﻿using Ardalis.SmartEnum;
 using MongoDB.Bson;
-namespace BurnIn.Shared.Models.BurnInStationData;
+namespace BurnIn.Shared.Models.StationData;
 
 /*public enum PadArea {
     a,

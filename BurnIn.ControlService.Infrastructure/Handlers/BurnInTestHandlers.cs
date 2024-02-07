@@ -1,6 +1,6 @@
 ﻿using BurnIn.ControlService.Infrastructure.Commands;
+using BurnIn.ControlService.Infrastructure.Services;
 using BurnIn.Shared;
-using BurnIn.Shared.Services;
 using MediatR;
 namespace BurnIn.ControlService.Infrastructure.Handlers;
 
@@ -10,7 +10,7 @@ public class TestSetupHandler : IRequestHandler<TestSetupCommand,Result> {
         this._testService = testService;
     }
     public Task<Result> Handle(TestSetupCommand request, CancellationToken cancellationToken) {
-        return Task.FromResult(this._testService.SetupTest(request.TestSetup));
+        return this._testService.SetupTest(request.TestSetup);
     }
 }
 

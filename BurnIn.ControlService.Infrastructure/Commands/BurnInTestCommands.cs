@@ -1,6 +1,6 @@
 ﻿using BurnIn.Shared;
 using BurnIn.Shared.Models;
-using BurnIn.Shared.Models.BurnInStationData;
+using BurnIn.Shared.Models.StationData;
 using MediatR;
 namespace BurnIn.ControlService.Infrastructure.Commands;
 

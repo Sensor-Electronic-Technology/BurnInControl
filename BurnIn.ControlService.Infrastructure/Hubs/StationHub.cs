@@ -1,12 +1,12 @@
-﻿using AsyncAwaitBestPractices;
-using BurnIn.ControlService.Infrastructure.Commands;
+﻿using BurnIn.ControlService.Infrastructure.Commands;
+using BurnIn.ControlService.Infrastructure.Services;
+using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
-using BurnIn.Shared.Models.BurnInStationData;
 using BurnIn.Shared.Models.Configurations;
-using BurnIn.Shared.Services;
+using BurnIn.Shared.Models.StationData;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
-namespace BurnIn.Shared.Hubs;
+namespace BurnIn.ControlService.Infrastructure.Hubs;
 
 public class StationHub:Hub<IStationHub> {
     private readonly StationController _controller;
@@ -56,7 +56,8 @@ public class StationHub:Hub<IStationHub> {
     }
 
     public async Task UpdateFirmware() {
-        await this._controller.UpdateFirmware();
+        //this._mediator.Send(new UpdateCommand());
+        //await this._controller.UpdateFirmware();
     }
 
     public Task SendProbeConfig(ProbeControllerConfig packet) {

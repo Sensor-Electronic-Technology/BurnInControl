@@ -33,3 +33,25 @@ public class FirmwareUpdateStatus {
         this.Message = msg;
     }
 }
+
+public record FirmwareUpdateResponse {
+    public string Version { get; set; }
+    public string ConsoleText { get; set; }
+    
+    public FirmwareUpdateResponse(string version, string consoleText) {
+        this.Version = version;
+        this.ConsoleText = consoleText;
+    }
+}
+
+public record UpdateResponseV2 {
+    public bool UpdateSuccess { get; set; }
+    public bool ConnectSuccess { get; set; }
+    public FirmwareUpdateResponse FirmwareResponse { get; set; }
+
+    public UpdateResponseV2() {
+        this.UpdateSuccess = false;
+        this.ConnectSuccess = false;
+        this.FirmwareResponse = new FirmwareUpdateResponse("V.0.0","N/A");
+    }
+}

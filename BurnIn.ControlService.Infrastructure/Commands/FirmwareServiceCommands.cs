@@ -12,7 +12,7 @@ public class CheckIfNewerVersion : IRequest {
     public string? ControllerVersion { get; set; }
 }
 
-public class UpdateCommand : IRequest<UpdateResponse> { }
+public class UpdateCommand : IRequest { }
 
 public class ControllerVersionReceived : INotification {
     public string? ControllerVersion { get; set; }

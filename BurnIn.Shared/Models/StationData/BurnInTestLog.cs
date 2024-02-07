@@ -1,17 +1,22 @@
 ﻿using MongoDB.Bson;
-namespace BurnIn.Shared.Models.BurnInStationData;
+namespace BurnIn.Shared.Models.StationData;
 
 public class BurnInTestLog {
     public ObjectId _id { get; set; }
+    public string StationId { get; set; }
+    public StationCurrent? SetCurrent { get; set; }
+    public long RunTime { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime StopTime { get; set; }
-
+    public bool Completed { get; set; }
+    
+    public long ElapsedTime { get; set; }
+    
     public List<WaferSetup> TestSetup { get; set; } = new List<WaferSetup>();
     public List<StationReading> Readings { get; set; } = new List<StationReading>();
 
     public void StartNew(List<WaferSetup> setup) {
         this.Clear();
-        this._id = ObjectId.GenerateNewId();
         this.TestSetup = setup;
     }
 
@@ -61,6 +66,7 @@ public class BurnInTestLog {
 
 public class WaferSetup {
     public string WaferId { get; set; }
+    public int BurnNumber { get; set; }
     public StationPocket StationPocket { get; set; }
     public StationProbe Probe1 { get; set; }
     public string? Probe1Pad { get; set; }

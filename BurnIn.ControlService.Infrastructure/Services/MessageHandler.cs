@@ -1,15 +1,15 @@
 ﻿using AsyncAwaitBestPractices;
 using BurnIn.ControlService.Infrastructure.Commands;
-using BurnIn.ControlService.Infrastructure.Services;
+using BurnIn.ControlService.Infrastructure.Hubs;
+using BurnIn.Shared;
 using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
-using BurnIn.Shared.Models.BurnInStationData;
+using BurnIn.Shared.Models.StationData;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using System.Threading.Channels;
-namespace BurnIn.Shared.Services;
+namespace BurnIn.ControlService.Infrastructure.Services;
 
 public class MessageHandler:IRequestHandler<ProcessSerialCommand> {
     private readonly BurnInTestService _testService;

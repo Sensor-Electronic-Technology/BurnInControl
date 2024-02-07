@@ -1,5 +1,6 @@
-﻿using BurnIn.Shared.Models;
-using BurnIn.Shared.Models.BurnInStationData;
+﻿using BurnIn.Shared;
+using BurnIn.Shared.Models;
+using BurnIn.Shared.Models.StationData;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.IO.Ports;
@@ -7,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Channels;
 using ThreadState=System.Threading.ThreadState;
-namespace BurnIn.Shared.Services;
+namespace BurnIn.ControlService.Infrastructure.Services;
 
 public class UpperCaseNamingPolicy : JsonNamingPolicy
 {

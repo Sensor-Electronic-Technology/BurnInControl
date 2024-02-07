@@ -1,7 +1,7 @@
 ﻿using Ardalis.SmartEnum;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-namespace BurnIn.Shared.Models.BurnInStationData;
+namespace BurnIn.Shared.Models.StationData;
 
 [JsonConverter(typeof(ArduinoCommandJsonConverter))]
 public class ArduinoCommand : SmartEnum<ArduinoCommand,int>,IPacket {

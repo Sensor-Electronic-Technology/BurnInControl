@@ -1,5 +1,6 @@
 ﻿using AsyncAwaitBestPractices;
 using BurnIn.ControlService.Infrastructure.Commands;
+using BurnIn.ControlService.Infrastructure.Services;
 using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
@@ -15,7 +16,7 @@ public class StationController:IDisposable {
     private readonly IHubContext<StationHub, IStationHub> _hubContext;
     private readonly ChannelReader<string> _channelReader;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
-    private readonly FirmwareVersionService _firmwareService;
+    /*private readonly FirmwareUpdateService _firmwareService;*/
     // private readonly MessageHandler _messageHandler;
     private readonly IMediator _mediator;
     
@@ -23,7 +24,6 @@ public class StationController:IDisposable {
     public StationController(IHubContext<StationHub, IStationHub> hubContext, 
             UsbController usbController,
             ChannelReader<string> channelReader,
-            FirmwareVersionService firmwareService,
             IMediator mediator,
             ILogger<StationController> logger) {
         this._logger = logger;
@@ -31,10 +31,8 @@ public class StationController:IDisposable {
         this._usbController = usbController;
         this._hubContext = hubContext;
         this._usbController.UsbUnPlugHandler += this.UsbUnplugHandler;
-        this._firmwareService = firmwareService;
+        /*this._firmwareService = firmwareService;*/
         this._mediator = mediator;
-        /*this._testService = testService;
-        this._messageHandler = messageHandler;*/
     }
 
     public Task Start() {
@@ -78,26 +76,20 @@ public class StationController:IDisposable {
         }
     }
 
-    public async Task<Result> CheckForUpdate() {
-        await this._firmwareService.GetLatestVersion();
+    public Task RequestFirmwareVersion() {
+        //TODO do something with result
         var result=this._usbController.RequestFirmwareVersion();
-        if (result.IsSuccess) {
-            return result;
-        } else {
-            return ResultFactory.Error($"Error Requesting Version " +
-                                       $"Error Message: {result.Message}");
-        }
+        return Task.CompletedTask;
     }
 
     public async Task UpdateFirmware() {
         var result=this._usbController.Disconnect();
         if (result.IsSuccess) {
-            await this._firmwareService.DownloadFirmwareUpdate();
-            this._firmwareService.UploadFirmwareUpdate();
+            var response=await this._mediator.Send(new UpdateCommand());
             this._usbController.Connect();
-            await this._hubContext.Clients.All.OnFirmwareUpdated(true, this._firmwareService.Version, "Updated");
+            await this._hubContext.Clients.All.OnFirmwareUpdated(true, response.Version, "Updated",response.UploadText);
         }
-        await this._hubContext.Clients.All.OnFirmwareUpdated(false, this._firmwareService.Version, "Update Failed");
+        await this._hubContext.Clients.All.OnFirmwareUpdated(false, "", "Update Failed","");
     }
     
     private async Task StartReaderAsync(CancellationToken token) {
@@ -105,8 +97,7 @@ public class StationController:IDisposable {
             while (this._channelReader.TryRead(out var message)) {
                 await this._mediator.Send(new ProcessSerialCommand() {
                     Message = message
-                });
-                //await this._messageHandler.Handle(message);
+                }, token);
             }
         }
     }

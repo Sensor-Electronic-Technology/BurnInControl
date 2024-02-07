@@ -1,5 +1,6 @@
 ﻿using AsyncAwaitBestPractices;
 using BurnIn.ControlService.Infrastructure.Commands;
+using BurnIn.ControlService.Infrastructure.Services;
 using BurnIn.Shared.Hubs;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
@@ -14,13 +15,13 @@ public class MessageHandler:IRequestHandler<ProcessSerialCommand> {
     private readonly BurnInTestService _testService;
     private readonly IHubContext<StationHub, IStationHub> _hubContext;
     private readonly ILogger<MessageHandler> _logger;
-    private readonly FirmwareVersionService _firmwareService;
+    private readonly FirmwareUpdateService _firmwareService;
     private readonly IMediator _mediator;
 
     public MessageHandler(ILogger<MessageHandler> logger,
         BurnInTestService testService,
         IHubContext<StationHub, IStationHub> hubContext,
-        FirmwareVersionService firmwareService,
+        FirmwareUpdateService firmwareService,
         IMediator mediator) {
         this._testService = testService;
         this._logger = logger;
@@ -39,22 +40,50 @@ public class MessageHandler:IRequestHandler<ProcessSerialCommand> {
                         var prefix=ArduinoMsgPrefix.FromValue(prefixValue);
                         if (prefix != null) {
                             var packetElem=doc.RootElement.GetProperty("Packet");
-                            prefix.When(ArduinoMsgPrefix.DataPrefix).Then(() => this.HandleData(packetElem))
-                                .When(ArduinoMsgPrefix.MessagePrefix).Then(() => this.HandleMessage(packetElem, false))
-                                .When(ArduinoMsgPrefix.InitMessage).Then(() => this.HandleMessage(packetElem, true))
-                                .When(ArduinoMsgPrefix.IdRequest).Then(() => this.HandleIdChanged(packetElem))
-                                .When(ArduinoMsgPrefix.VersionRequest).Then(()=>this.HandleVersionRequest(packetElem))
-                                .When(ArduinoMsgPrefix.TestStatus).Then(()=>this.HandleTestStatus(packetElem));
+                            switch (prefix) {
+                                case nameof(ArduinoMsgPrefix.DataPrefix): {
+                                    return this.HandleData(packetElem);
+                                }
+                                case nameof(ArduinoMsgPrefix.MessagePrefix): {
+                                    return this.HandleMessage(packetElem, false);
+                                }
+                                case nameof(ArduinoMsgPrefix.InitMessage): {
+                                    return this.HandleMessage(packetElem, false);
+                                }
+                                case nameof(ArduinoMsgPrefix.IdRequest): {
+                                    return this.HandleIdChanged(packetElem);
+                                }
+                                case nameof(ArduinoMsgPrefix.VersionRequest): {
+                                    return this.HandleVersionRequest(packetElem);
+                                }
+                                case nameof(ArduinoMsgPrefix.TestStatus): {
+                                    return this.HandleTestStatus(packetElem);
+                                }
+                                default: {
+                                    this._logger.LogWarning($"Prefix value {prefix.Value} not implemented");
+                                    return Task.CompletedTask;
+                                }
+                            }
+                        } else {
+                            this._logger.LogWarning("ArduinoMsgPrefix.FromValue(prefixValue) was null");
+                            return Task.CompletedTask;
                         }
+                    } else {
+                        this._logger.LogWarning("Prefix value null or empty");
+                        return Task.CompletedTask;
                     }
                 } else {
-                    this._hubContext.Clients.All.OnSerialComMessage(request.Message);
+                    this._logger.LogWarning("MessagePacket did not contain Prefix");
+                    return Task.CompletedTask;
                 }
+            } else {
+                this._logger.LogWarning("Mediator request MessagePacket json text was null or empty");
+                return Task.CompletedTask;
             }
         } catch {
             this._logger.LogWarning($"Message had errors.  Message: {request.Message}");
+            return Task.CompletedTask;
         }
-        return Task.CompletedTask;
     }
     
     /*public Task Handle(string message) {
@@ -84,7 +113,7 @@ public class MessageHandler:IRequestHandler<ProcessSerialCommand> {
         return Task.CompletedTask;
     }*/
 
-    private void HandleData(JsonElement element) {
+    private Task HandleData(JsonElement element) {
         try {
             var serialData=element.Deserialize<StationSerialData>();
             if (serialData != null) {
@@ -95,61 +124,60 @@ public class MessageHandler:IRequestHandler<ProcessSerialCommand> {
         } catch(Exception e) {
             this._logger.LogWarning("Failed to deserialize station data");
         }
+        return Task.CompletedTask;
     }
 
-    private void HandleMessage(JsonElement element,bool isInit) {
+    private Task HandleMessage(JsonElement element,bool isInit) {
         var message=element.GetProperty("Message").ToString();
-        this._hubContext.Clients.All.OnSerialComMessage(message).SafeFireAndForget();
+        return this._hubContext.Clients.All.OnSerialComMessage(message);
     }
 
-    private void HandleIdChanged(JsonElement element) {
-        var id = element.GetString();
-        this._hubContext.Clients.All.OnIdChanged(id);
+    private Task HandleIdChanged(JsonElement element) {
+        try {
+            var id = element.GetString();
+            return this._mediator.Publish(new ControllerIdReceived() {
+                ControllerId = id
+            });
+        } catch {
+            this._logger.LogError("Failed to parse Controller Id");
+            return Task.CompletedTask;
+        }
     }
     
-    private void HandleVersionRequest(JsonElement element) {
+    private async Task HandleVersionRequest(JsonElement element) {
         try {
             var version = element.GetString();
             if (!string.IsNullOrEmpty(version)) {
-                FirmwareUpdateStatus status = this._firmwareService.CheckNewerVersion(version);
-                this._hubContext.Clients.All.OnUpdateChecked(status);
-            } else {
-                this._hubContext.Clients.All.OnUpdateChecked(new FirmwareUpdateStatus() {
-                    Message = "Failed to check firmware version. Version string was null or empty",
-                    UpdateReady = false,
-                    Type=UpdateType.None
+                await this._mediator.Send(new CheckIfNewerVersion() {
+                    ControllerVersion = version
                 });
+            } else {
                 this._logger.LogError("Failed to check firmware version. Version string was null or empty");
             }
         } catch(Exception e) {
-            this._hubContext.Clients.All.OnUpdateChecked(new FirmwareUpdateStatus() {
-                Message =$"Update check failed Exception: {e.Message}",
-                UpdateReady = false,
-                Type=UpdateType.None
-            });
             this._logger.LogError("Update check failed Exception: {Error}",e.Message);
         }
     }
 
-    private void HandleTestStatus(JsonElement element) {
+    private Task HandleTestStatus(JsonElement element) {
         try {
             var success = element.GetProperty("Status").GetBoolean();
             var message = element.GetProperty("Message").GetString();
             if (success) {
-                this._mediator.Publish(new TestStartedNotify() { Message=message })
-                    .SafeFireAndForget();
-                //this._testService.SetSetupComplete();
-                this._hubContext.Clients.All.OnTestStarted();
+                return this._mediator.Publish(new TestStartedStatus() {
+                    Status = ResultFactory.Success(message)
+                });
             } else {
-                if (!string.IsNullOrEmpty(message)) {
-                    this._hubContext.Clients.All.OnTestStartedFailed(message);
-                } else {
-                    this._hubContext.Clients.All.OnTestStartedFailed("Test failed to start, cause unknown");
-                }
+                return this._mediator.Publish(new TestStartedStatus() {
+                    Status = ResultFactory.Error(message)
+                });
             }
         } catch(Exception e) {
-            this._hubContext.Clients.All.OnTestStartedFailed("Failed to parse test status message");
-            this._logger.LogError("Update check failed Exception: {Error}",e.Message);
+            var message = $"Failed to parse Test Status message packet. Exception: {e.Message}";
+            this._logger.LogError(message);
+            return this._mediator.Publish(new TestStartedStatus() {
+                Status = ResultFactory.Error(message)
+            });
         }
     }
 }

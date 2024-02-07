@@ -1,4 +1,5 @@
-﻿using BurnIn.ControlService.Infrastructure.Commands;
+﻿using AsyncAwaitBestPractices;
+using BurnIn.ControlService.Infrastructure.Commands;
 using BurnIn.Shared.Models;
 using BurnIn.Shared.Models.BurnInStationData;
 using BurnIn.Shared.Models.Configurations;
@@ -10,17 +11,10 @@ namespace BurnIn.Shared.Hubs;
 public class StationHub:Hub<IStationHub> {
     private readonly StationController _controller;
     private readonly IMediator _mediator;
-    //private readonly BurnInTestService _testService;
-    
-    /*public StationHub(StationController controller,BurnInTestService testService) {
-        this._controller = controller;
-        //this._testService = testService;
-    }*/
     
     public StationHub(StationController controller,IMediator mediator) {
         this._controller = controller;
         this._mediator = mediator;
-        //this._testService = testService;
     }
     
     public Task ConnectUsb() {
@@ -57,7 +51,8 @@ public class StationHub:Hub<IStationHub> {
     }
 
     public async Task CheckForUpdate() {
-        await this._controller.CheckForUpdate();
+        await this._mediator.Send(new GetLatestVersionCommand());
+        await this._controller.RequestFirmwareVersion();
     }
 
     public async Task UpdateFirmware() {

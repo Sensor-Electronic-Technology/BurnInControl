@@ -13,7 +13,7 @@ public interface IStationHub {
     Task OnSettingsUploaded(bool uploaded);
 
     Task OnUpdateChecked(FirmwareUpdateStatus firmwareUpdateStatus);
-    Task OnFirmwareUpdated(bool completed,string newVersion,string message);
+    Task OnFirmwareUpdated(bool completed,string newVersion,string message,string consoleMessage);
     
     //Test Related
     Task OnTestStarted();

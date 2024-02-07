@@ -1,23 +1,20 @@
-﻿using BurnIn.Shared.AppSettings;
-using BurnIn.Shared.Hubs;
+﻿using BurnIn.ControlService.Infrastructure.Commands;
+using BurnIn.Shared.AppSettings;
 using BurnIn.Shared.Models;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Octokit;
 using System.Diagnostics;
-using System.Text;
 using System.Text.RegularExpressions;
 using FileMode=System.IO.FileMode;
-namespace BurnIn.Shared.Services;
+namespace BurnIn.ControlService.Infrastructure.Services;
 
-public class FirmwareVersionService {
+public class FirmwareUpdateService {
     private readonly Regex _regex = new Regex("^V\\d\\.\\d\\.\\d$", RegexOptions.IgnoreCase);
-    private readonly ILogger<FirmwareVersionService> _logger;
-    private readonly IHubContext<StationHub, IStationHub> _hubContext;
+    private readonly ILogger<FirmwareUpdateService> _logger;
+    /*private readonly IHubContext<StationHub, IStationHub> _hubContext;*/
     private readonly GitHubClient _github;
     private string _latestVersion = string.Empty;
-    public StringBuilder _output;
     private FirmwareUpdateStatus _firmwareUpdateStatus=new FirmwareUpdateStatus();
     
     private readonly string _org;
@@ -30,9 +27,8 @@ public class FirmwareVersionService {
 
     public string Version => (!string.IsNullOrEmpty(this._latestVersion) ? this._latestVersion : "V0.0.0");
 
-    public FirmwareVersionService(ILogger<FirmwareVersionService> logger,
-        IOptions<FirmwareVersionSettings> options,
-        IHubContext<StationHub, IStationHub> hubContext) {
+    public FirmwareUpdateService(ILogger<FirmwareUpdateService> logger,
+        IOptions<FirmwareVersionSettings> options) {
         this._logger = logger;
         this._org = options.Value.GithubOrg;
         this._repo = options.Value.GithubRepo;
@@ -41,8 +37,6 @@ public class FirmwareVersionService {
         this._avrDudeCommand = options.Value.AvrDudeCmd;
         this._avrDudeFileName = options.Value.AvrDudeFileName;
         this._firmwareFullPath = this._firmwarePath + this._firmwareFileName;
-        this._hubContext = hubContext;
-        this._output = new StringBuilder();
         this._github=new GitHubClient(new ProductHeaderValue(this._org));
     }
 
@@ -57,7 +51,7 @@ public class FirmwareVersionService {
         var result = await this._github.Repository.Release.Create(this._org, this._repo, newRelease);
         
         /*
-         //Update release example
+         * //Update release example
          var release = client.Repository.Release.Get("octokit", "octokit.net", 1);
         var updateRelease = release.ToUpdate();
         updateRelease.Draft = false;
@@ -78,14 +72,9 @@ public class FirmwareVersionService {
         }
         */
     }
-
     public async Task GetLatestVersion() {
-        var result=await this._github.Repository.Release.GetLatest(this._org, this._repo);
-        this._latestVersion = result.TagName;
-    }
-
-    public async Task DownloadFirmwareUpdate() {
-        var release = await this._github.Repository.Release.Get(this._org, this._repo,this._latestVersion);
+        var release=await this._github.Repository.Release.GetLatest(this._org, this._repo);
+        this._latestVersion = release.TagName;
         HttpClient client = new HttpClient();
         if (release.Assets.Any()) {
             var asset = release.Assets.FirstOrDefault(e => e.Name == this._firmwareFileName);
@@ -131,21 +120,24 @@ public class FirmwareVersionService {
         int latestV = Convert.ToInt16(latestSpan[1]);
         int controlV = Convert.ToInt16(controlSpan[1]);
         if (latestV > controlV) {
-            this._firmwareUpdateStatus.Set(UpdateType.Major,$"Firmware major update is available. Controller: {fromController} Latest: {latest}");
+            this._firmwareUpdateStatus.Set(UpdateType.Major,
+                $"Firmware major update is available. Controller: {fromController} Latest: {latest}");
             return this._firmwareUpdateStatus;
         }
         
         latestV = Convert.ToInt16(latestSpan[3]);
         controlV = Convert.ToInt16(controlSpan[3]);
         if (latestV > controlV) {
-            this._firmwareUpdateStatus.Set(UpdateType.Minor,$"Firmware minor update is available. Controller: {fromController} Latest: {latest}");
+            this._firmwareUpdateStatus.Set(UpdateType.Minor,
+                $"Firmware minor update is available. Controller: {fromController} Latest: {latest}");
             return this._firmwareUpdateStatus;
         }
         
         latestV = Convert.ToInt16(latestSpan[5]);
         controlV = Convert.ToInt16(controlSpan[5]);
         if (latestV > controlV) {
-            this._firmwareUpdateStatus.Set(UpdateType.Patch,$"Firmware patch update is available. Controller: {fromController} Latest: {latest}");
+            this._firmwareUpdateStatus.Set(UpdateType.Patch,
+                $"Firmware patch update is available. Controller: {fromController} Latest: {latest}");
             return this._firmwareUpdateStatus;
         }
         
@@ -153,34 +145,36 @@ public class FirmwareVersionService {
         return this._firmwareUpdateStatus;
     }
     
-    public void UploadFirmwareUpdate() {
+    public Task<UpdateResponse> UploadFirmwareUpdate() {
         using Process process = new Process();
         process.StartInfo.FileName = this._avrDudeFileName;
         process.StartInfo.Arguments = this._avrDudeCommand;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.UseShellExecute = false;
-        //process.StartInfo.CreateNoWindow = true;
-        process.OutputDataReceived += new DataReceivedEventHandler((sender, e) =>
-        {
-            if (!String.IsNullOrEmpty(e.Data)) {
-                //this._output.AppendLine(e.Data);
-                this._hubContext.Clients.All.OnReceiveFirmwareUploadText(this._output.ToString());
-            }
-        });
         process.Start();
-        // Asynchronously read the standard output of the spawned process.
-        // This raises OutputDataReceived events for each line of output.
-        process.BeginOutputReadLine();
+        var result = process.StandardOutput.ReadToEnd();
         process.WaitForExit();
-        
-        //Console.WriteLine(this._output);
-        
-        process.WaitForExit();
-        process.Close();
-        this._output.Clear();
-        /*//this._channelWriter.TryWrite(process.StandardOutput.ReadToEnd());
-        //Console.WriteLine(process.StandardOutput.ReadToEnd());
-        process.WaitForExit();*/
+        return Task.FromResult(new UpdateResponse(this.Version, result));
     }
-
+    /*public async Task DownloadFirmwareUpdate() {
+    var release = await this._github.Repository.Release.Get(this._org, this._repo,this._latestVersion);
+    HttpClient client = new HttpClient();
+    if (release.Assets.Any()) {
+        var asset = release.Assets.FirstOrDefault(e => e.Name == this._firmwareFileName);
+        if (asset != null) {
+            var uri = new Uri(asset.BrowserDownloadUrl);
+            var stream = await client.GetStreamAsync(uri);
+            if (File.Exists(this._firmwareFullPath)) {
+                File.Delete(this._firmwareFullPath);
+                this._logger.LogInformation("Old firmware file deleted");
+            }
+            await using var fs = new FileStream(this._firmwareFullPath, FileMode.Create);
+            await stream.CopyToAsync(fs);
+        } else {
+            this._logger.LogError("Failed to download, file {file} not found","BurnInFirmwareV3.ino.hex");
+        }
+    } else {
+        this._logger.LogError("Failed to download latest firmware");
+    }
+    }*/
 }

@@ -12,8 +12,8 @@ public class LogCommand:IRequest<Result> {
     public StationSerialData Data { get; set; }
 }
 
-public class TestStartedNotify : INotification {
-    public string? Message { get; set; }
+public class TestStartedStatus : INotification {
+    public Result Status { get; set; }
 }
 
 

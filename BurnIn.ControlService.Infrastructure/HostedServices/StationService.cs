@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using BurnIn.Shared.Services;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-namespace BurnIn.Shared.Services;
+namespace BurnIn.ControlService.Infrastructure.HostedServices;
 
 public class StationService:IHostedService,IDisposable {
     private readonly StationController _stationController;
@@ -25,6 +26,6 @@ public class StationService:IHostedService,IDisposable {
         }
     }
     public void Dispose() {
-        
+        this._stationController.Dispose();
     }
 }

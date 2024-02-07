@@ -4,12 +4,9 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 namespace BurnIn.Shared.Services;
 public class BurnInTestService {
-    public event EventHandler TestStartedHandler;
-    public event EventHandler TestCompleteHandler;
-    
     private StationSerialData _latestData;
     private BurnInTestLog _runningTest=new BurnInTestLog();
-    private bool _testSetupComplete=false;
+    private bool _controllerStartedTest=false;
     private bool _testRunning = false;
     private bool _testPaused = false;
     private bool _disableLogging = false;
@@ -28,15 +25,15 @@ public class BurnInTestService {
 
     public Result SetupTest(List<WaferSetup> setup) {
         if (!this.IsRunning) {
-            this._testSetupComplete = false;
+            this._controllerStartedTest = false;
             this._runningTest.StartNew(setup);
             return ResultFactory.Success();
         }
         return ResultFactory.Error("Cannot create a new test while a test is running");
     }
 
-    public void SetSetupComplete() {
-        this._testSetupComplete=true;
+    public void StartTestLogging() {
+        this._controllerStartedTest=true;
     }
     
     public Result Log(StationSerialData data) {
@@ -70,7 +67,7 @@ public class BurnInTestService {
 
     private Result LogStart(StationSerialData data) {
         this._latestData = data;
-        if (this._testSetupComplete) {
+        if (this._controllerStartedTest) {
             this._runningTest.SetStart(DateTime.Now,data);
             this._testRunning = this._latestData.Running;
             this._testPaused = this._latestData.Paused;
@@ -91,13 +88,13 @@ public class BurnInTestService {
         //for testing pretend test was found
         testFound = true;
         if (testFound) {
-            this._testSetupComplete = true;
+            this._controllerStartedTest = true;
             this._testRunning = data.Running;
             this._testPaused = data.Paused;
             this._disableLogging = false;
             return ResultFactory.Success("Continuing test ABDC");
         } else {
-            this._testSetupComplete = true;
+            this._controllerStartedTest = true;
             this._testRunning = true;
             this._testPaused = false;
             this._disableLogging = true;
@@ -108,7 +105,7 @@ public class BurnInTestService {
     private Result LogFinished(StationSerialData data) {
         this._testRunning = false;
         this._testRunning = false;
-        this._testSetupComplete = false;
+        this._controllerStartedTest = false;
         this._disableLogging = false;
         this._latestData = data;
         this._runningTest.SetCompleted(DateTime.Now);

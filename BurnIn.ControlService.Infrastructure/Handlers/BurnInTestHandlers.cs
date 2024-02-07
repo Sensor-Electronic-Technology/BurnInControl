@@ -1,7 +1,8 @@
 ﻿using BurnIn.ControlService.Infrastructure.Commands;
+using BurnIn.Shared;
 using BurnIn.Shared.Services;
 using MediatR;
-namespace BurnIn.Shared.Handlers;
+namespace BurnIn.ControlService.Infrastructure.Handlers;
 
 public class TestSetupHandler : IRequestHandler<TestSetupCommand,Result> {
     private readonly BurnInTestService _testService;
@@ -23,14 +24,18 @@ public class TestLogCommandHandler : IRequestHandler<LogCommand,Result> {
     }
 }
 
-public class TestStartedNotifyHandler : INotificationHandler<TestStartedNotify> {
+public class TestStartedStatusHandler : INotificationHandler<TestStartedStatus> {
     private readonly BurnInTestService _testService;
-    public TestStartedNotifyHandler(BurnInTestService testService) {
+    public TestStartedStatusHandler(BurnInTestService testService) {
         this._testService = testService;
     }
 
-    public Task Handle(TestStartedNotify notification, CancellationToken cancellationToken) {
-        this._testService.SetSetupComplete();
+    public Task Handle(TestStartedStatus notification, CancellationToken cancellationToken) {
+        if (notification.Status.IsSuccess) {
+            this._testService.StartTestLogging();
+        } else {
+            this._testService.StartTestLogging();
+        }
         return Task.CompletedTask;
     }
 }

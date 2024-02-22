@@ -23,8 +23,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\BurnIn.Shared\BurnIn.Shared.csproj" />
+        <PackageReference Include="WolverineFx" Version="1.19.0" />
         <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0" />
+        <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
+        <PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0" />
+        <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
+        <PackageReference Include="Serilog.Sinks.Grafana.Loki" Version="8.3.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -34,9 +38,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Resource Include="Services\ListUsbPorts.sh">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Resource>
+      <ProjectReference Include="..\BurnInControl.Data\BurnInControl.Data.csproj" />
     </ItemGroup>
 
 </Project>

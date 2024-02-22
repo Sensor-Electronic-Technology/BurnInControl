@@ -8,12 +8,16 @@
   <ItemGroup>
     <PackageReference Include="DevExpress.Blazor" Version="23.2-*" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.0" />
+    <PackageReference Include="WolverineFx" Version="1.19.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0" />
+    <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
+    <PackageReference Include="Serilog.Sinks.Grafana.Loki" Version="8.3.0" />
     
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BurnIn.ControlService.Infrastructure\BurnIn.ControlService.Infrastructure.csproj" />
-    <ProjectReference Include="..\BurnIn.Shared\BurnIn.Shared.csproj" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0" />
   </ItemGroup>
 

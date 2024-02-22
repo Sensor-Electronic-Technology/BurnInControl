@@ -3,12 +3,16 @@ using BurnIn.ControlService.Infrastructure.Services;
 using BurnIn.Shared.AppSettings;
 using BurnIn.ControlService.Infrastructure.HostedServices;
 using BurnIn.ControlService.Infrastructure.Hubs;
+using BurnIn.Data.AppSettings;
 using DevExpress.Xpo.Logger;
+using Wolverine;
+using Wolverine.Transports.Tcp;
 using MongoDB.Driver;
 using System.Threading.Channels;
+using Wolverine.ErrorHandling;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.Configure<FirmwareVersionSettings>(builder.Configuration.GetSection(nameof(FirmwareVersionSettings)));
+builder.Services.Configure<FirmwareUpdateSettings>(builder.Configuration.GetSection(nameof(FirmwareUpdateSettings)));
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
 builder.Services.AddSignalR(options => { 
     options.EnableDetailedErrors = true;
@@ -24,6 +28,12 @@ builder.Services.AddDevExpressBlazor(options => {
 
 var channel = Channel.CreateUnbounded<string>();
 //builder.Host.UseSystemd();
+builder.Host.UseWolverine(opts => {
+    opts.ListenAtPort(5580);
+    opts.PublishAllMessages().ToPort(5581);
+    opts.OnException<InvalidOperationException>().Discard();
+});
+
 builder.Services.AddSingleton(channel.Reader);
 builder.Services.AddSingleton(channel.Writer);
 builder.Services.AddLogging();
@@ -38,6 +48,7 @@ builder.Services.AddHostedService<StationService>();
 var app = builder.Build();
 //app.Urls.Add("http://172.20.1.15:3000");
 app.MapHub<StationHub>("/hubs/station");
+
 // Configure the HTTP request pipeline.
 if(!app.Environment.IsDevelopment()) {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -47,6 +58,7 @@ if(!app.Environment.IsDevelopment()) {
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
-app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
 
 app.Run();

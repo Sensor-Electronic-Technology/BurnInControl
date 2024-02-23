@@ -1,4 +1,4 @@
-namespace BurnIn.Data.ComponentConfiguration.HeaterController;
+namespace BurnInControl.Data.ComponentConfiguration.HeaterController;
 
 public class PidConfiguration {
     public double Kp { get; set; }

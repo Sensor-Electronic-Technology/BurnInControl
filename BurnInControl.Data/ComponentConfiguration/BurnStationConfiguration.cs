@@ -1,8 +1,8 @@
-﻿using BurnIn.Data.ComDefinitions;
-using BurnIn.Data.ComponentConfiguration.HeaterController;
-using BurnIn.Data.ComponentConfiguration.ProbeController;
-using BurnIn.Data.ComponentConfiguration.StationController;
-namespace BurnIn.Data.Station.Configuration;
+﻿using BurnInControl.Data.ComponentConfiguration.HeaterController;
+using BurnInControl.Data.ComponentConfiguration.ProbeController;
+using BurnInControl.Data.ComponentConfiguration.StationController;
+using BurnInControl.Shared.ComDefinitions.MessagePacket;
+namespace BurnInControl.Data.ComponentConfiguration;
 
 public class BurnStationConfiguration:IPacket {
     public StationConfiguration StationConfiguration { get; set; }

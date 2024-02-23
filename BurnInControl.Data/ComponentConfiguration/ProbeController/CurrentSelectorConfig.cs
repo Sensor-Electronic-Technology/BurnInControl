@@ -1,4 +1,4 @@
-namespace BurnIn.Data.ComponentConfiguration.ProbeController;
+namespace BurnInControl.Data.ComponentConfiguration.ProbeController;
 
 public class CurrentSelectorConfig {
     public sbyte Pin120mA { get; set; }

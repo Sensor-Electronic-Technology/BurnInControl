@@ -1,5 +1,5 @@
-﻿using BurnIn.Data.ComDefinitions;
-namespace BurnIn.Data.ComponentConfiguration.ProbeController;
+﻿using BurnInControl.Shared.ComDefinitions.MessagePacket;
+namespace BurnInControl.Data.ComponentConfiguration.ProbeController;
 
 public class ProbeControllerConfig:IPacket {
     public CurrentSelectorConfig CurrentSelectConfig { get; set; }

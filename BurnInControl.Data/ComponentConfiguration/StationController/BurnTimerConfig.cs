@@ -1,4 +1,4 @@
-﻿namespace BurnIn.Data.ComponentConfiguration.StationController;
+﻿namespace BurnInControl.Data.ComponentConfiguration.StationController;
 
 public class BurnTimerConfig {
     public ulong Time60mASec { get; set; }

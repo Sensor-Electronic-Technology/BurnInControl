@@ -1,5 +1,5 @@
 using Ardalis.SmartEnum;
-namespace BurnIn.Data.StationModel.Components;
+namespace BurnInControl.Data.StationModel.Components;
 
 public class StationPocket : SmartEnum<StationPocket, int> {
     public static StationPocket LeftPocket = new StationPocket(nameof(LeftPocket), 1);

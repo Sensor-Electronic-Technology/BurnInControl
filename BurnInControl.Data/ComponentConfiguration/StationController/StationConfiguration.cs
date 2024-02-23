@@ -1,5 +1,5 @@
-﻿using BurnIn.Data.ComDefinitions;
-namespace BurnIn.Data.ComponentConfiguration.StationController;
+﻿using BurnInControl.Shared.ComDefinitions.MessagePacket;
+namespace BurnInControl.Data.ComponentConfiguration.StationController;
 
 public class StationConfiguration:IPacket {
     public BurnTimerConfig BurnTimerConfig { get; set; }

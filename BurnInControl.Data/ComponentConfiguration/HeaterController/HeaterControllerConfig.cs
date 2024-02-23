@@ -1,5 +1,5 @@
-﻿using BurnIn.Data.ComDefinitions;
-namespace BurnIn.Data.ComponentConfiguration.HeaterController;
+﻿using BurnInControl.Shared.ComDefinitions.MessagePacket;
+namespace BurnInControl.Data.ComponentConfiguration.HeaterController;
 
 public class HeaterControllerConfig:IPacket {
     public List<HeaterConfiguration> HeaterConfigurations { get; set; }

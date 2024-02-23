@@ -1,4 +1,4 @@
-namespace BurnIn.Data.ComponentConfiguration.ProbeController;
+namespace BurnInControl.Data.ComponentConfiguration.ProbeController;
 
 public class ProbeConfig {
     public VoltageSensorConfig VoltageSensorConfig { get; set; }

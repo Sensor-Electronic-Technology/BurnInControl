@@ -1,4 +1,4 @@
-namespace BurnIn.Data.ComponentConfiguration.HeaterController;
+namespace BurnInControl.Data.ComponentConfiguration.HeaterController;
 
 public class NtcConfiguration {
     public double ACoeff { get; set; } = 0;

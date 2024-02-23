@@ -1,6 +1,6 @@
-﻿using BurnIn.Data.Station.Configuration;
+﻿using BurnInControl.Data.ComponentConfiguration;
 using MongoDB.Bson;
-namespace BurnIn.Data.StationModel;
+namespace BurnInControl.Data.StationModel;
 
 public enum StationState {
     Running,Idle,Offline

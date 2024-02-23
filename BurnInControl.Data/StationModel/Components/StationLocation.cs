@@ -1,5 +1,5 @@
 ﻿using MongoDB.Bson;
-namespace BurnIn.Data.StationModel.Components;
+namespace BurnInControl.Data.StationModel.Components;
 
 public class StationPosition {
     public ObjectId _id { get; set; }

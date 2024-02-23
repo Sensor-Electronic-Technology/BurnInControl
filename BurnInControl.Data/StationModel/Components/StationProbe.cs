@@ -1,5 +1,5 @@
 using Ardalis.SmartEnum;
-namespace BurnIn.Data.StationModel.Components;
+namespace BurnInControl.Data.StationModel.Components;
 
 public class StationProbe : SmartEnum<StationProbe, int> {
     public static StationProbe Probe1 = new StationProbe(nameof(Probe1), 1);

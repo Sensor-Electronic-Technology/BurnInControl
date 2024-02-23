@@ -1,12 +1,12 @@
-﻿using BurnIn.Data.AppSettings;
-using BurnIn.Data.ComponentConfiguration.HeaterController;
-using BurnIn.Data.ComponentConfiguration.ProbeController;
-using BurnIn.Data.ComponentConfiguration.StationController;
-using BurnIn.Data.Station.Configuration;
-using BurnIn.Data.StationModel;
-using BurnIn.Data.StationModel.Components;
-using BurnIn.Data.StationModel.TestLogs;
-using BurnIn.Data.Util;
+﻿using BurnInControl.Data.BurnInTests;
+using BurnInControl.Data.ComponentConfiguration;
+using BurnInControl.Data.ComponentConfiguration.HeaterController;
+using BurnInControl.Data.ComponentConfiguration.ProbeController;
+using BurnInControl.Data.ComponentConfiguration.StationController;
+using BurnInControl.Data.StationModel;
+using BurnInControl.Data.StationModel.Components;
+using BurnInControl.Shared.AppSettings;
+using ErrorOr;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -28,44 +28,63 @@ public class StationDataService {
         this._testConfigurationCollection = database.GetCollection<TestConfiguration>("test_configurations");
     }
     
-    public async Task<TestConfiguration?> GetTestConfiguration(StationCurrent setCurrent) {
-        return await this._testConfigurationCollection
+    public async Task<ErrorOr<TestConfiguration>> GetTestConfiguration(StationCurrent setCurrent) {
+        var testConfig=await this._testConfigurationCollection
             .Find(e => e.SetCurrent == setCurrent)
             .FirstOrDefaultAsync();
+        if(testConfig==null) {
+            return Error.NotFound();
+        } else {
+            return testConfig;
+        }
     }
     
-    public Task<bool> SetRunningTest(string stationId,ObjectId testLogId) {
+    public async Task<ErrorOr<Success>> SetRunningTest(string stationId,ObjectId testLogId) {
         var filter=Builders<Station>.Filter.Eq(e => e.StationId,stationId);
         var updateBuilder = Builders<Station>.Update;
         var update=updateBuilder.Set(e => e.RunningTest, testLogId)
             .Set(e => e.State, StationState.Running);
-        return this._stationCollection.UpdateOneAsync(filter,update)
+         var success=await this._stationCollection.UpdateOneAsync(filter,update)
             .ContinueWith(e=>e.Result.IsAcknowledged);
+         if(success) {
+             return Result.Success;
+         } else {
+             return Error.Failure(description:"Failed to set running test");
+         }
     }
     
-    public Task<ObjectId?> CheckForRunningTest(string stationId) {
-        return this._stationCollection.Find(e => e.StationId == stationId)
+    public async Task<ErrorOr<ObjectId>> CheckForRunningTest(string stationId) {
+        var id=await this._stationCollection.Find(e => e.StationId == stationId)
             .Project(e => e.RunningTest)
             .FirstOrDefaultAsync();
+        if(id==null) {
+            return Error.NotFound();
+        } else {
+            return id.Value;
+        }
     }
     
-    public Task<bool> ClearRunningTest(string stationId) {
+    public async Task<ErrorOr<Success>> ClearRunningTest(string stationId) {
         var filter=Builders<Station>.Filter.Eq(e => e.StationId,stationId);
         var updateBuilder = Builders<Station>.Update;
         var update=updateBuilder.Set(e => e.RunningTest, null)
             .Set(e => e.State, StationState.Running);
-        return this._stationCollection.UpdateOneAsync(filter,update)
-            .ContinueWith(e=>e.Result.IsAcknowledged);
+         var result=await this._stationCollection.UpdateOneAsync(filter, update);
+         if (result.IsAcknowledged) {
+             return Result.Success;
+         } else {
+             return Error.Failure(description:"Failed to clear running test");
+         }
     }
     
-    public async Task<Result> InsertTestConfiguration(TestConfiguration config) {
+    public async Task<ErrorOr<Success>> InsertTestConfiguration(TestConfiguration config) {
         var exists=await this._testConfigurationCollection.Find(e => e.SetCurrent == config.SetCurrent)
             .AnyAsync();
         if(exists) {
-            return ResultFactory.Error("Set Current configuration already exists.  There can only be one test per set current.");
+            return Error.Failure(description: "Test Configuration already exists. Only one test per set current is allowed.");
         }
         await this._testConfigurationCollection.InsertOneAsync(config);
-        return ResultFactory.Success();
+        return Result.Success;
     }
 
     public Task<BurnStationConfiguration?> GetConfiguration(string stationId) {
@@ -74,29 +93,42 @@ public class StationDataService {
             .FirstOrDefaultAsync();
     }
 
-    public Task<string?> GetControllerFirmwareVersion(string stationId) {
-        return this._stationCollection.Find(e => e.StationId == stationId)
+    public async Task<ErrorOr<string>> GetControllerFirmwareVersion(string stationId) {
+        var version=await this._stationCollection.Find(e => e.StationId == stationId)
             .Project(e => e.FirmwareVersion)
             .FirstOrDefaultAsync();
+        if (string.IsNullOrEmpty(version)) {
+            return Error.NotFound(description: "Firmware Version Not Found");
+        } else {
+            return version;
+        }
     }
     
-    public async Task<bool> UpdateFirmwareVersion(string stationId,string version) {
+    public async Task<ErrorOr<Success>> UpdateFirmwareVersion(string stationId,string version) {
         var filter=Builders<Station>.Filter.Eq(e => e.StationId,stationId);
         var updateBuilder = Builders<Station>.Update;
         var result= await this._stationCollection
             .UpdateOneAsync(filter, updateBuilder.Set(e => e.FirmwareVersion, version));
-        return result.IsAcknowledged;
+        if (result.IsAcknowledged) {
+            return Result.Success;
+        } else {
+            return Error.Failure(description:"Failed to update firmware version");
+        }
     }
     
-    public async Task<bool> SetUpdateAvailable(string stationId,bool isAvailable) {
+    public async Task<ErrorOr<Success>> SetUpdateAvailable(string stationId,bool isAvailable) {
         var filter=Builders<Station>.Filter.Eq(e => e.StationId,stationId);
         var updateBuilder = Builders<Station>.Update;
         var result= await this._stationCollection
             .UpdateOneAsync(filter, updateBuilder.Set(e => e.UpdateAvailable, isAvailable));
-        return result.IsAcknowledged;
+        if (result.IsAcknowledged) {
+            return Result.Success;
+        } else {
+            return Error.Failure(description:"Failed to set update available");
+        }
     }
     
-    public async Task<bool> CheckUpdateAvailable(string stationId) {
+    public async Task<ErrorOr<bool>> CheckUpdateAvailable(string stationId) {
         var updateAvailable=await this._stationCollection.Find(e => e.StationId == stationId)
             .Project(e => e.UpdateAvailable)
             .FirstOrDefaultAsync();
@@ -107,27 +139,39 @@ public class StationDataService {
         return this._stationCollection.InsertOneAsync(station);
     }
     
-    public async Task<bool> UpdateSubConfig<TConfig>(string stationId,TConfig config) {
+    public async Task<ErrorOr<Success>> UpdateSubConfig<TConfig>(string stationId,TConfig config) {
         var filter=Builders<Station>.Filter.Eq(e => e.StationId,stationId);
         var updateBuilder = Builders<Station>.Update;
         switch (config) {
             case HeaterControllerConfig heatControlConfig: {
                 var result=await this._stationCollection
                     .UpdateOneAsync(filter, updateBuilder.Set(e => e.Configuration.HeaterConfig, heatControlConfig));
-                return result.IsAcknowledged;
+                if (result.IsAcknowledged) {
+                    return Result.Success;
+                } else {
+                    return Error.Failure(description:"Failed to update HeaterControllerConfig");
+                }
             }
             case ProbeControllerConfig probeControlConfig: {
                 var result=await this._stationCollection
                     .UpdateOneAsync(filter, updateBuilder.Set(e => e.Configuration.ProbesConfiguration, probeControlConfig));
-                return result.IsAcknowledged;
+                if (result.IsAcknowledged) {
+                    return Result.Success;
+                } else {
+                    return Error.Failure(description:"Failed to update ProbeControllerConfig");
+                }
             }
             case StationConfiguration stationConfig: {
                 var result=await this._stationCollection
                     .UpdateOneAsync(filter, updateBuilder.Set(e => e.Configuration.StationConfiguration, stationConfig));
-                return result.IsAcknowledged;
+                if (result.IsAcknowledged) {
+                    return Result.Success;
+                } else {
+                    return Error.Failure(description:"Failed to update StationConfiguration");
+                }
             }
             default: {
-                return false;
+                return Error.Unexpected(description:"Invalid Configuration Type");
             }
         }
     }

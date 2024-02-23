@@ -1,5 +1,5 @@
 ﻿using Ardalis.SmartEnum;
-namespace BurnIn.Data.StationModel.Components;
+namespace BurnInControl.Data.StationModel.Components;
 
 public class StationCurrent : SmartEnum<StationCurrent, int> {
     public static StationCurrent _60mA = new StationCurrent("60mA", 60);

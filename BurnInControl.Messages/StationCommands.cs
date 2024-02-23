@@ -1,5 +1,5 @@
-﻿using BurnIn.Data.ComDefinitions;
-using BurnIn.Data.ComDefinitions.Station;
+﻿using BurnInControl.Shared.ComDefinitions.MessagePacket;
+using BurnInControl.Shared.ComDefinitions.Station;
 namespace BurnInControl.Messages;
 
 public class SendUsbCommand {

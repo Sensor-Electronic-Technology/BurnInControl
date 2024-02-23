@@ -1,8 +1,10 @@
-﻿using BurnIn.Data.AppSettings;
-using BurnIn.Data.ComDefinitions;
-using BurnIn.Data.StationModel.Components;
-using BurnIn.Data.StationModel.TestLogs;
+﻿using BurnInControl.Data.BurnInTests;
+using BurnInControl.Data.StationModel;
+using BurnInControl.Data.StationModel.Components;
 using BurnInControl.Infrastructure.StationModel;
+using BurnInControl.Shared.AppSettings;
+using BurnInControl.Shared.ComDefinitions;
+using ErrorOr;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -24,9 +26,14 @@ public class TestLogDataService {
         this._stationDataService = stationDataService;
     }
     
-    public Task<BurnInTestLog?> GetTestLog(string waferId) {
-        return this._testLogCollection.Find(e => e.TestSetup.Any(e => e.WaferId == waferId))
+    public async Task<ErrorOr<BurnInTestLog>> GetTestLog(string waferId) {
+         var log=await this._testLogCollection.Find(e => e.TestSetup.Any(e => e.WaferId == waferId))
             .FirstOrDefaultAsync();
+         if (log == null) {
+             return Error.NotFound(description: "BurnInTestLog Not Found");
+         } else {
+             return log;
+         }
     }
     
     public Task<bool> LogExists(ObjectId id) {
@@ -34,30 +41,71 @@ public class TestLogDataService {
             .AnyAsync();
     }
     
-    public async Task<bool> StartNew(BurnInTestLog log,StationCurrent current) {
+    //TODO: Should this delete the log if the station fails to be marked as running?
+    public async Task<ErrorOr<Success>> StartNew(BurnInTestLog log,StationCurrent current) {
         log._id = ObjectId.GenerateNewId();
-        var testConfig = await this._stationDataService.GetTestConfiguration(current);
-        if(testConfig == null) {
-            return false;
+        var result = await this._stationDataService.GetTestConfiguration(current);
+        if (result.IsError) {
+            return Error.NotFound(description:"Test configuration not found");
         }
-        log.SetCurrent=testConfig.SetCurrent;
-        log.RunTime=testConfig.RunTime;
+        
+        log.SetCurrent=result.Value.SetCurrent;
+        log.RunTime=result.Value.RunTime;
         await this._testLogCollection.InsertOneAsync(log);
-        var logTask = this.LogExists(log._id);
-        var stationTask=this._stationDataService.SetRunningTest(log.StationId, log._id);
-        return await Task.WhenAll(logTask, stationTask).ContinueWith(e => e.Result.All(success => success));
+        var logExists = await this.LogExists(log._id);
+        var stationTaskResult=await this._stationDataService.SetRunningTest(log.StationId, log._id);
+
+        
+        if(logExists && !stationTaskResult.IsError){
+            return Result.Success;
+        }else if (logExists && stationTaskResult.IsError) {
+            //delete log and return error
+            var deleteResult=await this.DeleteTestLog(log._id);
+            if(deleteResult.IsError){
+                return Error.Failure(description: "Failed to mark test as running.  Log was inserted, you must delete before trying again");
+            } else {
+                return Error.Failure(description: "Failed to start new test. No data was modified, please try again");
+            }
+        } else if(!logExists && !stationTaskResult.IsError) {
+            var clearRunningResult=await this._stationDataService.ClearRunningTest(log.StationId);
+            if (clearRunningResult.IsError) {
+                return Error.NotFound(description: "Error Not Found. Test was marked as running and failed to clear. Before trying again you must rest");
+            } else {
+                return Error.NotFound(description:"Log not found");
+            }
+        } else {
+            return Error.Failure(description: "Failed to start new test. No data was modified, please try again");
+        }
     }
 
-    public async Task<BurnInTestLog?> CheckContinue(string stationId) {
-        var runningLogId=await this._stationDataService.CheckForRunningTest(stationId);
-        if (runningLogId == null) {
-            return null;
+    public async Task<ErrorOr<Deleted>> DeleteTestLog(ObjectId id) {
+        var deleteResult = await this._testLogCollection.DeleteOneAsync(e => e._id == id);
+        if (deleteResult.IsAcknowledged) {
+            if(deleteResult.DeletedCount>0){
+                return Result.Deleted;
+            } else {
+                return Error.Unexpected(description: "Log may not have been deleted");
+            }
+        } else {
+            return Error.Failure(description: "Failed to delete log");
         }
-        return await this._testLogCollection.Find(e => e._id == runningLogId)
+    }
+
+    public async Task<ErrorOr<BurnInTestLog>> CheckContinue(string stationId) {
+        var result=await this._stationDataService.CheckForRunningTest(stationId);
+        if(result.IsError) {
+            return Error.NotFound(description:"Running Test Not Found");
+        }
+        var log=await this._testLogCollection.Find(e => e._id == result.Value)
             .FirstOrDefaultAsync();
+        if(log==null){
+            return Error.NotFound(description:"Running Test Not Found");
+        } else {
+            return log;
+        }
     }
     
-    public Task<bool> SetStart(ObjectId id,DateTime start,StationSerialData data) {
+    public async Task<ErrorOr<Success>> SetStart(ObjectId id,DateTime start,StationSerialData data) {
         var filter=Builders<BurnInTestLog>.Filter.Eq(e => e._id,id);
         var updateBuilder = Builders<BurnInTestLog>.Update;
         var update=updateBuilder.Set(e => e.StartTime,start)
@@ -65,30 +113,54 @@ public class TestLogDataService {
                 TimeStamp = start,
                 Data=data
             });
-        return this._testLogCollection.UpdateOneAsync(filter,update)
-            .ContinueWith(e => e.Result.IsAcknowledged);
+        var updateResult=await this._testLogCollection.UpdateOneAsync(filter, update);
+        if (updateResult.IsAcknowledged) {
+            if(updateResult.ModifiedCount>0){
+                return Result.Success;
+            } else {
+                return Error.Unexpected(description: "Unknown State. The test may not be marked as running");
+            }
+        } else {
+            return Error.Failure(description: "Failed Mart Test as Running");
+        }
     }
     
-    public Task<bool> InsertReading(ObjectId id,StationSerialData data) {
+    public async Task<ErrorOr<Created>> InsertReading(ObjectId id,StationSerialData data) {
         var filter=Builders<BurnInTestLog>.Filter.Eq(e => e._id,id);
         var updateBuilder = Builders<BurnInTestLog>.Update;
         var update=updateBuilder.Push(e => e.Readings,new StationReading() {
             TimeStamp = DateTime.Now,
             Data=data
         });
-        return this._testLogCollection.UpdateOneAsync(filter,update)
-            .ContinueWith(e => e.Result.IsAcknowledged);
+        var readingResult = await this._testLogCollection.UpdateOneAsync(filter, update);
+        if(readingResult.IsAcknowledged){
+            if(readingResult.ModifiedCount>0){
+                return Result.Created;
+            } else {
+                return Error.Unexpected(description: "Unknown State.  Reading may not have been inserted");
+            }
+        } else {
+            return Error.Failure(description: "Failed to insert reading");
+        }
+
     }
     
-    public Task<bool> SetCompleted(ObjectId id,string stationId,DateTime stop) {
+    public async Task<ErrorOr<Success>> SetCompleted(ObjectId id,string stationId,DateTime stop) {
         var filter=Builders<BurnInTestLog>.Filter.Eq(e => e._id,id);
         var update = Builders<BurnInTestLog>.Update
             .Set(e => e.StopTime,stop)
             .Set(e=>e.Completed,true);
-        var stationTask = this._stationDataService.ClearRunningTest(stationId);
-        var logTask=this._testLogCollection.UpdateOneAsync(filter,update)
-            .ContinueWith(e => e.Result.IsAcknowledged);
-        return Task.WhenAll(logTask, stationTask)
-            .ContinueWith(e => e.Result.All(success => success));
+        var clearResult =await this._stationDataService.ClearRunningTest(stationId);
+        var logResult = await this._testLogCollection.UpdateOneAsync(filter, update);
+
+        if (!clearResult.IsError && logResult.IsAcknowledged) {
+            return Result.Success;
+        }else if (!clearResult.IsError && !logResult.IsAcknowledged) {
+            return Error.Unexpected(description: "Unknown State. Log may not be finalized with Completed flag and StopTime");
+        }else if (clearResult.IsError && logResult.IsAcknowledged) {
+            return Error.Unexpected(description: "Unknown State. Log was finalize but station Running flag was not cleared");
+        } else {
+            return Error.Failure(description: "Station Running flag not cleared and Log was not finalized");
+        }
     }
 }

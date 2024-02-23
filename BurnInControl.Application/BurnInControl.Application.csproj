@@ -5,23 +5,18 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-    
-    <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
-        <PackageReference Include="Octokit" Version="9.1.0" />
-        <PackageReference Include="AsyncAwaitBestPractices" Version="7.0.0" />
-    </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="StationControl\" />
+      <Folder Include="BurnInTest\Handlers\" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\BurnInControl.Data\BurnInControl.Data.csproj" />
-      <ProjectReference Include="..\BurnInControl.Infrastructure\BurnInControl.Infrastructure.csproj" />
+      <ProjectReference Include="..\BurnInControl.Shared\BurnInControl.Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="ErrorOr" Version="1.10.0" />
     </ItemGroup>
 
 </Project>

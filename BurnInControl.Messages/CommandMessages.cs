@@ -1,11 +1,7 @@
-﻿using BurnIn.Data.ComDefinitions;
-using BurnIn.Data.ComDefinitions.Station;
-using BurnIn.Data.ComponentConfiguration.HeaterController;
-using BurnIn.Data.ComponentConfiguration.ProbeController;
-using BurnIn.Data.ComponentConfiguration.StationController;
-using BurnIn.Data.Station.Configuration;
-using BurnIn.Data.StationModel.TestLogs;
-using BurnIn.Data.StationModel.TestLogs.Wafers;
+﻿using BurnInControl.Data.BurnInTests.Wafers;
+using BurnInControl.Data.ComponentConfiguration.HeaterController;
+using BurnInControl.Data.ComponentConfiguration.ProbeController;
+using BurnInControl.Data.ComponentConfiguration.StationController;
 namespace BurnInControl.Messages;
 
 public interface IExternalCommand{};

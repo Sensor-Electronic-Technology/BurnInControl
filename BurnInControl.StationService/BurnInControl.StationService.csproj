@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <AssemblyName>StationController</AssemblyName>
+        <RuntimeIdentifier>linux-arm64</RuntimeIdentifier>
+        <DockerDefaultTargetOS>linux-arm64</DockerDefaultTargetOS>
+        <ContainerRepository>aelmendorf234/burnin.controlservice</ContainerRepository>
+        <ContainerBaseImage>mcr.microsoft.com/dotnet/sdk:8.0</ContainerBaseImage>
+        <ContainerRuntimeIdentifier>linux-arm64</ContainerRuntimeIdentifier>
+        <ContainerRegistry>docker.io</ContainerRegistry>
+        <ContainerImageTag>dev</ContainerImageTag>
+        
+    </PropertyGroup>
+    <ItemGroup>
+        <ContainerPort Include="80" Type="tcp" />
+    </ItemGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <PlatformTarget>ARM64</PlatformTarget>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AsyncAwaitBestPractices" Version="7.0.0" />
+        <PackageReference Include="Octokit" Version="10.0.0" />
+        <PackageReference Include="System.IO.Ports" Version="8.0.0" />
+        <PackageReference Include="WolverineFx" Version="1.19.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0" />
+        <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
+        <PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0" />
+        <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
+        <PackageReference Include="Serilog.Sinks.Grafana.Loki" Version="8.3.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\BurnInControl.Data\BurnInControl.Data.csproj" />
+      <ProjectReference Include="..\BurnInControl.Infrastructure\BurnInControl.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>

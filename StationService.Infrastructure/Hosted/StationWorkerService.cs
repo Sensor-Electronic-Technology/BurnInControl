@@ -1,6 +1,7 @@
-﻿using BurnInControl.StationService.StationControl;
-using ErrorOr;
-namespace BurnInControl.StationService;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using StationService.Infrastructure.StationControl;
+namespace StationService.Infrastructure.Hosted;
 
 public class StationWorkerService:IHostedService,IDisposable {
     private readonly StationController _stationController;

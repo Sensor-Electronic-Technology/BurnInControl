@@ -1,57 +1,61 @@
 ﻿using AsyncAwaitBestPractices;
-using BurnInControl.Application.Firmware;
+using BurnInControl.Application.ProcessSerial.Handlers;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Packets;
 using BurnInControl.Shared.ComDefinitions.Station;
 using BurnInControl.Shared.Hubs;
-using BurnInControl.StationService.Hub;
-using BurnInControl.StationService.TestLogs;
 using ErrorOr;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
+using StationService.Infrastructure.Firmware;
+using StationService.Infrastructure.Hub;
+using StationService.Infrastructure.TestLogs;
 using System.Text.Json;
 using Wolverine;
-namespace BurnInControl.StationService.SerialCom;
+using BurnInControl.Application.ProcessSerial.Messages;
+namespace StationService.Infrastructure.SerialCom;
 
-public class StationMessageHandler:IWolverineHandler {
+public class StationMessageHandler:IStationMessageHandler{
     private readonly BurnInTestService _testService;
     private readonly IHubContext<StationHub, IStationHub> _hubContext;
     private readonly ILogger<StationMessageHandler> _logger;
     private readonly FirmwareUpdateService _firmwareService;
-    private readonly IMessageContext _messageContext;
     private readonly IMessageBus _messageBus;
     
     public StationMessageHandler(ILogger<StationMessageHandler> logger,
         BurnInTestService testService,
         IHubContext<StationHub, IStationHub> hubContext,
-        FirmwareUpdateService firmwareService) {
+        FirmwareUpdateService firmwareService,
+        IMessageBus messageBus) {
         this._testService = testService;
         this._logger = logger;
         this._hubContext = hubContext;
         this._firmwareService = firmwareService;
+        this._messageBus = messageBus;
     }
     
-    public ValueTask HandleAsync(StationMessage message, CancellationToken cancellationToken) {
+    public async Task Handle(StationMessage message,CancellationToken cancellationToken) {
         try {
             if (!string.IsNullOrEmpty(message.Message)) {
                 if (message.Message.Contains("Prefix")) {
                     var doc=JsonSerializer.Deserialize<JsonDocument>(message.Message);
                     if (doc != null) { 
-                        return this.Parse(doc);
+                        await this.Parse(doc);
                     } else {
                         this._logger.LogWarning("JsonDocument was null");
-                        return ValueTask.CompletedTask;
+                        /*return ValueTask.CompletedTask;*/
                     }
                 } else {
                     this._logger.LogWarning("MessagePacket did not contain Prefix");
-                    return ValueTask.CompletedTask;
+                    /*return ValueTask.CompletedTask;*/
                 }
             } else {
                 this._logger.LogWarning("Mediator request MessagePacket json text was null or empty");
-                return ValueTask.CompletedTask;
+                /*return ValueTask.CompletedTask;*/
             }
         } catch {
-            this._logger.LogWarning($"Message had errors.  Message: {message.Message}");
-            return ValueTask.CompletedTask;
+            this._logger.LogWarning($"Message had errors.  Message: {message}");
+            /*return ValueTask.CompletedTask;*/
         }
     }
     
@@ -61,7 +65,7 @@ public class StationMessageHandler:IWolverineHandler {
             var prefix=StationMsgPrefix.FromValue(prefixValue);
             if (prefix != null) {
                 var packetElem=doc.RootElement.GetProperty("Packet");
-                switch (prefix) {
+                switch (prefix.Name) {
                     case nameof(StationMsgPrefix.DataPrefix): {
                         return this.HandleData(packetElem);
                     }

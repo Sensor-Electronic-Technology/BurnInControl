@@ -12,8 +12,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BurnInControl.Messages", "BurnInControl.Messages\BurnInControl.Messages.csproj", "{ABCDFC83-1C02-4F32-B2E4-38316276E5DA}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BurnInControl.Data", "BurnInControl.Data\BurnInControl.Data.csproj", "{85267C7D-B679-4B82-A31F-1F48D19B6C41}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BurnInControl.Infrastructure", "BurnInControl.Infrastructure\BurnInControl.Infrastructure.csproj", "{EEEDED7D-2FAD-41B2-A2AF-00CB9D70A699}"
@@ -21,6 +19,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BurnInControl.Shared", "BurnInControl.Shared\BurnInControl.Shared.csproj", "{A3942FE7-4666-4377-961C-EDC04F86548B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BurnInControl.Application", "BurnInControl.Application\BurnInControl.Application.csproj", "{0EE79382-6BC1-4015-92A5-7C0FA571FB0A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StationService.Infrastructure", "StationService.Infrastructure\StationService.Infrastructure.csproj", "{12BB1177-6FE5-498D-A5A1-08CD32FACCB3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,10 +36,6 @@ Global
 		{C433AA51-2053-43E8-80C3-51734D254EB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C433AA51-2053-43E8-80C3-51734D254EB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C433AA51-2053-43E8-80C3-51734D254EB8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{ABCDFC83-1C02-4F32-B2E4-38316276E5DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ABCDFC83-1C02-4F32-B2E4-38316276E5DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ABCDFC83-1C02-4F32-B2E4-38316276E5DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ABCDFC83-1C02-4F32-B2E4-38316276E5DA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{85267C7D-B679-4B82-A31F-1F48D19B6C41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{85267C7D-B679-4B82-A31F-1F48D19B6C41}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{85267C7D-B679-4B82-A31F-1F48D19B6C41}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -56,6 +52,10 @@ Global
 		{0EE79382-6BC1-4015-92A5-7C0FA571FB0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0EE79382-6BC1-4015-92A5-7C0FA571FB0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0EE79382-6BC1-4015-92A5-7C0FA571FB0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12BB1177-6FE5-498D-A5A1-08CD32FACCB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12BB1177-6FE5-498D-A5A1-08CD32FACCB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12BB1177-6FE5-498D-A5A1-08CD32FACCB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12BB1177-6FE5-498D-A5A1-08CD32FACCB3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

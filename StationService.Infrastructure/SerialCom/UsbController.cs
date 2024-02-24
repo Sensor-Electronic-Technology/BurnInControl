@@ -1,12 +1,13 @@
 ﻿using BurnInControl.Shared.ComDefinitions.MessagePacket;
 using ErrorOr;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Channels;
 using ThreadState=System.Threading.ThreadState;
-namespace BurnInControl.StationService.SerialCom;
+namespace StationService.Infrastructure.SerialCom;
 
 public record UsbResult {
     public UsbState State { get; set; }

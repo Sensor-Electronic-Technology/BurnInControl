@@ -1,12 +1,16 @@
 ﻿@page "/"
 @using BurnIn.BlazorUI.Components.AppComponents
 @using BurnIn.BlazorUI.Components.AppComponents.TestSetupComponents
-@using BurnIn.Shared.Hubs
-@using BurnIn.Shared.Models
-@using BurnIn.Shared.Models.StationData
+@using BurnInControl.Application.StationControl.Messages
+@using BurnInControl.Shared.ComDefinitions
+@using BurnInControl.Shared.ComDefinitions.Packets
+@using BurnInControl.Shared.ComDefinitions.Station
+@using BurnInControl.Shared.Hubs
 @using Microsoft.AspNetCore.SignalR.Client
 @using System.Text
+@using Wolverine;
 @inject ILogger<Index> _logger
+@inject IMessageBus _messageBus
 
 @attribute [StreamRendering(true)]
 @rendermode InteractiveServer
@@ -18,6 +22,18 @@
         padding: 1rem;
     }
 </style>
+
+<DxPopup
+    @bind-Visible="@this._msgBoxVisible"
+    ShowFooter="true"
+    HeaderText="@this._msgHeader"
+    BodyText="@this._msgText">
+    <FooterContentTemplate Context="Context">
+        <DxButton CssClass="popup-button my-1 ms-2" RenderStyle="ButtonRenderStyle.Primary" 
+                  Text="OK" 
+                  Click="Context.CloseCallback" />
+    </FooterContentTemplate>
+</DxPopup>
 
 <DxGridLayout>
     <Rows>
@@ -97,6 +113,9 @@
     private HubConnection? _hubConnection;
     private StringBuilder _textAreaBuilder=new StringBuilder();
     private string _startButtonText = "Start";
+    private bool _msgBoxVisible = false;
+    private string _msgHeader = "";
+    private string _msgText = "";
 
     protected override async Task OnInitializedAsync(){
         this._hubConnection = new HubConnectionBuilder()
@@ -105,8 +124,12 @@
 
         this._hubConnection.On<StationSerialData>(HubConstants.Events.OnSerialCom,this.OnSerialComReceived);
         this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
-        this._hubConnection.On(HubConstants.Events.OnTestStarted, () => {
-            this.OnSerialComMessageReceived("Test Started");
+        this._hubConnection.On<StartTestStatus>(HubConstants.Events.OnTestStatus, (status) => {
+            if(status.Status.IsError){
+                this.ShowMsgBox("Test Start Failed", status.Status.FirstError.Description);
+            } else {
+                this.ShowMsgBox("Test Started Successfully", "Test Started Successfully");
+            }
         });
         this._hubConnection.On<string>(HubConstants.Events.OnTestStartedFailed, this.OnSerialComMessageReceived);
         try {
@@ -118,16 +141,20 @@
     }
 
     private async Task ResetHandler() {
-        await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, ArduinoCommand.Reset);
+        await this._messageBus.SendAsync(new SendStationCommand() { Command = StationCommand.Reset });
+        //await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Reset);
     }
 
     private async Task StartHandler() {
         if (this._startButtonText == "Start") {
-            await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, ArduinoCommand.Start);
+            await this._messageBus.SendAsync(new SendStationCommand(){Command=StationCommand.Start});
+            //await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Start);
         } else {
             this._startButtonText = "Pause";
-            await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, ArduinoCommand.Pause);
+            await this._messageBus.SendAsync(new SendStationCommand(){Command=StationCommand.Start});
+            /*await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Pause);*/
         }
+        await InvokeAsync(StateHasChanged);
     }
     
    
@@ -140,5 +167,11 @@
     private void OnSerialComMessageReceived(string message) {
         this._textAreaBuilder.AppendFormat($"{DateTime.Now:d/M h:mm:ss tt zz}::{message}").AppendLine();
         //this._textAreaBuilder.AppendLine(message);
+    }
+    
+    private void ShowMsgBox(string header, string message) {
+        this._msgHeader = header;
+        this._msgText = message;
+        this._msgBoxVisible = true;
     }
 }

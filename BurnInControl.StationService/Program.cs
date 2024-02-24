@@ -1,19 +1,16 @@
-using BurnInControl.Application.Firmware;
+using BurnInControl.Application.ProcessSerial.Messages;
+using BurnInControl.Application.StationControl.Handlers;
+using BurnInControl.Infrastructure;
 using BurnInControl.Shared.AppSettings;
-using BurnInControl.StationService;
-using JasperFx.Core;
-using Microsoft.Extensions.Hosting.Systemd;
 using MongoDB.Driver;
 using Serilog;
-using System.Threading.Channels;
 using Wolverine;
-using Wolverine.ErrorHandling;
-using Wolverine.Transports.Tcp;
 using BurnInControl.Shared;
-using BurnInControl.StationService.Hub;
-using BurnInControl.StationService.SerialCom;
-using BurnInControl.StationService.StationControl;
-using BurnInControl.StationService.TestLogs;
+using JasperFx.Core;
+using StationService.Infrastructure;
+using StationService.Infrastructure.Hub;
+using StationService.Infrastructure.SerialCom;
+using Wolverine.Transports.Tcp;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,8 +20,11 @@ builder.Host.UseWolverine(opts => {
         .Get<WolverineSettings>();
     opts.ListenAtPort(config?.ListenPort ?? 5580);
     opts.LocalQueue(config?.ControllerQueue ?? "ControllerCommandQueue");
-    //opts.Discovery.IncludeAssembly();
-    //opts.Publish<StationComm>()
+    opts.LocalQueue("StationMessageQueue");
+    opts.PublishMessage<StationMessage>().ToLocalQueue("StationMessageQueue");
+    opts.Discovery.IncludeAssembly(typeof(StationMessageHandler).Assembly);
+    opts.Discovery.IncludeType<SendStationCommandHandler>();
+    opts.Discovery.IncludeType<StationMessageHandler>();
 });
 
 builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration));
@@ -32,25 +32,18 @@ builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configurati
 /*builder.Services.Configure<FirmwareUpdateSettings>(builder.Configuration.GetSection(nameof(FirmwareUpdateSettings)));
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));*/
 
+builder.Services.AddInfrastructure();
 builder.Services.AddSettings(builder);
-
+builder.Services.AddStationService();
 builder.Services.AddSignalR(options => { 
     options.EnableDetailedErrors = true;
 }); 
-var channel = Channel.CreateUnbounded<string>();
 builder.Host.UseSystemd();
-builder.Services.AddSingleton(channel.Reader);
-builder.Services.AddSingleton(channel.Writer);
 builder.Services.AddLogging();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://172.20.3.41:28080"));
-builder.Services.AddTransient<BurnInTestService>();
-builder.Services.AddTransient<FirmwareUpdateService>();
-builder.Services.AddSingleton<StationController>();
-builder.Services.AddSingleton<UsbController>();
-builder.Services.AddHostedService<StationWorkerService>();
 var app = builder.Build();
 
-
+//app.Urls.Add("http://192.168.68.108:3000");
 //app.Urls.Add("http://192.168.68.112:3000");
 //app.Urls.Add("http://172.20.1.15:3000");
 app.MapHub<StationHub>("/hubs/station");

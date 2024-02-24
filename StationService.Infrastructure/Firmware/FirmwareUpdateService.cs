@@ -6,10 +6,9 @@ using Microsoft.Extensions.Options;
 using Octokit;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using ErrorOr;
 using FileMode=System.IO.FileMode;
 
-namespace BurnInControl.Application.Firmware;
+namespace StationService.Infrastructure.Firmware;
 
 public class FirmwareUpdateService {
     private readonly Regex _regex = new Regex("^V\\d\\.\\d\\.\\d$", RegexOptions.IgnoreCase);

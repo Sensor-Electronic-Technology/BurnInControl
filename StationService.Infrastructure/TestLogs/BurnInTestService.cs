@@ -3,7 +3,8 @@ using BurnInControl.Data.BurnInTests.Wafers;
 using BurnInControl.Infrastructure.TestLogs;
 using BurnInControl.Shared.ComDefinitions;
 using ErrorOr;
-namespace BurnInControl.StationService.TestLogs;
+using Microsoft.Extensions.Logging;
+namespace StationService.Infrastructure.TestLogs;
 
 public class BurnInTestService {
     private readonly TestLogDataService _testLogDataService;

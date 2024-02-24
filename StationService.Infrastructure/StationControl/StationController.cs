@@ -1,27 +1,34 @@
 ﻿using AsyncAwaitBestPractices;
+using BurnInControl.Application.ProcessSerial.Messages;
+using BurnInControl.Application.StationControl.Interfaces;
 using BurnInControl.Shared.ComDefinitions.MessagePacket;
 using BurnInControl.Shared.ComDefinitions.Station;
-using BurnInControl.StationService.SerialCom;
 using ErrorOr;
+using Microsoft.Extensions.Logging;
+using StationService.Infrastructure.SerialCom;
 using System.Threading.Channels;
-namespace BurnInControl.StationService.StationControl;
+using Wolverine;
+namespace StationService.Infrastructure.StationControl;
 
-public class StationController:IDisposable {
+public class StationController:IStationController,IDisposable {
     private readonly UsbController _usbController;
     private readonly ILogger<StationController> _logger;
     private readonly ChannelReader<string> _channelReader;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
-    
+    private readonly IMessageBus _messageBus;
+    //private readonly StationMessageHandler _stationMessageHandler;
     
     public StationController(UsbController usbController,
         ChannelReader<string> channelReader,
+        IMessageBus messageBus,
         ILogger<StationController> logger) {
         this._logger = logger;
+        this._messageBus = messageBus;
         this._channelReader = channelReader;
         this._usbController = usbController;
         this._usbController.UsbUnPlugHandler += this.UsbUnplugHandler;
     }
-
+    
     public Task Start() {
         return this.ConnectUsb();
     }
@@ -63,9 +70,8 @@ public class StationController:IDisposable {
     private async Task StartReaderAsync(CancellationToken token) {
         while (await this._channelReader.WaitToReadAsync(token)) {
             while (this._channelReader.TryRead(out var message)) {
-                /*await this._mediator.Send(new ProcessSerialCommand() {
-                    Message = message
-                }, token);*/
+                //this._stationMessageHandler.Handle(message, token);
+                await this._messageBus.PublishAsync(new StationMessage() { Message = message });
             }
         }
     }

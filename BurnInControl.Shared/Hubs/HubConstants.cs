@@ -3,7 +3,8 @@
 public static class HubConstants {
     //public static string HubAddress => "http://192.168.68.112:3000/hubs/station";
     //public static string HubAddress => "http://172.20.1.15:3000/hubs/station";
-    public static string HubAddress => "http://localhost:5000/hubs/station";
+    //public static string HubAddress => "http://localhost:5000/hubs/station";
+    public static string HubAddress=> "http://localhost:5066/hubs/station";
 
     public static class Events {
         public static string OnSerialCom => "OnSerialCom";
@@ -13,7 +14,7 @@ public static class HubConstants {
         public static string OnExecuteCommand => "OnExecuteCommand";
         public static string OnIdChanged => "OnIdChanged";
 
-        public static string OnTestStarted => "OnTestStarted";
+        public static string OnTestStatus => "OnTestStatus";
         public static string OnTestPaused => "OnTestPaused";
         public static string OnTestContinued => "OnTestContinued";
         public static string OnTestCompleted => "OnTestCompleted";

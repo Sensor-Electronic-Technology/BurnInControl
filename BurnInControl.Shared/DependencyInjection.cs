@@ -7,11 +7,13 @@ public static class DependencyInjection {
     public static IServiceCollection AddSettings(this IServiceCollection services, IHostApplicationBuilder builder) {
         services.Configure<WolverineSettings>(builder.Configuration.GetSection(nameof(WolverineSettings)));
         services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
+        services.Configure<FirmwareUpdateSettings>(builder.Configuration.GetSection(nameof(FirmwareUpdateSettings)));
         return services;
     }
     
-    public static IServiceCollection AddFirmwareSettings(this IServiceCollection services, IHostApplicationBuilder builder) {
-        services.Configure<FirmwareUpdateSettings>(builder.Configuration.GetSection(nameof(FirmwareUpdateSettings)));
+    public static IServiceCollection AddUiSettings(this IServiceCollection services, IHostApplicationBuilder builder) {
+        services.Configure<WolverineSettings>(builder.Configuration.GetSection(nameof(WolverineSettings)));
+        services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
         return services;
     }
 }

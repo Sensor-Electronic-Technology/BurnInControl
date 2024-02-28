@@ -1,4 +1,5 @@
-﻿using BurnInControl.Shared.AppSettings;
+﻿using BurnInControl.Application.FirmwareUpdate.Interfaces;
+using BurnInControl.Shared.AppSettings;
 using BurnInControl.Shared.FirmwareData;
 using ErrorOr;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ using FileMode=System.IO.FileMode;
 
 namespace StationService.Infrastructure.Firmware;
 
-public class FirmwareUpdateService {
+public class FirmwareUpdateService:IFirmwareUpdateService {
     private readonly Regex _regex = new Regex("^V\\d\\.\\d\\.\\d$", RegexOptions.IgnoreCase);
     private readonly ILogger<FirmwareUpdateService> _logger;
     private readonly GitHubClient _github;

@@ -1,0 +1,15 @@
+<RadzenRow JustifyContent="Radzen.JustifyContent.Center" Gap="1">
+    <RadzenStack Orientation="Radzen.Orientation.Vertical" style="text-align: center;">
+        <RadzenText Text="Temperatures" TextStyle="TextStyle.DisplayH5"/>
+        <RadzenStack  Orientation="Radzen.Orientation.Horizontal" Gap="30">
+            <HeaterDisplay/>
+            <HeaterDisplay/>
+            <HeaterDisplay/>
+        </RadzenStack>
+    </RadzenStack>
+</RadzenRow>
+
+@code{
+    [Parameter]
+    public List<double> Temperatures { get; set; }
+}

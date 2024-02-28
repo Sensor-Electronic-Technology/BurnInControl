@@ -1,0 +1,31 @@
+@inherits LayoutComponentBase
+<RadzenComponents />
+
+<RadzenLayout style="position:relative;">
+    <RadzenHeader>
+        <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
+            <RadzenColumn Size="5">
+                <RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="Radzen.AlignItems.Center">
+                    <RadzenSidebarToggle Click="@SidebarToggleClick"></RadzenSidebarToggle>
+                    <RadzenLabel Text="SETi Burn-in"/>
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="7">
+                <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"></RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenHeader>
+    <RadzenBody>
+        @Body
+    </RadzenBody>
+    <RadzenSidebar style="z-index: 2; width:max-content;">
+        <RadzenPanelMenu DisplayStyle="@(sidebarExpanded ? MenuItemDisplayStyle.IconAndText : MenuItemDisplayStyle.Icon)" ShowArrow="false">
+            <RadzenPanelMenuItem Text="Overview" Image="images/logo.png"/>
+            <RadzenPanelMenuItem Text="Dashboard" Icon="dashboard" />
+            <RadzenPanelMenuItem Text="UI Fundamentals" Icon="auto_awesome">
+                <RadzenPanelMenuItem Text="Themes" Icon="color_lens" />
+                <RadzenPanelMenuItem Text="Colors" Icon="invert_colors" />
+            </RadzenPanelMenuItem>
+        </RadzenPanelMenu>
+    </RadzenSidebar>
+</RadzenLayout>

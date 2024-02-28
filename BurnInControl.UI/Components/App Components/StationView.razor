@@ -1,0 +1,68 @@
+@using BurnInControl.UI.Components.App_Components.Displays
+
+<RadzenSplitter Orientation="Orientation.Horizontal">
+    <RadzenSplitterPane Size="20%" Collapsible="false">
+        <ProbeRuntimes />
+    </RadzenSplitterPane>
+    <RadzenSplitterPane Size="70%" Collapsible="false">
+        <RadzenSplitter Orientation="Radzen.Orientation.Vertical" style=" border: 1px solid rgba(0,0,0,.08);">
+            <RadzenSplitterPane Size="85%" Collapsible="false">
+                <RadzenSplitter>
+                    <RadzenSplitterPane Collapsible="false" >
+                        <StationDisplays/>
+                    </RadzenSplitterPane>
+                </RadzenSplitter>
+            </RadzenSplitterPane>
+            <RadzenSplitterPane Size="15%" Resizable="true" Collapsible="false" >
+                <RadzenSplitter>
+                    <RadzenSplitterPane>
+                        <EventConsole/>
+                    </RadzenSplitterPane>
+                </RadzenSplitter>
+            </RadzenSplitterPane>
+        </RadzenSplitter>
+    </RadzenSplitterPane>
+    <RadzenSplitterPane Size="10%" Resizable="true" Visible="true" Collapsible="false">
+        <RadzenStack Orientation="Orientation.Vertical" Style="padding: .5rem">
+            <RadzenText Text="Station Control" TextAlign="Radzen.TextAlign.Center" TextStyle="Radzen.Blazor.TextStyle.DisplayH6" Style="margin: .6rem" />
+            <StationControl/>
+        </RadzenStack>
+    </RadzenSplitterPane>
+</RadzenSplitter>
+
+@*<RadzenLayout Style="grid-template-columns: auto 1fr; grid-template-areas: 'rz-header rz-header rz-sidebar' 'rz-body rz-body rz-sidebar'">
+    $1$<RadzenSidebar Responsive="false" @bind-Expanded="@sidebarExpanded" Style="width: 150px; grid-area: rz-sidebar; padding: .5rem">
+        <RadzenText Text="Station Control" TextAlign="Radzen.TextAlign.Center" TextStyle="Radzen.Blazor.TextStyle.DisplayH6" Style="margin: .6rem" />
+        <StationControl/>
+    </RadzenSidebar>#1#
+    <RadzenBody>
+        <RadzenSplitter Orientation="Orientation.Horizontal">
+            <RadzenSplitterPane Size="20%">
+                Left Pane
+            </RadzenSplitterPane>
+            <RadzenSplitterPane>
+                <RadzenSplitter Orientation="Radzen.Orientation.Vertical" style=" border: 1px solid rgba(0,0,0,.08);">
+                    <RadzenSplitterPane Size="79%" Max="90%">
+                        <RadzenSplitter>
+                            <RadzenSplitterPane >
+                                <StationDisplays/>
+                            </RadzenSplitterPane>
+                        </RadzenSplitter>
+                    </RadzenSplitterPane>
+                    <RadzenSplitterPane >
+                        <RadzenSplitter>
+                            <RadzenSplitterPane>
+                                <EventConsole/>
+                            </RadzenSplitterPane>
+                        </RadzenSplitter>
+                    </RadzenSplitterPane>
+                </RadzenSplitter>
+            </RadzenSplitterPane>
+        </RadzenSplitter>
+    </RadzenBody>
+</RadzenLayout>*@
+
+@code {
+    bool sidebarExpanded = true ;
+} 
+

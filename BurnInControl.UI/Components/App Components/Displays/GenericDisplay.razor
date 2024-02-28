@@ -1,0 +1,28 @@
+@using Radzen
+<style>
+    :root{
+        --my-font-size: 10px
+    }
+
+    .rz-form-field-label {
+        font-size: var(--my-font-size) !important;
+    }
+</style>
+
+<RadzenFormField Text="@this.DisplayLabel" Variant="Radzen.Variant.Outlined" style="--my-font-size: @size">
+    <RadzenText Text="@this.DisplayValue" TextStyle="@this.DisplayTextStyle"
+        Style="font-family: 'Orbitron', sans-serif; vertical-align: text-bottom; margin: .5rem" TextAlign="Radzen.TextAlign.Center"/>
+</RadzenFormField>
+
+@code {
+    [Parameter]
+    public string DisplayLabel { get; set; } = "T1";
+
+    [Parameter]
+    public string DisplayValue  {get;set;} = "85.5";
+
+    [Parameter]
+    public TextStyle DisplayTextStyle { get; set; } = TextStyle.DisplayH3;
+
+    private string size="16px";
+}

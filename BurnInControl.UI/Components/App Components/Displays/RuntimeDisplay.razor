@@ -1,0 +1,14 @@
+<RadzenRow>
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+        <GenericDisplay DisplayLabel="@this.DisplayText" DisplayValue="5:33:02" DisplayTextStyle="TextStyle.H6"/>
+        <RadzenStack Gap="0">
+            <RadzenLabel Text="Okay"/>
+            <LedIndicator/>
+        </RadzenStack>
+    </RadzenStack>
+</RadzenRow>
+@code {
+    [Parameter]
+    public string DisplayText {get; set;}="Runtime";
+    
+}

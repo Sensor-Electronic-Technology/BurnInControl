@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BurnInControl.Application",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StationService.Infrastructure", "StationService.Infrastructure\StationService.Infrastructure.csproj", "{12BB1177-6FE5-498D-A5A1-08CD32FACCB3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BurnInControl.UI", "BurnInControl.UI\BurnInControl.UI.csproj", "{A9278020-AE3F-43EC-AE08-8FDFBAEAEDFD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +58,10 @@ Global
 		{12BB1177-6FE5-498D-A5A1-08CD32FACCB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{12BB1177-6FE5-498D-A5A1-08CD32FACCB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{12BB1177-6FE5-498D-A5A1-08CD32FACCB3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9278020-AE3F-43EC-AE08-8FDFBAEAEDFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9278020-AE3F-43EC-AE08-8FDFBAEAEDFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9278020-AE3F-43EC-AE08-8FDFBAEAEDFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9278020-AE3F-43EC-AE08-8FDFBAEAEDFD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

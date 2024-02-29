@@ -1,50 +1,24 @@
 @using BurnInControl.UI.Data
-<style>
-.led {
-    margin: 20px auto;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.25);
-    box-shadow: #000 0 -1px 6px 1px;
-}
-
-.led-red {
-    background-color: #F00;
-    box-shadow: #000 0 -1px 6px 1px, inset #600 0 -1px 8px, #F00 0 3px 11px;
-}
-
-.led-orange {
-    background-color: #FF7000;
-    box-shadow: #000 0 -1px 6px 1px, inset #630 0 -1px 8px, #FF7000 0 3px 11px;
-}
-
-.led-yellow {
-    background-color: #FF0;
-    box-shadow: #000 0 -1px 6px 1px, inset #660 0 -1px 8px, #FF0 0 3px 11px;
-}
-
-.led-green {
-    background-color: #80FF00;
-    box-shadow: #000 0 -1px 6px 1px, inset #460 0 -1px 8px, #80FF00 0 3px 11px;
-}
-
-.led-blue {
-    background-color: #06F;
-    box-shadow: #000 0 -1px 6px 1px, inset #006 0 -1px 8px, #06F 0 3px 11px;
-}
-</style>
-
-
-  <div class="led led-green">
+  <div class=@this._ledClass style=@this._ledCss>
   </div>
-
-
 @code {
-  /*[Parameter]
-  public LedColor LedColor { get; set; }
-
+  
   [Parameter]
-  public string LedColor { get; set; } = "led-green";*/
+  public string LedColor { get; set; } = "";
+  
+  [Parameter]
+  public string LedSize { get; set; } = "32px";
+  
+  [Parameter]
+  public bool State { get; set; } = false;
+
+  private string _ledClass = "led";
+  private string _ledCss="--led-size: 30px";
+
+  protected override void OnParametersSet() {
+    this._ledCss = $"--led-size: {this.LedSize}";
+    this._ledClass = (this.State) ? "led "+this.LedColor : "led";
+    base.OnParametersSet();
+  }
 
 }

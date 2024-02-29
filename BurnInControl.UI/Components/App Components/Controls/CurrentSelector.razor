@@ -1,0 +1,18 @@
+﻿@using BurnInControl.Data.StationModel.Components
+<RadzenFieldset Text="Current">
+    <RadzenDropDown TValue="string" Data="@this._currents" ValueChanged="CurrentChangedHandler"  />
+</RadzenFieldset>
+@code {
+    private IEnumerable<string> _currents = StationCurrent.List.Select(e => e.Name);
+    
+    [Parameter]
+    public EventCallback<StationCurrent> CurrentChanged { get; set; }
+    
+    private string _selectedItem;
+
+
+    private async Task CurrentChangedHandler(String obj) {
+        var current = StationCurrent.FromName(obj);
+        await CurrentChanged.InvokeAsync(current);
+    }
+}

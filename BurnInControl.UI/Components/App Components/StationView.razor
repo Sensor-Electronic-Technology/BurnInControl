@@ -1,68 +1,85 @@
 @using BurnInControl.UI.Components.App_Components.Displays
+@using BurnInControl.UI.Components.App_Components.Forms
+@using BurnInControl.UI.Components.App_Components.Util
+@using BurnInControl.UI.Components.App_Components.Controls
+@using BurnInControl.Data.StationModel.Components
+
+
 
 <RadzenSplitter Orientation="Orientation.Horizontal">
-    <RadzenSplitterPane Size="20%" Collapsible="false">
-        <ProbeRuntimes />
+    <RadzenSplitterPane Size="15%" Collapsed="@this._runtimePaneCollapsed">
+        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="10" Style="margin: 10px">
+            <RuntimeDisplay DisplayText="Runtime" TextStyle="TextStyle.H4" State="true" DisplayValue="06:07:53" LabelFontSize="12" />
+            <ProbeRuntimes />
+        </RadzenStack>
     </RadzenSplitterPane>
     <RadzenSplitterPane Size="70%" Collapsible="false">
-        <RadzenSplitter Orientation="Radzen.Orientation.Vertical" style=" border: 1px solid rgba(0,0,0,.08);">
-            <RadzenSplitterPane Size="85%" Collapsible="false">
+        <RadzenSplitter Orientation="Orientation.Vertical" style=" border: 1px solid rgba(0,0,0,.08);">
+            <RadzenSplitterPane Size="75%" Collapsible="false">
                 <RadzenSplitter>
-                    <RadzenSplitterPane Collapsible="false" >
-                        <StationDisplays/>
-                    </RadzenSplitterPane>
+                        <RadzenTabs RenderMode="TabRenderMode.Client" SelectedIndexChanged="SelectedTabChangedHandler" Style="width: 100%; height: 100%">
+                            <Tabs>
+                                <RadzenTabsItem Text="Display" Selected="true">
+                                    <StationDisplays/>
+                                </RadzenTabsItem>
+                                <RadzenTabsItem Text="Test Setup">
+                                    <TestSetup></TestSetup>
+                                </RadzenTabsItem>
+                            </Tabs>
+                        </RadzenTabs>
                 </RadzenSplitter>
             </RadzenSplitterPane>
-            <RadzenSplitterPane Size="15%" Resizable="true" Collapsible="false" >
+            <RadzenSplitterPane Size="25%" Resizable="true" Collapsed="this._eventPaneCollapsed" >
                 <RadzenSplitter>
                     <RadzenSplitterPane>
-                        <EventConsole/>
+                        <EventConsole @ref="@this._eventConsole" LogTitle="Station Log"/>
                     </RadzenSplitterPane>
                 </RadzenSplitter>
             </RadzenSplitterPane>
         </RadzenSplitter>
     </RadzenSplitterPane>
-    <RadzenSplitterPane Size="10%" Resizable="true" Visible="true" Collapsible="false">
-        <RadzenStack Orientation="Orientation.Vertical" Style="padding: .5rem">
-            <RadzenText Text="Station Control" TextAlign="Radzen.TextAlign.Center" TextStyle="Radzen.Blazor.TextStyle.DisplayH6" Style="margin: .6rem" />
-            <StationControl/>
-        </RadzenStack>
+    <RadzenSplitterPane Size="15%" Resizable="true" Collapsed="@this._controlPaneCollapsed">
+        <StationControl OnConnect="@this.OnConnectClicked" 
+                        OnReset="@this.OnResetClicked" 
+                        OnStart="@this.OnStartClicked"
+                        OnCurrentChanged="CurrentChangedHandler"
+                        OnTempChanged="TempChangedHandler"/>
     </RadzenSplitterPane>
 </RadzenSplitter>
 
-@*<RadzenLayout Style="grid-template-columns: auto 1fr; grid-template-areas: 'rz-header rz-header rz-sidebar' 'rz-body rz-body rz-sidebar'">
-    $1$<RadzenSidebar Responsive="false" @bind-Expanded="@sidebarExpanded" Style="width: 150px; grid-area: rz-sidebar; padding: .5rem">
-        <RadzenText Text="Station Control" TextAlign="Radzen.TextAlign.Center" TextStyle="Radzen.Blazor.TextStyle.DisplayH6" Style="margin: .6rem" />
-        <StationControl/>
-    </RadzenSidebar>#1#
-    <RadzenBody>
-        <RadzenSplitter Orientation="Orientation.Horizontal">
-            <RadzenSplitterPane Size="20%">
-                Left Pane
-            </RadzenSplitterPane>
-            <RadzenSplitterPane>
-                <RadzenSplitter Orientation="Radzen.Orientation.Vertical" style=" border: 1px solid rgba(0,0,0,.08);">
-                    <RadzenSplitterPane Size="79%" Max="90%">
-                        <RadzenSplitter>
-                            <RadzenSplitterPane >
-                                <StationDisplays/>
-                            </RadzenSplitterPane>
-                        </RadzenSplitter>
-                    </RadzenSplitterPane>
-                    <RadzenSplitterPane >
-                        <RadzenSplitter>
-                            <RadzenSplitterPane>
-                                <EventConsole/>
-                            </RadzenSplitterPane>
-                        </RadzenSplitter>
-                    </RadzenSplitterPane>
-                </RadzenSplitter>
-            </RadzenSplitterPane>
-        </RadzenSplitter>
-    </RadzenBody>
-</RadzenLayout>*@
-
 @code {
-    bool sidebarExpanded = true ;
+   private EventConsole _eventConsole=new EventConsole();
+   
+   private bool _eventPaneCollapsed = false;
+   private bool _controlPaneCollapsed = false;
+   private bool _runtimePaneCollapsed = false;
+   
+   private async Task OnStartClicked() {
+       this._eventConsole.Log("Start Clicked",AlertStyle.Info);
+   }
+   
+   private async Task OnResetClicked() {
+       this._eventConsole.Log("Reset Clicked",AlertStyle.Warning);
+   }
+   
+   private async Task OnConnectClicked() {
+       this._eventConsole.Log("Connect Clicked",AlertStyle.Danger);
+   }
+   private void SelectedTabChangedHandler(int obj) {
+       if (obj != 0) {
+           this._controlPaneCollapsed = true;
+           this._runtimePaneCollapsed = true;
+       } else {
+           this._controlPaneCollapsed = false;
+           this._runtimePaneCollapsed = false;
+       }
+       this._eventConsole.Log($"Tab Changed {obj}",AlertStyle.Info);
+   }
+   private async Task CurrentChangedHandler(StationCurrent stationCurrent) {
+       this._eventConsole.Log($"Current Selection Changed.  Value {stationCurrent.Name}",AlertStyle.Danger);
+   }
+   private async Task TempChangedHandler(double temp) {
+       this._eventConsole.Log($"Temp Value Changed.  Value {temp}",AlertStyle.Base);
+   }
 } 
 

@@ -1,14 +1,26 @@
 <RadzenRow>
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
-        <GenericDisplay DisplayLabel="@this.DisplayText" DisplayValue="5:33:02" DisplayTextStyle="TextStyle.H6"/>
-        <RadzenStack Gap="0">
-            <RadzenLabel Text="Okay"/>
-            <LedIndicator/>
-        </RadzenStack>
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="@this.DisplayGap">
+        <GenericDisplay DisplayLabel="@this.DisplayText" DisplayValue="@this.DisplayValue" DisplayTextStyle="@this.TextStyle" LabelFontSize="@this.LabelFontSize"/>
+            <LedIndicator LedSize="24px" LedColor="led-green" State="@this.State"/>
     </RadzenStack>
 </RadzenRow>
 @code {
     [Parameter]
     public string DisplayText {get; set;}="Runtime";
+    
+    [Parameter]
+    public string DisplayValue {get; set;}="5:33:02";
+    
+    [Parameter]
+    public TextStyle TextStyle {get; set;}=TextStyle.H6;
+    
+    [Parameter]
+    public bool State {get; set;}=false;
+
+    [Parameter]
+    public string DisplayGap { get; set; }="10";
+
+    [Parameter]
+    public string LabelFontSize{get;set;}="14";
     
 }

@@ -1,0 +1,35 @@
+@using BurnInControl.UI.Components.App_Components.Displays
+
+    <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="10">
+        <RadzenText Text="@this.PocketCaption"/>
+        <RadzenStack AlignItems="AlignItems.Center">
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenFieldset Text="Wafer">
+                    <RadzenTextBox/>
+                </RadzenFieldset>
+                <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
+                    <RadzenButton Text="Check Wafer" Style="height: 50px;"/>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                        <RadzenLabel Text="Exists?"/>
+                        <LedIndicator LedColor="led-green" State="true" LedSize="30px"/>
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenFieldset Text="Pad 2">
+                    <RadzenDropDown TValue="string" Data=@this._pads/>
+                </RadzenFieldset>
+                <RadzenFieldset Text="Pad 2">
+                    <RadzenDropDown TValue="string" Data=@this._pads/>
+                </RadzenFieldset>
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenStack>
+@code {
+    [Parameter]
+    public string PocketCaption { get; set; } = "Pocket 1";
+
+    private IEnumerable<string> _pads=new List<string>(){
+        "a","b","c"
+    };
+}

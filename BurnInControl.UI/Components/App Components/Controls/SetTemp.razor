@@ -1,0 +1,10 @@
+﻿<RadzenFieldset>
+    <RadzenNumeric TValue="double" Min="25" Max="100" Placeholder="85" ValueChanged="TempChangedHandler"/>
+</RadzenFieldset>
+@code {
+    [Parameter]
+    public EventCallback<double> TempChanged { get; set; }
+    private async Task TempChangedHandler(Double obj) {
+        await this.TempChanged.InvokeAsync(obj);
+    }
+}

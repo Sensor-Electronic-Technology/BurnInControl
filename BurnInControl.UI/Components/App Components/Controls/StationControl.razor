@@ -1,0 +1,64 @@
+@using BurnInControl.Data.StationModel.Components
+<RadzenStack Gap="30" Style="margin: .6rem">
+    <RadzenText Text="Station Control" TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH6" Style="margin: .6rem" />
+    <RadzenToggleButton Text="Connect" 
+                        ButtonStyle="ButtonStyle.Secondary" 
+                        Value="false" Size="ButtonSize.Large" 
+                        ToggleButtonStyle="ButtonStyle.Secondary" 
+                        Click="@OnConnectClick"
+                        ToggleShade="Shade.Darker"/>
+    <RadzenToggleButton Text="Start" 
+                        IsBusy="false" 
+                        ButtonStyle="ButtonStyle.Success" 
+                        ToggleButtonStyle="ButtonStyle.Success" 
+                        ToggleShade="Shade.Dark" 
+                        Click="@OnStartClicked"
+                        Size="ButtonSize.Large"/>
+    <RadzenToggleButton Text="Reset" 
+                        IsBusy="false" 
+                        ButtonStyle="ButtonStyle.Danger" 
+                        Size="ButtonSize.Large" 
+                        ToggleButtonStyle="ButtonStyle.Danger" 
+                        Click="@OnResetClicked"
+                        ToggleShade="Shade.Dark"/>
+    <RadzenStack Orientation="Orientation.Vertical">
+        <CurrentSelector CurrentChanged="@CurrentChangedHandler"/>
+        <SetTemp TempChanged="@TempChangedHandler"/>
+    </RadzenStack>
+</RadzenStack>
+@code{
+    [Parameter]
+    public EventCallback OnConnect { get; set; }
+    
+    [Parameter]
+    public EventCallback OnStart { get; set; }
+    
+    [Parameter]
+    public EventCallback OnReset { get; set; }
+    
+    [Parameter]
+    public EventCallback<StationCurrent> OnCurrentChanged { get; set; }
+    
+    [Parameter]
+    public EventCallback<double> OnTempChanged { get; set; }
+    
+    private async Task OnConnectClick() {
+        await this.OnConnect.InvokeAsync();
+    }
+    
+    private async Task OnStartClicked() {
+        await this.OnStart.InvokeAsync();
+    }
+    
+    private async Task OnResetClicked() {
+        await this.OnReset.InvokeAsync();
+    }
+    
+    private async Task CurrentChangedHandler(StationCurrent stationCurrent) {
+        await this.OnCurrentChanged.InvokeAsync(stationCurrent);
+    }
+    
+    private async Task TempChangedHandler(double temp) {
+        await this.OnTempChanged.InvokeAsync(temp);
+    }
+}

@@ -5,7 +5,7 @@
     <RadzenHeader>
         <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
             <RadzenColumn Size="5">
-                <RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="Radzen.AlignItems.Center">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
                     <RadzenSidebarToggle Click="@SidebarToggleClick"></RadzenSidebarToggle>
                     <RadzenLabel Text="SETi Burn-in"/>
                 </RadzenStack>
@@ -20,7 +20,7 @@
     </RadzenBody>
     <RadzenSidebar style="z-index: 2; width:max-content;">
         <RadzenPanelMenu DisplayStyle="@(sidebarExpanded ? MenuItemDisplayStyle.IconAndText : MenuItemDisplayStyle.Icon)" ShowArrow="false">
-            <RadzenPanelMenuItem Text="Overview" Image="images/logo.png"/>
+            <RadzenPanelMenuItem Text="Home" Image="images/logo.png" Path="/"/>
             <RadzenPanelMenuItem Text="Dashboard" Icon="dashboard" />
             <RadzenPanelMenuItem Text="UI Fundamentals" Icon="auto_awesome">
                 <RadzenPanelMenuItem Text="Themes" Icon="color_lens" />

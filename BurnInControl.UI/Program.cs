@@ -28,8 +28,6 @@ builder.Host.UseWolverine(opts => {
     opts.OnException<InvalidOperationException>().Discard();
 });
 
-
-
 builder.Services.AddInfrastructure();
 builder.Services.AddUiSettings(builder);
 builder.Services.AddLogging();

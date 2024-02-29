@@ -1,15 +1,7 @@
 @using Radzen
-<style>
-    :root{
-        --my-font-size: 10px
-    }
 
-    .rz-form-field-label {
-        font-size: var(--my-font-size) !important;
-    }
-</style>
 
-<RadzenFormField Text="@this.DisplayLabel" Variant="Radzen.Variant.Outlined" style="--my-font-size: @size">
+<RadzenFormField Text="@this.DisplayLabel" Variant="Radzen.Variant.Outlined" Style=@this._css>
     <RadzenText Text="@this.DisplayValue" TextStyle="@this.DisplayTextStyle"
         Style="font-family: 'Orbitron', sans-serif; vertical-align: text-bottom; margin: .5rem" TextAlign="Radzen.TextAlign.Center"/>
 </RadzenFormField>
@@ -23,6 +15,14 @@
 
     [Parameter]
     public TextStyle DisplayTextStyle { get; set; } = TextStyle.DisplayH3;
+    
+    [Parameter]
+    public string LabelFontSize { get; set; } = "24px";
 
-    private string size="16px";
+    private string _css="--my-font-size: 24px";
+
+    protected override void OnParametersSet() {
+        this._css = "--my-font-size: " + this.LabelFontSize;
+        base.OnParametersSet();
+    }
 }

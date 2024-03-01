@@ -1,0 +1,33 @@
+@using BurnInControl.Data.StationModel.Components
+@using BurnInControl.UI.Components.App_Components.Dialogs
+@inject DialogService DialogService
+
+<RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+    <RadzenStack Orientation="Orientation.Horizontal">
+        <CurrentSelector @bind-Current="@this.SetCurrent"/>
+        <SetTemp @bind-Temp="@this.SetTemperature"/>
+    </RadzenStack>
+    <RadzenStack Orientation="Orientation.Horizontal">
+        <RadzenButton Text="Edit" Click="EditClickHandler"></RadzenButton>
+        <RadzenButton Text="Upload" Click="UploadCurrentTemp"/>
+    </RadzenStack>
+    
+</RadzenStack>
+
+@code {
+    [Parameter]
+    public StationCurrent SetCurrent { get; set; } = StationCurrent._150mA;
+    
+    [Parameter]
+    public double SetTemperature { get; set; }
+
+    [Parameter]
+    public EventCallback<(StationCurrent current,double temp)> OnUpload { get; set; }
+    
+    private async Task UploadCurrentTemp() {
+        await this.OnUpload.InvokeAsync((SetCurrent,SetTemperature));
+    }
+    private async Task EditClickHandler() {
+        var result=await this.DialogService.OpenAsync("",ds=>@<EnableUploadDialog DialogService="@ds"/>);
+    }
+}

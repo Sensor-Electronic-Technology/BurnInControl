@@ -1,18 +1,27 @@
-﻿@using BurnInControl.Data.StationModel.Components
+@using BurnInControl.Data.StationModel.Components
 <RadzenFieldset Text="Current">
-    <RadzenDropDown TValue="string" Data="@this._currents" ValueChanged="CurrentChangedHandler"  />
+    <RadzenDropDown TValue="string" Data="@this._currents" 
+                    SelectedItem="@_selectedItem" 
+                    ValueChanged="CurrentChangedHandler"  />
 </RadzenFieldset>
 @code {
-    private IEnumerable<string> _currents = StationCurrent.List.Select(e => e.Name);
+    private IEnumerable<string?> _currents = StationCurrent.List.Select(x => x.Name);
+    
+    [Parameter]
+    public StationCurrent Current { get; set; }
     
     [Parameter]
     public EventCallback<StationCurrent> CurrentChanged { get; set; }
     
-    private string _selectedItem;
+    private string? _selectedItem;
 
 
-    private async Task CurrentChangedHandler(String obj) {
-        var current = StationCurrent.FromName(obj);
-        await CurrentChanged.InvokeAsync(current);
+    private async Task CurrentChangedHandler(string current) {
+        await CurrentChanged.InvokeAsync(StationCurrent.FromName(current));
+    }
+
+    protected override Task OnParametersSetAsync() {
+        this._selectedItem = this._currents.FirstOrDefault(e => e == this.Current.Name);
+        return base.OnParametersSetAsync();
     }
 }

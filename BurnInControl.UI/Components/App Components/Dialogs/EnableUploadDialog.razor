@@ -1,0 +1,52 @@
+    <RadzenTemplateForm TItem="UserModel" Data=@_userModel Submit=@OnSubmit>
+            <RadzenStack Gap="2rem" Class="rz-p-4 rz-p-md-12">
+                <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
+                    <RadzenColumn Size="12" SizeMD="8" Style="border: 0px solid #f6f7fa">
+                        <RadzenFieldset Text="Username">
+                            <RadzenText Name="Username" @bind-Value=@this._userModel.Username Style="width: 100%; height: 36px; font-size: 24px; border: 1px solid #45555e; border-radius: 4px; vertical-align: text-bottom"/>
+                            <RadzenRequiredValidator Component="Username" Text="Enter Username" Style="position: absolute"/>
+                            <RadzenCompareValidator Component="Username" Text="Username does not exists"
+                                                    Value="@this._user"
+                                                    Style="position: absolute"/>
+                        </RadzenFieldset>
+                    </RadzenColumn>
+                </RadzenRow>
+                <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
+                    <RadzenColumn Size="12" SizeMD="8">
+                        <RadzenFieldset Text="Password">
+                            <RadzenPassword Name="Password" @bind-Value=@_userModel.Password Style="display: block; width: 100%; border: 1px solid #45555e"/>
+                            <RadzenRequiredValidator Component="Password" Text="EnterPassword" Style="position: absolute"/>
+                            <RadzenCompareValidator Visible=@(!string.IsNullOrEmpty(this._userModel.Password))
+                                                    Value=@_userModel.Password
+                                                    Component="Password"
+                                                    Text="Password is incorrect" Style="position: absolute"/>
+                        </RadzenFieldset>
+                    </RadzenColumn>
+                </RadzenRow>
+                <RadzenRow AlignItems="AlignItems.Center" Class="rz-mt-4">
+                    <RadzenColumn Size="12" Offset="0" SizeMD="8" OffsetMD="4">
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Submit"></RadzenButton>
+                    </RadzenColumn>
+                </RadzenRow>
+            </RadzenStack>
+    </RadzenTemplateForm>
+
+@code {
+    class UserModel {
+        public string Password { get; set; }
+        public string Username { get; set; }
+    }
+    
+    UserModel _userModel = new UserModel();
+    UserModel _user = new UserModel() {
+        Username = "admin", Password = "admin"
+    };
+    
+    [Parameter]
+    public DialogService DialogService { get; set; }
+    
+
+    async Task OnSubmit(UserModel args) {
+        this.DialogService.Close();
+    }
+}

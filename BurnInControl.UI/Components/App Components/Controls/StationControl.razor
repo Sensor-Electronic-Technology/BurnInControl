@@ -21,10 +21,7 @@
                         ToggleButtonStyle="ButtonStyle.Danger" 
                         Click="@OnResetClicked"
                         ToggleShade="Shade.Dark"/>
-    <RadzenStack Orientation="Orientation.Vertical">
-        <CurrentSelector CurrentChanged="@CurrentChangedHandler"/>
-        <SetTemp TempChanged="@TempChangedHandler"/>
-    </RadzenStack>
+    <TempCurrentControl/>
 </RadzenStack>
 @code{
     [Parameter]
@@ -54,11 +51,7 @@
         await this.OnReset.InvokeAsync();
     }
     
-    private async Task CurrentChangedHandler(StationCurrent stationCurrent) {
+    private async Task OnUploadCurrentTemp(StationCurrent stationCurrent) {
         await this.OnCurrentChanged.InvokeAsync(stationCurrent);
-    }
-    
-    private async Task TempChangedHandler(double temp) {
-        await this.OnTempChanged.InvokeAsync(temp);
     }
 }

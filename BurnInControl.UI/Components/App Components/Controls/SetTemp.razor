@@ -1,9 +1,13 @@
-﻿<RadzenFieldset>
-    <RadzenNumeric TValue="double" Min="25" Max="100" Placeholder="85" ValueChanged="TempChangedHandler"/>
+<RadzenFieldset Text="Set Temperature">
+    <RadzenNumeric TValue="double" Value="@this.Temp" Min="25" Max="100" Placeholder="85" ValueChanged="TempChangedHandler"/>
 </RadzenFieldset>
 @code {
     [Parameter]
+    public double Temp { get; set; }
+    
+    [Parameter]
     public EventCallback<double> TempChanged { get; set; }
+    
     private async Task TempChangedHandler(Double obj) {
         await this.TempChanged.InvokeAsync(obj);
     }

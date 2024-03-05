@@ -1,8 +1,8 @@
 @using BurnInControl.Data.StationModel.Components
-<RadzenFieldset Text="Current">
+<RadzenFieldset Text="Current" Style="width: fit-content">
     <RadzenDropDown TValue="string" Data="@this._currents" 
                     SelectedItem="@_selectedItem" 
-                    ValueChanged="CurrentChangedHandler"  />
+                    ValueChanged="CurrentChangedHandler" Style="width: 100px"  />
 </RadzenFieldset>
 @code {
     private IEnumerable<string?> _currents = StationCurrent.List.Select(x => x.Name);

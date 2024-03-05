@@ -1,23 +1,63 @@
 @using BurnInControl.UI.Data
   <div class=@this._ledClass style=@this._ledCss>
+    @this._ledText
   </div>
 @code {
   
   [Parameter]
-  public string LedColor { get; set; } = "";
+  public string LedShape { get; set; } = "led";
+  
+  [Parameter]
+  public string LedOnColor { get; set; } = "led-green";
+
+  [Parameter]
+  public string LedOffColor { get; set; } = string.Empty;
   
   [Parameter]
   public string LedSize { get; set; } = "32px";
   
   [Parameter]
+  public string LedWidth { get; set; } = "32px";
+  
+  [Parameter]
+  public string LedHeight { get; set; } = "32px";
+  
+  [Parameter]
   public bool State { get; set; } = false;
+
+  [Parameter]
+  public string OnText { get; set; } = string.Empty;
+  
+  [Parameter]
+  public string OffText { get; set; } = string.Empty;
+
+  [Parameter]
+  public string Text{get;set;}=string.Empty;
 
   private string _ledClass = "led";
   private string _ledCss="--led-size: 30px";
+  private string _ledText=string.Empty;
 
   protected override void OnParametersSet() {
-    this._ledCss = $"--led-size: {this.LedSize}";
-    this._ledClass = (this.State) ? "led "+this.LedColor : "led";
+    if (this.LedShape == "led") {
+      this._ledCss = $"--led-size: {this.LedSize}";
+      
+    } else {
+      this._ledCss = $"--led-r-width: {this.LedWidth};";
+      this._ledCss += $"--led-r-height: {this.LedHeight};";
+    }
+    
+    this._ledClass = (this.State) ? this.LedShape+" "+ this.LedOnColor : this.LedShape;
+    if (this.State) {
+      this._ledText=string.IsNullOrEmpty(this.OnText) ? string.Empty:this.OnText;
+      this._ledClass = this.LedShape + " " + this.LedOnColor;
+    } else {
+      this._ledText=string.IsNullOrEmpty(this.OffText) ? string.Empty:this.OffText;
+      this._ledClass=string.IsNullOrEmpty(this.LedOffColor) ? this.LedShape : this.LedShape + " " + this.LedOffColor;
+    }
+    
+    
+    
     base.OnParametersSet();
   }
 

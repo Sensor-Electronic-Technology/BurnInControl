@@ -3,6 +3,8 @@
 :root{
     --my-font-size: 10px;
     --led-size: 30px;
+    --led-r-width: 100px;
+    --led-r-height: 50px;
 }
 
 .rz-form-field-label {
@@ -16,6 +18,25 @@
     border-radius: 50%;
     background-color: rgba(255, 255, 255, 0.25);
     box-shadow: #000 0 -1px 6px 1px;
+    color: color: #72a7fe;
+    text-align: center;
+    justify-content: center;
+    vertical-align: middle;
+
+}
+
+.led-rectangle {
+  height: var(--led-r-height);
+  width: var(--led-r-width);
+  background-color: rgba(255, 255, 255, 0.25);
+  box-shadow: #000 0 -1px 6px 1px;
+  color:#F00;
+  font-size: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px auto;
+  
 }
 
 .led-red {

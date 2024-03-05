@@ -1,26 +1,28 @@
 @using BurnInControl.Data.StationModel.Components
-<RadzenStack Gap="30" Style="margin: .6rem">
+<RadzenStack Gap="10" Style="margin: .6rem; width: fit-content" AlignItems="Radzen.AlignItems.Center">
     <RadzenText Text="Station Control" TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH6" Style="margin: .6rem" />
-    <RadzenToggleButton Text="Connect" 
-                        ButtonStyle="ButtonStyle.Secondary" 
-                        Value="false" Size="ButtonSize.Large" 
-                        ToggleButtonStyle="ButtonStyle.Secondary" 
-                        Click="@OnConnectClick"
-                        ToggleShade="Shade.Darker"/>
-    <RadzenToggleButton Text="Start" 
-                        IsBusy="false" 
-                        ButtonStyle="ButtonStyle.Success" 
-                        ToggleButtonStyle="ButtonStyle.Success" 
-                        ToggleShade="Shade.Dark" 
-                        Click="@OnStartClicked"
-                        Size="ButtonSize.Large"/>
-    <RadzenToggleButton Text="Reset" 
-                        IsBusy="false" 
-                        ButtonStyle="ButtonStyle.Danger" 
-                        Size="ButtonSize.Large" 
-                        ToggleButtonStyle="ButtonStyle.Danger" 
-                        Click="@OnResetClicked"
-                        ToggleShade="Shade.Dark"/>
+    <RadzenStack AlignItems="Radzen.AlignItems.Center" Orientation="Radzen.Orientation.Vertical" Gap="10">
+        <RadzenToggleButton Text="Connect" 
+                            ButtonStyle="ButtonStyle.Secondary" 
+                            Value="false" Size="Radzen.ButtonSize.Large" 
+                            ToggleButtonStyle="ButtonStyle.Secondary" 
+                            Click="@OnConnectClick"
+                            ToggleShade="Shade.Darker" Style="width: 150px"/>
+        <RadzenToggleButton Text="Start" 
+                            IsBusy="false" 
+                            ButtonStyle="ButtonStyle.Success" 
+                            ToggleButtonStyle="ButtonStyle.Success" 
+                            ToggleShade="Shade.Dark" 
+                            Click="@OnStartClicked"
+                            Size="ButtonSize.Large" Style="width: 150px"/>
+        <RadzenToggleButton Text="Reset" 
+                            IsBusy="false" 
+                            ButtonStyle="ButtonStyle.Danger" 
+                            Size="ButtonSize.Large" 
+                            ToggleButtonStyle="ButtonStyle.Danger" 
+                            Click="@OnResetClicked"
+                            ToggleShade="Shade.Dark" Style="width: 150px"/>
+    </RadzenStack>
     <TempCurrentControl/>
 </RadzenStack>
 @code{

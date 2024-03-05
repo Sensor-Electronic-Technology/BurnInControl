@@ -1,5 +1,5 @@
-<RadzenFieldset Text="Set Temperature">
-    <RadzenNumeric TValue="double" Value="@this.Temp" Min="25" Max="100" Placeholder="85" ValueChanged="TempChangedHandler"/>
+<RadzenFieldset Text="Set Temperature" Style="width: fit-content">
+    <RadzenNumeric TValue="double" Value="@this.Temp" Min="25" Max="100" Placeholder="85" ValueChanged="TempChangedHandler" class="col-1" Style="width: 100px"/>
 </RadzenFieldset>
 @code {
     [Parameter]

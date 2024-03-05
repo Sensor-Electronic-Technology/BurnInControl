@@ -1,4 +1,5 @@
 @inherits LayoutComponentBase
+@using BurnInControl.UI.Components.App_Components.Displays
 <RadzenComponents />
 
 <RadzenLayout style="position:relative;">
@@ -11,7 +12,9 @@
                 </RadzenStack>
             </RadzenColumn>
             <RadzenColumn Size="7">
-                <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"></RadzenStack>
+                <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+                    <StationStatus/>
+                </RadzenStack>
             </RadzenColumn>
         </RadzenRow>
     </RadzenHeader>
@@ -26,6 +29,7 @@
                 <RadzenPanelMenuItem Text="Themes" Icon="color_lens" />
                 <RadzenPanelMenuItem Text="Colors" Icon="invert_colors" />
             </RadzenPanelMenuItem>
+
         </RadzenPanelMenu>
     </RadzenSidebar>
 </RadzenLayout>

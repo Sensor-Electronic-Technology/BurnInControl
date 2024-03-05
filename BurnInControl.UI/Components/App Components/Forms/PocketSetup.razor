@@ -1,26 +1,26 @@
 @using BurnInControl.UI.Components.App_Components.Displays
 
-    <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="10">
+    <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="10" Style="width: fit-content">
         <RadzenText Text="@this.PocketCaption"/>
         <RadzenStack AlignItems="AlignItems.Center">
-            <RadzenStack Orientation="Orientation.Horizontal">
-                <RadzenFieldset Text="Wafer">
+            <RadzenStack Orientation="Orientation.Vertical" JustifyContent="Radzen.JustifyContent.Center" AlignItems="Radzen.AlignItems.Center">
+                <RadzenFieldset Text="Wafer" Style="height: fit-content">
                     <RadzenTextBox/>
                 </RadzenFieldset>
-                <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
-                    <RadzenButton Text="Check Wafer" Style="height: 50px;"/>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                    <RadzenButton Text="Check" Style="height: 25px; width: 100px"/>
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
                         <RadzenLabel Text="Exists?"/>
-                        <LedIndicator LedColor="led-green" State="true" LedSize="30px"/>
+                        <LedIndicator LedOnColor="led-green" State="true" LedSize="30px"/>
                     </RadzenStack>
                 </RadzenStack>
             </RadzenStack>
             <RadzenStack Orientation="Orientation.Horizontal">
-                <RadzenFieldset Text="Pad 2">
-                    <RadzenDropDown TValue="string" Data=@this._pads/>
+                <RadzenFieldset Text="Pad 1">
+                    <RadzenDropDown TValue="string" Data=@this._pads Style="width: 100px"/>
                 </RadzenFieldset>
                 <RadzenFieldset Text="Pad 2">
-                    <RadzenDropDown TValue="string" Data=@this._pads/>
+                    <RadzenDropDown TValue="string" Data=@this._pads Style="width: 100px"/>
                 </RadzenFieldset>
             </RadzenStack>
         </RadzenStack>

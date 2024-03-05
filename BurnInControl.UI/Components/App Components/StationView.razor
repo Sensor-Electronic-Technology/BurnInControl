@@ -39,12 +39,15 @@
         </RadzenSplitter>
     </RadzenSplitterPane>
     <RadzenSplitterPane Size="15%" Resizable="true" Collapsed="@this._controlPaneCollapsed">
-        <StationControl OnConnect="@this.OnConnectClicked" 
-                        OnReset="@this.OnResetClicked" 
-                        OnStart="@this.OnStartClicked"
-                        OnCurrentChanged="CurrentChangedHandler"
-                        OnTempChanged="TempChangedHandler"/>
+        <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+            <StationControl OnConnect="@this.OnConnectClicked"
+                            OnReset="@this.OnResetClicked"
+                            OnStart="@this.OnStartClicked"
+                            OnCurrentChanged="CurrentChangedHandler"
+                            OnTempChanged="TempChangedHandler"/>
+        </RadzenRow>
     </RadzenSplitterPane>
+
 </RadzenSplitter>
 
 @code {

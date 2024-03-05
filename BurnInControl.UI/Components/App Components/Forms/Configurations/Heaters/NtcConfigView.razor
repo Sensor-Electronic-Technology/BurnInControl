@@ -1,0 +1,67 @@
+@using BurnInControl.Data.ComponentConfiguration.HeaterController
+@using BurnInControl.Data.StationModel.Components
+<RadzenTemplateForm Data="@this.NtcConfig" Style="width: fit-content">
+    <RadzenFieldset Text="NTC Configuration" Style="width: fit-content; border: 5px solid #45565e">
+        <RadzenStack Gap=".1rem" 
+                     JustifyContent="JustifyContent.Center" 
+                     AlignItems="AlignItems.Center">
+            <RadzenStack Orientation="Orientation.Horizontal"
+                         Gap=".5rem"
+                         JustifyContent="JustifyContent.Center"
+                         AlignItems="AlignItems.Center">
+                <ExponentialInput Label="ACoeff" 
+                                  Value="@this.NtcConfig.ACoeff"
+                                  ValueChanged="@(async Task (val) => { this.NtcConfig.ACoeff = val; await this.NtcConfigChanged.InvokeAsync(this.NtcConfig); })"/>
+                <ExponentialInput Label="BCoeff" 
+                                  Value="@this.NtcConfig.BCoeff"
+                                  ValueChanged="@(async Task (val) => { this.NtcConfig.BCoeff = val; await this.NtcConfigChanged.InvokeAsync(this.NtcConfig); })"/>
+            </RadzenStack>
+            <ExponentialInput Label="CCoeff" 
+                              Value="@this.NtcConfig.CCoeff"
+                              ValueChanged="@(async Task (val) => { this.NtcConfig.CCoeff = val; await this.NtcConfigChanged.InvokeAsync(this.NtcConfig); })"/>
+            <RadzenStack Orientation="Orientation.Horizontal"
+                         AlignItems="AlignItems.Center"
+                         JustifyContent="JustifyContent.Center">
+                <RadzenFieldset Text="Pin">
+                    <RadzenDropDown TValue="string"
+                                    Data="@this._pins"
+                                    Value="@this._selectedAnalogPin"
+                                    ValueChanged="AnalogPinChangedHandler"/>
+                </RadzenFieldset>
+                <RadzenFieldset Text="fWeight">
+                    <RadzenNumeric TValue="double"
+                                   Name="fWeight"
+                                   Format="f"/>
+                </RadzenFieldset>
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenFieldset>
+</RadzenTemplateForm>
+
+
+@code {
+    [Parameter]
+    public NtcConfiguration NtcConfig { get; set; }
+    
+    [Parameter]
+    public EventCallback<NtcConfiguration> NtcConfigChanged { get; set; }
+
+    private IEnumerable<String> _pins;
+    private string? _selectedAnalogPin;
+
+    protected override Task OnParametersSetAsync() {
+        this._pins= StationAnalogPin.List.Select(p => p.Name);
+        this._selectedAnalogPin = this._pins.FirstOrDefault(e => e == StationAnalogPin.FromValue(this.NtcConfig.Pin).Name);
+        InvokeAsync(StateHasChanged);
+        return base.OnParametersSetAsync();
+    }
+
+    private async Task ConfigChanged() {
+        await this.NtcConfigChanged.InvokeAsync(this.NtcConfig);
+    }
+
+    private Task AnalogPinChangedHandler(string selected) {
+        this.NtcConfig.Pin= StationAnalogPin.FromName(selected).Value;
+        return this.ConfigChanged();
+    }
+}

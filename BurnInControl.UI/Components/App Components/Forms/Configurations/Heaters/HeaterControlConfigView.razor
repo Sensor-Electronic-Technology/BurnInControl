@@ -1,0 +1,40 @@
+﻿@using BurnInControl.Data.ComponentConfiguration.HeaterController
+@using BurnInControl.UI.Services
+@inject DialogService DialogService
+@inject ConsoleWriter _consoleWriter
+
+<RadzenTemplateForm Data="@this.HeaterControllerConfig">
+    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap">
+        <HeaterConfigView HeaterConfig="@this.HeaterControllerConfig.HeaterConfigurations[0]"
+                          HeaterConfigChanged="@this.ConfigChangedHandler"/>
+        <HeaterConfigView HeaterConfig="@this.HeaterControllerConfig.HeaterConfigurations[1]"
+                          HeaterConfigChanged="@this.ConfigChangedHandler"/>
+        <HeaterConfigView HeaterConfig="@this.HeaterControllerConfig.HeaterConfigurations[2]"
+                          HeaterConfigChanged="@this.ConfigChangedHandler"/>
+    </RadzenStack>
+    @*<RadzenTabs SelectedIndex="0">
+        <Tabs>
+            <RadzenTabsItem Text="Left Heater">
+
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Center Heater">
+
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Right Heater">
+
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>*@
+</RadzenTemplateForm>
+
+@code {
+    [Parameter]
+    public HeaterControllerConfig HeaterControllerConfig { get; set; } = new();
+
+    private async Task ConfigChangedHandler() {
+        this._consoleWriter.LogMessage("Configuration Changed",AlertStyle.Light);
+        //await this.DialogService.Alert("Configuration Changed", "Configuration Changed");
+    }
+    
+    
+}

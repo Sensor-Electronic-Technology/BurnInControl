@@ -1,8 +1,10 @@
 @using Radzen
 @using Radzen.Blazor
 @using System.Text.Json
-
+@using BurnInControl.UI.Services
+@inject ConsoleWriter _consoleWriter
 @inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
 <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem" Class="rz-mt-4 rz-p-4 rz-border-radius-1" @attributes=@Attributes Style="border: var(--rz-grid-cell-border)">
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
         <RadzenText TextStyle="TextStyle.Subtitle1" TextAlign="TextAlign.Center" TagName="TagName.P" Class="rz-m-0">@this.LogTitle</RadzenText>
@@ -32,35 +34,38 @@
     public IDictionary<string, object> Attributes { get; set; }
     IList<Message> messages = new List<Message>();
 
+    protected override Task OnInitializedAsync() {
+        this._consoleWriter.OnMessageChanged += this.Log;
+        return base.OnInitializedAsync();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender)
-        {
-            await JSRuntime.InvokeVoidAsync("eval", $"document.getElementById('event-console').scrollTop = document.getElementById('event-console').scrollHeight");
+        if (!firstRender) {
+            await JSRuntime.InvokeVoidAsync("eval", 
+            $"document.getElementById('event-console').scrollTop = document.getElementById('event-console').scrollHeight");
         }
     }
 
-    void OnClearClick()
-    {
+    void OnClearClick() {
         Clear();
     }
 
-    public void Clear()
-    {
+    public void Clear() {
         messages.Clear();
-
         InvokeAsync(StateHasChanged);
     }
 
-    public void Log(string message, AlertStyle alertStyle = AlertStyle.Info)
-    {
+    public void Log(string message, AlertStyle alertStyle = AlertStyle.Info) {
         messages.Add(new Message { Date = DateTime.Now, Text = message, AlertStyle = alertStyle });
-
         InvokeAsync(StateHasChanged);
     }
 
-    public void Log(object value)
-    {
+    public void Log(object value) {
         Log(JsonSerializer.Serialize(value));
+    }
+    public ValueTask DisposeAsync() {
+        this._consoleWriter.OnMessageChanged -= this.Log;
+        return ValueTask.CompletedTask;
     }
 }

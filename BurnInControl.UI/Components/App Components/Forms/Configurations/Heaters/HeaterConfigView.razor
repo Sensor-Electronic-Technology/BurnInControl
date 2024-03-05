@@ -1,0 +1,26 @@
+@using BurnInControl.Data.ComponentConfiguration.HeaterController
+@using System.Globalization
+
+<RadzenFieldset Text="HeaterConfiguration" Style="border: 5px solid #3a6d7c">
+    <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
+            <NtcConfigView NtcConfig="@this.HeaterConfig.NtcConfig" NtcConfigChanged="@this.NtcConfigChanged"/>
+            <PidConfigView PidConfig="@this.HeaterConfig.PidConfig" PidConfigChanged="@this.PidConfigChangedHandler"/>
+    </RadzenStack>
+</RadzenFieldset>
+@code{
+    [Parameter]
+    public HeaterConfiguration HeaterConfig { get; set; }
+    
+    [Parameter]
+    public EventCallback<HeaterConfiguration> HeaterConfigChanged { get; set; }
+
+    private async Task NtcConfigChanged(NtcConfiguration config) {
+        this.HeaterConfig.NtcConfig = config;
+        await this.HeaterConfigChanged.InvokeAsync(this.HeaterConfig);
+    }
+
+    private async Task PidConfigChangedHandler(PidConfiguration config) {
+        this.HeaterConfig.PidConfig = config;
+        await this.HeaterConfigChanged.InvokeAsync(this.HeaterConfig);
+    }
+}

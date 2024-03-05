@@ -1,0 +1,51 @@
+<RadzenTemplateForm TItem="string" 
+                    Data=@this.StrValue 
+                    Submit="@this.Submit" 
+                    Style="width: fit-content">
+    <RadzenFieldset Text="@this.Label" Style="width: fit-content">
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+            <RadzenStack Gap="0">
+                <RadzenTextBox @bind-Value="@this.StrValue"
+                               Name="Input" Style="width: 100px; height: 36px"/>
+                <RadzenCustomValidator Component="Input" Validator="@Validate" Text="Invalid Number"/>
+            </RadzenStack>
+            <RadzenButton Style="height: 36px"
+                          ButtonType="ButtonType.Submit" 
+                          Icon="save"/>
+        </RadzenStack>
+    </RadzenFieldset>
+</RadzenTemplateForm>
+
+
+
+
+@code {
+    [Parameter]
+    public double Value { get; set; }
+
+    [Parameter]
+    public string Label { get; set; } = "";
+    
+    [Parameter]
+    public EventCallback<double> ValueChanged { get; set; }
+
+    private string StrValue="1.00e-3";
+
+    protected override Task OnParametersSetAsync() {
+        this.StrValue= this.Value.ToString("0.00e0");
+        return base.OnParametersSetAsync();
+    }
+
+    private bool Validate() {
+        if (double.TryParse(this.StrValue, out double parsed)) {
+            this.Value= parsed;
+            return true;
+        }
+        return false;
+    }
+    
+    private async Task Submit() {
+        await this.ValueChanged.InvokeAsync(this.Value);
+    }
+    
+}

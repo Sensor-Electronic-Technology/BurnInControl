@@ -1,5 +1,0 @@
-﻿textarea {
-    overflow-y: scroll;
-    padding: 2rem;
-    resize: none; /* Remove this if you want the user to resize the textarea */
-}

@@ -1,0 +1,35 @@
+﻿@using BurnInControl.Data.ComponentConfiguration.ProbeController
+@using BurnInControl.Data.StationModel.Components
+
+<RadzenFieldset Text="@this.Label"></RadzenFieldset>
+<RadzenStack Orientation="Orientation.Horizontal">
+    <AnalogPinSelector AnalogPin="@this.AnalogPin" 
+                       AnalogPinChanged="AnalogPinChangedHandler"/>
+    <FilterInput FilterWeight="@this.FilterWeight" 
+                 FilterWeightChanged="FilterWeightChangedHandler"/>
+</RadzenStack>
+
+@code {
+    [Parameter]
+    public string Label { get; set; } = "Sensor Configuration";
+    
+    [Parameter]
+    public sbyte AnalogPin { get; set; }
+    
+    [Parameter]
+    public double FilterWeight { get; set; }
+    
+    [Parameter]
+    public EventCallback<(sbyte,double)> OnSensorChanged { get; set; }
+    
+    
+    private Task AnalogPinChangedHandler(sbyte newValue) {
+        this.AnalogPin = newValue;
+        return this.OnSensorChanged.InvokeAsync((this.AnalogPin, this.FilterWeight));
+    }
+    
+    private Task FilterWeightChangedHandler(double newValue) {
+        this.FilterWeight=newValue;
+        return this.OnSensorChanged.InvokeAsync((this.AnalogPin, this.FilterWeight));
+    }
+}

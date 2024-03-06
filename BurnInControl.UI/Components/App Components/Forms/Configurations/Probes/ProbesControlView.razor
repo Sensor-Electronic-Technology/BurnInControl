@@ -1,0 +1,31 @@
+﻿@using BurnInControl.Data.ComponentConfiguration.ProbeController
+
+<RadzenFieldset Text="Probe Controller Configuration">
+    <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenStack Orientation="Orientation.Horizontal">
+                @for (int i = 0; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
+                    <ProbeView @bind-ProbeConfig="@this.ProbeControllerConfig.ProbeConfigurations[i]"/>
+                }
+            </RadzenStack>
+    </RadzenStack>
+    <RadzenButton Text="Save" Click="@this.SaveConfig" />
+    <EventConsole @ref="@this._eventConsole"/>
+</RadzenFieldset>
+
+
+@code {
+    
+    [Parameter]
+    public ProbeControllerConfig ProbeControllerConfig { get; set; }
+    
+    private EventConsole _eventConsole;
+    
+    private Task SaveConfig() {
+        this._eventConsole.Log($"Sensor Voltage Pin: {ProbeControllerConfig.ProbeConfigurations[0].VoltageSensorConfig.Pin}");
+        return Task.CompletedTask;
+    }
+    
+    /*[Parameter]
+    public EventCallback<ProbeControllerConfig> ProbeControllerConfigChanged { get; set; }#1#*/
+    
+}

@@ -29,4 +29,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Components\App Components\Forms\Configurations\Stations\" />
+  </ItemGroup>
 </Project>

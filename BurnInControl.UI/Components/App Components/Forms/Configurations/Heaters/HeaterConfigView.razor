@@ -1,13 +1,15 @@
 @using BurnInControl.Data.ComponentConfiguration.HeaterController
 @using System.Globalization
 
-<RadzenFieldset Text="HeaterConfiguration" Style="border: 5px solid #3a6d7c">
+<RadzenFieldset Text="@this.Label" Style="border: 5px solid #3a6d7c">
     <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
             <NtcConfigView NtcConfig="@this.HeaterConfig.NtcConfig" NtcConfigChanged="@this.NtcConfigChanged"/>
             <PidConfigView PidConfig="@this.HeaterConfig.PidConfig" PidConfigChanged="@this.PidConfigChangedHandler"/>
     </RadzenStack>
 </RadzenFieldset>
 @code{
+    [Parameter]
+    public string Label { get; set; }= "Heater Configuration";
     [Parameter]
     public HeaterConfiguration HeaterConfig { get; set; }
     

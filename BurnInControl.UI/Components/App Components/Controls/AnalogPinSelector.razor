@@ -1,0 +1,30 @@
+﻿@using BurnInControl.Data.StationModel.Components
+
+<RadzenFieldset Text="Analog Pin">
+    <RadzenDropDown TValue="string"
+                    Data="@this._pins"
+                    Value="@this._selectedAnalogPin"
+                    ValueChanged="AnalogPinChangedHandler"/>
+</RadzenFieldset>
+
+@code {
+    [Parameter]
+    public sbyte AnalogPin { get; set; }
+    
+    [Parameter]
+    public EventCallback<sbyte> AnalogPinChanged { get; set; }
+    
+    private IEnumerable<String> _pins=StationAnalogPin.List.Select(p => p.Name);
+    private string? _selectedAnalogPin;
+    
+    protected override Task OnParametersSetAsync() {
+        this._selectedAnalogPin = this._pins.FirstOrDefault(e => e == StationAnalogPin.FromValue(AnalogPin).Name);
+        InvokeAsync(StateHasChanged);
+        return base.OnParametersSetAsync();
+    }
+    
+    private Task AnalogPinChangedHandler(string selected) { 
+        this.AnalogPin= StationAnalogPin.FromName(selected).Value;
+        return this.AnalogPinChanged.InvokeAsync(this.AnalogPin);
+    }
+}

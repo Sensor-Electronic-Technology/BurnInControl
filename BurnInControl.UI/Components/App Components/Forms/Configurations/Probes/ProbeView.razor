@@ -1,0 +1,36 @@
+﻿@using BurnInControl.Data.ComponentConfiguration.ProbeController
+
+<RadzenFieldset Text="Probe Configuration">
+    <RadzenStack Orientation="Orientation.Vertical">
+        <SensorView Label="Voltage Sensor Configuration" 
+                    AnalogPin="@this.ProbeConfig.VoltageSensorConfig.Pin"
+                    FilterWeight="@this.ProbeConfig.VoltageSensorConfig.fWeight"
+                    OnSensorChanged="@this.VoltageSensorChangeHandler"/>
+        <SensorView Label="Current Sensor Configuration"
+                    AnalogPin="@this.ProbeConfig.CurrentSensorConfig.Pin"
+                    FilterWeight="@this.ProbeConfig.CurrentSensorConfig.fWeight"
+                    OnSensorChanged="@this.CurrentSensorChangedHandler"/>
+    </RadzenStack>
+</RadzenFieldset>
+
+@code {
+    
+    [Parameter]
+    public ProbeConfig ProbeConfig { get; set; }
+    
+    [Parameter]
+    public EventCallback<ProbeConfig> ProbeConfigChanged { get; set; }
+    
+    
+    private Task CurrentSensorChangedHandler((sbyte, double) sensorValues) {
+        this.ProbeConfig.CurrentSensorConfig.Pin = sensorValues.Item1;
+        this.ProbeConfig.CurrentSensorConfig.fWeight = sensorValues.Item2;
+        return this.ProbeConfigChanged.InvokeAsync(this.ProbeConfig);
+    }
+    
+    private Task VoltageSensorChangeHandler((sbyte, double) sensorValues) {
+        this.ProbeConfig.VoltageSensorConfig.Pin = sensorValues.Item1;
+        this.ProbeConfig.VoltageSensorConfig.fWeight = sensorValues.Item2;
+        return this.ProbeConfigChanged.InvokeAsync(this.ProbeConfig);
+    }
+}

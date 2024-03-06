@@ -1,0 +1,35 @@
+﻿<RadzenFieldset Text="Pin">
+    <RadzenDropDown TValue="string"
+                    Data="@this._pins"
+                    Value="@this._selectedPin"
+                    ValueChanged="@this.PinValueChangedHandler"/>
+</RadzenFieldset>
+@code {
+    
+    [Parameter]
+    public sbyte Pin { get; set; }
+    
+    [Parameter]
+    public EventCallback<sbyte> PinChanged { get; set; }
+
+
+    private string? _selectedPin;
+    private List<string> _pins=Enumerable.Range(1, ControllerHardwareConstants.DIGITAL_COUNT)
+                                        .Select(x => x < 10 ? $"D0{x}" : $"D{x}").ToList();
+
+    protected override Task OnParametersSetAsync() {
+        
+        this._selectedPin=this._pins.FirstOrDefault(e => {
+            var lookup=this.Pin < 10 ? $"D0{this.Pin}" : $"D{this.Pin}";
+            return e == lookup;
+        });
+        return base.OnParametersSetAsync();
+    }
+
+    private Task PinValueChangedHandler(string selected) {
+        if (sbyte.TryParse(selected.Substring(1), out var pin)) {
+            return this.PinChanged.InvokeAsync(pin);
+        }
+        return Task.CompletedTask;
+    }
+}

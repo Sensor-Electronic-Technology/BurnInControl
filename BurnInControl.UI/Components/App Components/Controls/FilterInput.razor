@@ -1,0 +1,24 @@
+﻿<RadzenFieldset Text="fWeight">
+    <RadzenNumeric TValue="double"
+                   Name="fWeight"
+                   Format="f"
+                   ValueChanged="@this.FilterValueChangedHandler"/>
+</RadzenFieldset>
+
+
+@code {
+    
+    [Parameter]
+    public double FilterWeight { get; set; }
+
+    [Parameter]
+    public string Label { get; set; } = "Filter Weight";
+    
+    [Parameter]
+    public EventCallback<double> FilterWeightChanged { get; set; }
+
+    private Task FilterValueChangedHandler(double newValue) {
+        this.FilterWeight = newValue;
+        return this.FilterWeightChanged.InvokeAsync(newValue);
+    }
+}

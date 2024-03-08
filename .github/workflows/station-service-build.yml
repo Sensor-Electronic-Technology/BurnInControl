@@ -1,0 +1,31 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+    - 'BurnInControl.Data/**'
+    - 'BurnInControl.Infrastructure/**'
+    - 'StationService.Infrastructure/**'
+    - 'BurnInControl.StationService/**'
+    - '.github/workflows/station-service-build.yml'
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./BurnInControl.StationService
+    steps:
+    - uses: actions/checkout@v3
+    - name: Login
+      env:
+        DOCKER_USER: ${{secrets.Docker_Username}}
+        DOCKER_PASSWORD: ${{secrets.Docker_Password}}
+      run: |
+        docker login -u $DOCKER_USER -p $DOCKER_PASSWORD 
+    - name: Build the Docker image
+      run: |
+        docker build . --tag ${{secrets.Docker_Username}}/station-service:latest
+

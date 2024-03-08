@@ -5,6 +5,7 @@ on:
     branches: [ "master" ]
     paths:
     - 'BurnInControl.Data/**'
+    - 'BurnInControl.Shared/**'
     - 'BurnInControl.Infrastructure/**'
     - 'StationService.Infrastructure/**'
     - 'BurnInControl.StationService/**'
@@ -14,9 +15,6 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./BurnInControl.StationService
     steps:
     - uses: actions/checkout@v3
     - name: Login
@@ -27,5 +25,5 @@ jobs:
         docker login -u $DOCKER_USER -p $DOCKER_PASSWORD 
     - name: Build the Docker image
       run: |
-        docker build . --tag ${{secrets.Docker_Username}}/station-service:latest
+        docker build ./BurnInControl.StationService/Dockerfile --tag ${{secrets.Docker_Username}}/station-service:latest
 

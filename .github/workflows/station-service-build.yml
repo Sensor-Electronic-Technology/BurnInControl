@@ -25,5 +25,5 @@ jobs:
         docker login -u $DOCKER_USER -p $DOCKER_PASSWORD 
     - name: Build the Docker image
       run: |
-        docker build BurnInControl.StationService/Dockerfile --tag ${{secrets.Docker_Username}}/station-service:latest
+        docker build BurnInControl.StationService/ --tag ${{secrets.Docker_Username}}/station-service:latest
 

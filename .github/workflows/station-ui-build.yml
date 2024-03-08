@@ -27,6 +27,6 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./BurnInControl.StationService/Dockerfile
+        file: ./BurnInControl.UI/Dockerfile
         push: true
         tags: ${{secrets.Docker_Username}}/station-ui:latest

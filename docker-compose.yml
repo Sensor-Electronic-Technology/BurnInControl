@@ -9,7 +9,9 @@ services:
     restart: unless-stopped
     environment:
       - StationServiceUrl=http://station-service
-      - ASPNETCORE_URLS=http://0.0.0.0:80
+      - ASPNETCORE_HTTP_PORTS=80
+      - ASPNETCORE_URLS=http://+:80
+      - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
     depends_on:
       - station_service
       - mongodb
@@ -21,6 +23,10 @@ services:
     restart: unless-stopped
     user: "root"
     entrypoint: ["ash", "-c", "/scripts/entry-point.sh"]
+    environment:
+        - ASPNETCORE_URLS=http://+:80
+        - ASPNETCORE_HTTP_PORTS=80
+        - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
     ports:
       - "80:80"
     volumes:

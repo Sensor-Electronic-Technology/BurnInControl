@@ -48,7 +48,7 @@ if (!app.Environment.IsDevelopment())
 /*app.UseHttpsRedirection();*/
 app.MapControllers();
 app.UseStaticFiles();
-/*app.UseAntiforgery();*/
+app.UseAntiforgery();
 app.MapRazorComponents<App>()
    .AddInteractiveServerRenderMode();
 

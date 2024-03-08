@@ -7,6 +7,9 @@
 @using BurnInControl.Shared.ComDefinitions.Station
 @using BurnInControl.Shared.Hubs
 @using Microsoft.AspNetCore.SignalR.Client
+@inject ILogger<StationView> _logger
+@implements IAsyncDisposable
+
 
 <RadzenSplitter Orientation="Orientation.Horizontal">
     <RadzenSplitterPane Size="15%" Collapsed="@this._runtimePaneCollapsed">
@@ -70,8 +73,10 @@
        this._hubConnection.On<string>(HubConstants.Events.OnTestStartedFailed, this.OnSerialComMessageReceived);
        try {
            await this._hubConnection.StartAsync();
+           this._logger.LogInformation("Hub Connection Established");
            this._eventConsole.Log("Hub Connection Established",AlertStyle.Success);
        } catch {
+           this._logger.LogError("Hub Connection Failed");
            this._eventConsole.Log("Hub Connection Failed",AlertStyle.Danger);
        }
    }
@@ -89,8 +94,7 @@
        await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Reset);
    }
 
-
-
+   
    private async Task OnStartClicked() {
        this._eventConsole.Log("Start Clicked",AlertStyle.Info);
        await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Start);
@@ -118,6 +122,12 @@
    }
    private async Task TempChangedHandler(double temp) {
        this._eventConsole.Log($"Temp Value Changed.  Value {temp}",AlertStyle.Base);
+   }
+   public ValueTask DisposeAsync() {
+       if(this._hubConnection!=null) {
+           return this._hubConnection.DisposeAsync();
+       }
+         return ValueTask.CompletedTask;
    }
 } 
 

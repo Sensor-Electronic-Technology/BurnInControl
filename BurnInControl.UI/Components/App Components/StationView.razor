@@ -3,8 +3,10 @@
 @using BurnInControl.UI.Components.App_Components.Util
 @using BurnInControl.UI.Components.App_Components.Controls
 @using BurnInControl.Data.StationModel.Components
-
-
+@using BurnInControl.Shared.ComDefinitions
+@using BurnInControl.Shared.ComDefinitions.Station
+@using BurnInControl.Shared.Hubs
+@using Microsoft.AspNetCore.SignalR.Client
 
 <RadzenSplitter Orientation="Orientation.Horizontal">
     <RadzenSplitterPane Size="15%" Collapsed="@this._runtimePaneCollapsed">
@@ -47,18 +49,51 @@
                             OnTempChanged="TempChangedHandler"/>
         </RadzenRow>
     </RadzenSplitterPane>
-
 </RadzenSplitter>
 
 @code {
    private EventConsole _eventConsole=new EventConsole();
+   private StationSerialData? _data;
+   private HubConnection? _hubConnection;
    
    private bool _eventPaneCollapsed = false;
    private bool _controlPaneCollapsed = false;
    private bool _runtimePaneCollapsed = false;
+
+   protected override async Task OnInitializedAsync() {
+       this._hubConnection = new HubConnectionBuilder()
+           .WithUrl(HubConstants.HubAddress)
+           .Build();
+
+       this._hubConnection.On<StationSerialData>(HubConstants.Events.OnSerialCom,this.OnSerialComReceived);
+       this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
+       this._hubConnection.On<string>(HubConstants.Events.OnTestStartedFailed, this.OnSerialComMessageReceived);
+       try {
+           await this._hubConnection.StartAsync();
+           this._eventConsole.Log("Hub Connection Established",AlertStyle.Success);
+       } catch {
+           this._eventConsole.Log("Hub Connection Failed",AlertStyle.Danger);
+       }
+   }
    
+   private void OnSerialComReceived(StationSerialData data) {
+       this._data = data;
+       InvokeAsync(StateHasChanged);
+   }
+
+   private void OnSerialComMessageReceived(string message) {
+       this._eventConsole.Log(message,AlertStyle.Base);
+   }
+   
+   private async Task ResetHandler() {
+       await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Reset);
+   }
+
+
+
    private async Task OnStartClicked() {
        this._eventConsole.Log("Start Clicked",AlertStyle.Info);
+       await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Start);
    }
    
    private async Task OnResetClicked() {

@@ -1,13 +1,15 @@
 ﻿services:
-  burnincontrol.ui:
+  stationui:
     image: aelmendorf234/station_ui:latest
     container_name: station_ui
     pull_policy: always
     ports:
       - "80:8080"
     restart: unless-stopped
-    
-  burnincontrol.stationservice:
+    depends_on:
+      - station_service
+      - mongodb
+  startcontrol:
     image: aelmendorf234/station-service:latest
     container_name: station_service
     pull_policy: always
@@ -20,6 +22,16 @@
     volumes:
       - /home/setiburnin/StationSoft/StationService/app:/scripts
       - /dev:/dev
+    depends_on:
+      - mongodb
+  mongodb:
+    image: mongodb-raspberrypi4-unofficial-r7.0.4
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - /home/setiburnin/StationSoft/mongo/db:/data/db
 
 
     

@@ -13,6 +13,7 @@ using StationService.Infrastructure.SerialCom;
 using Wolverine.Transports.Tcp;
 
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseWolverine(opts => {

@@ -49,7 +49,6 @@ app.UseHttpsRedirection();
 app.MapControllers();
 app.UseStaticFiles();
 app.UseAntiforgery();
-app.Urls.Add("http://192.168.68.112:80");
 app.MapRazorComponents<App>()
    .AddInteractiveServerRenderMode();
 

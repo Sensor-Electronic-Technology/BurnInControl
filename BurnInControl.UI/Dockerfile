@@ -24,4 +24,4 @@ RUN dotnet publish "BurnInControl.UI.csproj" -c $BUILD_CONFIGURATION -o /app/pub
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "BurnInControl.UI.dll"]
+ENTRYPOINT ["dotnet", "StationUI.dll"]

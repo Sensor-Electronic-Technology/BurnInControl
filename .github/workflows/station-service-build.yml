@@ -6,14 +6,17 @@ on:
     paths:
     - 'BurnInControl.Data/**'
     - 'BurnInControl.Infrastructure/**'
-    - 'StationService.Infrastructure'
-    - 'MonitoringData.DataLoggingService/**'
+    - 'StationService.Infrastructure/**'
+    - 'BurnInControl.StationService/**'
     - '.github/workflows/station-service-build.yml'
 
 jobs:
 
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./BurnInControl.StationService
     steps:
     - uses: actions/checkout@v3
     - name: Login
@@ -23,10 +26,6 @@ jobs:
       run: |
         docker login -u $DOCKER_USER -p $DOCKER_PASSWORD 
     - name: Build the Docker image
-      uses: docker/setup-buildx-action@v3
-      with:
-          context: .
-          file: ./BurnInControl.StationService/Dockerfile
-          push: true
-          tags: ${{secrets.Docker_Username}}/station-service:latest
+      run: |
+        docker build . --tag ${{secrets.Docker_Username}}/station-service:latest
 

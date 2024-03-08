@@ -4,7 +4,7 @@ public static class HubConstants {
     //public static string HubAddress => "http://192.168.68.112:3000/hubs/station";
     //public static string HubAddress => "http://172.20.1.15:3000/hubs/station";
     //public static string HubAddress => "http://localhost:5000/hubs/station";
-    public static string HubAddress=> "http://localhost:5000/hubs/station";
+    public static string HubAddress=> "http://192.:5000/hubs/station";
 
     public static class Events {
         public static string OnSerialCom => "OnSerialCom";

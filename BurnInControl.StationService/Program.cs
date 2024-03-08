@@ -45,8 +45,9 @@ builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://172.20.3.
 var app = builder.Build();
 
 //app.Urls.Add("http://192.168.68.108:3000");
-//app.Urls.Add("http://192.168.68.112:3000");
+app.Urls.Add("http://192.168.68.112:5000");
 //app.Urls.Add("http://172.20.1.15:3000");
+
 app.MapHub<StationHub>("/hubs/station");
 //app.MapGet("/", () => "Hello World!");
 app.Run();

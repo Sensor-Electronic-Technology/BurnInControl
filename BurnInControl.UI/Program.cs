@@ -50,7 +50,6 @@ app.MapControllers();
 app.UseStaticFiles();
 app.UseAntiforgery();
 /*app.Urls.Add("http://192.168.68.112:3000");*/
-
 app.MapRazorComponents<App>()
    .AddInteractiveServerRenderMode();
 

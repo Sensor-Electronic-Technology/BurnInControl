@@ -41,11 +41,11 @@ builder.Services.AddSignalR(options => {
 }); 
 builder.Host.UseSystemd();
 builder.Services.AddLogging();
-builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://172.20.3.41:28080"));
+builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://192.168.68.112:27017"));
 var app = builder.Build();
 
 //app.Urls.Add("http://192.168.68.108:3000");
-app.Urls.Add("http://192.168.68.112:5000");
+//app.Urls.Add("http://localhost:5000");
 //app.Urls.Add("http://172.20.1.15:3000");
 
 app.MapHub<StationHub>("/hubs/station");

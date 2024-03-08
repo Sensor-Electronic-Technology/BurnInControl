@@ -9,7 +9,7 @@ on:
     - 'BurnInControl.Shared/**'
     - 'BurnInControl.UI.Shared/**'
     - 'BurnInControl.UI/**'
-    - '.github/workflows/station-service-build.yml'
+    - '.github/workflows/station-ui-build.yml'
 jobs:
   build:
     runs-on: ubuntu-latest

@@ -5,19 +5,21 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <AssemblyName>StationService</AssemblyName>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
     <ItemGroup>
         <ContainerPort Include="80" Type="tcp" />
     </ItemGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <PlatformTarget>ARM64</PlatformTarget>
+        <PlatformTarget>ARM64</PlatformTarget>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="AsyncAwaitBestPractices" Version="7.0.0" />
         <PackageReference Include="Octokit" Version="10.0.0" />
         <PackageReference Include="System.IO.Ports" Version="8.0.0" />
+        <PackageReference Include="runtime.linux-arm64.runtime.native.System.IO.Ports" Version="8.0.0" />
         <PackageReference Include="WolverineFx" Version="1.19.0" />
         <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0" />
         <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
@@ -27,15 +29,15 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="..\.dockerignore">
-        <Link>.dockerignore</Link>
-      </Content>
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\BurnInControl.Data\BurnInControl.Data.csproj" />
       <ProjectReference Include="..\BurnInControl.Infrastructure\BurnInControl.Infrastructure.csproj" />
       <ProjectReference Include="..\StationService.Infrastructure\StationService.Infrastructure.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
     </ItemGroup>
 
 </Project>

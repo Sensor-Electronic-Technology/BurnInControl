@@ -1,11 +1,12 @@
 namespace BurnInControl.Data.ComponentConfiguration.HeaterController;
 
 public class HeaterConfiguration {
+    public sbyte HeaterId { get; set; }
     public NtcConfiguration NtcConfig { get; set; }
     public PidConfiguration PidConfig { get; set; }
     public double TempDeviation { get; set; }
     public sbyte Pin { get; set; }
-    public sbyte HeaterId { get; set; }
+    
     public HeaterConfiguration(){}
     public HeaterConfiguration(NtcConfiguration ntcConfig, PidConfiguration pidConfig,
         double tempDev, sbyte pin, sbyte id) {

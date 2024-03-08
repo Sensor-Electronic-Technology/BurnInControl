@@ -1,4 +1,4 @@
-﻿@using BurnInControl.Data.ComponentConfiguration.HeaterController
+@using BurnInControl.Data.ComponentConfiguration.HeaterController
 @using BurnInControl.UI.Services
 @inject DialogService DialogService
 @inject ConsoleWriter _consoleWriter
@@ -6,36 +6,33 @@
 @if(this.HeaterControllerConfig == null) {
     <p>Loading...</p>
 } else {
-    <RadzenTemplateForm Data="@this.HeaterControllerConfig">
-        <RadzenStack Orientation="Orientation.Horizontal" 
-                     Wrap="FlexWrap.Wrap" 
-                     AlignItems="AlignItems.Center"
-                     JustifyContent="JustifyContent.Center">
-            @for (int i = 0; i < ControllerHardwareConstants.HEATER_COUNT; i++) {
-                <HeaterConfigView Label="@GetLabel(i)"
-                                  HeaterConfig="@this.HeaterControllerConfig.HeaterConfigurations[i]"
-                                  HeaterConfigChanged="@this.ConfigChangedHandler"/>
+    <RadzenTabs TabPosition="TabPosition.Left" RenderMode="Radzen.TabRenderMode.Client">
+        <Tabs>
+            @foreach (var config in this.HeaterControllerConfig.HeaterConfigurations) {
+                <HeaterConfigView Label="@GetLabel(config.HeaterId-1)" HeaterConfig="@config"
+                                  HeaterConfigChanged="@((hconfig) => { this.HeaterControllerConfig.HeaterConfigurations[hconfig.HeaterId - 1] = hconfig;})"/>
             }
-        </RadzenStack>
-    </RadzenTemplateForm>
+        </Tabs>
+    </RadzenTabs>
 }
-
-
 @code {
     [Parameter]
     public HeaterControllerConfig? HeaterControllerConfig { get; set; } = new();
 
     private async Task ConfigChangedHandler() {
         this._consoleWriter.LogMessage("Configuration Changed",AlertStyle.Light);
-        //await this.DialogService.Alert("Configuration Changed", "Configuration Changed"); 
     }
     
     private string GetLabel(int index) {
+        
         if(index==0) {
+            this._consoleWriter.LogMessage($"Index: {index} Left Heater Configuration",AlertStyle.Secondary);
             return "Left Heater Configuration";
         }else if (index == 1) {
+            this._consoleWriter.LogMessage($"Index: {index} Middle Heater Configuration",AlertStyle.Secondary);
             return "Middle Heater Configuration";
         } else {
+            this._consoleWriter.LogMessage($"Index: {index} Right Heater Configuration",AlertStyle.Secondary);
             return "Right Heater Configuration";
         }
     }

@@ -1,31 +1,37 @@
-﻿@using BurnInControl.Data.ComponentConfiguration.ProbeController
+@using BurnInControl.Data.ComponentConfiguration.ProbeController
+@inject ConsoleWriter _consoleWriter
 
 <RadzenFieldset Text="Probe Controller Configuration">
-    <RadzenStack Orientation="Orientation.Vertical">
-            <RadzenStack Orientation="Orientation.Horizontal">
-                @for (int i = 0; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
-                    <ProbeView @bind-ProbeConfig="@this.ProbeControllerConfig.ProbeConfigurations[i]"/>
-                }
-            </RadzenStack>
-    </RadzenStack>
-    <RadzenButton Text="Save" Click="@this.SaveConfig" />
-    <EventConsole @ref="@this._eventConsole"/>
+    <RadzenTabs RenderMode="TabRenderMode.Client" TabPosition="Radzen.TabPosition.Left">
+        <Tabs>
+            <RadzenTabsItem Text="Probes 1-3" Selected="false">
+                <RadzenStack Orientation="Orientation.Horizontal">
+                    @for (int i = 0; i < (ControllerHardwareConstants.PROBE_COUNT / 2); i++) {
+                        <ProbeView ProbeConfig="@this.ProbeController.ProbeConfigurations[i]"
+                                   ProbeConfigChanged="@((config) => { this.ProbeController.ProbeConfigurations[config.ProbeNumber - 1] = config; })"/>
+                    }
+                </RadzenStack>
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Probes 4-6">
+                <RadzenStack Orientation="Orientation.Horizontal">
+                    @for (int i = 3; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
+                        <ProbeView ProbeConfig="@this.ProbeController.ProbeConfigurations[i]"
+                                   ProbeConfigChanged="@((config) => { this.ProbeController.ProbeConfigurations[config.ProbeNumber - 1] = config; })"/>
+                    }
+                </RadzenStack>
+            </RadzenTabsItem>
+            
+        </Tabs>
+    </RadzenTabs>
+    <RadzenButton Text="Save" Click="@this.SaveConfig"/>
 </RadzenFieldset>
 
 
 @code {
-    
-    [Parameter]
-    public ProbeControllerConfig ProbeControllerConfig { get; set; }
-    
-    private EventConsole _eventConsole;
+    private ProbeControllerConfig ProbeController = new ProbeControllerConfig();
     
     private Task SaveConfig() {
-        this._eventConsole.Log($"Sensor Voltage Pin: {ProbeControllerConfig.ProbeConfigurations[0].VoltageSensorConfig.Pin}");
+        this._consoleWriter.LogMessage($"Sensor Voltage Pin: {ProbeController.ProbeConfigurations[0].VoltageSensorConfig.Pin}");
         return Task.CompletedTask;
     }
-    
-    /*[Parameter]
-    public EventCallback<ProbeControllerConfig> ProbeControllerConfigChanged { get; set; }#1#*/
-    
 }

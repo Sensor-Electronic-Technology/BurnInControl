@@ -66,8 +66,10 @@ public class UsbController:IDisposable {
         if (this._serialPort.IsOpen) {
             return Error.Conflict(description: "Usb already connected");
         }
-        string portName = string.Empty;
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
+        //string portName = string.Empty;
+        string portName = "/dev/ttyACM0";
+        this._portNameFound = true;
+        /*if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
             portName = "/dev/ttyACM0";
             if (!string.IsNullOrEmpty(portName)) {
                 this._portNameFound = true;
@@ -76,7 +78,7 @@ public class UsbController:IDisposable {
             //Debugging
             portName = this.FindPortWindows();
             this._portNameFound = true;
-        }
+        }*/
         if (this._portNameFound) {
             this._serialPort.PortName = portName;
             this._serialPort.BaudRate = 38400;
@@ -94,7 +96,7 @@ public class UsbController:IDisposable {
                     exMessage += $" \n Inner:{exception.InnerException.Message} ";
                 }
                 this._state = UsbState.Disconnected;
-                this.Log("Failed to connect. Exception was thrown. \n Exception: {exMessage}",true);
+                this.Log($"Failed to connect. Exception was thrown. \n Exception: {exMessage}",true);
                 return Error.Failure(description: $"Failed to connect. Exception was thrown. \n Exception: {exMessage}");
             }
         }else {

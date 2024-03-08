@@ -1,7 +1,25 @@
 ﻿services:
-  burnin.controlservice:
-    image: aelmendorf234/burnin.controlservice:dev
+  burnincontrol.ui:
+    image: aelmendorf234/station_ui:latest
+    container_name: station_ui
+    pull_policy: always
     ports:
-      - 8080:8080
-    devices:
-      - /dev/burn_control:/dev/burn_control
+      - "80:8080"
+    restart: unless-stopped
+    
+  burnincontrol.stationservice:
+    image: aelmendorf234/station-service:latest
+    container_name: station_service
+    pull_policy: always
+    privileged: true
+    restart: unless-stopped
+    user: "root"
+    entrypoint: ["ash", "-c", "/scripts/entry-point.sh"]
+    ports:
+      - "5000:5000"
+    volumes:
+      - /home/setiburnin/StationSoft/StationService/app:/scripts
+      - /dev:/dev
+
+
+    

@@ -1,6 +1,6 @@
-﻿@using BurnInControl.Data.ComponentConfiguration.ProbeController
+@using BurnInControl.Data.ComponentConfiguration.ProbeController
 
-<RadzenFieldset Text="Probe Configuration">
+<RadzenFieldset Text="@this._label" Style="border: 5px solid #5d7b89">
     <RadzenStack Orientation="Orientation.Vertical">
         <SensorView Label="Voltage Sensor Configuration" 
                     AnalogPin="@this.ProbeConfig.VoltageSensorConfig.Pin"
@@ -20,8 +20,15 @@
     
     [Parameter]
     public EventCallback<ProbeConfig> ProbeConfigChanged { get; set; }
-    
-    
+
+    private string _label = "Probe";
+
+    protected override Task OnParametersSetAsync() {
+        this._label = $"Probe {this.ProbeConfig.ProbeNumber} Config";
+        return base.OnParametersSetAsync();
+    }
+
+
     private Task CurrentSensorChangedHandler((sbyte, double) sensorValues) {
         this.ProbeConfig.CurrentSensorConfig.Pin = sensorValues.Item1;
         this.ProbeConfig.CurrentSensorConfig.fWeight = sensorValues.Item2;

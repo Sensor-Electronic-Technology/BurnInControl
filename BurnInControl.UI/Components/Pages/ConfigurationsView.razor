@@ -1,19 +1,26 @@
 ﻿@page "/config-view"
 @using BurnInControl.UI.Components.App_Components.Forms.Configurations.Heaters
+@using BurnInControl.UI.Components.App_Components.Forms.Configurations.Probes
+@using BurnInControl.Data.ComponentConfiguration.ProbeController
 
-<RadzenTabs SelectedIndex="0" RenderMode="TabRenderMode.Client">
-    <Tabs>
-        <RadzenTabsItem Text="Station Configuration">
-                    
-        </RadzenTabsItem>
-        <RadzenTabsItem Text="Heater Configuration">
-            <HeaterControlConfigView/>
-        </RadzenTabsItem>
-        <RadzenTabsItem Text="Probes Configuration">
-
-        </RadzenTabsItem>
-    </Tabs>
-</RadzenTabs>
+<RadzenStack Orientation="Orientation.Vertical">
+    <RadzenTabs SelectedIndex="0" RenderMode="TabRenderMode.Client">
+        <Tabs>
+            <RadzenTabsItem Text="Station Configuration">
+            
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Heater Configuration">
+                <HeaterControlConfigView/>
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Probes Configuration">
+                <ProbesControlView/>
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
+        <EventConsole @ref="@this._eventConsole"/>
+</RadzenStack>
 @code {
+    private EventConsole _eventConsole;
+
     
 }

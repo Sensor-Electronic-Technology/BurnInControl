@@ -1,13 +1,14 @@
-﻿@using BurnInControl.Data.ComponentConfiguration.ProbeController
+@using BurnInControl.Data.ComponentConfiguration.ProbeController
 @using BurnInControl.Data.StationModel.Components
 
-<RadzenFieldset Text="@this.Label"></RadzenFieldset>
-<RadzenStack Orientation="Orientation.Horizontal">
-    <AnalogPinSelector AnalogPin="@this.AnalogPin" 
-                       AnalogPinChanged="AnalogPinChangedHandler"/>
-    <FilterInput FilterWeight="@this.FilterWeight" 
-                 FilterWeightChanged="FilterWeightChangedHandler"/>
-</RadzenStack>
+<RadzenFieldset Text="@this.Label" Style="border: 5px solid #45565e">
+    <RadzenStack Orientation="Orientation.Horizontal">
+        <AnalogPinSelector AnalogPin="@this.AnalogPin" 
+                           AnalogPinChanged="AnalogPinChangedHandler"/>
+        <FilterInput FilterWeight="@this.FilterWeight" 
+                     FilterWeightChanged="FilterWeightChangedHandler"/>
+    </RadzenStack>
+</RadzenFieldset>
 
 @code {
     [Parameter]

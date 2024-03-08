@@ -33,7 +33,7 @@ builder.Services.AddInfrastructure();
 builder.Services.AddUiSettings(builder);
 builder.Services.AddLogging();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://172.20.3.41:28080"));
-builder.Services.AddSingleton<ConsoleWriter>();
+/*builder.Services.AddSingleton<ConsoleWriter>();*/
 
 var app = builder.Build();
 
@@ -49,7 +49,7 @@ app.UseHttpsRedirection();
 app.MapControllers();
 app.UseStaticFiles();
 app.UseAntiforgery();
-/*app.Urls.Add("http://192.168.68.112:3000");*/
+app.Urls.Add("http://192.168.68.112:80");
 app.MapRazorComponents<App>()
    .AddInteractiveServerRenderMode();
 

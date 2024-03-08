@@ -47,7 +47,7 @@ var app = builder.Build();
 //app.Urls.Add("http://192.168.68.108:3000");
 //app.Urls.Add("http://localhost:5000");
 //app.Urls.Add("http://172.20.1.15:3000");
-
+app.Urls.Add("http://localhost:5000");
 app.MapHub<StationHub>("/hubs/station");
 //app.MapGet("/", () => "Hello World!");
 app.Run();

@@ -64,8 +64,11 @@
    private bool _runtimePaneCollapsed = false;
 
    protected override async Task OnInitializedAsync() {
+       var hubAddress=Environment.GetEnvironmentVariable("StationHub");
+       string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
+
        this._hubConnection = new HubConnectionBuilder()
-           .WithUrl(HubConstants.HubAddress)
+           .WithUrl(addr)
            .Build();
 
        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnSerialCom,this.OnSerialComReceived);

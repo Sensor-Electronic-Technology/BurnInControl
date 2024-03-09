@@ -1,7 +1,8 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0.2-alpine3.18-arm64v8 AS base
-USER root
+USER $APP_UID
 WORKDIR /app
-EXPOSE 80
+EXPOSE 5000
+EXPOSE 5580
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release

@@ -75,8 +75,12 @@
            await this._hubConnection.StartAsync();
            this._logger.LogInformation("Hub Connection Established");
            this._eventConsole.Log("Hub Connection Established",AlertStyle.Success);
-       } catch {
-           this._logger.LogError("Hub Connection Failed");
+       } catch(Exception e) {
+           string error = e.Message;
+           if (e.InnerException != null) {
+               error+="\n"+e.InnerException.Message;
+           }
+           this._logger.LogError($"Hub Connection Failed, Exception: \n {error}");
            this._eventConsole.Log("Hub Connection Failed",AlertStyle.Danger);
        }
    }

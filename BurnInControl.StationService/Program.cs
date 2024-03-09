@@ -19,6 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseWolverine(opts => {
     var config = builder.Configuration.GetSection(nameof(WolverineSettings))
         .Get<WolverineSettings>();
+    
     opts.ListenAtPort(config?.ListenPort ?? 5580);
     opts.LocalQueue(config?.ControllerQueue ?? "ControllerCommandQueue");
     opts.LocalQueue("StationMessageQueue");

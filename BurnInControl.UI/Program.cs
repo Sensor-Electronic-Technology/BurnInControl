@@ -5,6 +5,7 @@ using BurnInControl.Shared.AppSettings;
 using Radzen;
 using BurnInControl.UI.Components;
 using BurnInControl.UI.Services;
+using Microsoft.AspNetCore.DataProtection;
 using MongoDB.Driver;
 using Wolverine;
 using Wolverine.ErrorHandling;
@@ -19,13 +20,14 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddControllers();
 builder.Services.AddRadzenComponents();
+builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(@"\var\lib\dpkeys"));
 builder.Services.AddHttpClient();
 //builder.Host.UseSystemd();
 builder.Host.UseWolverine(opts => {
     var config = builder.Configuration.GetSection(nameof(WolverineSettings))
         .Get<WolverineSettings>();
     opts.ListenAtPort(config?.ListenPort ?? 5581);
-    opts.PublishMessage<SendStationCommand>().ToPort(config?.PublishPort ?? 5580);
+    opts.PublishMessage<SendStationCommand>().ToServerAndPort("station.service", config?.PublishPort ?? 5580);
     opts.OnException<InvalidOperationException>().Discard();
 });
 

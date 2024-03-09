@@ -32,7 +32,7 @@ builder.Host.UseWolverine(opts => {
 builder.Services.AddInfrastructure();
 builder.Services.AddUiSettings(builder);
 builder.Services.AddLogging();
-builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://172.20.3.41:28080"));
+builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://mongodb:27017"));
 /*builder.Services.AddSingleton<ConsoleWriter>();*/
 
 var app = builder.Build();

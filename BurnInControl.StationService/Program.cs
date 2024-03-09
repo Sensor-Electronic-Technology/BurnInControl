@@ -41,7 +41,8 @@ builder.Services.AddSignalR(options => {
 }); 
 builder.Host.UseSystemd();
 builder.Services.AddLogging();
-builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://192.168.68.112:27017"));
+/*builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://192.168.68.112:27017"));*/
+builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://mongodb:27017"));
 var app = builder.Build();
 app.MapHub<StationHub>("/hubs/station");
 //app.MapGet("/", () => "Hello World!");

@@ -1,34 +1,32 @@
 ﻿version : '3.8'
 services:
-  stationui:
-    image: aelmendorf234/station_ui:latest
-    container_name: station_ui
+  station.ui:
+    image: aelmendorf234/station-ui:latest
+    container_name: station.ui
     pull_policy: always
     ports:
       - "80:8080"
+      - "5581:5581"
     restart: unless-stopped
     environment:
-      - StationServiceUrl=http://station-service
-      - ASPNETCORE_HTTP_PORTS=80
-      - ASPNETCORE_URLS=http://+:80
+      - StationServiceUrl=http://station.service
       - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
     depends_on:
       - station_service
       - mongodb
-  station-service:
+  station.service:
     image: aelmendorf234/station-service:latest
-    container_name: station_service
+    container_name: station.service
     pull_policy: always
     privileged: true
     restart: unless-stopped
     user: "root"
     entrypoint: ["ash", "-c", "/scripts/entry-point.sh"]
     environment:
-        - ASPNETCORE_URLS=http://+:80
-        - ASPNETCORE_HTTP_PORTS=80
         - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
     ports:
-      - "80:80"
+      - "5000:5000"
+      - "5580:5580"
     volumes:
       - /home/setiburnin/StationSoft/StationService/app:/scripts
       - /dev:/dev

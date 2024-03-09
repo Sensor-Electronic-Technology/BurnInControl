@@ -1,7 +1,7 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0.2-alpine3.18-arm64v8 AS base
 USER $APP_UID
 WORKDIR /app
-EXPOSE 5000
+EXPOSE 80
 EXPOSE 5580
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build

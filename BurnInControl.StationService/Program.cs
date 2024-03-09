@@ -40,7 +40,7 @@ builder.Services.AddStationService();
 builder.Services.AddSignalR(options => { 
     options.EnableDetailedErrors = true;
 }); 
-builder.Host.UseSystemd();
+
 builder.Services.AddLogging();
 /*builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://192.168.68.112:27017"));*/
 builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://mongodb:27017"));

@@ -20,7 +20,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddControllers();
 builder.Services.AddRadzenComponents();
-builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(@"\var\lib\dpkeys"));
+/*builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(@"\var\lib\dpkeys"));*/
 builder.Services.AddHttpClient();
 //builder.Host.UseSystemd();
 builder.Host.UseWolverine(opts => {

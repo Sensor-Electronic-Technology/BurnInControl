@@ -1,32 +1,34 @@
-﻿version : '3.8'
+﻿
+version : '3.8'
 services:
   station.ui:
     image: aelmendorf234/station-ui:latest
     container_name: station.ui
     pull_policy: always
-#    ports:
-#      - "80:8080"
-#      - "5581:5581"
+    expose:
+      - 80
+      - 5581
+    ports:
+      - "80:8080"
+      - "4000:5581"
     restart: unless-stopped
     environment:
-      - StationHub=http://station.service/hubs/station
-      - StationServiceUrl=http://station.serviceose.yml *
-      - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
-    labels:
-      - "traefik.enable=false"
-      - "traefik.http.routers.ui.rule=Host(`localhost`)"
-      - "traefik.http.routers.ui.service=svc_ui"
-      - "traefik.http.services.svc_ui.loadbalancer.server.port=80"
-    
-      - "traefik.http.routers.uil.rule=Host(`localhost`)"
-      - "traefik.http.routers.uil.service=svc_uil"
-      - "traefik.http.services.svc_uil.loadbalancer.server.port=5581"
+      - StationHub=http://station-service:8080/hubs/station
+      - MsgEndpoint=10.5.0.11
+      # - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
     depends_on:
-      - station.service
-      - mongodb
-  station.service:
+      - station-service
+      # - mongodb
+    links:
+      - "station-service"
+      # - "mongodb"
+    networks:
+      station_net:
+        ipv4_address: 10.5.0.10
+
+  station-service:
     image: aelmendorf234/station-service:latest
-    container_name: station.service
+    container_name: station-service
     pull_policy: always
     privileged: true
     restart: unless-stopped
@@ -34,58 +36,53 @@ services:
     entrypoint: ["ash", "-c", "/scripts/entry-point.sh"]
     environment:
       - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
- #   ports:
- #     - "5000:8080"
- #     - "5580:5580"
+    expose:
+      - 8080
+      - 5580
+    ports:
+      - "5000:8080"
+      - "5580:5580"
     volumes:
       - /home/setiburnin/StationSoft/StationService/app:/scripts
       - /dev:/dev
     labels:
-      - "traefik.enable=false"
-      - "traefik.http.routers.control.rule=Host(`localhost`)"
-      - "traefik.http.routers.control.service=svc_control"
-      - "traefik.http.services.svc_control.loadbalancer.server.port=5000"
+      - "com.centurylinklabs.watchtower.enable=true"
+    #links:
+    #  - "mongodb"
+    #depends_on:
+      #- mongodb
+    networks:
+      station_net:
+        ipv4_address: 10.5.0.11
 
-      - "traefik.http.routers.control_l.rule=Host(`localhost`)"
-      - "traefik.http.routers.control_l.service=svc_control_l"
-      - "traefik.http.services.svc_control_l.loadbalancer.server.port=5580"
-    depends_on:
-      - mongodb
-  mongodb:
-    image: mongodb-raspberrypi4-unofficial-r7.0.4
-    container_name: mongodb
-    pull_policy: never
-    restart: unless-stopped
-#    ports:
-#      - "27017:27017"
-    volumes:
-      - /home/setiburnin/StationSoft/mongo/db:/data/db
-    labels:
-        - "traefik.enable=false"
-        - "traefik.http.routers.mongodb.rule=Host(`mongodb.localhost`)"
-        - "traefik.http.routers.mongodb.service=svc_mongodb_l"
-        - "traefik.http.services.svc_mongodb_l.loadbalancer.server.port=27017"
-        
-  reverse-proxy:
-    image: traefik:latest
-    command:
-      # - "--log.level=DEBUG"
-      - "--api.dashboard=true"
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-    container_name: traefik
-    ports:
-      - "80:80"
-      - "5000:5000"
-      - "27017:27017"
-      - "5580:5580"
-      - "5581:5581"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock 
-    restart: always
+  # mongodb:
+  #   image: mongodb-raspberrypi4-unofficial-r7.0.4
+  #   container_name: mongodb
+  #   pull_policy: never
+  #   restart: unless-stopped
+  #   labels:
+  #     - "com.centurylinklabs.watchtower.enable=false"
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - /home/setiburnin/StationSoft/mongo/db:/data/db
+  #   networks:
+  #     station_net:
+  #       ipv4_address: 10.5.0.12
+
   watchtower:
     image: containrrr/watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    restart: unless-stopped
+    command: --interval 10
+    networks:
+      station_net:
+        ipv4_address: 10.5.0.13
+
+networks:
+  station_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1

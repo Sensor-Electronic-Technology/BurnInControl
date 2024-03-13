@@ -11,9 +11,9 @@
         <ContainerPort Include="80" Type="tcp" />
     </ItemGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+<!--    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <PlatformTarget>ARM64</PlatformTarget>
-    </PropertyGroup>
+    </PropertyGroup>-->
 
     <ItemGroup>
         <PackageReference Include="coravel" Version="5.0.3" />

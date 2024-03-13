@@ -7,7 +7,10 @@
 @using BurnInControl.Shared.ComDefinitions.Station
 @using BurnInControl.Shared.Hubs
 @using Microsoft.AspNetCore.SignalR.Client
+@using Wolverine
+@using BurnInControl.Application.StationControl.Messages
 @inject ILogger<StationView> _logger
+@inject IMessageBus _messageBus
 @implements IAsyncDisposable
 
 
@@ -66,7 +69,7 @@
    protected override async Task OnInitializedAsync() {
        var hubAddress=Environment.GetEnvironmentVariable("StationHub");
        string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
-
+       //string addr =//HubConstants.HubAddress;
        this._hubConnection = new HubConnectionBuilder()
            .WithUrl(addr)
            .Build();
@@ -104,6 +107,7 @@
    
    private async Task OnStartClicked() {
        this._eventConsole.Log("Start Clicked",AlertStyle.Info);
+       await this._messageBus.SendAsync(new SendStationCommand() { Command = StationCommand.Start });
        //await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Start);
    }
    

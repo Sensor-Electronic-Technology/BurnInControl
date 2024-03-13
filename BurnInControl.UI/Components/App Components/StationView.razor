@@ -104,7 +104,7 @@
    
    private async Task OnStartClicked() {
        this._eventConsole.Log("Start Clicked",AlertStyle.Info);
-       await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Start);
+       //await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Start);
    }
    
    private async Task OnResetClicked() {

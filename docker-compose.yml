@@ -4,15 +4,25 @@ services:
     image: aelmendorf234/station-ui:latest
     container_name: station.ui
     pull_policy: always
-    ports:
-      - "80:8080"
-      - "5581:5581"
+#    ports:
+#      - "80:8080"
+#      - "5581:5581"
     restart: unless-stopped
     environment:
-      - StationServiceUrl=http://station.service
+      - StationHub=http://station.service/hubs/station
+      - StationServiceUrl=http://station.serviceose.yml *
       - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
+    labels:
+      - "traefik.enable=false"
+      - "traefik.http.routers.ui.rule=Host(`localhost`)"
+      - "traefik.http.routers.ui.service=svc_ui"
+      - "traefik.http.services.svc_ui.loadbalancer.server.port=80"
+    
+      - "traefik.http.routers.uil.rule=Host(`localhost`)"
+      - "traefik.http.routers.uil.service=svc_uil"
+      - "traefik.http.services.svc_uil.loadbalancer.server.port=5581"
     depends_on:
-      - station_service
+      - station.service
       - mongodb
   station.service:
     image: aelmendorf234/station-service:latest
@@ -23,13 +33,22 @@ services:
     user: "root"
     entrypoint: ["ash", "-c", "/scripts/entry-point.sh"]
     environment:
-        - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
-    ports:
-      - "5000:5000"
-      - "5580:5580"
+      - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
+ #   ports:
+ #     - "5000:8080"
+ #     - "5580:5580"
     volumes:
       - /home/setiburnin/StationSoft/StationService/app:/scripts
       - /dev:/dev
+    labels:
+      - "traefik.enable=false"
+      - "traefik.http.routers.control.rule=Host(`localhost`)"
+      - "traefik.http.routers.control.service=svc_control"
+      - "traefik.http.services.svc_control.loadbalancer.server.port=5000"
+
+      - "traefik.http.routers.control_l.rule=Host(`localhost`)"
+      - "traefik.http.routers.control_l.service=svc_control_l"
+      - "traefik.http.services.svc_control_l.loadbalancer.server.port=5580"
     depends_on:
       - mongodb
   mongodb:
@@ -37,10 +56,36 @@ services:
     container_name: mongodb
     pull_policy: never
     restart: unless-stopped
-    ports:
-      - "27017:27017"
+#    ports:
+#      - "27017:27017"
     volumes:
       - /home/setiburnin/StationSoft/mongo/db:/data/db
-
-
-    
+    labels:
+        - "traefik.enable=false"
+        - "traefik.http.routers.mongodb.rule=Host(`mongodb.localhost`)"
+        - "traefik.http.routers.mongodb.service=svc_mongodb_l"
+        - "traefik.http.services.svc_mongodb_l.loadbalancer.server.port=27017"
+        
+  reverse-proxy:
+    image: traefik:latest
+    command:
+      # - "--log.level=DEBUG"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+    container_name: traefik
+    ports:
+      - "80:80"
+      - "5000:5000"
+      - "27017:27017"
+      - "5580:5580"
+      - "5581:5581"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock 
+    restart: always
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped

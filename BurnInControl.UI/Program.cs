@@ -27,7 +27,8 @@ builder.Host.UseWolverine(opts => {
     var config = builder.Configuration.GetSection(nameof(WolverineSettings))
         .Get<WolverineSettings>();
     opts.ListenAtPort(config?.ListenPort ?? 5581);
-    opts.PublishMessage<SendStationCommand>().ToServerAndPort("station.service", config?.PublishPort ?? 5580);
+    var server = Environment.GetEnvironmentVariable("MsgEndpoint") ?? "10.5.0.11";
+    opts.PublishMessage<SendStationCommand>().ToServerAndPort(server, config?.PublishPort ?? 8081);
     opts.OnException<InvalidOperationException>().Discard();
 });
 

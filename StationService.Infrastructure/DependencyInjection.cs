@@ -1,5 +1,7 @@
 ﻿using BurnInControl.Application.FirmwareUpdate.Handlers;
 using BurnInControl.Application.FirmwareUpdate.Interfaces;
+using BurnInControl.Application.ProcessSerial.Handlers;
+using BurnInControl.Application.ProcessSerial.Interfaces;
 using BurnInControl.Application.StationControl.Handlers;
 using BurnInControl.Application.StationControl.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,10 +24,12 @@ public static class DependencyInjection {
         services.AddSingleton<IStationController,StationController>();
         services.AddSingleton<UsbController>();
         
-        /*services.AddSingleton<StationMessageHandler>();*/
+        services.AddSingleton<IStationMessageHandler,StationMessageHandler>();
         services.AddHostedService<StationWorkerService>();
         services.AddMediatR(config => {
-            config.RegisterServicesFromAssemblies(typeof(ConnectionActionHandler).Assembly, 
+            config.RegisterServicesFromAssemblies(
+            typeof(StationSerialMessageHandler).Assembly,
+            typeof(ConnectionActionHandler).Assembly, 
             typeof(SendStationCommandHandler).Assembly,
             typeof(CheckForUpdateCommandHandler).Assembly,
             typeof(UpdateFirmwareCommandHandler).Assembly);

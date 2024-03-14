@@ -20,7 +20,7 @@ public class StationWorkerService:IHostedService,IDisposable {
     
 
     public async Task StartAsync(CancellationToken cancellationToken) {
-        var connectionString=Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING");
+        /*var connectionString=Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING");
         var client = new MongoClient(connectionString);
 
         var database = client.GetDatabase("burn_in_db");
@@ -30,7 +30,7 @@ public class StationWorkerService:IHostedService,IDisposable {
             ProbesConfiguration = new ProbeControllerConfig(),
             StationConfiguration = new StationConfiguration()
         }, cancellationToken: cancellationToken);
-        this._logger.LogInformation("Wrote to database, Starting service...");
+        this._logger.LogInformation("Wrote to database, Starting service...");*/
         await this._stationController.Start();
     }
     

@@ -8,7 +8,6 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using StationService.Infrastructure.SerialCom;
 using System.Threading.Channels;
-using Wolverine;
 namespace StationService.Infrastructure.StationControl;
 
 public class StationController:IStationController,IDisposable {
@@ -40,7 +39,7 @@ public class StationController:IStationController,IDisposable {
             if (!result.IsError) {
                 this.StartReaderAsync(this._cancellationTokenSource.Token)
                     .SafeFireAndForget(e => {
-                        this._logger.LogWarning("Channel read failed");
+                        this._logger.LogWarning($"Channel read failed. Exception: \n {e.Message}");
                     });
                 return Task.FromResult<ErrorOr<Success>>(result.Value);
             } else {

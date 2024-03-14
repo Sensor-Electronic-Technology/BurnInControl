@@ -1,6 +1,20 @@
 
 <RadzenStack Orientation="Orientation.Vertical" Gap="20">
     <HeaterDisplays/>
-    <VoltCurrentDisplay/>
-    <VoltCurrentDisplay/>
+    <VoltCurrentDisplay LabelPrefix="V" Values="@this.Voltages"/>
+    <VoltCurrentDisplay LabelPrefix="I" Values="@this.Currents"/>
 </RadzenStack>
+
+@code {
+    [Parameter]
+    public List<double> Voltages { get; set; }
+    
+    [Parameter]
+    public List<double> Currents { get; set; }
+    
+    [Parameter]
+    public List<double> Temps { get; set; }
+    
+    
+
+}

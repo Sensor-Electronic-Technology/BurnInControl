@@ -1,5 +1,5 @@
 ﻿using AsyncAwaitBestPractices;
-using BurnInControl.Application.ProcessSerial.Handlers;
+using BurnInControl.Application.ProcessSerial.Interfaces;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Packets;
 using BurnInControl.Shared.ComDefinitions.Station;
@@ -11,7 +11,6 @@ using StationService.Infrastructure.Firmware;
 using StationService.Infrastructure.Hub;
 using StationService.Infrastructure.TestLogs;
 using System.Text.Json;
-using Wolverine;
 using BurnInControl.Application.ProcessSerial.Messages;
 using MediatR;
 namespace StationService.Infrastructure.SerialCom;
@@ -20,24 +19,22 @@ public class StationMessageHandler:IStationMessageHandler{
     private readonly BurnInTestService _testService;
     private readonly IHubContext<StationHub, IStationHub> _hubContext;
     private readonly ILogger<StationMessageHandler> _logger;
-    private readonly FirmwareUpdateService _firmwareService;
     private readonly IMediator _mediator;
     
     public StationMessageHandler(ILogger<StationMessageHandler> logger,
         BurnInTestService testService,
         IHubContext<StationHub, IStationHub> hubContext,
-        FirmwareUpdateService firmwareService,
         IMediator mediator) {
         this._testService = testService;
         this._logger = logger;
         this._hubContext = hubContext;
-        this._firmwareService = firmwareService;
         this._mediator = mediator;
     }
     
     public Task Handle(StationMessage message,CancellationToken cancellationToken) {
         try {
             if (!string.IsNullOrEmpty(message.Message)) {
+                this._logger.LogInformation(message.Message);
                 if (message.Message.Contains("Prefix")) {
                     var doc=JsonSerializer.Deserialize<JsonDocument>(message.Message);
                     if (doc != null) { 

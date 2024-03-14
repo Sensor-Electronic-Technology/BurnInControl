@@ -19,10 +19,17 @@
     [Parameter]
     public string LabelFontSize { get; set; } = "24px";
 
-    private string _css="--my-font-size: 24px";
+    [Parameter]
+    public string Width { get; set; } = string.Empty;
+
+    private string _css="--my-font-size: 24px; width: 130px";
 
     protected override void OnParametersSet() {
         this._css = "--my-font-size: " + this.LabelFontSize;
+        if (!string.IsNullOrEmpty(this.Width)) {
+            this._css+= "; width: " + this.Width;
+        }
+        
         base.OnParametersSet();
     }
 }

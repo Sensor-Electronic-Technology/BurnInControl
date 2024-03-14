@@ -27,7 +27,7 @@
                         <RadzenTabs RenderMode="TabRenderMode.Client" SelectedIndexChanged="SelectedTabChangedHandler" Style="width: 100%; height: 100%">
                             <Tabs>
                                 <RadzenTabsItem Text="Display" Selected="true">
-                                    <StationDisplays/>
+                                    <StationDisplays Voltages="@this._data.Voltages" Currents="@this._data.Currents"/>
                                 </RadzenTabsItem>
                                 <RadzenTabsItem Text="Test Setup">
                                     <TestSetup></TestSetup>
@@ -58,7 +58,7 @@
 
 @code {
    private EventConsole _eventConsole=new EventConsole();
-   private StationSerialData? _data;
+   private StationSerialData? _data=new StationSerialData();
    private HubConnection? _hubConnection;
    private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;
    
@@ -70,8 +70,11 @@
        var hubAddress=Environment.GetEnvironmentVariable("StationHub");
        string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
        //string addr =//HubConstants.HubAddress;
+       /*this._hubConnection = new HubConnectionBuilder()
+           .WithUrl("http://localhost:5066/hubs/station")
+           .Build();*/
        this._hubConnection = new HubConnectionBuilder()
-           .WithUrl(addr)
+           .WithUrl("addr")
            .Build();
 
        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnSerialCom,this.OnSerialComReceived);
@@ -102,7 +105,6 @@
    
    private async Task OnStartClicked() {
        this._eventConsole.Log("Start Clicked",AlertStyle.Info);
-       //await this._messageBus.SendAsync(new SendStationCommand() { Command = StationCommand.Start });
        await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Start);
    }
    

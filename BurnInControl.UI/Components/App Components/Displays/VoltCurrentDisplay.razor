@@ -1,13 +1,26 @@
+@using System.Globalization
+
+
 <RadzenRow JustifyContent="Radzen.JustifyContent.Center" Gap="1">
     <RadzenStack Orientation="Orientation.Vertical" style="text-align: center;">
         <RadzenText Text=" Probe Currents/Voltages" TextStyle="TextStyle.DisplayH5"/>
         <RadzenStack JustifyContent="Radzen.JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal" Gap="40">
-            <GenericDisplay DisplayValue="54.5"/>
-            <GenericDisplay DisplayValue="54.5"/>
-            <GenericDisplay DisplayValue="54.5"/>
-            <GenericDisplay DisplayValue="54.5"/>
-            <GenericDisplay DisplayValue="54.5"/>
-            <GenericDisplay DisplayValue="54.5"/>
+            @for (int i = 0; i < 6; i++) {
+                var label = $"{LabelPrefix} {i + 1}";
+                <GenericDisplay DisplayLabel=label 
+                                DisplayValue="@this.Values[i].ToString(CultureInfo.InvariantCulture)"
+                                Width="130px"/>
+            }
         </RadzenStack>
     </RadzenStack>
 </RadzenRow>
+
+@code {
+    [Parameter]
+    public string LabelPrefix { get; set; }
+    
+    [Parameter]
+    public List<double> Values { get; set; }
+    
+}
+```

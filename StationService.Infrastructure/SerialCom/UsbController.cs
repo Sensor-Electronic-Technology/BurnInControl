@@ -67,8 +67,8 @@ public class UsbController:IDisposable {
             return Error.Conflict(description: "Usb already connected");
         }
         //string portName = string.Empty;
-        //string portName = "/dev/ttyACM0";
-        string portName = "COM3";
+        string portName = "/dev/ttyACM0";
+        //string portName = "COM3";
         this._portNameFound = true;
         /*if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
             portName = "/dev/ttyACM0";

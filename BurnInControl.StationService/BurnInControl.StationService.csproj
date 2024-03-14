@@ -7,9 +7,7 @@
         <AssemblyName>StationService</AssemblyName>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
-    <ItemGroup>
-        <ContainerPort Include="80" Type="tcp" />
-    </ItemGroup>
+
 
 <!--    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <PlatformTarget>ARM64</PlatformTarget>

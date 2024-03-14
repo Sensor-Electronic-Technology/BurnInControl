@@ -74,7 +74,7 @@
            .WithUrl("http://localhost:5066/hubs/station")
            .Build();*/
        this._hubConnection = new HubConnectionBuilder()
-           .WithUrl("addr")
+           .WithUrl(addr)
            .Build();
 
        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnSerialCom,this.OnSerialComReceived);

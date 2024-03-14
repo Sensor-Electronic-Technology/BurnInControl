@@ -11,9 +11,6 @@ public class SendStationCommandHandler:IRequestHandler<SendStationCommand,ErrorO
         _controller = controller;
     }
     
-    /*public async Task<ErrorOr<Success>> Handle(SendStationCommand command, IStationController controller) {
-        return await controller.Send(StationMsgPrefix.CommandPrefix, command.Command);
-    }*/
     public async Task<ErrorOr<Success>> Handle(SendStationCommand command, CancellationToken cancellationToken) {
         return await this._controller.Send(StationMsgPrefix.CommandPrefix, command.Command);
     }

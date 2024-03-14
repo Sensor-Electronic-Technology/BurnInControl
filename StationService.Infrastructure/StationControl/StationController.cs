@@ -4,6 +4,7 @@ using BurnInControl.Application.StationControl.Interfaces;
 using BurnInControl.Shared.ComDefinitions.MessagePacket;
 using BurnInControl.Shared.ComDefinitions.Station;
 using ErrorOr;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using StationService.Infrastructure.SerialCom;
 using System.Threading.Channels;
@@ -15,18 +16,18 @@ public class StationController:IStationController,IDisposable {
     private readonly ILogger<StationController> _logger;
     private readonly ChannelReader<string> _channelReader;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
-    private readonly IMessageBus _messageBus;
+    private readonly ISender _sender;
     //private readonly StationMessageHandler _stationMessageHandler;
     
     public StationController(UsbController usbController,
         ChannelReader<string> channelReader,
-        IMessageBus messageBus,
+        ISender sender,
         ILogger<StationController> logger) {
         this._logger = logger;
-        this._messageBus = messageBus;
         this._channelReader = channelReader;
         this._usbController = usbController;
         this._usbController.UsbUnPlugHandler += this.UsbUnplugHandler;
+        this._sender = sender;
     }
     
     public Task Start() {
@@ -71,7 +72,7 @@ public class StationController:IStationController,IDisposable {
         while (await this._channelReader.WaitToReadAsync(token)) {
             while (this._channelReader.TryRead(out var message)) {
                 //this._stationMessageHandler.Handle(message, token);
-                await this._messageBus.PublishAsync(new StationMessage() { Message = message });
+                await this._sender.Send(new StationMessage() { Message = message }, token);
             }
         }
     }

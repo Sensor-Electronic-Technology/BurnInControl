@@ -33,6 +33,12 @@ builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configurati
 
 /*builder.Services.Configure<FirmwareUpdateSettings>(builder.Configuration.GetSection(nameof(FirmwareUpdateSettings)));
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));*/
+/*builder.Services.AddMediatR(config => {
+    config.RegisterServicesFromAssemblies(typeof(ConnectionActionHandler).Assembly, 
+    typeof(SendStationCommandHandler).Assembly,
+    typeof(CheckForUpdateCommandHandler).Assembly,
+    typeof(UpdateFirmwareCommandHandler).Assembly);
+});*/
 
 builder.Services.AddInfrastructure();
 builder.Services.AddSettings(builder);
@@ -41,12 +47,7 @@ builder.Services.AddSignalR(options => {
     options.EnableDetailedErrors = true;
 });
 
-builder.Services.AddMediatR(config => {
-    config.RegisterServicesFromAssemblies(typeof(ConnectionActionHandler).Assembly, 
-    typeof(SendStationCommandHandler).Assembly,
-    typeof(CheckForUpdateCommandHandler).Assembly,
-    typeof(UpdateFirmwareCommandHandler).Assembly);
-});
+
 
 builder.Services.AddLogging();
 /*builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://192.168.68.112:27017"));*/

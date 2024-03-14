@@ -7,7 +7,7 @@ using MediatR;
 namespace StationService.Infrastructure.Hub;
 
 public class StationHub:Hub<IStationHub> {
-    public readonly IMediator _mediator;
+    private readonly IMediator _mediator;
     public StationHub(IMediator mediator) {
         _mediator = mediator;
     }

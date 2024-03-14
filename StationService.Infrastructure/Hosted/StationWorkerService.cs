@@ -1,4 +1,5 @@
-﻿using BurnInControl.Data.ComponentConfiguration;
+﻿using BurnInControl.Application.StationControl.Interfaces;
+using BurnInControl.Data.ComponentConfiguration;
 using BurnInControl.Data.ComponentConfiguration.HeaterController;
 using BurnInControl.Data.ComponentConfiguration.ProbeController;
 using BurnInControl.Data.ComponentConfiguration.StationController;
@@ -9,10 +10,10 @@ using StationService.Infrastructure.StationControl;
 namespace StationService.Infrastructure.Hosted;
 
 public class StationWorkerService:IHostedService,IDisposable {
-    private readonly StationController _stationController;
+    private readonly IStationController _stationController;
     private readonly ILogger<StationWorkerService> _logger;
 
-    public StationWorkerService(StationController stationController, ILogger<StationWorkerService> logger) {
+    public StationWorkerService(IStationController stationController, ILogger<StationWorkerService> logger) {
         this._logger = logger;
         this._stationController = stationController;
     }

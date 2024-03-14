@@ -11,8 +11,8 @@ public static class DependencyInjection {
     }
     
     public static IServiceCollection AddPersistence(this IServiceCollection services) {
-        services.AddScoped<StationDataService>();
-        services.AddScoped<TestLogDataService>();
+        services.AddTransient<StationDataService>();
+        services.AddTransient<TestLogDataService>();
         return services;
     }
     

@@ -11,6 +11,9 @@ namespace StationService.Infrastructure;
 public static class DependencyInjection {
     public static IServiceCollection AddStationService(this IServiceCollection services) {
         var channel = Channel.CreateUnbounded<string>();
+        services.AddMediatR(config => {
+            
+        });
         services.AddSingleton(channel.Reader);
         services.AddSingleton(channel.Writer);
         services.AddSingleton<BurnInTestService>();

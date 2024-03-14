@@ -13,6 +13,7 @@ using StationService.Infrastructure.TestLogs;
 using System.Text.Json;
 using Wolverine;
 using BurnInControl.Application.ProcessSerial.Messages;
+using MediatR;
 namespace StationService.Infrastructure.SerialCom;
 
 public class StationMessageHandler:IStationMessageHandler{
@@ -20,46 +21,46 @@ public class StationMessageHandler:IStationMessageHandler{
     private readonly IHubContext<StationHub, IStationHub> _hubContext;
     private readonly ILogger<StationMessageHandler> _logger;
     private readonly FirmwareUpdateService _firmwareService;
-    private readonly IMessageBus _messageBus;
+    private readonly IMediator _mediator;
     
     public StationMessageHandler(ILogger<StationMessageHandler> logger,
         BurnInTestService testService,
         IHubContext<StationHub, IStationHub> hubContext,
         FirmwareUpdateService firmwareService,
-        IMessageBus messageBus) {
+        IMediator mediator) {
         this._testService = testService;
         this._logger = logger;
         this._hubContext = hubContext;
         this._firmwareService = firmwareService;
-        this._messageBus = messageBus;
+        this._mediator = mediator;
     }
     
-    public async Task Handle(StationMessage message,CancellationToken cancellationToken) {
+    public Task Handle(StationMessage message,CancellationToken cancellationToken) {
         try {
             if (!string.IsNullOrEmpty(message.Message)) {
                 if (message.Message.Contains("Prefix")) {
                     var doc=JsonSerializer.Deserialize<JsonDocument>(message.Message);
                     if (doc != null) { 
-                        await this.Parse(doc);
+                        return this.Parse(doc);
                     } else {
                         this._logger.LogWarning("JsonDocument was null");
-                        /*return ValueTask.CompletedTask;*/
+                        return Task.CompletedTask;
                     }
                 } else {
                     this._logger.LogWarning("MessagePacket did not contain Prefix");
-                    /*return ValueTask.CompletedTask;*/
+                    return Task.CompletedTask;
                 }
             } else {
                 this._logger.LogWarning("Mediator request MessagePacket json text was null or empty");
-                /*return ValueTask.CompletedTask;*/
+                return Task.CompletedTask;
             }
         } catch {
             this._logger.LogWarning($"Message had errors.  Message: {message}");
-            /*return ValueTask.CompletedTask;*/
+            return Task.CompletedTask;
         }
     }
     
-    private ValueTask Parse(JsonDocument doc) {
+    private Task Parse(JsonDocument doc) {
         var prefixValue=doc.RootElement.GetProperty("Prefix").ToString();
         if (!string.IsNullOrEmpty(prefixValue)) {
             var prefix=StationMsgPrefix.FromValue(prefixValue);
@@ -86,39 +87,36 @@ public class StationMessageHandler:IStationMessageHandler{
                     }
                     default: {
                         this._logger.LogWarning($"Prefix value {prefix.Value} not implemented");
-                        return ValueTask.CompletedTask;
+                        return Task.CompletedTask;
                     }
                 }
             } else {
                 this._logger.LogWarning("ArduinoMsgPrefix.FromValue(prefixValue) was null");
-                return ValueTask.CompletedTask;
+                return Task.CompletedTask;
             }
         } else {
             this._logger.LogWarning("Prefix value null or empty");
-            return ValueTask.CompletedTask;
+            return Task.CompletedTask;
         }
     }
     
-    private ValueTask HandleData(JsonElement element) {
+    private Task HandleData(JsonElement element) {
         try {
             var serialData=element.Deserialize<StationSerialData>();
             if (serialData != null) {
                 this._testService.Log(serialData);
-                this._hubContext.Clients.All.OnSerialCom(serialData)
-                    .SafeFireAndForget(e => {
-                        this._logger.LogError($"Error sending serial data to hub.  Error: {e.Message}");
-                    });
+                return this._hubContext.Clients.All.OnSerialCom(serialData);
             }
+            return Task.CompletedTask;
         } catch(Exception e) {
             this._logger.LogWarning("Failed to deserialize station data");
+            return Task.CompletedTask;
         }
-        return ValueTask.CompletedTask;
     }
 
-    private ValueTask HandleMessage(JsonElement element,bool isInit) {
+    private Task HandleMessage(JsonElement element,bool isInit) {
         var message=element.GetProperty("Message").ToString();
-        this._hubContext.Clients.All.OnSerialComMessage(message).SafeFireAndForget();
-        return ValueTask.CompletedTask;
+        return this._hubContext.Clients.All.OnSerialComMessage(message);
     }
 
     /*private Task HandleIdChanged(JsonElement element) {
@@ -149,17 +147,17 @@ public class StationMessageHandler:IStationMessageHandler{
         }
     }*/
 
-    private ValueTask HandleTestStatus(JsonElement element) {
+    private Task HandleTestStatus(JsonElement element) {
         try {
             var success = element.GetProperty("Status").GetBoolean();
             var message = element.GetProperty("Message").GetString();
             return success ? 
-                this._messageBus.PublishAsync(new StartTestStatus(){Status = Result.Success}) 
-                : this._messageBus.PublishAsync(new StartTestStatus(){Status = Error.Failure(description:message)});
+                this._hubContext.Clients.All.OnTestStatus(new StartTestStatus() { Status = Result.Success })
+                : this._hubContext.Clients.All.OnTestStatus(new StartTestStatus(){Status = Error.Failure(description:message)});
         } catch(Exception e) {
             var message = $"Failed to parse test status message packet. Exception: {e.Message}";
             this._logger.LogError(message);
-            return this._messageBus.PublishAsync(new StartTestStatus() {
+            return this._hubContext.Clients.All.OnTestStatus(new StartTestStatus() {
                 Status = Error.Unexpected(description: message)
             });
         }

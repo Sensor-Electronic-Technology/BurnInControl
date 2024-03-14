@@ -35,7 +35,7 @@ public static class HubConstants {
 
     public static class Methods {
         public static string ConnectUsb => "ConnectUsb";
-        public static string Disconnect => "ConnectUsb";
+        public static string Disconnect => "DisconnectUsb";
         public static string Send => "Send";
         public static string SendHeaterConfig => "SendHeaterConfig";
         public static string SendProbeConfig => "SendProbeConfig";

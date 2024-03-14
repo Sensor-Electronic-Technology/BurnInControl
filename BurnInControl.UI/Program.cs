@@ -1,15 +1,9 @@
-using BurnInControl.Application.StationControl.Messages;
 using BurnInControl.Infrastructure;
 using BurnInControl.Shared;
-using BurnInControl.Shared.AppSettings;
 using Radzen;
 using BurnInControl.UI.Components;
 using BurnInControl.UI.Services;
-using Microsoft.AspNetCore.DataProtection;
 using MongoDB.Driver;
-using Wolverine;
-using Wolverine.ErrorHandling;
-using Wolverine.Transports.Tcp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,20 +17,20 @@ builder.Services.AddRadzenComponents();
 /*builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(@"\var\lib\dpkeys"));*/
 builder.Services.AddHttpClient();
 //builder.Host.UseSystemd();
-builder.Host.UseWolverine(opts => {
+/*builder.Host.UseWolverine(opts => {
     var config = builder.Configuration.GetSection(nameof(WolverineSettings))
         .Get<WolverineSettings>();
     opts.ListenAtPort(config?.ListenPort ?? 5581);
     var server = Environment.GetEnvironmentVariable("MsgEndpoint") ?? "10.5.0.11";
     opts.PublishMessage<SendStationCommand>().ToServerAndPort(server, config?.PublishPort ?? 8081);
     opts.OnException<InvalidOperationException>().Discard();
-});
+});*/
 
 builder.Services.AddInfrastructure();
 builder.Services.AddUiSettings(builder);
 builder.Services.AddLogging();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://mongodb:27017"));
-/*builder.Services.AddSingleton<ConsoleWriter>();*/
+builder.Services.AddSingleton<ConsoleWriter>();
 
 var app = builder.Build();
 

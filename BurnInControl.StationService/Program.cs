@@ -1,3 +1,4 @@
+using BurnInControl.Application.FirmwareUpdate.Handlers;
 using BurnInControl.Application.ProcessSerial.Messages;
 using BurnInControl.Application.StationControl.Handlers;
 using BurnInControl.Infrastructure;
@@ -16,7 +17,7 @@ using Wolverine.Transports.Tcp;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.UseWolverine(opts => {
+/*builder.Host.UseWolverine(opts => {
     var config = builder.Configuration.GetSection(nameof(WolverineSettings))
         .Get<WolverineSettings>();
     opts.ListenAtPort(config?.ListenPort ?? 8081);
@@ -26,7 +27,7 @@ builder.Host.UseWolverine(opts => {
     opts.Discovery.IncludeAssembly(typeof(StationMessageHandler).Assembly);
     opts.Discovery.IncludeType<SendStationCommandHandler>();
     opts.Discovery.IncludeType<StationMessageHandler>();
-});
+});*/
 
 builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration));
 
@@ -38,7 +39,14 @@ builder.Services.AddSettings(builder);
 builder.Services.AddStationService();
 builder.Services.AddSignalR(options => { 
     options.EnableDetailedErrors = true;
-}); 
+});
+
+builder.Services.AddMediatR(config => {
+    config.RegisterServicesFromAssemblies(typeof(ConnectionActionHandler).Assembly, 
+    typeof(SendStationCommandHandler).Assembly,
+    typeof(CheckForUpdateCommandHandler).Assembly,
+    typeof(UpdateFirmwareCommandHandler).Assembly);
+});
 
 builder.Services.AddLogging();
 /*builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://192.168.68.112:27017"));*/

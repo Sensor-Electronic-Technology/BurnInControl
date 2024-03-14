@@ -10,7 +10,6 @@
 @using Wolverine
 @using BurnInControl.Application.StationControl.Messages
 @inject ILogger<StationView> _logger
-@inject IMessageBus _messageBus
 @implements IAsyncDisposable
 
 
@@ -61,6 +60,7 @@
    private EventConsole _eventConsole=new EventConsole();
    private StationSerialData? _data;
    private HubConnection? _hubConnection;
+   private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;
    
    private bool _eventPaneCollapsed = false;
    private bool _controlPaneCollapsed = false;
@@ -76,7 +76,7 @@
 
        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnSerialCom,this.OnSerialComReceived);
        this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
-       this._hubConnection.On<string>(HubConstants.Events.OnTestStartedFailed, this.OnSerialComMessageReceived);
+       this._hubConnection.On<string>(HubConstants.Events.OnTestStatus, this.OnSerialComMessageReceived);
        try {
            await this._hubConnection.StartAsync();
            this._logger.LogInformation("Hub Connection Established");
@@ -100,18 +100,14 @@
        this._eventConsole.Log(message,AlertStyle.Base);
    }
    
-   private async Task ResetHandler() {
-       await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Reset);
-   }
-
-   
    private async Task OnStartClicked() {
        this._eventConsole.Log("Start Clicked",AlertStyle.Info);
-       await this._messageBus.SendAsync(new SendStationCommand() { Command = StationCommand.Start });
-       //await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Start);
+       //await this._messageBus.SendAsync(new SendStationCommand() { Command = StationCommand.Start });
+       await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Start);
    }
    
    private async Task OnResetClicked() {
+       await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Reset);
        this._eventConsole.Log("Reset Clicked",AlertStyle.Warning);
    }
    

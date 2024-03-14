@@ -13,6 +13,8 @@ public static class HubConstants {
         public static string OnSerialComMessage => "OnSerialComMessage";
         public static string OnUsbConnect => "OnUsbConnect";
         public static string OnUsbDisconnect => "OnUsbDisconnect";
+        public static string OnUsbConnectFailed => "OnUsbConnectFailed";
+        public static string OnUsbDisconnectFailed => "OnUsbDisconnectFailed";
         public static string OnExecuteCommand => "OnExecuteCommand";
         public static string OnIdChanged => "OnIdChanged";
 
@@ -35,8 +37,7 @@ public static class HubConstants {
 
     public static class Methods {
         public static string ConnectUsb => "ConnectUsb";
-        public static string Disconnect => "DisconnectUsb";
-        public static string Send => "Send";
+        public static string DisconnectUsb => "DisconnectUsb";
         public static string SendHeaterConfig => "SendHeaterConfig";
         public static string SendProbeConfig => "SendProbeConfig";
         public static string SendStationConfig => "SendStationConfig";

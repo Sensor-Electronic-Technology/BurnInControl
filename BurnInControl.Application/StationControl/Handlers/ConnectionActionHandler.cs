@@ -9,13 +9,6 @@ public class ConnectionActionHandler:IRequestHandler<ConnectionAction,ErrorOr<Su
     public ConnectionActionHandler(IStationController controller) {
         this._controller = controller;
     }
-    /*public async Task<ErrorOr<Success>> Handle(ConnectionAction action,IStationController controller) {
-        if(action.Action== ConnectAction.Connect) {
-            return await controller.ConnectUsb();
-        } else {
-            return await controller.Disconnect();
-        }
-    }*/
     public async Task<ErrorOr<Success>> Handle(ConnectionAction action, CancellationToken cancellationToken) {
         if(action.Action== ConnectAction.Connect) {
             return await this._controller.ConnectUsb();

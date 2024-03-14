@@ -80,6 +80,9 @@
        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnSerialCom,this.OnSerialComReceived);
        this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
        this._hubConnection.On<string>(HubConstants.Events.OnTestStatus, this.OnSerialComMessageReceived);
+       this._hubConnection.On<string>(HubConstants.Events.OnUsbDisconnect,(msg)=>this._eventConsole.Log(msg,AlertStyle.Danger));
+       this._hubConnection.On<string>(HubConstants.Events.OnUsbConnectFailed,(msg)=>this._eventConsole.Log(msg,AlertStyle.Danger));
+       this._hubConnection.On<string>(HubConstants.Events.OnUsbConnect,(msg)=>this._eventConsole.Log(msg,AlertStyle.Info));
        try {
            await this._hubConnection.StartAsync();
            this._logger.LogInformation("Hub Connection Established");
@@ -115,7 +118,9 @@
    
    private async Task OnConnectClicked() {
        this._eventConsole.Log("Connect Clicked",AlertStyle.Danger);
+         await this._hubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
    }
+   
    private void SelectedTabChangedHandler(int obj) {
        if (obj != 0) {
            this._controlPaneCollapsed = true;

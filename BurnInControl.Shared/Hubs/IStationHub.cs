@@ -5,8 +5,11 @@ namespace BurnInControl.Shared.Hubs;
 
 public interface IStationHub {
     Task OnSerialCom(StationSerialData serialData);
-
     Task OnSerialComMessage(string message);
-
     Task OnTestStatus(StartTestStatus status);
+    Task OnUsbConnectFailed(string message);
+    Task OnUsbDisconnect(string message);
+    Task OnUsbConnect(string message);
+    Task OnUsbDisconnectFailed(string message);
+
 }

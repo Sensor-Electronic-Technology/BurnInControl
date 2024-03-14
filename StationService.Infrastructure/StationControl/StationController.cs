@@ -3,9 +3,12 @@ using BurnInControl.Application.ProcessSerial.Messages;
 using BurnInControl.Application.StationControl.Interfaces;
 using BurnInControl.Shared.ComDefinitions.MessagePacket;
 using BurnInControl.Shared.ComDefinitions.Station;
+using BurnInControl.Shared.Hubs;
 using ErrorOr;
 using MediatR;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using StationService.Infrastructure.Hub;
 using StationService.Infrastructure.SerialCom;
 using System.Threading.Channels;
 namespace StationService.Infrastructure.StationControl;
@@ -16,17 +19,19 @@ public class StationController:IStationController,IDisposable {
     private readonly ChannelReader<string> _channelReader;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly ISender _sender;
-    //private readonly StationMessageHandler _stationMessageHandler;
+    private readonly IHubContext<StationHub, IStationHub> _hubContext;
     
     public StationController(UsbController usbController,
         ChannelReader<string> channelReader,
         ISender sender,
+        IHubContext<StationHub, IStationHub> hubContext,
         ILogger<StationController> logger) {
         this._logger = logger;
         this._channelReader = channelReader;
         this._usbController = usbController;
         this._usbController.UsbUnPlugHandler += this.UsbUnplugHandler;
         this._sender = sender;
+        this._hubContext = hubContext;
     }
     
     public Task Start() {
@@ -39,19 +44,33 @@ public class StationController:IStationController,IDisposable {
             if (!result.IsError) {
                 this.StartReaderAsync(this._cancellationTokenSource.Token)
                     .SafeFireAndForget(e => {
-                        this._logger.LogWarning($"Channel read failed. Exception: \n {e.Message}");
+                        var message = $"Channel read failed. Exception: \n {e.Message}";
+                        if(e.InnerException!=null) {
+                            message+= $"\n Inner Exception: {e.InnerException.Message}";
+                        }
+                        this._hubContext.Clients.All.OnUsbConnectFailed(message);
+                        this._logger.LogError(message);
                     });
                 return Task.FromResult<ErrorOr<Success>>(result.Value);
             } else {
+                this._hubContext.Clients.All.OnUsbConnect("Usb Connected");
                 return Task.FromResult<ErrorOr<Success>>(result.Value);
             }
         } else {
+            this._hubContext.Clients.All.OnUsbConnect("Usb already connected");
             return Task.FromResult<ErrorOr<Success>>(Error.Conflict(description:"Usb already connected"));
         }
     }
 
     public Task<ErrorOr<Success>> Disconnect() {
         var result=this._usbController.Disconnect();
+        if (result.IsError) {
+            this._hubContext.Clients.All.OnUsbDisconnectFailed($"Usb failed to disconnect.  " +
+                                                               $"Please remove usb\n Usb Message: " +
+                                                               $"{result.FirstError.Description}");
+        } else {
+            this._hubContext.Clients.All.OnUsbDisconnect("Usb Disconnected");
+        }
         return Task.FromResult(result);
     }
 
@@ -70,7 +89,6 @@ public class StationController:IStationController,IDisposable {
     private async Task StartReaderAsync(CancellationToken token) {
         while (await this._channelReader.WaitToReadAsync(token)) {
             while (this._channelReader.TryRead(out var message)) {
-                //this._stationMessageHandler.Handle(message, token);
                 await this._sender.Send(new StationMessage() { Message = message }, token);
             }
         }
@@ -78,7 +96,7 @@ public class StationController:IStationController,IDisposable {
     
     private void UsbUnplugHandler(object? sender,EventArgs args) {
         this._logger.LogWarning("Usb Disconnected");
-        //this._hubContext.Clients.All.OnUsbDisconnect(true);
+        this._hubContext.Clients.All.OnUsbDisconnect("Error: Usb Disconnected.  Please check usb connection");
     }
     
     public Task<ErrorOr<Success>> Send<TPacket>(StationMsgPrefix prefix,TPacket packet) where TPacket:IPacket {

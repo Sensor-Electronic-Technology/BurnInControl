@@ -18,12 +18,26 @@ public class StationHub:Hub<IStationHub> {
     public async Task SendSerialComMessage(string message) {
         await this.Clients.All.OnSerialComMessage(message);
     }
+    public async Task ConnectUsb() {
+        await this._mediator.Send(new ConnectionAction(){Action=ConnectAction.Connect});
+    }
     
-    public async Task UsbConnectionAction(ConnectionAction action) {
-        await this._mediator.Send(action);
+    public async Task DisconnectUsb() {
+        await this._mediator.Send(new ConnectionAction(){Action=ConnectAction.Disconnect});
     }
     public async Task SendCommand(StationCommand command) {
         await this._mediator.Send(new SendStationCommand(){Command = command});
+    }
+    
+    public Task OnUsbConnectFailed(string message) {
+        return this.Clients.All.OnUsbConnectFailed(message);
+    }
+
+    public Task OnUsbDisconnectFailed(string message) {
+        return this.Clients.All.OnUsbDisconnectFailed(message);
+    }
+    public Task OnUsbDisconnect(string message) {
+        return this.Clients.All.OnUsbDisconnect(message);
     }
     
 }

@@ -51,8 +51,12 @@ public class StationMessageHandler:IStationMessageHandler{
                 this._logger.LogWarning("Mediator request MessagePacket json text was null or empty");
                 return Task.CompletedTask;
             }
-        } catch {
-            this._logger.LogWarning($"Message had errors.  Message: {message}");
+        } catch(Exception e) {
+            var exceptionMessage = $"\nException: {e.Message}";
+            if(e.InnerException!=null) {
+                exceptionMessage+= $"\n Inner Exception: {e.InnerException.Message}";
+            }
+            this._logger.LogWarning($"Message had errors.  Message: {message.Message} {exceptionMessage}");
             return Task.CompletedTask;
         }
     }
@@ -149,14 +153,12 @@ public class StationMessageHandler:IStationMessageHandler{
             var success = element.GetProperty("Status").GetBoolean();
             var message = element.GetProperty("Message").GetString();
             return success ? 
-                this._hubContext.Clients.All.OnTestStatus(new StartTestStatus() { Status = Result.Success })
-                : this._hubContext.Clients.All.OnTestStatus(new StartTestStatus(){Status = Error.Failure(description:message)});
+                this._hubContext.Clients.All.OnTestStatus($"Test Started, Message: {message}")
+                : this._hubContext.Clients.All.OnTestStatus($"Error, Message: {message}");
         } catch(Exception e) {
             var message = $"Failed to parse test status message packet. Exception: {e.Message}";
             this._logger.LogError(message);
-            return this._hubContext.Clients.All.OnTestStatus(new StartTestStatus() {
-                Status = Error.Unexpected(description: message)
-            });
+            return this._hubContext.Clients.All.OnTestStatus($"Error: {message}");
         }
     }
 }

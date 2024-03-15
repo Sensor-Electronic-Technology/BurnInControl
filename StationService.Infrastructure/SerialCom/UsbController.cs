@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.IO.Ports;
 using SerialPortLib;
+using System.Buffers;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
@@ -13,7 +14,7 @@ namespace StationService.Infrastructure.SerialCom;
 
 
 public class UsbController:IDisposable {
-    public event EventHandler UsbUnPlugHandler;
+    public event EventHandler<ConnectionStatusChangedEventArgs> UsbStateChangedHandler;
     
     private readonly ILogger<UsbController> _logger;
     private bool _loggingEnabled=false;
@@ -23,6 +24,7 @@ public class UsbController:IDisposable {
     private string _portName = string.Empty;
     private int _baudRate = 38400;
     private StringBuilder _inputBuffer=new StringBuilder();
+    ArrayPool<byte> _arrayPool = ArrayPool<byte>.Shared;
     public bool Connected => this._serialPort.IsConnected;
     
     public UsbController(ChannelWriter<string> channelWriter,ILogger<UsbController> logger) {
@@ -32,37 +34,39 @@ public class UsbController:IDisposable {
         this._loggingEnabled = true;
         this._inputBuffer.Clear();
         this._serialPort.MessageReceived+= SerialPortOnMessageReceived;
+        this._serialPort.ConnectionStatusChanged+= SerialPortOnConnectionStatusChanged;
+        this._serialPort.ReconnectDelay = 1000;
     }
-
     public UsbController(ChannelWriter<string> channelWriter) {
         this._loggingEnabled = false;
         this._channelWriter = channelWriter;
         this._serialPort = new SerialPortInput();
         this._inputBuffer.Clear();
         this._serialPort.MessageReceived+= SerialPortOnMessageReceived;
+        this._serialPort.ConnectionStatusChanged+= SerialPortOnConnectionStatusChanged;
+        this._serialPort.ReconnectDelay = 1000;
     }
     private void SerialPortOnMessageReceived(Object sender, MessageReceivedEventArgs args) {
-        var input=System.Text.Encoding.ASCII.GetString(args.Data);
-
+        var input=System.Text.Encoding.Default.GetString(args.Data);
         this._inputBuffer.Append(input);
-        
-        if (input.Contains('\n')) {
+        if (input.Contains("\n")) {
             var output = this._inputBuffer.ToString();
-            var startIndex=output.IndexOf('{');
-            if (startIndex >= 0) {
-                if (this._channelWriter.TryWrite(output.Substring(startIndex, output.Length-startIndex))) {
-                    this._inputBuffer.Clear();
-                    return;
-                } else {
-                    this._inputBuffer.Clear();
-                    this.Log($"Channel Write Failed, ThreadId: {Thread.CurrentThread.ManagedThreadId}",true);
-                    return;
+            var lines=output.Split('\n',StringSplitOptions.RemoveEmptyEntries);
+            foreach(string line in lines) {
+                if (line.Contains('{')) {
+                    if (!this._channelWriter.TryWrite(line)){
+                        this.Log($"Channel Write Failed, ThreadId: {Thread.CurrentThread.ManagedThreadId}",true);
+                    }
                 }
             }
             this._inputBuffer.Clear();
         }
     }
-
+    
+    private void SerialPortOnConnectionStatusChanged(Object sender, ConnectionStatusChangedEventArgs args) {
+        this.UsbStateChangedHandler?.Invoke(this,args);
+    }
+    
     public ErrorOr<Success> Connect() {
         /*if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
             this._portName = "/dev/ttyACM0";
@@ -76,6 +80,7 @@ public class UsbController:IDisposable {
         }*/
         this._portName = "/dev/ttyACM0";
         this._portNameFound = true;
+        
         if (this._portNameFound) {
             this._serialPort.SetPort(this._portName, 38400);
             if (this._serialPort.Connect()) {

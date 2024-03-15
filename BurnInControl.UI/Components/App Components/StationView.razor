@@ -10,6 +10,7 @@
 @using Wolverine
 @using BurnInControl.Application.StationControl.Messages
 @inject ILogger<StationView> _logger
+@inject NotificationService NotificationService
 @implements IAsyncDisposable
 
 
@@ -80,9 +81,9 @@
        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnSerialCom,this.OnSerialComReceived);
        this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
        this._hubConnection.On<string>(HubConstants.Events.OnTestStatus, this.OnSerialComMessageReceived);
-       this._hubConnection.On<string>(HubConstants.Events.OnUsbDisconnect,(msg)=>this._eventConsole.Log(msg,AlertStyle.Danger));
-       this._hubConnection.On<string>(HubConstants.Events.OnUsbConnectFailed,(msg)=>this._eventConsole.Log(msg,AlertStyle.Danger));
-       this._hubConnection.On<string>(HubConstants.Events.OnUsbConnect,(msg)=>this._eventConsole.Log(msg,AlertStyle.Info));
+       this._hubConnection.On<string>(HubConstants.Events.OnUsbDisconnect,this.UsbDisconnectedHandler);
+       this._hubConnection.On<string>(HubConstants.Events.OnUsbConnectFailed,this.UsbConnectFailedHandler);
+       this._hubConnection.On<string>(HubConstants.Events.OnUsbConnect, this.UsbConnectHandler);
        try {
            await this._hubConnection.StartAsync();
            this._logger.LogInformation("Hub Connection Established");
@@ -96,7 +97,36 @@
            this._eventConsole.Log("Hub Connection Failed",AlertStyle.Danger);
        }
    }
+   private void UsbConnectHandler(string message) {
+       var notification=new NotificationMessage { 
+           Severity = NotificationSeverity.Success, 
+           Summary = "Usb Connected", 
+           Detail = message, 
+           Duration = 10000 };
+       this.NotificationService.Notify(notification);
+       this._eventConsole.Log(message,AlertStyle.Info);
+   }
    
+   private void UsbDisconnectedHandler(string message) {
+       var notification=new NotificationMessage { 
+           Severity = NotificationSeverity.Error, 
+           Summary = "Usb Disconnected", 
+           Detail = message, 
+           Duration = 10000 };
+       this.NotificationService.Notify(notification);
+       this._eventConsole.Log(message,AlertStyle.Danger);
+   }
+   
+   private void UsbConnectFailedHandler(string message) {
+       var notification=new NotificationMessage { 
+           Severity = NotificationSeverity.Error, 
+           Summary = "Usb Failed To Connect", 
+           Detail = message, 
+           Duration = 10000 };
+       this.NotificationService.Notify(notification);
+       this._eventConsole.Log(message,AlertStyle.Danger);
+   }
+
    private void OnSerialComReceived(StationSerialData data) {
        this._data = data;
        InvokeAsync(StateHasChanged);

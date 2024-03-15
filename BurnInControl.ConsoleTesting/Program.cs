@@ -2,12 +2,20 @@
 
 using BurnInControl.Data.ComponentConfiguration.ProbeController;
 using System.Text.Json;
-ProbeControllerConfig config = new ProbeControllerConfig();
+
+
+string value = "{\"some text\"}\r\n";
+System.Text.Encoding.Default.GetBytes(value);
+var index=value.IndexOf("}\r\n", StringComparison.Ordinal);
+var sub=value.Substring(0,value.Length-2);
+Console.WriteLine(sub);
+
+/*ProbeControllerConfig config = new ProbeControllerConfig();
 
 var json=JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
 
 Console.WriteLine("ProbeControllerConfig:");
-Console.WriteLine(json);
+Console.WriteLine(json);*/
 
 
 /*var numberstr="123.434e-3";

@@ -74,7 +74,7 @@ public class UsbController:IDisposable {
             this._portName = this.FindPortWindows();
             this._portNameFound = true;
         }*/
-        this._portName = "COM3";
+        this._portName = "/dev/ttyACM0";
         this._portNameFound = true;
         if (this._portNameFound) {
             this._serialPort.SetPort(this._portName, 38400);

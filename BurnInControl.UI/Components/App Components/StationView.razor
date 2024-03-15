@@ -70,12 +70,12 @@
        var hubAddress=Environment.GetEnvironmentVariable("StationHub");
        string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
        //string addr =//HubConstants.HubAddress;
-       /*this._hubConnection = new HubConnectionBuilder()
-           .WithUrl("http://localhost:5066/hubs/station")
-           .Build();*/
        this._hubConnection = new HubConnectionBuilder()
-           .WithUrl(addr)
+           .WithUrl("http://localhost:5066/hubs/station")
            .Build();
+       /*this._hubConnection = new HubConnectionBuilder()
+           .WithUrl(addr)
+           .Build();*/
 
        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnSerialCom,this.OnSerialComReceived);
        this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);

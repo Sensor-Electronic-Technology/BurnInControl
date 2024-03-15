@@ -39,7 +39,7 @@ public class StationController:IStationController,IDisposable {
     }
     
     public Task<ErrorOr<Success>> ConnectUsb() {
-        if (!this._usbController.Connected) {
+        /*if (!this._usbController.Connected) {*/
             var result=this._usbController.Connect();
             if (!result.IsError) {
                 this.StartReaderAsync(this._cancellationTokenSource.Token)
@@ -56,10 +56,10 @@ public class StationController:IStationController,IDisposable {
                 this._hubContext.Clients.All.OnUsbConnect("Usb Connected");
                 return Task.FromResult<ErrorOr<Success>>(result.Value);
             }
-        } else {
+        /*} else {
             this._hubContext.Clients.All.OnUsbConnect("Usb already connected");
             return Task.FromResult<ErrorOr<Success>>(Error.Conflict(description:"Usb already connected"));
-        }
+        }*/
     }
 
     public Task<ErrorOr<Success>> Disconnect() {
@@ -96,6 +96,7 @@ public class StationController:IStationController,IDisposable {
     
     private void UsbUnplugHandler(object? sender,EventArgs args) {
         this._logger.LogWarning("Usb Disconnected");
+        //this._usbController.Disconnect();
         this._hubContext.Clients.All.OnUsbDisconnect("Error: Usb Disconnected.  Please check usb connection");
     }
     

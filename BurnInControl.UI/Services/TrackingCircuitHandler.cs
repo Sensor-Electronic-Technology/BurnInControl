@@ -27,7 +27,7 @@ public class TrackingCircuitHandler : CircuitHandler
         CancellationToken cancellationToken) {
         circuits.Remove(circuit);
         this._logger.LogInformation($"Circuit Removed Count: {circuits.Count}");
-        return this._hubConnection.StopConnection();
+        return Task.CompletedTask;
     }
 
     public int ConnectedCircuits => circuits.Count;

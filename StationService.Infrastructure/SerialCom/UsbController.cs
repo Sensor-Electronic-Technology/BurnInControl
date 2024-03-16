@@ -23,31 +23,41 @@ public class UsbController:IDisposable {
     private bool _portNameFound = false;
     private string _portName = string.Empty;
     private int _baudRate = 38400;
-    private StringBuilder _inputBuffer=new StringBuilder();
-    ArrayPool<byte> _arrayPool = ArrayPool<byte>.Shared;
     public bool Connected => this._serialPort.IsConnected;
     
     public UsbController(ChannelWriter<string> channelWriter,ILogger<UsbController> logger) {
         this._logger = logger;
         this._channelWriter = channelWriter;
-        this._serialPort = new SerialPortInput();
+        this._serialPort = new SerialPortInput(true);
         this._loggingEnabled = true;
-        this._inputBuffer.Clear();
-        this._serialPort.MessageReceived+= SerialPortOnMessageReceived;
+
+        this._serialPort.MessageLineReceived+= SerialPortOnMessageLineReceived;
         this._serialPort.ConnectionStatusChanged+= SerialPortOnConnectionStatusChanged;
         this._serialPort.ReconnectDelay = 1000;
     }
     public UsbController(ChannelWriter<string> channelWriter) {
         this._loggingEnabled = false;
         this._channelWriter = channelWriter;
-        this._serialPort = new SerialPortInput();
-        this._inputBuffer.Clear();
-        this._serialPort.MessageReceived+= SerialPortOnMessageReceived;
+        this._serialPort = new SerialPortInput(true);
+
+        this._serialPort.MessageLineReceived+= SerialPortOnMessageLineReceived;
         this._serialPort.ConnectionStatusChanged+= SerialPortOnConnectionStatusChanged;
         this._serialPort.ReconnectDelay = 1000;
     }
-    private void SerialPortOnMessageReceived(Object sender, MessageReceivedEventArgs args) {
+    private void SerialPortOnMessageLineReceived(Object sender, MessageReceivedLineEventArgs args) {
+        if (args.Data.Contains('{')) {
+            if (args.Data.IndexOf('{') == 0) {
+                if (!this._channelWriter.TryWrite(args.Data)){
+                    this.Log($"Channel Write Failed, ThreadId: {Thread.CurrentThread.ManagedThreadId}",true);
+                }
+            }
+        }
+    }
+
+    /*private void SerialPortOnMessageReceived(Object sender, MessageReceivedEventArgs args) {
         var input=System.Text.Encoding.Default.GetString(args.Data);
+        
+        args.Data.Contains((byte)'\n');
         this._inputBuffer.Append(input);
         if (input.Contains("\n")) {
             var output = this._inputBuffer.ToString();
@@ -61,7 +71,7 @@ public class UsbController:IDisposable {
             }
             this._inputBuffer.Clear();
         }
-    }
+    }*/
     
     private void SerialPortOnConnectionStatusChanged(Object sender, ConnectionStatusChangedEventArgs args) {
         this.UsbStateChangedHandler?.Invoke(this,args);
@@ -93,7 +103,6 @@ public class UsbController:IDisposable {
             return Error.NotFound(description: "SerialPort not found");
         }
     }
-
     public ErrorOr<Success> Disconnect() {
         if (!this._serialPort.IsConnected) {
             return Error.Conflict(description: "Usb already disconnected");

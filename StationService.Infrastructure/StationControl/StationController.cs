@@ -92,12 +92,16 @@ public class StationController:IStationController,IDisposable {
     }
     
     private void UsbControllerOnUsbStateChangedHandler(Object? sender, ConnectionStatusChangedEventArgs e) {
-        this._logger.LogWarning("Usb Disconnected");
+        
         if (e.Connected) {
             this._hubContext.Clients.All.OnUsbConnect("Usb Connected");
         } else {
-            this._hubContext.Clients.All.OnUsbDisconnect("Error: Usb Disconnected.  Please check usb cable \n" +
-                                                         "The system will reconnect once the cable is plugged back in.");
+            if (e.ConnectionEventType == ConnectionEventType.DisconnectWithRetry) {
+                this._hubContext.Clients.All.OnUsbDisconnect("Error: Usb Disconnected. Please check usb cable \n" +
+                                                             "The system will reconnect once the cable is plugged back in.");
+            } else {
+                this._hubContext.Clients.All.OnUsbDisconnect("Usb Disconnected,to reconnect please press the connect button");
+            }
         }
     }
     

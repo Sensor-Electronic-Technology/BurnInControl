@@ -3,6 +3,7 @@ using BurnInControl.Shared;
 using Radzen;
 using BurnInControl.UI.Components;
 using BurnInControl.UI.Services;
+using Microsoft.AspNetCore.Components.Server.Circuits;
 using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,8 @@ builder.Services.AddUiSettings(builder);
 builder.Services.AddLogging();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://mongodb:27017"));
 builder.Services.AddSingleton<ConsoleWriter>();
+builder.Services.AddSingleton<StationHubConnection>();
+builder.Services.AddSingleton<CircuitHandler, TrackingCircuitHandler>();
 
 var app = builder.Build();
 

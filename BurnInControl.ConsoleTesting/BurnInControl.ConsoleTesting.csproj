@@ -6,13 +6,14 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-    
-    <ItemGroup>
-        <PackageReference Include="SerialPortLib" Version="1.1.2" />
-    </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\BurnInControl.Data\BurnInControl.Data.csproj" />
+      <ProjectReference Include="..\BurnInControl.Infrastructure\BurnInControl.Infrastructure.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="SerialPortLib" Version="1.3.0" />
     </ItemGroup>
 
 </Project>

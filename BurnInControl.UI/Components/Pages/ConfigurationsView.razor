@@ -2,6 +2,8 @@
 @using BurnInControl.UI.Components.App_Components.Forms.Configurations.Heaters
 @using BurnInControl.UI.Components.App_Components.Forms.Configurations.Probes
 @using BurnInControl.Data.ComponentConfiguration.ProbeController
+@using BurnInControl.Infrastructure.StationModel
+@inject StationDataService StationDataService
 
 <RadzenStack Orientation="Orientation.Vertical">
     <RadzenTabs SelectedIndex="0" RenderMode="TabRenderMode.Client">
@@ -21,6 +23,4 @@
 </RadzenStack>
 @code {
     private EventConsole _eventConsole;
-
-    
 }

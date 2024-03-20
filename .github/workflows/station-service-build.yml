@@ -10,7 +10,7 @@ on:
     - 'BurnInControl.StationService/**'
     - '.github/workflows/station-service-build.yml'
 jobs:
-  package-repo:
+  package-repo-add:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -22,7 +22,7 @@ jobs:
       run: dotnet nuget add source --username aelmendorf --password ${{ secrets.NUGET_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/Sensor-Electronic-Technology/index.json"
 
   build:
-    needs: package-repo
+    needs: package-repo-add
     runs-on: ubuntu-latest
     defaults:
       run:

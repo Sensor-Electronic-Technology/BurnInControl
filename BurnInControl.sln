@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C14CD9BF-E712-4F23-92BD-A87D3519BD4D}"
 	ProjectSection(SolutionItems) = preProject
 		docker-compose.yml = docker-compose.yml
+		NuGet.config = NuGet.config
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BurnInControl.Data", "BurnInControl.Data\BurnInControl.Data.csproj", "{85267C7D-B679-4B82-A31F-1F48D19B6C41}"

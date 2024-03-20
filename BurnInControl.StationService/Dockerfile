@@ -7,14 +7,14 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["BurnInControl.StationService/nuget.config", "."]
+COPY ["NuGet.config", "."]
 COPY ["BurnInControl.StationService/BurnInControl.StationService.csproj", "BurnInControl.StationService/"]
 COPY ["BurnInControl.Data/BurnInControl.Data.csproj", "BurnInControl.Data/"]
 COPY ["BurnInControl.Shared/BurnInControl.Shared.csproj", "BurnInControl.Shared/"]
 COPY ["BurnInControl.Infrastructure/BurnInControl.Infrastructure.csproj", "BurnInControl.Infrastructure/"]
 COPY ["StationService.Infrastructure/StationService.Infrastructure.csproj", "StationService.Infrastructure/"]
 COPY ["BurnInControl.Application/BurnInControl.Application.csproj", "BurnInControl.Application/"]
-RUN dotnet restore "BurnInControl.StationService/BurnInControl.StationService.csproj" --configfile nuget.config --ignore-failed-sources
+RUN dotnet restore "BurnInControl.StationService/BurnInControl.StationService.csproj"
 COPY . .
 WORKDIR "/src/BurnInControl.StationService"
 RUN dotnet build "BurnInControl.StationService.csproj" -c $BUILD_CONFIGURATION -o /app/build

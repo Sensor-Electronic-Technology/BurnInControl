@@ -12,9 +12,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./BurnInControl.StationService
+#    defaults:
+#      run:
+#        working-directory: ./BurnInControl.StationService
     steps:
     - uses: actions/checkout@v3
     - name: Adjust NuGet Config Credentials

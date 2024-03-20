@@ -9,7 +9,6 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using BurnInControl.Application.StationControl.Messages
 @inject ILogger<StationView> _logger
-@inject NotificationService NotificationService
 @inject StationHubConnection StationHubConnection
 @implements IAsyncDisposable
 
@@ -52,11 +51,13 @@
     </RadzenSplitterPane>
     <RadzenSplitterPane Size="15%" Resizable="true" Collapsed="@this._controlPaneCollapsed">
         <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
-            <StationControl OnConnect="@this.OnConnectClicked"
+            @*<StationControl OnConnect="@this.OnConnectClicked"
                             OnReset="@this.OnResetClicked"
-                            OnStart="@this.OnStartClicked"
+                            OnStartPause="@this.OnStartClicked"
                             OnCurrentChanged="CurrentChangedHandler"
-                            OnTempChanged="TempChangedHandler"/>
+                            OnUsbConnect="@this.OnConnectUsbClicked"
+                            OnTempChanged="TempChangedHandler"/>*@
+            <StationControl />
         </RadzenRow>
     </RadzenSplitterPane>
 </RadzenSplitter>
@@ -73,12 +74,12 @@
 
    protected override async Task OnInitializedAsync() {
         this.StationHubConnection.OnStationDataReceived += this.OnSerialComReceived;
-        this.StationHubConnection.OnHubConnected += StationHubConnectionOnOnHubConnected;
-        this.StationHubConnection.OnUsbDisconnected+=this.UsbDisconnectedHandler;
+        /*this.StationHubConnection.OnHubConnected += StationHubConnectionOnOnHubConnected;
+        this.StationHubConnection.OnUsbDisconnected+=this.UsbDisconnectedHandler;*/
         this.StationHubConnection.OnStationMessageReceived+=this.OnSerialComMessageReceived;
    }
    
-   private Task StationHubConnectionOnOnHubConnected(Boolean stat, String arg) {
+   /*private Task StationHubConnectionOnOnHubConnected(Boolean stat, String arg) {
        if (stat) {
            var notification=new NotificationMessage { 
                Severity = NotificationSeverity.Success, 
@@ -104,16 +105,16 @@
            Duration = 10000 };
        this.NotificationService.Notify(notification);
        this._eventConsole.Log(message,AlertStyle.Info);
-   }
+   }*/
    
-   private Task UsbDisconnectedHandler(string message) {
+   /*private Task UsbDisconnectedHandler(string message) {
        var notification=new NotificationMessage { 
            Severity = NotificationSeverity.Error, 
            Summary = "Usb Disconnected", 
            Detail = message, 
            Duration = 10000 };
        this.NotificationService.Notify(notification);
-       this._eventConsole.Log(message,AlertStyle.Danger);
+       this._eventConsole.Log(message, AlertStyle.Danger);
        return Task.CompletedTask;
    }
    
@@ -125,7 +126,7 @@
            Duration = 10000 };
        this.NotificationService.Notify(notification);
        this._eventConsole.Log(message,AlertStyle.Danger);
-   }
+   }*/
 
    private async Task OnSerialComReceived(StationSerialData data) {
        this._data = data;
@@ -137,22 +138,39 @@
        return Task.CompletedTask;
    }
    
-   private async Task OnStartClicked() {
-       this._eventConsole.Log("Start Clicked",AlertStyle.Info);
-       await this.StationHubConnection.SendStart();
-       /*await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Start);*/
+   /*private async Task OnStartClicked(bool state) {
+       if (state) {
+           await this.StationHubConnection.SendPause();
+           this._eventConsole.Log("Pause Clicked",AlertStyle.Info);
+       } else {
+           await this.StationHubConnection.SendStart();
+           this._eventConsole.Log("Start Clicked",AlertStyle.Info);
+       }
    }
    
    private async Task OnResetClicked() {
-       /*await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, StationCommand.Reset);*/
        await this.StationHubConnection.SendReset();
        this._eventConsole.Log("Reset Clicked",AlertStyle.Warning);
-   }
+   }*/
    
-   private async Task OnConnectClicked() {
-       await this.StationHubConnection.StartConnection();
-       /*this._eventConsole.Log("Connect Clicked",AlertStyle.Danger);
-         await this._hubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);*/
+   private async Task OnConnectClicked(bool state) {
+       if (state) {
+           await this.StationHubConnection.StopConnection();
+           this._eventConsole.Log("Disconnect Clicked",AlertStyle.Warning);
+       } else {
+          await this.StationHubConnection.StartConnection();
+          this._eventConsole.Log("Connect Clicked",AlertStyle.Success);
+       }
+   }
+
+   private async Task OnConnectUsbClicked(bool state) {
+       if (state) {
+           await this.StationHubConnection.SendDisconnectUsb();
+           this._eventConsole.Log("Usb Disconnect Clicked",AlertStyle.Warning);
+       } else {
+           await this.StationHubConnection.SendUsbConnect();
+           this._eventConsole.Log("Usb Connect Clicked",AlertStyle.Info);
+       }
    }
    
    private void SelectedTabChangedHandler(int obj) {
@@ -176,10 +194,10 @@
        if(this._hubConnection!=null) {
            await this._hubConnection.DisposeAsync();
        }
-       this.StationHubConnection.OnStationDataReceived -= this.OnSerialComReceived;
+       /*this.StationHubConnection.OnStationDataReceived -= this.OnSerialComReceived;
        this.StationHubConnection.OnHubConnected -= StationHubConnectionOnOnHubConnected;
        this.StationHubConnection.OnUsbDisconnected-=this.UsbDisconnectedHandler;
-       this.StationHubConnection.OnStationMessageReceived-=this.OnSerialComMessageReceived;
+       this.StationHubConnection.OnStationMessageReceived-=this.OnSerialComMessageReceived;*/
    }
    
    

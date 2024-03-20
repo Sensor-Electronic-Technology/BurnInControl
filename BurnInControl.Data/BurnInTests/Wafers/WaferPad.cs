@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson;
+using QuickTest.Data.Wafer;
 namespace BurnInControl.Data.BurnInTests.Wafers;
 
 public class WaferPad {

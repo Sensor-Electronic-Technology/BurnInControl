@@ -1,4 +1,5 @@
 ﻿using BurnInControl.Application.StationControl.Interfaces;
+using BurnInControl.Data.BurnInTests.Wafers;
 using BurnInControl.Data.ComponentConfiguration;
 using BurnInControl.Data.ComponentConfiguration.HeaterController;
 using BurnInControl.Data.ComponentConfiguration.ProbeController;
@@ -6,6 +7,7 @@ using BurnInControl.Data.ComponentConfiguration.StationController;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
+using QuickTest.Data.Wafer;
 using StationService.Infrastructure.StationControl;
 namespace StationService.Infrastructure.Hosted;
 
@@ -31,6 +33,8 @@ public class StationWorkerService:IHostedService,IDisposable {
             StationConfiguration = new StationConfiguration()
         }, cancellationToken: cancellationToken);
         this._logger.LogInformation("Wrote to database, Starting service...");*/
+        PadLocation padLocation = PadLocation.PadLocationG;
+        this._logger.LogInformation($"Nuget Worked, PadLocation: {padLocation.Value}");
         await this._stationController.Start();
     }
     

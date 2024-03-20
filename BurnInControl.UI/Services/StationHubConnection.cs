@@ -67,10 +67,30 @@ public class StationHubConnection {
             await this._hubConnection.StopAsync();
         }
     }
+    
+    public async Task SendUsbConnect() {
+        if (this.Connected) {
+            await this._hubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
+        }
+    }
+    
+    public async Task SendDisconnectUsb() {
+        if (this.Connected) {
+            await this._hubConnection.InvokeAsync(HubConstants.Methods.DisconnectUsb);
+        }
+    }
+    
     public async Task SendStart() {
         if (this.Connected) {
             await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, 
             StationCommand.Start);
+        }
+    }
+    
+    public async Task SendPause() {
+        if (this.Connected) {
+            await this._hubConnection.InvokeAsync(HubConstants.Methods.SendCommand, 
+            StationCommand.Pause);
         }
     }
     

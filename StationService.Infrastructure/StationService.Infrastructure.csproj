@@ -13,6 +13,7 @@
         <!--<PackageReference Include="SerialPortLib" Version="1.3.0" />-->
         <PackageReference Include="Octokit" Version="10.0.0" />
         <PackageReference Include="NLog.Extensions.Logging" Version="5.2.0" />
+        <PackageReference Include="QuickTest.Data" Version="1.0.11" />
         <PackageReference Include="System.IO.Ports" Version="8.0.0" />
         <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0" />
         <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />

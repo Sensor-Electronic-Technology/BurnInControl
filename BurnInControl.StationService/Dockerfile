@@ -5,7 +5,7 @@ EXPOSE 8080
 EXPOSE 8081
 # Add the GitHub NuGet package source
 RUN --mount=type=secret,id=PASSWORD \
-    dotnet nuget add source --username aelmendorf --password-file=/run/secrets/PASSWORD --store-password-in-clear-text --name github "https://nuget.pkg.github.com/Sensor-Electronic-Technology/index.json" \
+    dotnet nuget add source --username aelmendorf --password-file=/run/secrets/PASSWORD --store-password-in-clear-text --name github "https://nuget.pkg.github.com/Sensor-Electronic-Technology/index.json"
         
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release

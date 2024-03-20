@@ -34,7 +34,7 @@ public class StationWorkerService:IHostedService,IDisposable {
         }, cancellationToken: cancellationToken);
         this._logger.LogInformation("Wrote to database, Starting service...");*/
         PadLocation padLocation = PadLocation.PadLocationG;
-        this._logger.LogInformation($"Nuget Worked, PadLocation: {padLocation.Value}");
+        this._logger.LogInformation($"Private Nuget Worked, PadLocation: {padLocation.Value}");
         await this._stationController.Start();
     }
     

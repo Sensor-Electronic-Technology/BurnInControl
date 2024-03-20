@@ -29,6 +29,4 @@ jobs:
         file: ./BurnInControl.StationService/Dockerfile
         push: true
         tags: ${{secrets.Docker_Username}}/station-service:latest
-        secrets: |
-          PASSWORD=${{ secrets.NUGET_TOKEN }}
           

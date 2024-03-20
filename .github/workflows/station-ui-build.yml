@@ -16,7 +16,7 @@ jobs:
     steps:
     - name: Adjust NuGet Config Credentials
       run: |
-        cp nuget.bak NuGet.config
+        cp ./nuget.bak ./NuGet.config
         echo $(sed -e "s@\${PAT}@${{ secrets.NUGET_TOKEN }}@" NuGet.config) >NuGet.config
   build:
     runs-on: ubuntu-latest

@@ -10,19 +10,7 @@ on:
     - 'BurnInControl.StationService/**'
     - '.github/workflows/station-service-build.yml'
 jobs:
-  package-repo-add:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-    - name: Package Setup
-      run: dotnet nuget add source --username aelmendorf --password ${{ secrets.NUGET_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/Sensor-Electronic-Technology/index.json"
-
   build:
-    needs: package-repo-add
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -41,3 +29,6 @@ jobs:
         file: ./BurnInControl.StationService/Dockerfile
         push: true
         tags: ${{secrets.Docker_Username}}/station-service:latest
+        secrets: |
+          PASSWORD=${{ secrets.NUGET_TOKEN }}
+          

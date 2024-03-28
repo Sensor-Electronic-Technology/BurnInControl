@@ -5,6 +5,7 @@ namespace BurnInControl.Shared;
 
 public static class DependencyInjection {
     public static IServiceCollection AddSettings(this IServiceCollection services, IHostApplicationBuilder builder) {
+        services.Configure<StationSettings>(builder.Configuration.GetSection(nameof(StationSettings)));
         services.Configure<WolverineSettings>(builder.Configuration.GetSection(nameof(WolverineSettings)));
         services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
         services.Configure<FirmwareUpdateSettings>(builder.Configuration.GetSection(nameof(FirmwareUpdateSettings)));

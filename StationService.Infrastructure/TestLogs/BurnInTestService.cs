@@ -1,10 +1,38 @@
 ﻿using BurnInControl.Data.BurnInTests;
 using BurnInControl.Data.BurnInTests.Wafers;
 using BurnInControl.Infrastructure.TestLogs;
+using BurnInControl.Shared.AppSettings;
 using BurnInControl.Shared.ComDefinitions;
 using ErrorOr;
+using Stateless;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 namespace StationService.Infrastructure.TestLogs;
+
+public enum TestState {
+    NotDefined,
+    StartUp,
+    Idle,
+    Running,
+    LoadRunningTest,
+    Paused
+}
+
+public enum TestTrigger {
+    Initialize,
+    Start,
+    StartTest,
+    PauseTest,
+    ContinueTest,
+    ContinueTestFromExternal,
+    StopTest,
+    Stop,
+    Reset
+}
+
+public record TestStateData {
+    public string? StationId { get; set; }
+}
 
 public class BurnInTestService {
     private readonly TestLogDataService _testLogDataService;
@@ -17,12 +45,33 @@ public class BurnInTestService {
     private DateTime _lastLog;
     private readonly TimeSpan _interval=new TimeSpan(0,0,60);
     private readonly ILogger<BurnInTestService> _logger;
+    private TestStateData _testStateData;
+    private readonly StateMachine<TestState,TestTrigger> _stateMachine;
 
     public bool IsRunning => this._testRunning || this._testPaused;
 
-    public BurnInTestService(TestLogDataService testLogDataService,ILogger<BurnInTestService> logger) {
+    public BurnInTestService(TestLogDataService testLogDataService,
+        ILogger<BurnInTestService> logger,
+        IOptions<StationSettings> options) {
         this._logger = logger;
         this._testLogDataService = testLogDataService;
+        this._testStateData= new TestStateData() {
+            StationId = options.Value.StationId
+        };
+        this._stateMachine = new StateMachine<TestState, TestTrigger>(TestState.NotDefined);
+        this._stateMachine.Configure(TestState.NotDefined)
+            .Permit(TestTrigger.Start,TestState.Idle);
+
+        this._stateMachine.Configure(TestState.StartUp)
+            .OnEntry(() => {
+                this._runningTest.Reset();
+                this._stateMachine.Fire(TestTrigger.Start);
+            });
+
+        this._stateMachine.Configure(TestState.Idle)
+            .Permit(TestTrigger.StartTest,TestState.Running)
+            .Permit(TestTrigger.Reset,TestState.StartUp)
+            .Permit(TestTrigger.ContinueTestFromExternal,TestState.LoadRunningTest);
     }
     
     public Task<ErrorOr<Success>> SetupTest(List<WaferSetup> setup) {

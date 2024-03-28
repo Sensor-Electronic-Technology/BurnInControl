@@ -21,7 +21,7 @@ public class BurnInTestLog {
     public List<StationReading> Readings { get; set; } = new List<StationReading>();
 
     public void StartNew(List<WaferSetup> setup) {
-        this.Clear();
+        this.Reset();
         this.TestSetup = setup;
     }
 
@@ -60,7 +60,7 @@ public class BurnInTestLog {
         }
         return Error.NotFound(description:"Wafer not found");
     }
-    public void Clear() {
+    public void Reset() {
         this.TestSetup.Clear();
         this.Readings.Clear();
         this._id = default;

@@ -116,6 +116,17 @@ public class StationDataService {
         }
     }
     
+    public async Task<ErrorOr<string>> GetFirmwareVersion(string stationId) {
+        var version=await this._stationCollection.Find(e => e.StationId == stationId)
+            .Project(e => e.FirmwareVersion)
+            .FirstOrDefaultAsync();
+        if (!string.IsNullOrEmpty(version)) {
+            return version;
+        } else {
+            return Error.Failure(description:"Version was null or empty,continue with update");
+        }
+    }
+    
     public async Task<ErrorOr<Success>> SetUpdateAvailable(string stationId,bool isAvailable) {
         var filter=Builders<Station>.Filter.Eq(e => e.StationId,stationId);
         var updateBuilder = Builders<Station>.Update;

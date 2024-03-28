@@ -20,7 +20,6 @@ public class StationWorkerService:IHostedService,IDisposable {
         this._stationController = stationController;
     }
     
-
     public async Task StartAsync(CancellationToken cancellationToken) {
         /*var connectionString=Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING");
         var client = new MongoClient(connectionString);

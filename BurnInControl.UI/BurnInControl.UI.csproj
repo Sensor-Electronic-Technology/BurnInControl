@@ -16,7 +16,7 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.0" />
     <PackageReference Include="Radzen.Blazor" Version="*" />
     <PackageReference Include="WolverineFx" Version="1.19.0" />
-    <PackageReference Include="Ardalis.SmartEnum" Version="7.0.0" />
+    <PackageReference Include="Ardalis.SmartEnum" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
     <PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0" />

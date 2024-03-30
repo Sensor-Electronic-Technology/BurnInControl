@@ -66,9 +66,9 @@ public class StationController:IStationController,IDisposable {
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly ISender _sender;
     private readonly IHubContext<StationHub, IStationHub> _hubContext;
-    private readonly StateMachine<ControllerState, ControllerTrigger> _stateMachine;
+    /*private readonly StateMachine<ControllerState, ControllerTrigger> _stateMachine;
     private ControllerStateData _stateData=new ControllerStateData();
-    private Timer _retryTimer;
+    private Timer _retryTimer;*/
     
     
     public StationController(UsbController usbController,
@@ -83,25 +83,25 @@ public class StationController:IStationController,IDisposable {
         this._usbController.OnUsbStateChangedHandler+= UsbControllerOnUsbStateChangedHandler;
         this._sender = sender;
         this._hubContext = hubContext;
-        this._stateData.StationId = _options.Value.StationId;
+        /*this._stateData.StationId = _options.Value.StationId;
         this._stateMachine = new StateMachine<ControllerState, ControllerTrigger>(ControllerState.NotDefined);
         this._retryTimer = new Timer(TimeSpan.FromSeconds(10));
         this._retryTimer.AutoReset = true;
-        this._retryTimer.Elapsed+= RetryTimerOnElapsed;
+        this._retryTimer.Elapsed+= RetryTimerOnElapsed;*/
     }
     private void RetryTimerOnElapsed(Object? sender, ElapsedEventArgs e) {
-        if (CanFire(ControllerTrigger.Connect)) {
+        /*if (CanFire(ControllerTrigger.Connect)) {
             this._stateMachine.FireAsync(ControllerTrigger.Connect)
                 .SafeFireAndForget();
         } else {
             this._stateMachine.PermittedTriggers
                 .ToList()
                 .ForEach(trigger => this._logger.LogInformation("Permitted Trigger: {Trigger}", trigger));
-        }
+        }*/
     }
 
     public async Task Start() {
-        await this.BuildStateMachine();
+        //await this.BuildStateMachine();
         await this.ConnectUsb();
     }
     
@@ -117,7 +117,7 @@ public class StationController:IStationController,IDisposable {
                     this._hubContext.Clients.All.OnUsbConnectFailed(message);
                     this._logger.LogError(message);
                 });
-            await this._stateMachine.FireAsync(ControllerTrigger.Connected);
+            //await this._stateMachine.FireAsync(ControllerTrigger.Connected);
             /*return Task.FromResult<ErrorOr<Success>>(result.Value);*/
             return result;
         } else {
@@ -125,8 +125,8 @@ public class StationController:IStationController,IDisposable {
                                                             $"Please check usb cable" +
                                                             $"\n Usb Message: {result.FirstError.Description})")
                 .SafeFireAndForget();
-            this._stateMachine.FireAsync(ControllerTrigger.NotConnected)
-                .SafeFireAndForget();
+            /*this._stateMachine.FireAsync(ControllerTrigger.NotConnected)
+                .SafeFireAndForget();*/
             return result;
         }
     }
@@ -140,7 +140,7 @@ public class StationController:IStationController,IDisposable {
         } else {
             this._hubContext.Clients.All.OnUsbDisconnect("Usb Disconnected");
         }
-        this._stateMachine.FireAsync(ControllerTrigger.NotConnected);
+        /*this._stateMachine.FireAsync(ControllerTrigger.NotConnected);*/
         return Task.FromResult(result);
     }
 
@@ -168,12 +168,12 @@ public class StationController:IStationController,IDisposable {
     private void UsbControllerOnUsbStateChangedHandler(Object? sender, ConnectionStatusChangedEventArgs e) {
         if (e.Connected) {
             this._hubContext.Clients.All.OnUsbConnect("Usb Connected");
-            if(CanFire(ControllerTrigger.Connected)) {
+            /*if(CanFire(ControllerTrigger.Connected)) {
                 this._stateMachine.Fire(ControllerTrigger.Connected);
-            }
+            }*/
         } else {
             if (CanFire(ControllerTrigger.NotConnected)) {
-                this._stateMachine.Fire(ControllerTrigger.NotConnected);
+                //this._stateMachine.Fire(ControllerTrigger.NotConnected);
             }
             if (e.ConnectionEventType == ConnectionEventType.DisconnectWithRetry) {
                 this._hubContext.Clients.All.OnUsbDisconnect("Error: Usb Disconnected. Please check usb cable \n" +
@@ -201,11 +201,12 @@ public class StationController:IStationController,IDisposable {
     }
 
     private bool CanFire(ControllerTrigger trigger) {
-        return this._stateMachine.CanFire(trigger);
+        //return this._stateMachine.CanFire(trigger);
+        return true;
     }
 
     private async Task BuildStateMachine() {
-        this._stateMachine.Configure(ControllerState.NotDefined)
+        /*this._stateMachine.Configure(ControllerState.NotDefined)
             .Permit(ControllerTrigger.Startup, ControllerState.Startup);
         
         this._stateMachine.Configure(ControllerState.Startup)
@@ -272,7 +273,7 @@ public class StationController:IStationController,IDisposable {
         });
         
         this._stateMachine.OnTransitioned(this.OnTransition);
-        await this._stateMachine.FireAsync(ControllerTrigger.Startup);
+        await this._stateMachine.FireAsync(ControllerTrigger.Startup);*/
     }
     
     private void OnTransition(StateMachine<ControllerState, ControllerTrigger>.Transition transition) {

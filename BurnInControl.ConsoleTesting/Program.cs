@@ -5,6 +5,8 @@ using BurnInControl.ConsoleTesting.TestWorkflow;
 using BurnInControl.Data.ComponentConfiguration.ProbeController;
 using BurnInControl.Data.StationModel;
 using BurnInControl.Infrastructure.StationModel;
+using BurnInControl.Shared.ComDefinitions.MessagePacket;
+using BurnInControl.Shared.ComDefinitions.Station;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using System.Text.Json;
@@ -14,8 +16,17 @@ using WorkflowCore.Services;
 
 //await TestWorkFlow();
 
-TestStateMachine();
+//TestStateMachine();
 
+
+
+
+MessagePacket<StationCommand> packet = new MessagePacket<StationCommand>() {
+    Prefix = StationMsgPrefix.CommandPrefix,
+    Packet = StationCommand.Start
+};
+var output=JsonSerializer.Serialize<MessagePacket<StationCommand>>(packet);
+Console.WriteLine(output);
 
 void TestStateMachine() {
     ControllerStateMachine stateMachine = new ControllerStateMachine();

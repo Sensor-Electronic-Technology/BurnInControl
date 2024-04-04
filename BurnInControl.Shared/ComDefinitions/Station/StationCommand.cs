@@ -15,8 +15,9 @@ public class StationCommand : SmartEnum<StationCommand,int>,IPacket {
     public static readonly StationCommand ChangeModeATune = new StationCommand(nameof(ChangeModeATune), 6);
     public static readonly StationCommand ChangeModeNormal = new StationCommand(nameof(ChangeModeNormal), 7);
     public static readonly StationCommand StartTune = new StationCommand(nameof(StartTune), 8);
-    public static readonly StationCommand StopTune = new StationCommand(nameof(StopTune), 9);
-    public static readonly StationCommand SaveATuneResult = new StationCommand(nameof(SaveATuneResult), 10);
-    public static readonly StationCommand Reset = new StationCommand(nameof(Reset), 11);
+    public static readonly StationCommand StopTune  = new StationCommand(nameof(StartTune), 9);
+    public static readonly StationCommand SaveTuning = new StationCommand(nameof(SaveTuning), 10);
+    public static readonly StationCommand CancelTuning = new StationCommand(nameof(CancelTuning), 11);
+    public static readonly StationCommand Reset = new StationCommand(nameof(Reset), 12);
     private StationCommand(string name, int value) : base(name, value) {  }
 }

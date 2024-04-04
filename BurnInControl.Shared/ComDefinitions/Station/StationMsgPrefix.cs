@@ -11,6 +11,7 @@ public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
     public static readonly StationMsgPrefix StationConfigPrefix = new StationMsgPrefix(nameof(StationConfigPrefix), "CS");
     public static readonly StationMsgPrefix SaveState = new StationMsgPrefix(nameof(SaveState), "ST");
     public static readonly StationMsgPrefix MessagePrefix = new StationMsgPrefix(nameof(MessagePrefix), "M");
+    public static readonly StationMsgPrefix NotifyMessage = new StationMsgPrefix(nameof(StationMsgPrefix), "NM");
     public static readonly StationMsgPrefix DataPrefix = new StationMsgPrefix(nameof(DataPrefix), "D");
     public static readonly StationMsgPrefix CommandPrefix = new StationMsgPrefix(nameof(CommandPrefix), "COM");
     public static readonly StationMsgPrefix IdReceive = new StationMsgPrefix(nameof(IdReceive), "IDREC");
@@ -22,6 +23,7 @@ public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
     public static readonly StationMsgPrefix TestStartFromLoad = new StationMsgPrefix(nameof(TestStartFromLoad), "TLOAD");
     public static readonly StationMsgPrefix TestCompleted = new StationMsgPrefix(nameof(TestCompleted), "TCOMP");
     public static readonly StationMsgPrefix HeaterTuneComplete=new StationMsgPrefix(nameof(HeaterTuneComplete), "HTUNED");
-    public static readonly StationMsgPrefix HeaterTuneRespond=new StationMsgPrefix(nameof(HeaterTuneRespond), "HRESP");
+    public static readonly StationMsgPrefix HeaterNotify = new StationMsgPrefix(nameof(HeaterNotify), "HNOTIFY");
+    public static readonly StationMsgPrefix ErrorMessage = new StationMsgPrefix(nameof(HeaterNotify), "ERR");
     private StationMsgPrefix(string name, string value) : base(name, value) {  }
 }

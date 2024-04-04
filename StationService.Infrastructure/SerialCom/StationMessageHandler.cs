@@ -74,17 +74,22 @@ public class StationMessageHandler:IStationMessageHandler{
                     case nameof(StationMsgPrefix.MessagePrefix): {
                         return this.HandleMessage(packetElem, false);
                     }
-                    case nameof(StationMsgPrefix.InitMessage): {
-                        return this.HandleMessage(packetElem, false);
+                    case nameof(StationMsgPrefix.HeaterTuneComplete): {
+                        //TODO: Add handle for received Tuning results
+                        return Task.CompletedTask;
+                        //return this.HandleIdChanged(packetElem);
                     }
-                    /*case nameof(StationMsgPrefix.IdRequest): {
-                        return this.HandleIdChanged(packetElem);
+                    case nameof(StationMsgPrefix.HeaterNotify): {
+                        //TODO: Add Handle for heater notify that tune is completed
+                        // This only notifies the user of progress
+                        return Task.CompletedTask;
                     }
-                    case nameof(StationMsgPrefix.VersionRequest): {
-                        return this.HandleVersionRequest(packetElem);
-                    }*/
                     case nameof(StationMsgPrefix.TestStatus): {
                         return this.HandleTestStatus(packetElem);
+                    }
+                    case nameof(StationMsgPrefix.ErrorMessage): {
+                        //TODO: Add handler for error. 
+                        return Task.CompletedTask;
                     }
                     default: {
                         this._logger.LogWarning($"Prefix value {prefix.Value} not implemented");
@@ -116,8 +121,36 @@ public class StationMessageHandler:IStationMessageHandler{
     }
 
     private Task HandleMessage(JsonElement element,bool isInit) {
-        var message=element.GetProperty("Message").ToString();
-        return this._hubContext.Clients.All.OnSerialComMessage(message);
+        //var message=element.GetProperty("Message").ToString();
+        try {
+            var message = element.Deserialize<StationMessagePacket>();
+            switch (message.MessageType) {
+                case StationMessageType.INIT: {
+                    return this._hubContext.Clients.All.OnSerialInitMessage(message.Message);
+                }
+                case StationMessageType.GENERAL: {
+                    return this._hubContext.Clients.All.OnSerialComMessage(message.Message);
+                }
+                case StationMessageType.NOTIFY: {
+                    return this._hubContext.Clients.All.OnSerialNotifyMessage(message.Message);
+                }
+                case StationMessageType.ERROR: {
+                    return this._hubContext.Clients.All.OnSerialErrorMessage(message.Message);
+                }
+                default: {
+                    var logMessage = "Error: Invalid StationMessagePacket in StationMessageType";
+                    this._logger.LogWarning(logMessage);
+                    return this._hubContext.Clients.All.OnSerialErrorMessage(logMessage);
+                }
+            }
+        } catch(Exception e) {
+            var errorMessage = "Exception: "+e.Message;
+            if (e.InnerException != null) {
+                errorMessage += "\n InnerException: " + e.InnerException;
+            }
+            this._logger.LogError($"Error deserializing SystemMessagePacket.\n {errorMessage}");
+            return this._hubContext.Clients.All.OnSerialErrorMessage($"Error deserializing SystemMessagePacket.\n {errorMessage}");
+        }
     }
 
     /*private Task HandleIdChanged(JsonElement element) {

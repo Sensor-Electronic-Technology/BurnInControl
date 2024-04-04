@@ -23,7 +23,7 @@ using WorkflowCore.Services;
 
 MessagePacket<StationCommand> packet = new MessagePacket<StationCommand>() {
     Prefix = StationMsgPrefix.CommandPrefix,
-    Packet = StationCommand.Start
+    Packet = StationCommand.Reset
 };
 var output=JsonSerializer.Serialize<MessagePacket<StationCommand>>(packet);
 Console.WriteLine(output);

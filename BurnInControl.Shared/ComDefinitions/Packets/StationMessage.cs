@@ -17,4 +17,9 @@ public enum StationMessageType {
 public class StationMessagePacket : IPacket {
     public StationMessageType MessageType { get; set; }
     public string Message { get; set; }
+    
+    public StationMessagePacket() {
+        
+    }
+    
 }

@@ -1,4 +1,5 @@
 ﻿using AsyncAwaitBestPractices;
+using BurnInControl.Application.BurnInTest.Messages;
 using BurnInControl.Application.ProcessSerial.Interfaces;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Packets;
@@ -153,45 +154,25 @@ public class StationMessageHandler:IStationMessageHandler{
         }
     }
 
-    /*private Task HandleIdChanged(JsonElement element) {
-        try {
-            var id = element.GetString();
-            return Task.CompletedTask;
-            /*return this._mediator.Publish(new ControllerIdReceived() {
-                ControllerId = id
-            });#1#
-        } catch {
-            this._logger.LogError("Failed to parse Controller Id");
-            return Task.CompletedTask;
-        }
-    }*/
+    private Task HandleTestCompleted() {
+        this._mediator.Send(new TestStartedStatus() {
+            Status=Result.Success
+        });
+        return this._hubContext.Clients.All.OnTestCompleted("Test Completed");   
+    }
     
-    /*private async Task HandleVersionRequest(JsonElement element) {
-        try {
-            var version = element.GetString();
-            if (!string.IsNullOrEmpty(version)) {
-                /*await this._mediator.Send(new CheckIfNewerVersion() {
-                    ControllerVersion = version
-                });#1#
-            } else {
-                this._logger.LogError("Failed to check firmware version. Version string was null or empty");
-            }
-        } catch(Exception e) {
-            this._logger.LogError("Update check failed Exception: {Error}",e.Message);
-        }
-    }*/
-
     private Task HandleTestStatus(JsonElement element) {
         try {
             var success = element.GetProperty("Status").GetBoolean();
             var message = element.GetProperty("Message").GetString();
+            
             return success ? 
-                this._hubContext.Clients.All.OnTestStatus($"Test Started, Message: {message}")
-                : this._hubContext.Clients.All.OnTestStatus($"Error, Message: {message}");
+                this._hubContext.Clients.All.OnTestStarted($"Test Started, Message: {message}")
+                : this._hubContext.Clients.All.OnTestStartedFailed($"Error, Message: {message}");
         } catch(Exception e) {
             var message = $"Failed to parse test status message packet. Exception: {e.Message}";
             this._logger.LogError(message);
-            return this._hubContext.Clients.All.OnTestStatus($"Error: {message}");
+            return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStatus,$"Error: {message}");
         }
     }
 }

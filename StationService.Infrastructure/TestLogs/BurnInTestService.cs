@@ -1,4 +1,5 @@
-﻿using BurnInControl.Data.BurnInTests;
+﻿using BurnInControl.Application.BurnInTest;
+using BurnInControl.Data.BurnInTests;
 using BurnInControl.Data.BurnInTests.Wafers;
 using BurnInControl.Infrastructure.TestLogs;
 using BurnInControl.Shared.AppSettings;
@@ -34,7 +35,7 @@ public record TestStateData {
     public string? StationId { get; set; }
 }
 
-public class BurnInTestService {
+public class BurnInTestService:IBurnInTestService{
     private readonly TestLogDataService _testLogDataService;
     private StationSerialData _latestData;
     private BurnInTestLog _runningTest=new BurnInTestLog();
@@ -83,6 +84,18 @@ public class BurnInTestService {
         return Task.FromResult<ErrorOr<Success>>(Error.Forbidden(description:"Cannot create a new test while a test is running"));
     }
 
+    public Task<ErrorOr<Success>> StartTest() {
+        if (!this.IsRunning) {
+            
+            return Task.FromResult<ErrorOr<Success>>(Result.Success);
+        }
+        return Task.FromResult<ErrorOr<Success>>(Result.Success);
+    }
+
+    public Task<ErrorOr<Success>> StartTestFrom() {
+        return Task.FromResult<ErrorOr<Success>>(Result.Success);
+    }
+
     public void StartTestLogging() {
         this._controllerStartedTest=true;
     }
@@ -120,7 +133,6 @@ public class BurnInTestService {
         this._latestData = data;
         if (this._controllerStartedTest) {
             this._runningTest.SetStart(DateTime.Now,data);
-            
             this._testRunning = this._latestData.Running;
             this._testPaused = this._latestData.Paused;
             this._disableLogging = false;

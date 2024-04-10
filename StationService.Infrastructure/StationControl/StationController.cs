@@ -4,7 +4,7 @@ using BurnInControl.Application.StationControl.Interfaces;
 using BurnInControl.Shared.AppSettings;
 using BurnInControl.Shared.ComDefinitions.MessagePacket;
 using BurnInControl.Shared.ComDefinitions.Station;
-using BurnInControl.Shared.Hubs;
+using BurnInControl.HubDefinitions.Hubs;
 using ErrorOr;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;

@@ -1,116 +1,124 @@
 ﻿using BurnInControl.Application.BurnInTest;
 using BurnInControl.Data.BurnInTests;
 using BurnInControl.Data.BurnInTests.Wafers;
+using BurnInControl.Data.StationModel.Components;
 using BurnInControl.Infrastructure.TestLogs;
 using BurnInControl.Shared.AppSettings;
 using BurnInControl.Shared.ComDefinitions;
+using BurnInControl.HubDefinitions.Hubs;
 using ErrorOr;
-using Stateless;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using StationService.Infrastructure.Hub;
 namespace StationService.Infrastructure.TestLogs;
 
-public enum TestState {
-    NotDefined,
-    StartUp,
-    Idle,
-    Running,
-    LoadRunningTest,
-    Paused
-}
-
-public enum TestTrigger {
-    Initialize,
-    Start,
-    StartTest,
-    PauseTest,
-    ContinueTest,
-    ContinueTestFromExternal,
-    StopTest,
-    Stop,
-    Reset
-}
-
-public record TestStateData {
-    public string? StationId { get; set; }
-}
-
-public class BurnInTestService:IBurnInTestService{
+public class BurnInTestService{
     private readonly TestLogDataService _testLogDataService;
     private StationSerialData _latestData;
     private BurnInTestLog _runningTest=new BurnInTestLog();
+    private IHubContext<StationHub, IStationHub> _hubContext;
     private bool _controllerStartedTest=false;
     private bool _testRunning = false;
     private bool _testPaused = false;
     private bool _disableLogging = false;
+    private bool _testSetupComplete = false;
+    private string? _stationId;
     private DateTime _lastLog;
     private readonly TimeSpan _interval=new TimeSpan(0,0,60);
     private readonly ILogger<BurnInTestService> _logger;
-    private TestStateData _testStateData;
-    private readonly StateMachine<TestState,TestTrigger> _stateMachine;
-
+    private List<StationSerialData> _readings=new List<StationSerialData>();
+    
     public bool IsRunning => this._testRunning || this._testPaused;
 
     public BurnInTestService(TestLogDataService testLogDataService,
         ILogger<BurnInTestService> logger,
-        IOptions<StationSettings> options) {
+        IOptions<StationSettings> options,
+        IHubContext<StationHub, IStationHub> hubContext) {
         this._logger = logger;
         this._testLogDataService = testLogDataService;
-        this._testStateData= new TestStateData() {
-            StationId = options.Value.StationId
-        };
-        this._stateMachine = new StateMachine<TestState, TestTrigger>(TestState.NotDefined);
-        this._stateMachine.Configure(TestState.NotDefined)
-            .Permit(TestTrigger.Start,TestState.Idle);
-
-        this._stateMachine.Configure(TestState.StartUp)
-            .OnEntry(() => {
-                this._runningTest.Reset();
-                this._stateMachine.Fire(TestTrigger.Start);
-            });
-
-        this._stateMachine.Configure(TestState.Idle)
-            .Permit(TestTrigger.StartTest,TestState.Running)
-            .Permit(TestTrigger.Reset,TestState.StartUp)
-            .Permit(TestTrigger.ContinueTestFromExternal,TestState.LoadRunningTest);
+        this._stationId = options.Value.StationId;
+        this._hubContext = hubContext;
     }
     
-    public Task<ErrorOr<Success>> SetupTest(List<WaferSetup> setup) {
+    public async Task SetupTest(List<WaferSetup> setup,StationCurrent current,int setTemp) {
         if (!this.IsRunning) {
             this._controllerStartedTest = false;
-            this._runningTest.StartNew(setup);
-            return Task.FromResult<ErrorOr<Success>>(Result.Success);
+            this._runningTest.StartNew(setup,setTemp,current);
+            var result=await this._testLogDataService.StartNew(this._runningTest);
+            if (!result.IsError) {
+                await this._hubContext.Clients.All.OnTestSetup(true, "Test Setup Complete, start test when ready");
+            } else {
+                this._testSetupComplete = false;
+                this._testRunning = false;
+                this._testPaused = false;
+                this._disableLogging = false;
+                await this._hubContext.Clients.All.OnTestSetup(false,result.FirstError.Description);
+                this._logger.LogError("Failed to start new test.  Internal Error: " + result.FirstError);
+            }
+        } else {
+            await this._hubContext.Clients.All.OnTestSetup(false,"Test is already running, " +
+                                                                 "please reset controller or wait for current " +
+                                                                 "test to complete before starting new test");
         }
-        return Task.FromResult<ErrorOr<Success>>(Error.Forbidden(description:"Cannot create a new test while a test is running"));
     }
 
-    public Task<ErrorOr<Success>> StartTest() {
-        if (!this.IsRunning) {
-            
-            return Task.FromResult<ErrorOr<Success>>(Result.Success);
+    public async Task StartTest() {
+        if (this._testSetupComplete) {
+            this._disableLogging = false;
+            await this._testLogDataService.SetStart(this._runningTest._id,DateTime.Now,this._latestData);
+        }else {
+            if (!string.IsNullOrEmpty(this._stationId)) {
+                //TODO: Log to station with unknown test setup
+                await this._hubContext.Clients.All.OnTestStarted("Unexpected Error: " +
+                                                                 "Test Setup not complete but received start from controller." +
+                                                                 "Log will be saved as unknown test setup.  Please contact the administrator.");
+                this._logger.LogError("Unexpected Error: Test Setup not complete but received start from controller");
+            } else {
+                //TODO: Log to unknown station with unknown test setup
+                await this._hubContext.Clients.All.OnTestStarted("Unexpected Error: " +
+                                                                 "Test Setup not complete but received start from controller." +
+                                                                 "Log will be saved as unknown test setup.  Please contact the administrator.");
+                this._logger.LogError("Unexpected Error: Test Setup not complete but received start from controller");
+            }
+
         }
-        return Task.FromResult<ErrorOr<Success>>(Result.Success);
     }
 
-    public Task<ErrorOr<Success>> StartTestFrom() {
-        return Task.FromResult<ErrorOr<Success>>(Result.Success);
-    }
-
-    public void StartTestLogging() {
-        this._controllerStartedTest=true;
+    public async Task StartTestFrom() {
+        if (!string.IsNullOrEmpty(this._stationId)) {
+            var result=await this._testLogDataService.CheckContinue(this._stationId);
+            if (!result.IsError) {
+                //TODO: 
+            } else {
+                
+            }
+        } else {
+            //this._hubContext.Clients.All.OnTestStarted
+            this._logger.LogCritical("StationId is null or empty, cannot continue test.  " +
+                                     "Controller will continue running.  " +
+                                     "Please contact the administrator");
+        }
+        
     }
     
-    public ErrorOr<Success> Log(StationSerialData data) {
+    public void StartTestLogging() {
+        //this._runningTest.SetStart(DateTime.Now,data);
+
+    }
+    
+    public void CompleteTest() {
+        this._controllerStartedTest = false;
+    }
+    
+    public async Task Log(StationSerialData data) {
         if (!this.IsRunning && data.Running) {
-            //start
-            return this.LogStart(data);
+            this.LogStart(data);
         }
         if (this.IsRunning && !data.Running) {
-            //stop
-            return this.LogFinished(data);
+            this.LogFinished(data);
         }
         if(this.IsRunning && data.Running){
-            //log
             this._latestData = data;
             this._testRunning = data.Running;
             this._testPaused = data.Paused;
@@ -119,17 +127,16 @@ public class BurnInTestService:IBurnInTestService{
                 var now = DateTime.Now;
                 if ((now - this._lastLog >= this._interval)) {
                     this._lastLog = now;
-                    //TODO: Log to database
+                    await this._testLogDataService.InsertReading(this._runningTest._id,data);
                 }
             }
-            return Result.Success;
+            
         }
         
         this._latestData = data;
-        return Result.Success;
     }
 
-    private ErrorOr<Success> LogStart(StationSerialData data) {
+    private void LogStart(StationSerialData data) {
         this._latestData = data;
         if (this._controllerStartedTest) {
             this._runningTest.SetStart(DateTime.Now,data);
@@ -137,15 +144,13 @@ public class BurnInTestService:IBurnInTestService{
             this._testPaused = this._latestData.Paused;
             this._disableLogging = false;
             //TODO: Log to database
-            return Result.Success;
+            
         } else {
             //Try to find running test and continue logging
-            return this.ContinueTest(data);
+            
         }
     }
-    /***
-     * If test not found continue test without logging
-     */
+
     private ErrorOr<Success> ContinueTest(StationSerialData data) {
         bool testFound = false;
         //TODO: Search for test to continue

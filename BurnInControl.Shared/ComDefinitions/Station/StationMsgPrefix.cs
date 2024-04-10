@@ -18,12 +18,11 @@ public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
     public static readonly StationMsgPrefix IdRequest = new StationMsgPrefix(nameof(IdRequest), "IDREQ");
     public static readonly StationMsgPrefix VersionReceive = new StationMsgPrefix(nameof(VersionReceive), "VERREC");
     public static readonly StationMsgPrefix VersionRequest = new StationMsgPrefix(nameof(VersionRequest), "VERREQ");
-    public static readonly StationMsgPrefix InitMessage = new StationMsgPrefix(nameof(InitMessage), "INIT");
     public static readonly StationMsgPrefix TestStatus = new StationMsgPrefix(nameof(TestStatus), "TSTAT");
     public static readonly StationMsgPrefix TestStartFromLoad = new StationMsgPrefix(nameof(TestStartFromLoad), "TLOAD");
     public static readonly StationMsgPrefix TestCompleted = new StationMsgPrefix(nameof(TestCompleted), "TCOMP");
     public static readonly StationMsgPrefix HeaterTuneComplete=new StationMsgPrefix(nameof(HeaterTuneComplete), "HTUNED");
     public static readonly StationMsgPrefix HeaterNotify = new StationMsgPrefix(nameof(HeaterNotify), "HNOTIFY");
-    public static readonly StationMsgPrefix ErrorMessage = new StationMsgPrefix(nameof(HeaterNotify), "ERR");
+    public static readonly StationMsgPrefix Acknowledge = new StationMsgPrefix(nameof(Acknowledge), "ACK");
     private StationMsgPrefix(string name, string value) : base(name, value) {  }
 }

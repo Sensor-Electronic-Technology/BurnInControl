@@ -1,13 +1,12 @@
-﻿using BurnInControl.Shared.ComDefinitions;
-using BurnInControl.Shared.ComDefinitions.Packets;
+﻿using BurnInControl.HubDefinitions.HubTransports;
+using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Station;
-namespace BurnInControl.Shared.Hubs;
+namespace BurnInControl.HubDefinitions.Hubs;
 
 public interface IStationHub {
 
 #region StationNotifications
     Task OnSerialCom(StationSerialData serialData);
-
     Task OnSerialComError(StationMsgPrefix prefix,string message);
     Task OnSerialComMessage(string message);
     Task OnSerialNotifyMessage(string message);
@@ -16,10 +15,14 @@ public interface IStationHub {
 
 #endregion  
 
-#region TestStatus
+#region BurnInTest
     Task OnTestStarted(string message);
+    Task OnTestStartedFrom();
+    Task OnTestStartedFromUnknown(TestSetupTransport testSetup);
     Task OnTestStartedFailed(string message);
     Task OnTestCompleted(string message);
+    Task OnTestSetup(bool success, string message);
+    
 #endregion
 
 #region UsbStatus

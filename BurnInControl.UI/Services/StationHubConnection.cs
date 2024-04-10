@@ -1,6 +1,6 @@
 ﻿using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Station;
-using BurnInControl.Shared.Hubs;
+using BurnInControl.HubDefinitions.Hubs;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 namespace BurnInControl.UI.Services;

@@ -10,18 +10,20 @@ public class BurnInTestLog {
     public ObjectId _id { get; set; }
     public string StationId { get; set; }
     public StationCurrent? SetCurrent { get; set; }
+    public int SetTemperature { get; set; }
     public long RunTime { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime StopTime { get; set; }
     public bool Completed { get; set; }
-    
     public long ElapsedTime { get; set; }
     
     public List<WaferSetup> TestSetup { get; set; } = new List<WaferSetup>();
     public List<StationReading> Readings { get; set; } = new List<StationReading>();
 
-    public void StartNew(List<WaferSetup> setup) {
+    public void StartNew(List<WaferSetup> setup,int setTemp,StationCurrent current) {
         this.Reset();
+        this.SetCurrent= current;
+        this.SetTemperature = setTemp;
         this.TestSetup = setup;
     }
 
@@ -64,7 +66,12 @@ public class BurnInTestLog {
         this.TestSetup.Clear();
         this.Readings.Clear();
         this._id = default;
-        this.StartTime = default;
-        this.StopTime = default;
+        this.StartTime = DateTime.MinValue;
+        this.StopTime = DateTime.MinValue;
+        this.ElapsedTime = 0;
+        this.RunTime = 0;
+        this.Completed = false;
+        this.SetCurrent = StationCurrent._150mA;
+        this.SetTemperature = 0;
     }
 }

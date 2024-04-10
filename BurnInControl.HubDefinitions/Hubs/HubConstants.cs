@@ -1,4 +1,4 @@
-﻿namespace BurnInControl.Shared.Hubs;
+﻿namespace BurnInControl.HubDefinitions.Hubs;
 
 public static class HubConstants {
     //public static string HubAddress => "http://192.168.68.112:3000/hubs/station";

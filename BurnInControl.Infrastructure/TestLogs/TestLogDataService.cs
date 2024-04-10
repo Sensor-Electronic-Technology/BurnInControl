@@ -1,4 +1,5 @@
 ﻿using BurnInControl.Data.BurnInTests;
+using BurnInControl.Data.BurnInTests.Wafers;
 using BurnInControl.Data.StationModel;
 using BurnInControl.Data.StationModel.Components;
 using BurnInControl.Infrastructure.StationModel;
@@ -42,20 +43,16 @@ public class TestLogDataService {
     }
     
     //TODO: Should this delete the log if the station fails to be marked as running?
-    public async Task<ErrorOr<Success>> StartNew(BurnInTestLog log,StationCurrent current) {
+    public async Task<ErrorOr<Success>> StartNew(BurnInTestLog log) {
         log._id = ObjectId.GenerateNewId();
-        var result = await this._stationDataService.GetTestConfiguration(current);
+        var result = await this._stationDataService.GetTestConfiguration(log.SetCurrent);
         if (result.IsError) {
-            return Error.NotFound(description:"Test configuration not found");
+            return Error.NotFound(description:$"Test configuration for {log.SetCurrent.Name} not found");
         }
-        
-        log.SetCurrent=result.Value.SetCurrent;
         log.RunTime=result.Value.RunTime;
         await this._testLogCollection.InsertOneAsync(log);
         var logExists = await this.LogExists(log._id);
         var stationTaskResult=await this._stationDataService.SetRunningTest(log.StationId, log._id);
-
-        
         if(logExists && !stationTaskResult.IsError){
             return Result.Success;
         }else if (logExists && stationTaskResult.IsError) {
@@ -77,6 +74,65 @@ public class TestLogDataService {
             return Error.Failure(description: "Failed to start new test. No data was modified, please try again");
         }
     }
+    
+    public async Task<ErrorOr<Success>> StartNewUnknown(string stationId,StationCurrent current) {
+        BurnInTestLog log=new BurnInTestLog();
+        log._id = ObjectId.GenerateNewId();
+        log.TestSetup.Add(new WaferSetup() {
+            WaferId = "Unknown",
+            Probe1 = StationProbe.Probe1,
+            Probe2 = StationProbe.Probe2,
+            StationPocket = StationPocket.LeftPocket
+        });
+        log.TestSetup.Add(new WaferSetup() {
+            WaferId = "Unknown",
+            Probe1 = StationProbe.Probe3,
+            Probe2 = StationProbe.Probe4,
+            StationPocket = StationPocket.MiddlePocket
+        });
+        log.TestSetup.Add(new WaferSetup() {
+            WaferId = "Unknown",
+            Probe1 = StationProbe.Probe5,
+            Probe2 = StationProbe.Probe6,
+            StationPocket = StationPocket.LeftPocket
+        });
+        log.SetCurrent = current;
+        log.StationId = stationId;
+        log.StartTime= DateTime.Now;
+        log.Completed = false;
+        log.ElapsedTime = 0;
+        var result = await this._stationDataService.GetTestConfiguration(log.SetCurrent);
+        if (result.IsError) {
+            return Error.NotFound(description:$"Test configuration for {log.SetCurrent.Name} not found");
+        }
+        log.SetCurrent=result.Value.SetCurrent;
+        log.RunTime=result.Value.RunTime;
+        await this._testLogCollection.InsertOneAsync(log);
+        var logExists = await this.LogExists(log._id);
+        var stationTaskResult=await this._stationDataService.SetRunningTest(log.StationId, log._id);
+        if(logExists && !stationTaskResult.IsError){
+            return Result.Success;
+        }else if (logExists && stationTaskResult.IsError) {
+            //delete log and return error
+            var deleteResult=await this.DeleteTestLog(log._id);
+            if(deleteResult.IsError){
+                return Error.Failure(description: "Failed to mark test as running.  Log was inserted, you must delete before trying again");
+            } else {
+                return Error.Failure(description: "Failed to start new test. No data was modified, please try again");
+            }
+        } else if(!logExists && !stationTaskResult.IsError) {
+            var clearRunningResult=await this._stationDataService.ClearRunningTest(log.StationId);
+            if (clearRunningResult.IsError) {
+                return Error.NotFound(description: "Error Not Found. Test was marked as running and failed to clear. Before trying again you must rest");
+            } else {
+                return Error.NotFound(description:"Log not found");
+            }
+        } else {
+            return Error.Failure(description: "Failed to start new test. No data was modified, please try again");
+        }
+    }
+    
+    
 
     public async Task<ErrorOr<Deleted>> DeleteTestLog(ObjectId id) {
         var deleteResult = await this._testLogCollection.DeleteOneAsync(e => e._id == id);
@@ -99,7 +155,7 @@ public class TestLogDataService {
         var log=await this._testLogCollection.Find(e => e._id == result.Value)
             .FirstOrDefaultAsync();
         if(log==null){
-            return Error.NotFound(description:"Running Test Not Found");
+            return Error.NotFound(description:"Running Test found burt log is missing");
         } else {
             return log;
         }
@@ -125,8 +181,8 @@ public class TestLogDataService {
         }
     }
     
-    public async Task<ErrorOr<Created>> InsertReading(ObjectId id,StationSerialData data) {
-        var filter=Builders<BurnInTestLog>.Filter.Eq(e => e._id,id);
+    public async Task<ErrorOr<Created>> InsertReading(ObjectId logId,StationSerialData data) {
+        var filter=Builders<BurnInTestLog>.Filter.Eq(e => e._id,logId);
         var updateBuilder = Builders<BurnInTestLog>.Update;
         var update=updateBuilder.Push(e => e.Readings,new StationReading() {
             TimeStamp = DateTime.Now,

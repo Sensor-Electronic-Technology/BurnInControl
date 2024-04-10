@@ -36,6 +36,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web", "Web", "{BCD822C5-DD1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BurnInControl.Api", "BurnInControl.Api\BurnInControl.Api.csproj", "{ECCD7356-60D0-460F-9236-20C8A879F26B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BurnInControl.HubDefinitions", "BurnInControl.HubDefinitions\BurnInControl.HubDefinitions.csproj", "{11102E3C-0168-473E-89C1-D3200DAA5AFD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -82,6 +84,10 @@ Global
 		{ECCD7356-60D0-460F-9236-20C8A879F26B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ECCD7356-60D0-460F-9236-20C8A879F26B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ECCD7356-60D0-460F-9236-20C8A879F26B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11102E3C-0168-473E-89C1-D3200DAA5AFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11102E3C-0168-473E-89C1-D3200DAA5AFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11102E3C-0168-473E-89C1-D3200DAA5AFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11102E3C-0168-473E-89C1-D3200DAA5AFD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -100,5 +106,6 @@ Global
 		{A9278020-AE3F-43EC-AE08-8FDFBAEAEDFD} = {ED5556C3-9BEA-4E3E-ADB7-C91FC63B6637}
 		{D65B3FD2-1E07-49C4-AC49-393CB5AD916C} = {08CDAECA-A104-4CD7-AA48-B6FF451ADDE1}
 		{ECCD7356-60D0-460F-9236-20C8A879F26B} = {BCD822C5-DD11-4027-92A2-FFFBC558855F}
+		{11102E3C-0168-473E-89C1-D3200DAA5AFD} = {605F2C0B-4B99-405B-9076-E094874C3AE8}
 	EndGlobalSection
 EndGlobal

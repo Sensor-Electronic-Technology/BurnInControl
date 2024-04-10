@@ -4,7 +4,7 @@ using BurnInControl.Application.ProcessSerial.Interfaces;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Packets;
 using BurnInControl.Shared.ComDefinitions.Station;
-using BurnInControl.Shared.Hubs;
+using BurnInControl.HubDefinitions.Hubs;
 using ErrorOr;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -73,23 +73,39 @@ public class StationMessageHandler:IStationMessageHandler{
                         return this.HandleData(packetElem);
                     }
                     case nameof(StationMsgPrefix.MessagePrefix): {
+                        //Send to UI
                         return this.HandleMessage(packetElem, false);
                     }
                     case nameof(StationMsgPrefix.HeaterTuneComplete): {
                         //TODO: Add handle for received Tuning results
+                        //Send to UI and wait for Save or Discard
                         return Task.CompletedTask;
                         //return this.HandleIdChanged(packetElem);
                     }
                     case nameof(StationMsgPrefix.HeaterNotify): {
                         //TODO: Add Handle for heater notify that tune is completed
                         // This only notifies the user of progress
+                        //Send to UI
                         return Task.CompletedTask;
                     }
                     case nameof(StationMsgPrefix.TestStatus): {
+                        //Send to BurnInTestService and start logging
                         return this.HandleTestStatus(packetElem);
                     }
-                    case nameof(StationMsgPrefix.ErrorMessage): {
-                        //TODO: Add handler for error. 
+                    case nameof(StationMsgPrefix.TestStartFromLoad): {
+                        //Send to BurnInTestService.  Load and start test
+                        return this.HandleTestStartedFrom(packetElem);
+                    }
+                    case nameof(StationMsgPrefix.TestCompleted): {
+                        //Send to BurnInTestService and complete test
+                        return this.HandleTestCompleted(packetElem);
+                    }
+                    case nameof(StationMsgPrefix.IdRequest): {
+                        //Send to controller and respond with ACK
+                        return Task.CompletedTask;
+                    }
+                    case nameof(StationMsgPrefix.VersionRequest): {
+                        //Send to firmware Updated and respond with ACK
                         return Task.CompletedTask;
                     }
                     default: {
@@ -111,7 +127,9 @@ public class StationMessageHandler:IStationMessageHandler{
         try {
             var serialData=element.Deserialize<StationSerialData>();
             if (serialData != null) {
-                this._testService.Log(serialData);
+                this._mediator.Send(new LogCommand() {
+                    Data = serialData
+                });
                 return this._hubContext.Clients.All.OnSerialCom(serialData);
             }
             return Task.CompletedTask;
@@ -154,10 +172,8 @@ public class StationMessageHandler:IStationMessageHandler{
         }
     }
 
-    private Task HandleTestCompleted() {
-        this._mediator.Send(new TestStartedStatus() {
-            Status=Result.Success
-        });
+    private Task HandleTestCompleted(JsonElement element) {
+        this._mediator.Send(new TestCompletedMessage());
         return this._hubContext.Clients.All.OnTestCompleted("Test Completed");   
     }
     
@@ -165,7 +181,12 @@ public class StationMessageHandler:IStationMessageHandler{
         try {
             var success = element.GetProperty("Status").GetBoolean();
             var message = element.GetProperty("Message").GetString();
-            
+            if (success) {
+                //send to BurnInService and start logging
+                //Send to UI
+            } else {
+                //Send to UI
+            }
             return success ? 
                 this._hubContext.Clients.All.OnTestStarted($"Test Started, Message: {message}")
                 : this._hubContext.Clients.All.OnTestStartedFailed($"Error, Message: {message}");
@@ -174,5 +195,9 @@ public class StationMessageHandler:IStationMessageHandler{
             this._logger.LogError(message);
             return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStatus,$"Error: {message}");
         }
+    }
+
+    private Task HandleTestStartedFrom(JsonElement element) {
+        return Task.CompletedTask;
     }
 }

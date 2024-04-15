@@ -1,15 +1,16 @@
+@using BurnInControl.Shared
 
 <RadzenStack AlignItems="AlignItems.Center" Style="padding: .5rem">
-<RadzenText Text="Probe Runtimes" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
-<RadzenStack Gap="5" Reverse="false" Style="border: 1px solid #f6f7fa; padding: .5rem"> 
-    <RuntimeDisplay DisplayText="P1" />
-    <RuntimeDisplay DisplayText="P2" />
-    <RuntimeDisplay DisplayText="P3" />
-    <RuntimeDisplay DisplayText="P4" />
-    <RuntimeDisplay DisplayText="P5" />
-    <RuntimeDisplay DisplayText="P6" />
-</RadzenStack>
+    <RadzenText Text="Probe Runtimes" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
+
+    <RadzenStack Gap="5" Reverse="false" Style="border: 1px solid #f6f7fa; padding: .5rem">
+        @for (int i = 0; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
+            var text = $"P{i + 1}";
+            <RuntimeDisplay DisplayText="@text" RuntimeSecs="@this.RunTimes[i]" />
+        }
+    </RadzenStack>
 </RadzenStack>
 @code{
-    
+    [Parameter]
+    public List<long> RunTimes { get; set; }=new List<long>(){0,0,0,0,0,0};
 }

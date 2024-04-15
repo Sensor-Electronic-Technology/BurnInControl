@@ -10,6 +10,9 @@
     
     [Parameter]
     public string DisplayValue {get; set;}="5:33:02";
+
+    [Parameter]
+    public long RuntimeSecs { get; set; } = 0;
     
     [Parameter]
     public TextStyle TextStyle {get; set;}=TextStyle.H6;
@@ -22,5 +25,31 @@
 
     [Parameter]
     public string LabelFontSize{get;set;}="14";
-    
+
+    protected override Task OnParametersSetAsync() {
+        long hours=this.RuntimeSecs/3600;
+        long minutes=(this.RuntimeSecs/3600)%60;
+        long seconds=this.RuntimeSecs%60;
+        string value = "";
+        if ((hours / 10) < 1 || hours==0) {
+            value="0"+hours+":";
+        } else {
+            value=hours+":";
+        }
+        
+        if ((minutes / 10) < 1 || minutes==0) {
+            value+="0"+minutes+":";
+        } else {
+            value+=minutes+":";
+        }
+        
+        if ((seconds / 10) < 1 || seconds==0) {
+            value+="0"+seconds+":";
+        } else {
+            value+=seconds+":";
+        }
+        this.DisplayValue=value;
+        return base.OnParametersSetAsync();
+    }
+
 }

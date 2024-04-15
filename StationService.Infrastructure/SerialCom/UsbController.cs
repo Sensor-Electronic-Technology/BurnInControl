@@ -144,9 +144,9 @@ public class UsbController:IDisposable {
             PropertyNamingPolicy =null,
             WriteIndented = false
         });
-        Monitor.Enter(this._serialPort);
+        Monitor.Enter(this._serialPort);//Lock object for thread safety
         try {
-            this._serialPort.SendMessage(System.Text.Encoding.ASCII.GetBytes(output));
+            this._serialPort.SendMessage(System.Text.Encoding.ASCII.GetBytes(output));//send bytes
         } catch(Exception e) {
             var exMessage = $"Exception: {e.Message}";
             if(e.InnerException != null) {

@@ -1,4 +1,4 @@
-﻿namespace BurnInControl.Data.StationModel;
+﻿namespace BurnInControl.Shared;
 
 public static class ControllerHardwareConstants {
     public static readonly int PROBE_COUNT = 6;

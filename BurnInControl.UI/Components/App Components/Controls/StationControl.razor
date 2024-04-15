@@ -2,7 +2,7 @@
 @inject StationHubConnection StationHubConnection
 @inject NotificationService NotificationService
 @implements IAsyncDisposable
-<RadzenStack Gap="10" Style="margin: .6rem; width: fit-content" AlignItems="Radzen.AlignItems.Center">
+<RadzenStack Gap="10" Style="margin: .6rem" AlignItems="Radzen.AlignItems.Center">
     <RadzenText Text="Station Control" TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH6" Style="margin: .6rem" />
     <RadzenStack AlignItems="AlignItems.Center" Orientation="Radzen.Orientation.Vertical" Gap="10">
         <RadzenFieldset Text="Test Control">
@@ -14,13 +14,13 @@
                                     ToggleButtonStyle="ButtonStyle.Light"
                                     ToggleShade="Shade.Dark"
                                     Click="@OnStartClicked"
-                                    Size="ButtonSize.Large" Style="width: 200px"/>
+                                    Size="ButtonSize.Large" Style="width: 170px"/>
                 <RadzenToggleButton Text="Reset"
                                     ButtonStyle="ButtonStyle.Danger"
                                     Size="ButtonSize.Large"
                                     ToggleButtonStyle="ButtonStyle.Danger"
                                     Click="@OnResetClicked"
-                                    ToggleShade="Shade.Dark" Style="width: 200px"/>
+                                    ToggleShade="Shade.Dark" Style="width: 170px"/>
             </RadzenStack>
         </RadzenFieldset>
 
@@ -34,14 +34,14 @@
                                 Size="ButtonSize.Large"
                                 ToggleButtonStyle="ButtonStyle.Secondary"
                                 IsBusy="@this._serviceConnectBtnBusy"
-                                Click="@OnConnectClick" Style="width: 200px"/>
+                                Click="@OnConnectClick" Style="width: 170px; height: 80px"/>
             <RadzenToggleButton Value="@this._usbConnectBtnValue"
                                 Text="@(this._usbConnectBtnValue ? "Disconnect Usb" : "Connect Usb")"
                                 ButtonStyle="ButtonStyle.Primary"
                                 Size="ButtonSize.Large"
                                 ToggleButtonStyle="ButtonStyle.Secondary"
                                 IsBusy="@this._usbBtnBusy"
-                                Click="@OnUsbConnectClick" Style="width: 200px"/>
+                                Click="@OnUsbConnectClick" Style="width: 170px; height: 80px"/>
         </RadzenStack>
 
     </RadzenFieldset>
@@ -156,47 +156,31 @@
     
 
     private async Task OnConnectClick() {
-        if (!this._serviceConnectBtnValue) {
-            await this.StationHubConnection.StartConnection();
-        } else {
-            await this.StationHubConnection.StopConnection();
-        }
-        
-        //await this.OnConnect.InvokeAsync(this._serviceConnectBtnValue);
+        await this.OnConnect.InvokeAsync(this._serviceConnectBtnValue);
     }
     
     private async Task OnStartClicked() {
-        if (this._testBtnValue) {
-            await this.StationHubConnection.SendPause();
-        } else {
-            await this.StationHubConnection.SendStart();
-        }
-        //await this.OnStartPause.InvokeAsync(this._testBtnValue);
+        await this.OnStartPause.InvokeAsync(this._testBtnValue);
     }
     
     private async Task OnResetClicked() {
-        await this.StationHubConnection.SendReset();
-        //await this.OnReset.InvokeAsync();
+        await this.OnReset.InvokeAsync();
     }
     
     private async Task OnUsbConnectClick() {
-        if (this._usbConnectBtnValue) {
-            await this.StationHubConnection.SendDisconnectUsb();
-        } else {
-            await this.StationHubConnection.SendUsbConnect();
-        }
         this._usbBtnBusy = true;
+        await this.OnUsbConnect.InvokeAsync(this._usbConnectBtnValue);
     }
     
     private async Task OnUploadCurrentTemp(StationCurrent stationCurrent) {
-        //await this.OnCurrentChanged.InvokeAsync(stationCurrent);
+        await this.OnCurrentChanged.InvokeAsync(stationCurrent);
     }
     
     
     public ValueTask DisposeAsync() {
-        this.StationHubConnection.OnHubConnected -= this.StationHubConnectionOnOnHubConnected;
+        /*this.StationHubConnection.OnHubConnected -= this.StationHubConnectionOnOnHubConnected;
         this.StationHubConnection.OnUsbConnected -= this.UsbConnectHandler;
-        this.StationHubConnection.OnUsbDisconnected -=this.UsbDisconnectedHandler;
+        this.StationHubConnection.OnUsbDisconnected -=this.UsbDisconnectedHandler;*/
         return ValueTask.CompletedTask;
     }
 }

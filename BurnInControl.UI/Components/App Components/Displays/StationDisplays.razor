@@ -7,13 +7,13 @@
 
 @code {
     [Parameter]
-    public List<double> Voltages { get; set; }
+    public List<double> Voltages { get; set; }=new List<double>(){52.5,52.5,52.5,52.5,52.5,52.5};
     
     [Parameter]
-    public List<double> Currents { get; set; }
+    public List<double> Currents { get; set; }=new List<double>(){150,148,151,149,150,149};
     
     [Parameter]
-    public List<double> Temps { get; set; }
+    public List<double> Temps { get; set; }=new List<double>(){0,0,0};
     
     
 

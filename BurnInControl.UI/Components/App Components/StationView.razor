@@ -10,6 +10,7 @@
 @using BurnInControl.Application.StationControl.Messages
 @inject ILogger<StationView> _logger
 @inject StationHubConnection StationHubConnection
+@inject NotificationService NotificationService
 @implements IAsyncDisposable
 
 
@@ -17,33 +18,43 @@
 <RadzenSplitter Orientation="Orientation.Horizontal">
     <RadzenSplitterPane Size="15%" Collapsed="@this._runtimePaneCollapsed">
         <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="10" Style="margin: 10px">
-            <RuntimeDisplay DisplayText="Runtime" TextStyle="TextStyle.H4" State="true" DisplayValue="06:07:53" LabelFontSize="12" />
-            <ProbeRuntimes />
+            <RuntimeDisplay DisplayText="Runtime" 
+                            TextStyle="TextStyle.H4" 
+                            State="true" 
+                            RuntimeSecs="@this._data.RuntimeSeconds" 
+                            LabelFontSize="12" />
+            <ProbeRuntimes RunTimes="@this._data.ProbeRuntimes"/>
         </RadzenStack>
     </RadzenSplitterPane>
     <RadzenSplitterPane Size="70%" Collapsible="false">
         <RadzenSplitter Orientation="Orientation.Vertical" style=" border: 1px solid rgba(0,0,0,.08);">
             <RadzenSplitterPane Size="75%" Collapsible="false">
                 <RadzenSplitter>
-                        <RadzenTabs RenderMode="TabRenderMode.Client" SelectedIndexChanged="SelectedTabChangedHandler" Style="width: 100%; height: 100%">
+                    <RadzenTabs RenderMode="TabRenderMode.Client" 
+                                SelectedIndexChanged="SelectedTabChangedHandler" Style="width: 100%; height: 100%">
                             <Tabs>
-                                <RadzenTabsItem Text="Display" Selected="true">
-                                    <StationDisplays Voltages="@this._data.Voltages" Currents="@this._data.Currents"/>
+                                <RadzenTabsItem Text="Live" Selected="true">
+                                    <StationDisplays Voltages="@this._data.Voltages" 
+                                                     Currents="@this._data.Currents" 
+                                                     Temps="@this._data.Temperatures"/>
                                 </RadzenTabsItem>
                                 <RadzenTabsItem Text="Test Setup">
                                     <TestSetup></TestSetup>
                                 </RadzenTabsItem>
-                                <RadzenTabsItem Text="Test Setup">
+                                <RadzenTabsItem Text="Plots">
                                     <TestSetup></TestSetup>
                                 </RadzenTabsItem>
                             </Tabs>
                         </RadzenTabs>
                 </RadzenSplitter>
             </RadzenSplitterPane>
-            <RadzenSplitterPane Size="25%" Resizable="true" Collapsed="this._eventPaneCollapsed" >
+            <RadzenSplitterPane Size="25%" 
+                                Resizable="true" 
+                                Collapsed="this._eventPaneCollapsed" >
                 <RadzenSplitter>
                     <RadzenSplitterPane>
-                        <EventConsole @ref="@this._eventConsole" LogTitle="Station Log"/>
+                        <EventConsole @ref="@this._eventConsole" 
+                                      LogTitle="Station Log"/>
                     </RadzenSplitterPane>
                 </RadzenSplitter>
             </RadzenSplitterPane>
@@ -51,12 +62,12 @@
     </RadzenSplitterPane>
     <RadzenSplitterPane Size="15%" Resizable="true" Collapsed="@this._controlPaneCollapsed">
         <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
-            @*<StationControl OnConnect="@this.OnConnectClicked"
+            <StationControl OnConnect="@this.OnConnectClicked"
                             OnReset="@this.OnResetClicked"
                             OnStartPause="@this.OnStartClicked"
                             OnCurrentChanged="CurrentChangedHandler"
-                            OnUsbConnect="@this.OnConnectUsbClicked"
-                            OnTempChanged="TempChangedHandler"/>*@
+                            OnUsbConnect="@this.OnUsbConnectClicked"
+                            OnTempChanged="TempChangedHandler"/>
             <StationControl />
         </RadzenRow>
     </RadzenSplitterPane>
@@ -73,13 +84,39 @@
    private bool _runtimePaneCollapsed = false;
 
    protected override async Task OnInitializedAsync() {
-        this.StationHubConnection.OnStationDataReceived += this.OnSerialComReceived;
-        /*this.StationHubConnection.OnHubConnected += StationHubConnectionOnOnHubConnected;
-        this.StationHubConnection.OnUsbDisconnected+=this.UsbDisconnectedHandler;*/
-        this.StationHubConnection.OnStationMessageReceived+=this.OnSerialComMessageReceived;
+        /*this.StationHubConnection.OnStationDataReceived += this.OnSerialComReceived;
+        this.StationHubConnection.OnHubConnected += StationHubConnectionOnOnHubConnected;
+        this.StationHubConnection.OnUsbDisconnected+=this.UsbDisconnectedHandler;
+        this.StationHubConnection.OnStationMessageReceived+=this.OnSerialComMessageReceived;*/
+        var hubAddress=Environment.GetEnvironmentVariable("StationHub");
+        string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
+        /*this._hubConnection = new HubConnectionBuilder()
+            .WithUrl("http://localhost:5066/hubs/station")
+            .Build();*/
+        this._hubConnection = new HubConnectionBuilder()
+            .WithUrl(addr)
+            .Build();
+        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnSerialCom,this.OnSerialComReceived);
+        this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
+        this._hubConnection.On<string>(HubConstants.Events.OnTestStatus, this.OnSerialComMessageReceived);
+        this._hubConnection.On<string>(HubConstants.Events.OnUsbDisconnect,this.UsbDisconnectedHandler);
+        this._hubConnection.On<string>(HubConstants.Events.OnUsbConnectFailed,this.UsbConnectFailedHandler);
+        this._hubConnection.On<string>(HubConstants.Events.OnUsbConnect, this.UsbConnectHandler);
+        try {
+            await this._hubConnection.StartAsync();
+            this._logger.LogInformation("Hub Connection Established");
+            this._eventConsole.Log("Hub Connection Established",AlertStyle.Success);
+        } catch(Exception e) {
+            string error = e.Message;
+            if (e.InnerException != null) {
+                error+="\n"+e.InnerException.Message;
+            }
+            this._logger.LogError($"Hub Connection Failed, Exception: \n {error}");
+            this._eventConsole.Log("Hub Connection Failed",AlertStyle.Danger);
+        }
    }
    
-   /*private Task StationHubConnectionOnOnHubConnected(Boolean stat, String arg) {
+   private Task StationHubConnectionOnOnHubConnected(Boolean stat, String arg) {
        if (stat) {
            var notification=new NotificationMessage { 
                Severity = NotificationSeverity.Success, 
@@ -105,9 +142,9 @@
            Duration = 10000 };
        this.NotificationService.Notify(notification);
        this._eventConsole.Log(message,AlertStyle.Info);
-   }*/
+   }
    
-   /*private Task UsbDisconnectedHandler(string message) {
+   private Task UsbDisconnectedHandler(string message) {
        var notification=new NotificationMessage { 
            Severity = NotificationSeverity.Error, 
            Summary = "Usb Disconnected", 
@@ -126,7 +163,7 @@
            Duration = 10000 };
        this.NotificationService.Notify(notification);
        this._eventConsole.Log(message,AlertStyle.Danger);
-   }*/
+   }
 
    private async Task OnSerialComReceived(StationSerialData data) {
        this._data = data;
@@ -138,7 +175,7 @@
        return Task.CompletedTask;
    }
    
-   /*private async Task OnStartClicked(bool state) {
+   private async Task OnStartClicked(bool state) {
        if (state) {
            await this.StationHubConnection.SendPause();
            this._eventConsole.Log("Pause Clicked",AlertStyle.Info);
@@ -151,7 +188,7 @@
    private async Task OnResetClicked() {
        await this.StationHubConnection.SendReset();
        this._eventConsole.Log("Reset Clicked",AlertStyle.Warning);
-   }*/
+   }
    
    private async Task OnConnectClicked(bool state) {
        if (state) {
@@ -163,12 +200,17 @@
        }
    }
 
-   private async Task OnConnectUsbClicked(bool state) {
+   private async Task OnUsbConnectClicked(bool state) {
        if (state) {
-           await this.StationHubConnection.SendDisconnectUsb();
+           if (this.Connected) {
+               await this._hubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
+           }
            this._eventConsole.Log("Usb Disconnect Clicked",AlertStyle.Warning);
        } else {
-           await this.StationHubConnection.SendUsbConnect();
+           if (this.Connected) {
+               await this._hubConnection.InvokeAsync(HubConstants.Methods.DisconnectUsb);
+           }
+           //await this.StationHubConnection.SendUsbConnect();
            this._eventConsole.Log("Usb Connect Clicked",AlertStyle.Info);
        }
    }

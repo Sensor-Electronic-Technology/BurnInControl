@@ -58,7 +58,6 @@ public class StationHubConnection {
                 this._logger.LogError($"Hub Connection Failed, Exception: \n {error}");
                 this.OnHubConnected?.Invoke(false,"Station Service failed to connect, contact administrator");
             }
-            
         }
     }
     

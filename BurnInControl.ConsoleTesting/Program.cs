@@ -10,6 +10,7 @@ using BurnInControl.Shared.ComDefinitions.Station;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using System.Text.Json;
+using BurnInControl.Shared.ComDefinitions;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
 using WorkflowCore.Services;
@@ -21,38 +22,30 @@ using WorkflowCore.Services;
 
 
 
-MessagePacket<StationCommand> packet = new MessagePacket<StationCommand>() {
+/*MessagePacket<StationCommand> packet = new MessagePacket<StationCommand>() {
     Prefix = StationMsgPrefix.CommandPrefix,
     Packet = StationCommand.Reset
-};
-var output=JsonSerializer.Serialize<MessagePacket<StationCommand>>(packet);
-Console.WriteLine(output);
+};*/
+var jsonString=await File.ReadAllTextAsync(@"C:\temp\jsonTest.txt");
+try {
+    var doc=JsonSerializer.Deserialize<JsonDocument>(jsonString);
+    var prefixValue=doc.RootElement.GetProperty("Prefix").ToString();
+    var prefix=StationMsgPrefix.FromValue(prefixValue);
+    Console.WriteLine($"Prefix: {prefix.Value}");
+    var packetElem=doc.RootElement.GetProperty("Packet");
 
-void TestStateMachine() {
-    ControllerStateMachine stateMachine = new ControllerStateMachine();
-    ConsoleKeyInfo key;
-    while(true) {
-        PrintMenu();
-        key=Console.ReadKey();
-        /*if(key.KeyChar=='1') {
-            stateMachine.StartUp();
-        } else if(key.KeyChar=='2') {
-            stateMachine.Connect();
-        } else if(key.KeyChar=='3') {
-            stateMachine.Start();
-        } else if(key.KeyChar=='4') {
-            stateMachine.Pause();
-        } else if(key.KeyChar=='5') {
-            stateMachine.Continue();
-        } else if(key.KeyChar=='6') {
-            stateMachine.Disconnect();
-        } else if(key.KeyChar=='7') {
-            break;
-        }*/
-    }
-    Console.WriteLine();
-
+    var serialData = packetElem.Deserialize<StationSerialData>();
+    Console.WriteLine($"Object: CurrentSetPoint: {serialData.CurrentSetPoint}");
+}catch(Exception e) {
+    Console.WriteLine(e.Message);
 }
+
+//var output=JsonSerializer.Serialize<MessagePacket<StationCommand>>(packet);
+Console.WriteLine("Input: ");
+Console.WriteLine(jsonString);
+
+
+
 
 void PrintMenu() {
     Console.WriteLine();
@@ -84,7 +77,7 @@ static IServiceProvider ConfigureServices()
 {
     //setup dependency injection
     IServiceCollection services = new ServiceCollection();
-    services.AddLogging();
+    //services.AddLogging();
     /*services.AddWorkflow();*/
     
     services.AddWorkflow(x => x.UseMongoDB(@"mongodb://172.20.3.41:27017", "burn_test_workflow"));

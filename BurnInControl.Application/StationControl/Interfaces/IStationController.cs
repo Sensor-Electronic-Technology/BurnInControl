@@ -8,6 +8,7 @@ public interface IStationController {
     public Task<ErrorOr<Success>> Disconnect();
     public Task<ErrorOr<Success>> Stop();
     public Task Start();
+    public Task GetConnectionStatus();
     public void Dispose();
     public Task<ErrorOr<Success>> Send<TPacket>(StationMsgPrefix prefix, TPacket packet) where TPacket : IPacket;
 }

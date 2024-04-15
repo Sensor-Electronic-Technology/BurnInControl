@@ -11,6 +11,9 @@ using StationService.Infrastructure.SerialCom;
 using StationService.Infrastructure.StationControl;
 using StationService.Infrastructure.TestLogs;
 using System.Threading.Channels;
+using BurnInControl.Application.BurnInTest;
+using BurnInControl.Application.BurnInTest.Handlers;
+
 namespace StationService.Infrastructure;
 
 public static class DependencyInjection {
@@ -19,7 +22,7 @@ public static class DependencyInjection {
 
         services.AddSingleton(channel.Reader);
         services.AddSingleton(channel.Writer);
-        services.AddSingleton<BurnInTestService>();
+        services.AddSingleton<IBurnInTestService,BurnInTestService>();
         services.AddSingleton<IFirmwareUpdateService,FirmwareUpdateService>();
         services.AddSingleton<IStationController,StationController>();
         services.AddSingleton<UsbController>();
@@ -32,7 +35,8 @@ public static class DependencyInjection {
             typeof(ConnectionActionHandler).Assembly, 
             typeof(SendStationCommandHandler).Assembly,
             typeof(CheckForUpdateCommandHandler).Assembly,
-            typeof(UpdateFirmwareCommandHandler).Assembly);
+            typeof(UpdateFirmwareCommandHandler).Assembly,
+            typeof(TestStartedStatusHandler).Assembly);
         });
         return services;
     }

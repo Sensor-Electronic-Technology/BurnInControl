@@ -5,6 +5,7 @@ namespace BurnInControl.Data.ComponentConfiguration.HeaterController;
 public class HeaterControllerConfig:IPacket {
     public List<HeaterConfiguration> HeaterConfigurations { get; set; }
     public ulong ReadInterval { get; set; }
+    public int TemperatureSetPoint { get; set; }
     public HeaterControllerConfig() {
         NtcConfiguration ntcConfig1 = new NtcConfiguration(1.159e-3f, 1.429e-4f, 1.118e-6f, StationAnalogPin.A07.Value, 0.01);
         NtcConfiguration ntcConfig2 = new NtcConfiguration(1.173e-3f, 1.736e-4f, 7.354e-7f, StationAnalogPin.A08.Value, 0.01);

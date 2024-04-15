@@ -1,21 +1,32 @@
+@using System.Globalization
+@using BurnInControl.Shared
 <RadzenRow JustifyContent="Radzen.JustifyContent.Center" Gap="1">
-<RadzenStack Gap="20" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
-<RadzenFieldset Text="Toggle Temperature" Style="width:fit-content; height:fit-content;">
-<RadzenToggleButton Text="85C" Style="width:150px; height:75px; font-size: x-large" ButtonStyle="Radzen.ButtonStyle.Danger" ToggleButtonStyle="Radzen.ButtonStyle.Secondary" Value="false" />
-</RadzenFieldset>
-    <RadzenStack Orientation="Radzen.Orientation.Vertical" style="text-align: center;">
-        <RadzenText Text="Temperatures" TextStyle="TextStyle.DisplayH5"/>
-        <RadzenStack  Orientation="Radzen.Orientation.Horizontal" Gap="30">
-            <HeaterDisplay/>
-            <HeaterDisplay/>
-            <HeaterDisplay/>
+    <RadzenStack Gap="20" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
+        <RadzenFieldset Text="Toggle Temperature" Style="width:fit-content; height:fit-content;">
+            <RadzenToggleButton Text="85C" Style="width:150px; height:75px; font-size: x-large" 
+                                ButtonStyle="ButtonStyle.Danger" 
+                                ToggleButtonStyle="ButtonStyle.Secondary"
+                                Value="false" />
+        </RadzenFieldset>
+        <RadzenStack Orientation="Orientation.Vertical" style="text-align: center;">
+            <RadzenText Text="Temperatures" TextStyle="TextStyle.DisplayH5"/>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="30">
+                @for (int i = 0; i < ControllerHardwareConstants.HEATER_COUNT; i++) {
+                    var label = $"T{i+1}";
+                    var temp=Temperatures[i];
+                    var state=HeaterStates[i];
+                    <HeaterDisplay DisplayLabel="@label" 
+                                   DisplayValue="@temp.ToString(CultureInfo.CurrentCulture)" 
+                                   State="@state"/>
+                }
+            </RadzenStack>
         </RadzenStack>
     </RadzenStack>
-</RadzenStack>
-
 </RadzenRow>
 
 @code{
     [Parameter]
-    public List<double> Temperatures { get; set; }
+    public List<double> Temperatures { get; set; }= [0, 0, 0];
+    [Parameter]
+    public List<bool> HeaterStates { get; set; }= [false, false, false];
 }

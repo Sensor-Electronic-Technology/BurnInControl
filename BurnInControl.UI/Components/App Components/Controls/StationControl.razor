@@ -8,179 +8,79 @@
         <RadzenFieldset Text="Test Control">
             <RadzenStack>
                 <RadzenToggleButton Value="@this._testBtnValue"
-                                    Text="@(_testBtnValue ? "Pause" : "Start")"
-                                    IsBusy="@this._testBtnBusy"
+                                    Text="@(this._testBtnValue ? "Pause" : "Start")"
                                     ButtonStyle="ButtonStyle.Success"
                                     ToggleButtonStyle="ButtonStyle.Light"
-                                    ToggleShade="Shade.Dark"
                                     Click="@OnStartClicked"
                                     Size="ButtonSize.Large" Style="width: 170px"/>
                 <RadzenToggleButton Text="Reset"
                                     ButtonStyle="ButtonStyle.Danger"
                                     Size="ButtonSize.Large"
                                     ToggleButtonStyle="ButtonStyle.Danger"
-                                    Click="@OnResetClicked"
+                                    Click="@this.Reset"
                                     ToggleShade="Shade.Dark" Style="width: 170px"/>
             </RadzenStack>
         </RadzenFieldset>
-
     </RadzenStack>
     <TempCurrentControl/>
     <RadzenFieldset Text="Station Service">
         <RadzenStack>
-            <RadzenToggleButton Value="@_serviceConnectBtnValue"
-                                Text="@(_serviceConnectBtnValue ? "Disconnect Service" : "Connect Service")"
+            <RadzenToggleButton Value="@this.ServiceConnected"
+                                Text="@(this.ServiceConnected ? "Disconnect Service" : "Connect Service")"
                                 ButtonStyle="ButtonStyle.Secondary"
                                 Size="ButtonSize.Large"
                                 ToggleButtonStyle="ButtonStyle.Secondary"
-                                IsBusy="@this._serviceConnectBtnBusy"
-                                Click="@OnConnectClick" Style="width: 170px; height: 80px"/>
-            <RadzenToggleButton Value="@this._usbConnectBtnValue"
-                                Text="@(this._usbConnectBtnValue ? "Disconnect Usb" : "Connect Usb")"
+                                Click="@this.Connect" Style="width: 170px; height: 80px"/>
+            <RadzenToggleButton Value="@this.UsbConnected"
+                                Text="@(this.UsbConnected ? "Disconnect Usb" : "Connect Usb")"
                                 ButtonStyle="ButtonStyle.Primary"
                                 Size="ButtonSize.Large"
                                 ToggleButtonStyle="ButtonStyle.Secondary"
-                                IsBusy="@this._usbBtnBusy"
-                                Click="@OnUsbConnectClick" Style="width: 170px; height: 80px"/>
+                                Click="@this.UsbConnect" Style="width: 170px; height: 80px"/>
         </RadzenStack>
-
     </RadzenFieldset>
 </RadzenStack>
 @code{
     [Parameter]
-    public EventCallback<bool> OnConnect { get; set; }
+    public EventCallback Connect { get; set; }
     
     [Parameter]
-    public EventCallback<bool> OnStartPause { get; set; }
+    public EventCallback<bool> StartPause { get; set; }
     
     [Parameter]
-    public EventCallback<bool> OnUsbConnect { get; set; }
+    public EventCallback UsbConnect { get; set; }
     
     [Parameter]
-    public EventCallback OnReset { get; set; }
+    public EventCallback Reset { get; set; }
     
     [Parameter]
-    public EventCallback<StationCurrent> OnCurrentChanged { get; set; }
+    public EventCallback<StationCurrent> CurrentChanged { get; set; }
     
     [Parameter]
-    public EventCallback<double> OnTempChanged { get; set; }
+    public EventCallback<double> TempChanged { get; set; }
     
-    private string _usbButtonText = "Connect USB";
-    private string _serviceButtonText = "Connect Service";
+    [Parameter]
+    public bool UsbConnected { get; set; }
+    
+    [Parameter]
+    public bool ServiceConnected { get; set; }
     
     private bool _serviceConnectBtnBusy = false;
     private bool _usbBtnBusy = false;
     private bool _testBtnBusy = false;
-
-    private bool _serviceConnectBtnValue = false;
-    private bool _usbConnectBtnValue = false;
+    
     private bool _testBtnValue = false;
-
-    protected override Task OnInitializedAsync() {
-        this.StationHubConnection.OnHubConnected += this.StationHubConnectionOnOnHubConnected;
-        this.StationHubConnection.OnUsbConnected += this.UsbConnectHandler;
-        this.StationHubConnection.OnUsbDisconnected +=this.UsbDisconnectedHandler;
-        return base.OnInitializedAsync();
-    }
     
-    private Task StationHubConnectionOnOnHubConnected(Boolean stat, String arg) {
-        if (stat) {
-            var notification=new NotificationMessage { 
-                Severity = NotificationSeverity.Success, 
-                Summary = "Station Service Connected", 
-                Detail = arg, 
-                Duration = 10000 };
-            this.NotificationService.Notify(notification);
-            this._serviceConnectBtnValue = true;
-            this._serviceConnectBtnBusy= false;
-        } else {
-            var notification=new NotificationMessage { 
-                Severity = NotificationSeverity.Error, 
-                Summary = "Station Service Connection Failed", 
-                Detail = arg, 
-                Duration = 10000 };
-            this._serviceConnectBtnValue = false;
-            this._serviceConnectBtnBusy= false;
-            this.NotificationService.Notify(notification);
-        }
-        return Task.CompletedTask;
-    }
-    private async Task UsbConnectHandler(string message) {
-        var notification=new NotificationMessage { 
-            Severity = NotificationSeverity.Success, 
-            Summary = "Usb Connected", 
-            Detail = message, 
-            Duration = 10000 };
-        this.NotificationService.Notify(notification);
-        this._usbConnectBtnValue = true;
-        this._usbBtnBusy = false;
-        await InvokeAsync(StateHasChanged);
-        //this._eventConsole.Log(message,AlertStyle.Info);
-    }
     
-    private async Task UsbDisconnectedHandler(string message) {
-        var notification=new NotificationMessage { 
-            Severity = NotificationSeverity.Error, 
-            Summary = "Usb Disconnected", 
-            Detail = message, 
-            Duration = 10000 };
-        this.NotificationService.Notify(notification);
-        this._usbBtnBusy = false;
-        this._usbConnectBtnValue= false;
-        await InvokeAsync(StateHasChanged);
-        //this._eventConsole.Log(message, AlertStyle.Danger);
-    }
-   
-    private void UsbConnectFailedHandler(string message) {
-        var notification=new NotificationMessage { 
-            Severity = NotificationSeverity.Error, 
-            Summary = "Usb Failed To Connect", 
-            Detail = message, 
-            Duration = 10000 };
-        this.NotificationService.Notify(notification);
-        this._usbBtnBusy = false;
-        this._usbConnectBtnValue= false;
-        
-        //this._eventConsole.Log(message,AlertStyle.Danger);
-    }
-    
-    private async Task OnStartClicked(bool state) {
-        if (state) {
-            await this.StationHubConnection.SendPause();
-            //this._eventConsole.Log("Pause Clicked",AlertStyle.Info);
-        } else {
-            await this.StationHubConnection.SendStart();
-            //this._eventConsole.Log("Start Clicked",AlertStyle.Info);
-        }
-    }
-    
-
-    private async Task OnConnectClick() {
-        await this.OnConnect.InvokeAsync(this._serviceConnectBtnValue);
-    }
-    
-    private async Task OnStartClicked() {
-        await this.OnStartPause.InvokeAsync(this._testBtnValue);
-    }
-    
-    private async Task OnResetClicked() {
-        await this.OnReset.InvokeAsync();
-    }
-    
-    private async Task OnUsbConnectClick() {
-        this._usbBtnBusy = true;
-        await this.OnUsbConnect.InvokeAsync(this._usbConnectBtnValue);
+    private Task OnStartClicked() {
+        return this.StartPause.InvokeAsync(this._testBtnValue);
     }
     
     private async Task OnUploadCurrentTemp(StationCurrent stationCurrent) {
-        await this.OnCurrentChanged.InvokeAsync(stationCurrent);
+        await this.CurrentChanged.InvokeAsync(stationCurrent);
     }
     
-    
     public ValueTask DisposeAsync() {
-        /*this.StationHubConnection.OnHubConnected -= this.StationHubConnectionOnOnHubConnected;
-        this.StationHubConnection.OnUsbConnected -= this.UsbConnectHandler;
-        this.StationHubConnection.OnUsbDisconnected -=this.UsbDisconnectedHandler;*/
         return ValueTask.CompletedTask;
     }
 }

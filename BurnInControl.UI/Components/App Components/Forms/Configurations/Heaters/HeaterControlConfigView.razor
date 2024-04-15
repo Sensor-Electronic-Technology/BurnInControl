@@ -6,6 +6,12 @@
 @if(this.HeaterControllerConfig == null) {
     <p>Loading...</p>
 } else {
+    @*<RadzenNumeric TValue="int" 
+                   Value="@this.HeaterControllerConfig?.TemperatureSetPoint" Change="@ConfigChangedHandler" Placeholder="Temperature Setpoint" />
+    <RadzenNumeric TValue="int" 
+                   Value="@this.HeaterControllerConfig?.ReadInterval" 
+                   Change="@ConfigChangedHandler" 
+                   Placeholder="Temperature Setpoint" />*@
     <RadzenTabs TabPosition="TabPosition.Left" RenderMode="Radzen.TabRenderMode.Client">
         <Tabs>
             @foreach (var config in this.HeaterControllerConfig.HeaterConfigurations) {

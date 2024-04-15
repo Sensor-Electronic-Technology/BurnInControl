@@ -104,7 +104,11 @@ public class StationController:IStationController,IDisposable {
         //await this.BuildStateMachine();
         await this.ConnectUsb();
     }
-    
+
+    public Task GetConnectionStatus() {
+       return this._hubContext.Clients.All.OnStationConnection(this._usbController.Connected);
+    }
+
     public async Task<ErrorOr<Success>> ConnectUsb() {
         var result=this._usbController.Connect();
         if (!result.IsError) {

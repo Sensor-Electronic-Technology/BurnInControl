@@ -17,16 +17,13 @@ using MediatR;
 namespace StationService.Infrastructure.SerialCom;
 
 public class StationMessageHandler:IStationMessageHandler{
-    private readonly BurnInTestService _testService;
     private readonly IHubContext<StationHub, IStationHub> _hubContext;
     private readonly ILogger<StationMessageHandler> _logger;
     private readonly IMediator _mediator;
     
     public StationMessageHandler(ILogger<StationMessageHandler> logger,
-        BurnInTestService testService,
         IHubContext<StationHub, IStationHub> hubContext,
         IMediator mediator) {
-        this._testService = testService;
         this._logger = logger;
         this._hubContext = hubContext;
         this._mediator = mediator;
@@ -127,9 +124,9 @@ public class StationMessageHandler:IStationMessageHandler{
         try {
             var serialData=element.Deserialize<StationSerialData>();
             if (serialData != null) {
-                this._mediator.Send(new LogCommand() {
+                /*this._mediator.Send(new LogCommand() {
                     Data = serialData
-                });
+                });*/
                 return this._hubContext.Clients.All.OnSerialCom(serialData);
             }
             return Task.CompletedTask;

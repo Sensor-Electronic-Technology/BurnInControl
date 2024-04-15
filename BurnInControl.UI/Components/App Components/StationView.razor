@@ -12,18 +12,18 @@
 @inject StationHubConnection StationHubConnection
 @inject NotificationService NotificationService
 @implements IAsyncDisposable
-
-
+@rendermode InteractiveServer
 
 <RadzenSplitter Orientation="Orientation.Horizontal">
     <RadzenSplitterPane Size="15%" Collapsed="@this._runtimePaneCollapsed">
         <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="10" Style="margin: 10px">
-            <RuntimeDisplay DisplayText="Runtime" 
-                            TextStyle="TextStyle.H4" 
-                            State="true" 
-                            RuntimeSecs="@this._data.RuntimeSeconds" 
-                            LabelFontSize="12" />
-            <ProbeRuntimes RunTimes="@this._data.ProbeRuntimes"/>
+            <TempCurrentToggle CurrentSetPoint="@this._data.CurrentSetPoint"
+                               TemperatureSetPoint="@this._data.TemperatureSetPoint"
+                               CurrentCycle="@this.CycleCurrentHandler"
+                               TemperatureToggle="@this.ToggleTemperatureHandler"
+                               Disabled="@(!this.Connected)"/>
+            <ElapsedView Elapsed="@this._data.ElapsedSeconds" 
+                         ProbeRuntimes="@this._data.ProbeRuntimes"/>
         </RadzenStack>
     </RadzenSplitterPane>
     <RadzenSplitterPane Size="70%" Collapsible="false">
@@ -62,13 +62,14 @@
     </RadzenSplitterPane>
     <RadzenSplitterPane Size="15%" Resizable="true" Collapsed="@this._controlPaneCollapsed">
         <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
-            <StationControl OnConnect="@this.OnConnectClicked"
-                            OnReset="@this.OnResetClicked"
-                            OnStartPause="@this.OnStartClicked"
-                            OnCurrentChanged="CurrentChangedHandler"
-                            OnUsbConnect="@this.OnUsbConnectClicked"
-                            OnTempChanged="TempChangedHandler"/>
-            <StationControl />
+            <StationControl Connect="@this.OnConnectClicked"
+                            Reset="@this.OnResetClicked"
+                            StartPause="@this.OnStartClicked"
+                            CurrentChanged="CurrentChangedHandler"
+                            UsbConnect="@this.OnUsbConnectClicked"
+                            TempChanged="TempChangedHandler"
+                            ServiceConnected="@this.Connected"
+                            UsbConnected="@this._usbConnected"/>
         </RadzenRow>
     </RadzenSplitterPane>
 </RadzenSplitter>
@@ -78,23 +79,20 @@
    private StationSerialData? _data=new StationSerialData();
    private HubConnection? _hubConnection;
    private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;
+   private bool _usbConnected=false;
    
    private bool _eventPaneCollapsed = false;
    private bool _controlPaneCollapsed = false;
    private bool _runtimePaneCollapsed = false;
 
-   protected override async Task OnInitializedAsync() {
-        /*this.StationHubConnection.OnStationDataReceived += this.OnSerialComReceived;
-        this.StationHubConnection.OnHubConnected += StationHubConnectionOnOnHubConnected;
-        this.StationHubConnection.OnUsbDisconnected+=this.UsbDisconnectedHandler;
-        this.StationHubConnection.OnStationMessageReceived+=this.OnSerialComMessageReceived;*/
-        var hubAddress=Environment.GetEnvironmentVariable("StationHub");
+   protected override Task OnInitializedAsync() {
+        /*var hubAddress=Environment.GetEnvironmentVariable("StationHub");
         string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
-        /*this._hubConnection = new HubConnectionBuilder()
-            .WithUrl("http://localhost:5066/hubs/station")
-            .Build();*/
         this._hubConnection = new HubConnectionBuilder()
             .WithUrl(addr)
+            .Build();*/
+        this._hubConnection = new HubConnectionBuilder()
+            .WithUrl("http://localhost:5066/hubs/station")
             .Build();
         this._hubConnection.On<StationSerialData>(HubConstants.Events.OnSerialCom,this.OnSerialComReceived);
         this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
@@ -102,20 +100,32 @@
         this._hubConnection.On<string>(HubConstants.Events.OnUsbDisconnect,this.UsbDisconnectedHandler);
         this._hubConnection.On<string>(HubConstants.Events.OnUsbConnectFailed,this.UsbConnectFailedHandler);
         this._hubConnection.On<string>(HubConstants.Events.OnUsbConnect, this.UsbConnectHandler);
-        try {
-            await this._hubConnection.StartAsync();
-            this._logger.LogInformation("Hub Connection Established");
-            this._eventConsole.Log("Hub Connection Established",AlertStyle.Success);
-        } catch(Exception e) {
-            string error = e.Message;
-            if (e.InnerException != null) {
-                error+="\n"+e.InnerException.Message;
-            }
-            this._logger.LogError($"Hub Connection Failed, Exception: \n {error}");
-            this._eventConsole.Log("Hub Connection Failed",AlertStyle.Danger);
-        }
+        this._hubConnection.On<bool>(HubConstants.Events.OnStationConnection, this.OnStationConnection);
+        return this.StartConnection();
    }
-   
+
+   private Task OnStationConnection(bool usbStatus) {
+     this._usbConnected = usbStatus;
+     return Task.CompletedTask;
+   }
+
+   private Task ToggleTemperatureHandler() {
+       if(this.Connected){
+           return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,StationCommand.ToggleHeat);
+       }
+
+       this.NotifyNotConnected();
+       return Task.CompletedTask;
+   }
+
+   private Task CycleCurrentHandler() {
+       if(this.Connected){
+           return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,StationCommand.CycleCurrent);
+       }
+       this.NotifyNotConnected();
+       return Task.CompletedTask;
+   }
+
    private Task StationHubConnectionOnOnHubConnected(Boolean stat, String arg) {
        if (stat) {
            var notification=new NotificationMessage { 
@@ -134,6 +144,7 @@
        }
        return Task.CompletedTask;
    }
+  
    private void UsbConnectHandler(string message) {
        var notification=new NotificationMessage { 
            Severity = NotificationSeverity.Success, 
@@ -143,7 +154,7 @@
        this.NotificationService.Notify(notification);
        this._eventConsole.Log(message,AlertStyle.Info);
    }
-   
+  
    private Task UsbDisconnectedHandler(string message) {
        var notification=new NotificationMessage { 
            Severity = NotificationSeverity.Error, 
@@ -164,10 +175,9 @@
        this.NotificationService.Notify(notification);
        this._eventConsole.Log(message,AlertStyle.Danger);
    }
-
-   private async Task OnSerialComReceived(StationSerialData data) {
+   private Task OnSerialComReceived(StationSerialData data) {
        this._data = data;
-       await InvokeAsync(StateHasChanged);
+       return InvokeAsync(StateHasChanged);;
    }
 
    private Task OnSerialComMessageReceived(string message) {
@@ -175,44 +185,47 @@
        return Task.CompletedTask;
    }
    
-   private async Task OnStartClicked(bool state) {
-       if (state) {
-           await this.StationHubConnection.SendPause();
-           this._eventConsole.Log("Pause Clicked",AlertStyle.Info);
-       } else {
-           await this.StationHubConnection.SendStart();
-           this._eventConsole.Log("Start Clicked",AlertStyle.Info);
+   private Task OnStartClicked(bool state) {
+       if (this.Connected) {
+           var command = state ? StationCommand.Pause : StationCommand.Start;
+           return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand, command);
        }
+       this.NotifyNotConnected();
+       return Task.CompletedTask;
    }
    
-   private async Task OnResetClicked() {
-       await this.StationHubConnection.SendReset();
-       this._eventConsole.Log("Reset Clicked",AlertStyle.Warning);
+   private Task OnResetClicked() {
+       if (this.Connected) {
+           this._eventConsole.Log("Reset Clicked",AlertStyle.Warning);
+           return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.Reset);
+       }
+       this.NotifyNotConnected();
+       return Task.CompletedTask;
    }
    
-   private async Task OnConnectClicked(bool state) {
-       if (state) {
-           await this.StationHubConnection.StopConnection();
+   private Task OnConnectClicked() {
+       if (this.Connected) {
            this._eventConsole.Log("Disconnect Clicked",AlertStyle.Warning);
+           return this._hubConnection.StopAsync();
+          
        } else {
-          await this.StationHubConnection.StartConnection();
-          this._eventConsole.Log("Connect Clicked",AlertStyle.Success);
+           this._eventConsole.Log("Connect Clicked",AlertStyle.Success);
+           return this.StartConnection();
        }
    }
 
-   private async Task OnUsbConnectClicked(bool state) {
-       if (state) {
-           if (this.Connected) {
-               await this._hubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
+   private Task OnUsbConnectClicked() {
+       if (this.Connected) {
+           if (this._usbConnected) {
+               this._eventConsole.Log("Usb Disconnect Clicked",AlertStyle.Warning);
+               return this._hubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
+           } else {
+               this._eventConsole.Log("Usb Connect Clicked",AlertStyle.Info);
+               return this._hubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
            }
-           this._eventConsole.Log("Usb Disconnect Clicked",AlertStyle.Warning);
-       } else {
-           if (this.Connected) {
-               await this._hubConnection.InvokeAsync(HubConstants.Methods.DisconnectUsb);
-           }
-           //await this.StationHubConnection.SendUsbConnect();
-           this._eventConsole.Log("Usb Connect Clicked",AlertStyle.Info);
        }
+       this.NotifyNotConnected();
+       return Task.CompletedTask;
    }
    
    private void SelectedTabChangedHandler(int obj) {
@@ -225,9 +238,53 @@
        }
        this._eventConsole.Log($"Tab Changed {obj}",AlertStyle.Info);
    }
+   
+   public async Task StartConnection() {
+       if (!this.Connected) {
+           try {
+               await this._hubConnection.StartAsync();
+               if (this.Connected) {
+                   this._eventConsole.Log("Hub Connection Established",AlertStyle.Success);
+                   this.Notify("Connected Established","Connected to Station Service",NotificationSeverity.Success);
+               } else {
+                   this._eventConsole.Log("Hub Connection Failed",AlertStyle.Danger);
+                   this.Notify("Connected Failed","Failed to connect to Station Service",NotificationSeverity.Error,30000);
+               }
+           }  catch(Exception e) {
+               string error = e.Message;
+               if (e.InnerException != null) {
+                   error+="\n"+e.InnerException.Message;
+               }
+               this._logger.LogError($"Hub Connection Failed, Exception: \n {error}");
+               this._eventConsole.Log("Hub Connection Failed",AlertStyle.Danger);
+               this.Notify("Connected Failed",$"Failed to connect to Station Service. Exception thrown:\n{error}",
+                   NotificationSeverity.Error,30000);
+           }
+       }
+   }
+   
+   private void Notify(string summary,string message,NotificationSeverity severity=NotificationSeverity.Info,int duration=5000) {
+       var notification=new NotificationMessage { 
+           Severity = severity, 
+           Summary = summary, 
+           Detail = message, 
+           Duration = 10000 };
+       this.NotificationService.Notify(notification);
+   }
+
+   private void NotifyNotConnected() {
+       var notification=new NotificationMessage { 
+           Severity = NotificationSeverity.Error, 
+           Summary = "Station Service Not Connected", 
+           Detail = "Cannot Send Command", 
+           Duration = 10000 };
+       this.NotificationService.Notify(notification);
+   }
+   
    private async Task CurrentChangedHandler(StationCurrent stationCurrent) {
        this._eventConsole.Log($"Current Selection Changed.  Value {stationCurrent.Name}",AlertStyle.Danger);
    }
+   
    private async Task TempChangedHandler(double temp) {
        this._eventConsole.Log($"Temp Value Changed.  Value {temp}",AlertStyle.Base);
    }
@@ -236,40 +293,7 @@
        if(this._hubConnection!=null) {
            await this._hubConnection.DisposeAsync();
        }
-       /*this.StationHubConnection.OnStationDataReceived -= this.OnSerialComReceived;
-       this.StationHubConnection.OnHubConnected -= StationHubConnectionOnOnHubConnected;
-       this.StationHubConnection.OnUsbDisconnected-=this.UsbDisconnectedHandler;
-       this.StationHubConnection.OnStationMessageReceived-=this.OnSerialComMessageReceived;*/
    }
-   
-   
-           /*var hubAddress=Environment.GetEnvironmentVariable("StationHub");
-        string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
-        //string addr =//HubConstants.HubAddress;
-        this._hubConnection = new HubConnectionBuilder()
-            .WithUrl("http://localhost:5066/hubs/station")
-            .Build();
-        /*this._hubConnection = new HubConnectionBuilder()
-            .WithUrl(addr)
-            .Build();#1#
 
-        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnSerialCom,this.OnSerialComReceived);
-        this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
-        this._hubConnection.On<string>(HubConstants.Events.OnTestStatus, this.OnSerialComMessageReceived);
-        this._hubConnection.On<string>(HubConstants.Events.OnUsbDisconnect,this.UsbDisconnectedHandler);
-        this._hubConnection.On<string>(HubConstants.Events.OnUsbConnectFailed,this.UsbConnectFailedHandler);
-        this._hubConnection.On<string>(HubConstants.Events.OnUsbConnect, this.UsbConnectHandler);
-        try {
-            await this._hubConnection.StartAsync();
-            this._logger.LogInformation("Hub Connection Established");
-            this._eventConsole.Log("Hub Connection Established",AlertStyle.Success);
-        } catch(Exception e) {
-            string error = e.Message;
-            if (e.InnerException != null) {
-                error+="\n"+e.InnerException.Message;
-            }
-            this._logger.LogError($"Hub Connection Failed, Exception: \n {error}");
-            this._eventConsole.Log("Hub Connection Failed",AlertStyle.Danger);
-        }*/
 } 
 

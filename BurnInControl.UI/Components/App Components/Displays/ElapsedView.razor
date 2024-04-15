@@ -1,0 +1,14 @@
+﻿
+<RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="2" Style="margin: 10px; border: black">
+    <h3>Elapsed</h3>
+    <RuntimeDisplay DisplayText="Runtime"
+                    TextStyle="TextStyle.H4"
+                    State="true"
+                    RuntimeSecs="@this.Elapsed"
+                    LabelFontSize="12"/>
+    <ProbeRuntimes RunTimes="@this.ProbeRuntimes"/>
+</RadzenStack>
+@code {
+    [Parameter] public List<long> ProbeRuntimes { get; set; } = [0,0,0,0,0,0];
+    [Parameter] public long Elapsed { get; set; } = 0;
+}

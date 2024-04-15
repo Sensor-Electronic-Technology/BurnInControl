@@ -44,9 +44,9 @@
         }
         
         if ((seconds / 10) < 1 || seconds==0) {
-            value+="0"+seconds+":";
+            value+="0"+seconds;
         } else {
-            value+=seconds+":";
+            value+=seconds;
         }
         this.DisplayValue=value;
         return base.OnParametersSetAsync();

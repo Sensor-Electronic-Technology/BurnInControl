@@ -11,8 +11,15 @@ namespace StationService.Infrastructure.Hub;
 public class StationHub:Hub<IStationHub> {
     private readonly IMediator _mediator;
     public StationHub(IMediator mediator) {
-        _mediator = mediator;
+        this._mediator = mediator;
     }
+    public override Task OnConnectedAsync() {
+        return this._mediator.Send(new RequestConnectionStatus());
+    }
+    public Task RequestUsbConnectionStatus() {
+        return this._mediator.Send(new RequestConnectionStatus());
+    }
+    
     public async Task SendSerialCom(StationSerialData serialData) {
         await this.Clients.All.OnSerialCom(serialData);
     }
@@ -21,9 +28,10 @@ public class StationHub:Hub<IStationHub> {
         await this.Clients.All.OnSerialComMessage(message);
     }
     public async Task ConnectUsb() {
-        await this._mediator.Send(new ConnectionAction(){Action=ConnectAction.Connect});
+        await this._mediator.Send(new ConnectionAction() {
+            Action=ConnectAction.Connect
+        });
     }
-    
     public async Task DisconnectUsb() {
         await this._mediator.Send(new ConnectionAction(){Action=ConnectAction.Disconnect});
     }

@@ -13,7 +13,7 @@ using Microsoft.Extensions.Options;
 using StationService.Infrastructure.Hub;
 namespace StationService.Infrastructure.TestLogs;
 
-public class BurnInTestService{
+public class BurnInTestService:IBurnInTestService{
     private readonly TestLogDataService _testLogDataService;
     private StationSerialData _latestData;
     private BurnInTestLog _runningTest=new BurnInTestLog();
@@ -101,12 +101,20 @@ public class BurnInTestService{
         }
         
     }
-    
+
+    public Task<ErrorOr<Success>> SetupTest(List<WaferSetup> setup) {
+        throw new NotImplementedException();
+    }
+
     public void StartTestLogging() {
         //this._runningTest.SetStart(DateTime.Now,data);
 
     }
-    
+
+    ErrorOr<Success> IBurnInTestService.Log(StationSerialData data) {
+        throw new NotImplementedException();
+    }
+
     public void CompleteTest() {
         this._controllerStartedTest = false;
     }

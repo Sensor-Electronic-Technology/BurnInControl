@@ -25,12 +25,13 @@ public interface IStationHub {
     
 #endregion
 
-#region UsbStatus
+#region ConnectionStatus
     Task OnUsbConnectFailed(string message);
     Task OnUsbDisconnect(string message);
     Task OnUsbConnect(string message);
     Task OnUsbDisconnectFailed(string message);
-#endregion
+    Task OnStationConnection(bool usbStatus);
+    #endregion
 
 
 

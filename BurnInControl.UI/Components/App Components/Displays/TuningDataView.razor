@@ -1,0 +1,65 @@
+@using BurnInControl.UI.Data
+@rendermode InteractiveServer
+
+    <RadzenStack Orientation="Orientation.Vertical" Style="margin: 5rem">
+        <HeaterDisplays Temperatures="@this.HeaterTemperatures"
+                        HeaterStates="@this.HeaterStates"/>
+        <RadzenChart Style="height: 500px;">
+            <RadzenLineSeries Smooth="false"
+                              Data="@H1Data"
+                              CategoryProperty="TimeSecs"
+                              Title="H1"
+                              LineType="LineType.Solid"
+                              ValueProperty="TempC">
+                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle" />
+                <RadzenSeriesDataLabels Visible="false"/>
+            </RadzenLineSeries>
+            <RadzenLineSeries Smooth="false"
+                              Data="@H2Data"
+                              CategoryProperty="TimeSecs"
+                              Title="H2"
+                              LineType="LineType.Solid"
+                              ValueProperty="TempC">
+                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                <RadzenSeriesDataLabels Visible="false"/>
+            </RadzenLineSeries>
+            <RadzenLineSeries Smooth="false"
+                              Data="@H3Data"
+                              CategoryProperty="TimeSecs"
+                              Title="H3"
+                              LineType="LineType.Solid"
+                              ValueProperty="TempC">
+                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                <RadzenSeriesDataLabels Visible="false"/>
+            </RadzenLineSeries>
+            <RadzenCategoryAxis  Min="@this.YAxisMin" Max="@this.YAxisMax" Max="200" LineType="LineType.Solid">
+                <RadzenAxisTitle Text="Time(s)"/>
+                <RadzenGridLines Visible="true" StrokeWidth="3"/>
+            </RadzenCategoryAxis>
+            <RadzenValueAxis  Min="@this.YAxisMin" Max="@this.YAxisMax" Step="10">
+                <RadzenGridLines Visible="true" StrokeWidth="3"/>
+                <RadzenAxisTitle Text="Temperature(C)"/>
+            </RadzenValueAxis>
+        </RadzenChart>
+    </RadzenStack>
+
+
+
+@code {
+    [Parameter]
+    public List<TemperatureData> H1Data { get; set; }=new List<TemperatureData>();
+    [Parameter]
+    public List<TemperatureData> H2Data { get; set; }=new List<TemperatureData>();
+    [Parameter]
+    public List<TemperatureData> H3Data { get; set; }=new List<TemperatureData>();
+    [Parameter]
+    public List<double> HeaterTemperatures { get; set; }=[0,0,0];
+    [Parameter] 
+    public List<bool> HeaterStates { get; set; } = [false,false,false];
+
+    [Parameter] public int YAxisMin { get; set; } = 20;
+    [Parameter] public int YAxisMax { get; set; } = 100;
+    [Parameter] public int XAxisMin { get; set; } = 0;
+    [Parameter] public int XAxisMax { get; set; } = 2000;
+
+}

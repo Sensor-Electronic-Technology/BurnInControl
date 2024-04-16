@@ -1,0 +1,154 @@
+﻿@page "/tune-view"
+@using System.Timers
+@using BurnInControl.HubDefinitions.Hubs
+@using BurnInControl.Shared.ComDefinitions
+@using BurnInControl.UI.Data
+@using Microsoft.AspNetCore.SignalR.Client
+@using BurnInControl.UI.Components.App_Components.Displays
+@rendermode InteractiveServer
+
+@*<RadzenStack Orientation="Orientation.Vertical">
+    <AutoTuneControl StartPressed="@this.StartHandler"
+                     CancelPressed="@this.CancelHandler"/>
+    <TuningDataView H1Data="@this._h1Data"
+                                    H2Data="@this._h2Data"
+                                    H3Data="@this._h3Data"
+                                    HeaterStates="@this._data.HeaterStates"
+                                    HeaterTemperatures="@this._data.Temperatures"/>
+    <EventConsole @ref="@this._eventConsole"
+                  LogTitle="AutoTune Log"/>
+</RadzenStack>*@
+
+<RadzenSplitter Orientation="Orientation.Horizontal">
+    <RadzenSplitterPane Size="15%" Collapsed="@this._runtimePaneCollapsed">
+        <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+            <RadzenStack Orientation="Orientation.Vertical">
+                <RadzenText TextStyle="TextStyle.DisplayH5" Text="Tuning Controls"></RadzenText>
+                <AutoTuneControl StartPressed="@this.StartHandler"
+                                 CancelPressed="@this.CancelHandler"
+                                 YMinChanged="YMinCallback"
+                                 YMaxChanged="YMaxCallback"
+                                 XMinChanged="XMinCallback"
+                                 XMaxChanged="XMaxCallback"/>
+            </RadzenStack>
+        </RadzenRow>
+
+    </RadzenSplitterPane>
+    <RadzenSplitterPane Size="80%" Collapsible="false">
+        <RadzenSplitter Orientation="Orientation.Vertical" style=" border: 1px solid rgba(0,0,0,.08);">
+            <RadzenSplitterPane Size="75%" Collapsible="false" >
+                <TuningDataView H1Data="@this._h1Data"
+                                H2Data="@this._h2Data"
+                                H3Data="@this._h3Data"
+                                HeaterStates="@this._data.HeaterStates"
+                                HeaterTemperatures="@this._data.Temperatures"/>
+            </RadzenSplitterPane>
+            <RadzenSplitterPane Size="25%"
+                                Resizable="true"
+                                Collapsed="@this._eventPaneCollapsed" >
+                <RadzenSplitter>
+                    <RadzenSplitterPane>
+                        <EventConsole @ref="@this._eventConsole"
+                                      LogTitle="AutoTune Log"/>
+                    </RadzenSplitterPane>
+                </RadzenSplitter>
+            </RadzenSplitterPane>
+        </RadzenSplitter>
+    </RadzenSplitterPane>
+</RadzenSplitter>
+
+@code {
+    private EventConsole _eventConsole=new EventConsole();
+    private HubConnection? _hubConnection;
+    bool _runtimePaneCollapsed=false;
+    bool _controlPaneCollapsed=false;
+    bool _eventPaneCollapsed=false;
+    TuningSerialData _data=new TuningSerialData();
+    private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;
+    Timer? _timer;
+    int count = 0;
+    private int _ymin = 20; 
+    private int _ymax = 100; 
+    private int _xmin = 0; 
+    private int _xmax = 200; 
+        
+    List<TemperatureData> _h1Data = new List<TemperatureData>();
+    List<TemperatureData> _h2Data = new List<TemperatureData>();
+    List<TemperatureData> _h3Data = new List<TemperatureData>();
+    
+    protected override Task OnInitializedAsync() {
+        /*var hubAddress=Environment.GetEnvironmentVariable("StationHub");
+        string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
+        this._hubConnection = new HubConnectionBuilder()
+            .WithUrl(addr)
+            .Build();*/
+        /*this._hubConnection = new HubConnectionBuilder()
+            .WithUrl("http://localhost:5066/hubs/station")
+            .Build();*/
+        //this._hubConnection.On<TuningSerialData>(HubConstants.Events.OnTuningData,this.OnStationDataHandler);
+
+        return base.OnInitializedAsync();
+    }
+
+    private Task StartHandler() {
+        this._timer = new Timer();
+        this._timer.Interval = 500;
+        this._timer.AutoReset = true;
+        this._timer.Elapsed+=this.OnTimedEvent;
+        this._timer.Start();
+        this._eventConsole.Log("Starting Timer...");
+        return Task.CompletedTask;
+    }
+
+    private Task CancelHandler() {
+        this._timer?.Stop();
+        this._h1Data.Clear();
+        this._h2Data.Clear();
+        this._h3Data.Clear();
+        this.count = 0;
+        this._eventConsole.Log("Canceling Timer...");
+        return Task.CompletedTask;
+    }
+    
+    private void OnTimedEvent(object? source, ElapsedEventArgs e) {
+        this.count++;
+        TuningSerialData data = new TuningSerialData {
+            IsTuning = true,
+            ElapsedSeconds = (ulong)count,
+            TemperatureSetPoint = 85
+        };
+        data.Temperatures = new List<double>();
+        for (int i = 0; i < 3; i++) {
+            double value = (23 + (i + 1)) * Math.Exp(0.01 * count);
+            data.Temperatures.Add(Math.Round(value, 0));
+            data.HeaterStates[i]=!this._data.HeaterStates[i];
+        }
+        this._data.Temperatures=data.Temperatures;
+        this._data.HeaterStates=data.HeaterStates;
+        this.OnStationDataHandler(data);
+    }
+
+
+    private Task OnStationDataHandler(TuningSerialData data) {
+        if (data.IsTuning) {
+            this._h1Data.Add(new TemperatureData { TimeSecs = data.ElapsedSeconds, TempC = data.Temperatures[0] });
+            this._h2Data.Add(new TemperatureData { TimeSecs = data.ElapsedSeconds, TempC = data.Temperatures[1] });
+            this._h3Data.Add(new TemperatureData { TimeSecs = data.ElapsedSeconds, TempC = data.Temperatures[2] });
+        }
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private void YMinCallback(int obj) {
+        throw new NotImplementedException();
+    }
+    private void YMaxCallback(int obj) {
+        throw new NotImplementedException();
+    }
+    private void XMinCallback(int obj) {
+        throw new NotImplementedException();
+    }
+    private void XMaxCallback(int obj) {
+        throw new NotImplementedException();
+    }
+
+}

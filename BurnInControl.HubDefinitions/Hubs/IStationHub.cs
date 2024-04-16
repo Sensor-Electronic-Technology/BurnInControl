@@ -6,7 +6,8 @@ namespace BurnInControl.HubDefinitions.Hubs;
 public interface IStationHub {
 
 #region StationNotifications
-    Task OnSerialCom(StationSerialData serialData);
+    Task OnStationData(StationSerialData serialData);
+    Task OnTuningData(TuningSerialData tuningData);
     Task OnSerialComError(StationMsgPrefix prefix,string message);
     Task OnSerialComMessage(string message);
     Task OnSerialNotifyMessage(string message);

@@ -21,7 +21,7 @@ public class StationHub:Hub<IStationHub> {
     }
     
     public async Task SendSerialCom(StationSerialData serialData) {
-        await this.Clients.All.OnSerialCom(serialData);
+        await this.Clients.All.OnStationData(serialData);
     }
     
     public async Task SendSerialComMessage(string message) {

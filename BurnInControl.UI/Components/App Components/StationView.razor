@@ -50,7 +50,7 @@
             </RadzenSplitterPane>
             <RadzenSplitterPane Size="25%" 
                                 Resizable="true" 
-                                Collapsed="this._eventPaneCollapsed" >
+                                Collapsed="@this._eventPaneCollapsed" >
                 <RadzenSplitter>
                     <RadzenSplitterPane>
                         <EventConsole @ref="@this._eventConsole" 
@@ -76,7 +76,7 @@
 
 @code {
    private EventConsole _eventConsole=new EventConsole();
-   private StationSerialData? _data=new StationSerialData();
+   private StationSerialData? _data=new();
    private HubConnection? _hubConnection;
    private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;
    private bool _usbConnected=false;
@@ -85,23 +85,25 @@
    private bool _controlPaneCollapsed = false;
    private bool _runtimePaneCollapsed = false;
 
-   protected override Task OnInitializedAsync() {
-        /*var hubAddress=Environment.GetEnvironmentVariable("StationHub");
+   protected override async Task OnInitializedAsync() {
+        /*
+        var hubAddress=Environment.GetEnvironmentVariable("StationHub");
         string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
         this._hubConnection = new HubConnectionBuilder()
             .WithUrl(addr)
-            .Build();*/
+            .Build();
+        */
         this._hubConnection = new HubConnectionBuilder()
             .WithUrl("http://localhost:5066/hubs/station")
             .Build();
-        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnSerialCom,this.OnSerialComReceived);
+        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,this.OnSerialComReceived);
         this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
         this._hubConnection.On<string>(HubConstants.Events.OnTestStatus, this.OnSerialComMessageReceived);
         this._hubConnection.On<string>(HubConstants.Events.OnUsbDisconnect,this.UsbDisconnectedHandler);
         this._hubConnection.On<string>(HubConstants.Events.OnUsbConnectFailed,this.UsbConnectFailedHandler);
         this._hubConnection.On<string>(HubConstants.Events.OnUsbConnect, this.UsbConnectHandler);
         this._hubConnection.On<bool>(HubConstants.Events.OnStationConnection, this.OnStationConnection);
-        return this.StartConnection();
+        //await this.StartConnection();
    }
 
    private Task OnStationConnection(bool usbStatus) {
@@ -239,10 +241,10 @@
        this._eventConsole.Log($"Tab Changed {obj}",AlertStyle.Info);
    }
    
-   public async Task StartConnection() {
+   private async Task StartConnection() {
        if (!this.Connected) {
            try {
-               await this._hubConnection.StartAsync();
+               await this._hubConnection?.StartAsync();
                if (this.Connected) {
                    this._eventConsole.Log("Hub Connection Established",AlertStyle.Success);
                    this.Notify("Connected Established","Connected to Station Service",NotificationSeverity.Success);

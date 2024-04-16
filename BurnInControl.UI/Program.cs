@@ -22,7 +22,6 @@ builder.Services.AddSingleton<IMongoClient>(new MongoClient("mongodb://mongodb:2
 builder.Services.AddSingleton<ConsoleWriter>();
 builder.Services.AddSingleton<StationHubConnection>();
 builder.Services.AddSingleton<StationStateService>();
-builder.Services.AddSingleton<CircuitHandler, TrackingCircuitHandler>();
 
 var app = builder.Build();
 

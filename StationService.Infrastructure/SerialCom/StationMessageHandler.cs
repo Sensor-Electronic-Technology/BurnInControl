@@ -67,41 +67,46 @@ public class StationMessageHandler:IStationMessageHandler{
                 var packetElem=doc.RootElement.GetProperty("Packet");
                 switch (prefix.Name) {
                     case nameof(StationMsgPrefix.DataPrefix): {
+                        //Send to UI and BurnInTestService
                         return this.HandleData(packetElem);
+                    }
+                    case nameof(StationMsgPrefix.TuneComPrefix): {
+                        //Send to UI
+                        return this.HandleTuneData(packetElem);
                     }
                     case nameof(StationMsgPrefix.MessagePrefix): {
                         //Send to UI
                         return this.HandleMessage(packetElem, false);
                     }
-                    case nameof(StationMsgPrefix.HeaterTuneComplete): {
+                    case nameof(StationMsgPrefix.HeaterTuneCompletePrefix): {
                         //TODO: Add handle for received Tuning results
                         //Send to UI and wait for Save or Discard
                         return Task.CompletedTask;
                         //return this.HandleIdChanged(packetElem);
                     }
-                    case nameof(StationMsgPrefix.HeaterNotify): {
+                    case nameof(StationMsgPrefix.HeaterNotifyPrefix): {
                         //TODO: Add Handle for heater notify that tune is completed
                         // This only notifies the user of progress
                         //Send to UI
                         return Task.CompletedTask;
                     }
-                    case nameof(StationMsgPrefix.TestStatus): {
+                    case nameof(StationMsgPrefix.TestStatusPrefix): {
                         //Send to BurnInTestService and start logging
                         return this.HandleTestStatus(packetElem);
                     }
-                    case nameof(StationMsgPrefix.TestStartFromLoad): {
+                    case nameof(StationMsgPrefix.TestStartFromLoadPrefix): {
                         //Send to BurnInTestService.  Load and start test
                         return this.HandleTestStartedFrom(packetElem);
                     }
-                    case nameof(StationMsgPrefix.TestCompleted): {
+                    case nameof(StationMsgPrefix.TestCompletedPrefix): {
                         //Send to BurnInTestService and complete test
                         return this.HandleTestCompleted(packetElem);
                     }
-                    case nameof(StationMsgPrefix.IdRequest): {
+                    case nameof(StationMsgPrefix.IdRequestPrefix): {
                         //Send to controller and respond with ACK
                         return Task.CompletedTask;
                     }
-                    case nameof(StationMsgPrefix.VersionRequest): {
+                    case nameof(StationMsgPrefix.VersionRequestPrefix): {
                         //Send to firmware Updated and respond with ACK
                         return Task.CompletedTask;
                     }
@@ -127,7 +132,20 @@ public class StationMessageHandler:IStationMessageHandler{
                 /*this._mediator.Send(new LogCommand() {
                     Data = serialData
                 });*/
-                return this._hubContext.Clients.All.OnSerialCom(serialData);
+                return this._hubContext.Clients.All.OnStationData(serialData);
+            }
+            return Task.CompletedTask;
+        } catch(Exception e) {
+            this._logger.LogWarning("Failed to deserialize station data");
+            return Task.CompletedTask;
+        }
+    }
+    
+    private Task HandleTuneData(JsonElement element) {
+        try {
+            var tuningData=element.Deserialize<TuningSerialData>();
+            if (tuningData != null) {
+                return this._hubContext.Clients.All.OnTuningData(tuningData);
             }
             return Task.CompletedTask;
         } catch(Exception e) {
@@ -190,7 +208,7 @@ public class StationMessageHandler:IStationMessageHandler{
         } catch(Exception e) {
             var message = $"Failed to parse test status message packet. Exception: {e.Message}";
             this._logger.LogError(message);
-            return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStatus,$"Error: {message}");
+            return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStatusPrefix,$"Error: {message}");
         }
     }
 

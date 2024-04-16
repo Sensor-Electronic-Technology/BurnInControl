@@ -35,7 +35,7 @@ for (int i = 0; i < 10; i++) {
     Prefix = StationMsgPrefix.CommandPrefix,
     Packet = StationCommand.Reset
 };*/
-var jsonString=await File.ReadAllTextAsync(@"C:\temp\jsonTest.txt");
+/*var jsonString=await File.ReadAllTextAsync(@"C:\temp\jsonTest.txt");
 try {
     var doc=JsonSerializer.Deserialize<JsonDocument>(jsonString);
     var prefixValue=doc.RootElement.GetProperty("Prefix").ToString();
@@ -47,11 +47,11 @@ try {
     Console.WriteLine($"Object: CurrentSetPoint: {serialData.CurrentSetPoint}");
 }catch(Exception e) {
     Console.WriteLine(e.Message);
-}
+}*/
 
 //var output=JsonSerializer.Serialize<MessagePacket<StationCommand>>(packet);
-Console.WriteLine("Input: ");
-Console.WriteLine(jsonString);
+/*Console.WriteLine("Input: ");
+Console.WriteLine(jsonString);*/
 
 
 

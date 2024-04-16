@@ -1,83 +1,98 @@
-﻿<h3>AutoTuneControl</h3>
-
-<RadzenRow>
-    <RadzenChart>
-        <RadzenLineSeries Smooth="false" 
-                          Data="@h1Data" 
-                          CategoryProperty="TimeSecs" 
-                          Title="H1" 
-                          LineType="LineType.Dashed" 
-                          ValueProperty="Revenue">
-            <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle" />
-            <RadzenSeriesDataLabels Visible="false" />
-        </RadzenLineSeries>
-        <RadzenLineSeries Smooth="false"
-                          Data="@h2Data"
-                          CategoryProperty="TimeSecs"
-                          Title="H2"
-                          LineType="LineType.Dashed"
-                          ValueProperty="Revenue">
-            <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle" />
-            <RadzenSeriesDataLabels Visible="false" />
-        </RadzenLineSeries>
-        <RadzenLineSeries Smooth="false"
-                          Data="@h3Data"
-                          CategoryProperty="TimeSecs"
-                          Title="H3"
-                          LineType="LineType.Dashed"
-                          ValueProperty="Revenue">
-            <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle" />
-            <RadzenSeriesDataLabels Visible="false" />
-        </RadzenLineSeries>
-        <RadzenCategoryAxis Padding="20" />
-        <RadzenValueAxis>
-            <RadzenGridLines Visible="true" />
-            <RadzenAxisTitle Text="Temperature (\u2103)"/>
-        </RadzenValueAxis>
-    </RadzenChart>
-</RadzenRow>
-<RadzenStack Orientation="Orientation.Horizontal"
+@rendermode InteractiveServer
+<RadzenStack Orientation="Orientation.Vertical"
              JustifyContent="JustifyContent.Center"
-             AlignItems="AlignItems.Center">
+             AlignItems="AlignItems.Center" Style="width: fit-content">
     <RadzenFieldset Text="Switch Mode">
-        <RadzenToggleButton Text="@_swButtonText"
-                            Value="@_swButtonValue"
-                            Value="false"
-                            Click="ModeSwitchHandler"
+        <RadzenToggleButton Text="@(_swButtonValue ? "AutoTune" : "Heating")"
+                            @bind-Value="@_swButtonValue"
+                            Click="@ModeSwPressed"
                             ToggleButtonStyle="ButtonStyle.Info" 
                             ToggleShade="Shade.Dark"/>
     </RadzenFieldset>
-    <RadzenFieldset Text="Tune Control">
+    <RadzenFieldset Text="Tune Control" Visible="true">
         <RadzenStack Orientation="Orientation.Horizontal">
-            <RadzenButton Text="Start"/>
-            <RadzenButton Text="Cancel"/>
+            <RadzenButton Text="Start" Click="@StartPressedHandler"/>
+            <RadzenButton Text="Cancel" Click="@CancelPressedHandler"/>
         </RadzenStack>
     </RadzenFieldset>
     <RadzenFieldset Text="Tune Save/Discard">
-        <RadzenButton Text="Save"/>
-        <RadzenButton Text="Discard"/>
+        <RadzenButton Text="Save" Click="@SavePressed"/>
+        <RadzenButton Text="Discard" Click="@DiscardPressed"/>
     </RadzenFieldset>
+    <RadzenStack Orientation="Orientation.Horizontal">
+        <RadzenFieldset Text="YAxis">
+            <RadzenFieldset Text="YMax">
+                <RadzenNumeric TValue="int" @bind-Value="@this._ymin" Change="@(async () => { await this.YMinChanged.InvokeAsync(this._ymin); })"/>
+            </RadzenFieldset>
+            <RadzenFieldset Text="YMin">
+                <RadzenNumeric TValue="int" @bind-Value="@this._ymax" Change="@(async () => { await this.YMaxChanged.InvokeAsync(this._ymax); })"/>
+            </RadzenFieldset>
+        </RadzenFieldset>
+        <RadzenFieldset Text="XAxis">
+            <RadzenFieldset Text="XMax">
+                <RadzenNumeric TValue="int" @bind-Value="@this._xmin" Change="@(async () => { await this.XMinChanged.InvokeAsync(this._xmin); })"/>
+            </RadzenFieldset>
+            <RadzenFieldset Text="XMin">
+                <RadzenNumeric TValue="int" @bind-Value="@this._xmax" Change="@(async () => { await this.XMaxChanged.InvokeAsync(this._xmax); })"/>
+            </RadzenFieldset>
+        </RadzenFieldset>
+        <RadzenFieldset Text="XY Step">
+            <RadzenFieldset Text="X Step">
+                <RadzenNumeric TValue="int" @bind-Value="@this._xstep" Change="@(async () => { await this.XMinChanged.InvokeAsync(this._xmin); })"/>
+            </RadzenFieldset>
+            <RadzenFieldset Text="Y Step">
+                <RadzenNumeric TValue="int" @bind-Value="@this._ystep" Change="@(async () => { await this.YStepChanged.InvokeAsync(this._xmax); })"/>
+            </RadzenFieldset>
+        </RadzenFieldset>
+
+    </RadzenStack>
+
 </RadzenStack>
 
 @code {
-    
-    List<TempData> h1Data = new List<TempData>();
-    List<TempData> h2Data = new List<TempData>();
-    List<TempData> h3Data = new List<TempData>();
-
-    private bool _swButtonValue=true;
+    private bool _swButtonValue=false;
     private string _swButtonText="AutoTune";
     
+    [Parameter]
+    public EventCallback ModeSwPressed { get; set; }
+    [Parameter]
+    public EventCallback StartPressed { get; set; }
+    [Parameter]
+    public EventCallback CancelPressed { get; set; }
+    [Parameter]
+    public EventCallback SavePressed { get; set; }
+    [Parameter]
+    public EventCallback DiscardPressed { get; set; }
+    [Parameter]
+    public EventCallback<int> XMinChanged { get; set; }
+    [Parameter]
+    public EventCallback<int> XMaxChanged { get; set; }
+    [Parameter]
+    public EventCallback<int> YMinChanged { get; set; }
+    [Parameter]
+    public EventCallback<int> YMaxChanged { get; set; }
+    [Parameter]
+    public EventCallback<int> YStepChanged { get; set; }
+    [Parameter]
+    public EventCallback<int> XStepChanged { get; set; }
+
+    private int _ymin = 20; 
+    private int _ymax = 100; 
+    private int _xmin = 0; 
+    private int _xmax = 200; 
+    private int _ystep = 10;
+    private int _xstep = 10;
     
-    public record TempData {
-        public double TimeSecs { get; set; }
-        public double TempC { get; set; }
+
+    private Task StartPressedHandler() {
+        return this.StartPressed.InvokeAsync();
+    }
+    private Task CancelPressedHandler() {
+        return this.CancelPressed.InvokeAsync();
     }
 
-
-    private void ModeSwitchHandler() {
-        this._swButtonValue = !this._swButtonValue;
-        this._swButtonText=(this._swButtonValue ? "AutoTune" : "Heating");
+    private Task OnYMaxChanged() {
+        return this.YMaxChanged.InvokeAsync(_ymax);
     }
 
 }

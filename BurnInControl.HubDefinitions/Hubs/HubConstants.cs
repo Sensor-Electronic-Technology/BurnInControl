@@ -9,7 +9,8 @@ public static class HubConstants {
     public static string HubAddress => "http://192.168.68.112:5000/hubs/station";
 
     public static class Events {
-        public static string OnSerialCom => "OnSerialCom";
+        public static string OnStationData => "OnStationData";
+        public static string OnTuningData => "OnTuningData";
         public static string OnSerialComMessage => "OnSerialComMessage";
         public static string OnUsbConnect => "OnUsbConnect";
         public static string OnUsbDisconnect => "OnUsbDisconnect";

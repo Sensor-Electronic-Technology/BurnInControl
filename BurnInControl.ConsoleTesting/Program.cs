@@ -19,6 +19,15 @@ using WorkflowCore.Services;
 
 //TestStateMachine();
 
+string text = "AutoTune";
+bool sw=false;
+sw = true;
+for (int i = 0; i < 10; i++) {
+    sw = !sw;
+    text=sw ? "AutoTune":"Heating";
+    Console.WriteLine(text);
+}
+
 
 
 

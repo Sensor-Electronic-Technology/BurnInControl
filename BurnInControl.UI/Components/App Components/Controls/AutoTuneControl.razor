@@ -1,0 +1,83 @@
+﻿<h3>AutoTuneControl</h3>
+
+<RadzenRow>
+    <RadzenChart>
+        <RadzenLineSeries Smooth="false" 
+                          Data="@h1Data" 
+                          CategoryProperty="TimeSecs" 
+                          Title="H1" 
+                          LineType="LineType.Dashed" 
+                          ValueProperty="Revenue">
+            <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle" />
+            <RadzenSeriesDataLabels Visible="false" />
+        </RadzenLineSeries>
+        <RadzenLineSeries Smooth="false"
+                          Data="@h2Data"
+                          CategoryProperty="TimeSecs"
+                          Title="H2"
+                          LineType="LineType.Dashed"
+                          ValueProperty="Revenue">
+            <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle" />
+            <RadzenSeriesDataLabels Visible="false" />
+        </RadzenLineSeries>
+        <RadzenLineSeries Smooth="false"
+                          Data="@h3Data"
+                          CategoryProperty="TimeSecs"
+                          Title="H3"
+                          LineType="LineType.Dashed"
+                          ValueProperty="Revenue">
+            <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle" />
+            <RadzenSeriesDataLabels Visible="false" />
+        </RadzenLineSeries>
+        <RadzenCategoryAxis Padding="20" />
+        <RadzenValueAxis>
+            <RadzenGridLines Visible="true" />
+            <RadzenAxisTitle Text="Temperature (\u2103)"/>
+        </RadzenValueAxis>
+    </RadzenChart>
+</RadzenRow>
+<RadzenStack Orientation="Orientation.Horizontal"
+             JustifyContent="JustifyContent.Center"
+             AlignItems="AlignItems.Center">
+    <RadzenFieldset Text="Switch Mode">
+        <RadzenToggleButton Text="@_swButtonText"
+                            Value="@_swButtonValue"
+                            Value="false"
+                            Click="ModeSwitchHandler"
+                            ToggleButtonStyle="ButtonStyle.Info" 
+                            ToggleShade="Shade.Dark"/>
+    </RadzenFieldset>
+    <RadzenFieldset Text="Tune Control">
+        <RadzenStack Orientation="Orientation.Horizontal">
+            <RadzenButton Text="Start"/>
+            <RadzenButton Text="Cancel"/>
+        </RadzenStack>
+    </RadzenFieldset>
+    <RadzenFieldset Text="Tune Save/Discard">
+        <RadzenButton Text="Save"/>
+        <RadzenButton Text="Discard"/>
+    </RadzenFieldset>
+</RadzenStack>
+
+@code {
+    
+    List<TempData> h1Data = new List<TempData>();
+    List<TempData> h2Data = new List<TempData>();
+    List<TempData> h3Data = new List<TempData>();
+
+    private bool _swButtonValue=true;
+    private string _swButtonText="AutoTune";
+    
+    
+    public record TempData {
+        public double TimeSecs { get; set; }
+        public double TempC { get; set; }
+    }
+
+
+    private void ModeSwitchHandler() {
+        this._swButtonValue = !this._swButtonValue;
+        this._swButtonText=(this._swButtonValue ? "AutoTune" : "Heating");
+    }
+
+}

@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Net;
 using BurnInControl.ConsoleTesting.TestStateMachine;
 using BurnInControl.ConsoleTesting.TestWorkflow;
 using BurnInControl.Data.ComponentConfiguration.ProbeController;
@@ -9,7 +10,9 @@ using BurnInControl.Shared.ComDefinitions.MessagePacket;
 using BurnInControl.Shared.ComDefinitions.Station;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
+using System.Net.Http;
 using System.Text.Json;
+using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
 using BurnInControl.Shared.ComDefinitions;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
@@ -19,14 +22,25 @@ using WorkflowCore.Services;
 
 //TestStateMachine();
 
-string text = "AutoTune";
+HttpClient client = new HttpClient();
+client.DefaultRequestHeaders.Add("Authorization", "Bearer mytoken");
+//client.BaseAddress = new Uri("192.168.68.112:8080");
+var response=await client.SendAsync(new HttpRequestMessage(HttpMethod.Get,"http://192.168.68.112:8080/v1/update"));
+if (response.StatusCode == HttpStatusCode.OK) {
+    Console.WriteLine("Updates ran");
+} else {
+    Console.WriteLine("Updates Failed");
+}
+
+
+/*string text = "AutoTune";
 bool sw=false;
 sw = true;
 for (int i = 0; i < 10; i++) {
     sw = !sw;
     text=sw ? "AutoTune":"Heating";
     Console.WriteLine(text);
-}
+}*/
 
 
 

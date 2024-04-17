@@ -1,10 +1,10 @@
-﻿@using BurnInControl.Shared
-<RadzenFieldset Text="Pin">
+@using BurnInControl.Shared
+<RadzenFormField Text="Pin">
     <RadzenDropDown TValue="string"
                     Data="@this._pins"
                     Value="@this._selectedPin"
                     ValueChanged="@this.PinValueChangedHandler"/>
-</RadzenFieldset>
+</RadzenFormField>
 @code {
     
     [Parameter]

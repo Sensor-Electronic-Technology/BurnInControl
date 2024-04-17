@@ -13,6 +13,7 @@ COPY ["BurnInControl.Data/BurnInControl.Data.csproj", "BurnInControl.Data/"]
 COPY ["BurnInControl.Shared/BurnInControl.Shared.csproj", "BurnInControl.Shared/"]
 COPY ["BurnInControl.Infrastructure/BurnInControl.Infrastructure.csproj", "BurnInControl.Infrastructure/"]
 COPY ["BurnInControl.UI.Shared/BurnInControl.UI.Shared.csproj", "BurnInControl.UI.Shared/"]
+COPY ["BurnInControl.HubDefinitions/BurnInControl.HubDefinitions.csproj", "BurnInControl.HubDefinitions/"]
 RUN dotnet restore "BurnInControl.UI/BurnInControl.UI.csproj"
 COPY . .
 WORKDIR "/src/BurnInControl.UI"

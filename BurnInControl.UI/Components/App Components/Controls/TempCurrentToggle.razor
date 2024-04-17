@@ -1,20 +1,20 @@
-﻿@rendermode InteractiveServer
+@rendermode InteractiveServer
 <RadzenStack Orientation="Orientation.Vertical">
-    <RadzenFieldset Text="Cycle Current" Style="width:fit-content; height:fit-content;">
+    <RadzenFormField Text="Cycle Current" Style="width:fit-content; height:fit-content;">
         <RadzenButton Text="@(this.CurrentSetPoint+"mA")" 
                       Click="@CurrentCycle"
-                      Style="width:150px; height:75px; font-size: x-large"
+                      Style="width: 120px; height: 50px; font-size: x-large"
                       ButtonStyle="ButtonStyle.Light"
                       Disabled="@this.Disabled"/>
-    </RadzenFieldset>
-    <RadzenFieldset Text="Toggle Temperature" Style="width:fit-content; height:fit-content;">
+    </RadzenFormField>
+    <RadzenFormField Text="Toggle Temperature" Style="width:fit-content; height:fit-content;">
         <RadzenToggleButton Text="@(this.TemperatureSetPoint+"°C")" 
-                            Style="width:150px; height:75px; font-size: x-large"
+                            Style="height: 50px; font-size: x-large; width: 120px"
                             ButtonStyle="ButtonStyle.Danger"
                             ToggleButtonStyle="ButtonStyle.Secondary"
                             Click="@this.TemperatureToggle"
                             Disabled="@this.Disabled"/>
-    </RadzenFieldset>
+    </RadzenFormField>
 </RadzenStack>
 @code {
     [Parameter] public int CurrentSetPoint { get; set; } = 0;

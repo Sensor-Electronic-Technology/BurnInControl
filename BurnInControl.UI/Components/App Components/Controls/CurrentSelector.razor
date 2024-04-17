@@ -1,14 +1,14 @@
 @using BurnInControl.Data.StationModel.Components
-<RadzenFieldset Text="Current" Style="width: fit-content">
+<RadzenFormField Text="Current" Style="width: fit-content">
     <RadzenDropDown TValue="string" Data="@this._currents" 
                     SelectedItem="@_selectedItem" 
-                    ValueChanged="CurrentChangedHandler" Style="width: 100px"  />
-</RadzenFieldset>
+                    ValueChanged="CurrentChangedHandler" AllowSelectAll="false"  />
+</RadzenFormField>
 @code {
     private IEnumerable<string?> _currents = StationCurrent.List.Select(x => x.Name);
     
     [Parameter]
-    public StationCurrent Current { get; set; }
+    public int Current { get; set; }
     
     [Parameter]
     public EventCallback<StationCurrent> CurrentChanged { get; set; }
@@ -21,7 +21,7 @@
     }
 
     protected override Task OnParametersSetAsync() {
-        this._selectedItem = this._currents.FirstOrDefault(e => e == this.Current.Name);
+        this._selectedItem = this._currents.FirstOrDefault(e => e == StationCurrent.FromValue(Current).Name);
         return base.OnParametersSetAsync();
     }
 }

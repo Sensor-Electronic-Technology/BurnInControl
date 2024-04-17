@@ -10,7 +10,7 @@
             <SetTemp @bind-Temp="@this.SetTemperature"/>
         </RadzenStack>
         <RadzenStack Orientation="Orientation.Horizontal">
-            <RadzenButton Text="Edit" Click="EditClickHandler" Visible="false"></RadzenButton>
+            <RadzenButton Text="Edit" Click="EditClickHandler" Visible="false"/>
             <RadzenButton Text="Upload" Click="UploadCurrentTemp"/>
         </RadzenStack>
     </RadzenStack>
@@ -18,7 +18,7 @@
 
 @code {
     [Parameter]
-    public StationCurrent SetCurrent { get; set; } = StationCurrent._150mA;
+    public int SetCurrent { get; set; } 
     
     [Parameter]
     public double SetTemperature { get; set; }
@@ -27,7 +27,7 @@
     public EventCallback<(StationCurrent current,double temp)> OnUpload { get; set; }
     
     private async Task UploadCurrentTemp() {
-        await this.OnUpload.InvokeAsync((SetCurrent,SetTemperature));
+        await this.OnUpload.InvokeAsync((StationCurrent.FromValue(this.SetCurrent),SetTemperature));
     }
     private async Task EditClickHandler() {
         var result=await this.DialogService.OpenAsync("",ds=>@<EnableUploadDialog DialogService="@ds"/>);

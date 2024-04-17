@@ -2,9 +2,15 @@
 @inject StationHubConnection StationHubConnection
 @inject NotificationService NotificationService
 @implements IAsyncDisposable
-<RadzenStack Gap="10" Style="margin: .6rem" AlignItems="Radzen.AlignItems.Center">
-    <RadzenText Text="Station Control" TextAlign="TextAlign.Center" TextStyle="TextStyle.DisplayH6" Style="margin: .6rem" />
-    <RadzenStack AlignItems="AlignItems.Center" Orientation="Radzen.Orientation.Vertical" Gap="10">
+<RadzenStack Gap="10" Style="margin: .6rem" 
+             AlignItems="AlignItems.Center">
+    <RadzenText Text="Station Control" 
+                TextAlign="TextAlign.Center" 
+                TextStyle="TextStyle.DisplayH6" 
+                Style="margin: .6rem" />
+    <RadzenStack AlignItems="AlignItems.Center" 
+                 Orientation="Orientation.Vertical" 
+                 Gap="10">
         <RadzenFieldset Text="Test Control">
             <RadzenStack>
                 <RadzenToggleButton Value="@this._testBtnValue"
@@ -22,53 +28,40 @@
             </RadzenStack>
         </RadzenFieldset>
     </RadzenStack>
-    <TempCurrentControl/>
+    <TempCurrentControl SetCurrent="@this.SetCurrent" 
+                        SetTemperature="@this.SetTemperature"/>
     <RadzenFieldset Text="Station Service">
         <RadzenStack>
             <RadzenToggleButton Value="@this.ServiceConnected"
                                 Text="@(this.ServiceConnected ? "Disconnect Service" : "Connect Service")"
                                 ButtonStyle="ButtonStyle.Secondary"
-                                Size="ButtonSize.Large"
+                                Size="Radzen.ButtonSize.Medium"
                                 ToggleButtonStyle="ButtonStyle.Secondary"
-                                Click="@this.Connect" Style="width: 170px; height: 80px"/>
+                                Click="@this.Connect" Style="width: 170px; height: 52px"/>
             <RadzenToggleButton Value="@this.UsbConnected"
                                 Text="@(this.UsbConnected ? "Disconnect Usb" : "Connect Usb")"
                                 ButtonStyle="ButtonStyle.Primary"
-                                Size="ButtonSize.Large"
+                                Size="Radzen.ButtonSize.Medium"
                                 ToggleButtonStyle="ButtonStyle.Secondary"
-                                Click="@this.UsbConnect" Style="width: 170px; height: 80px"/>
+                                Click="@this.UsbConnect" Style="width: 170px; height: 52px"/>
         </RadzenStack>
     </RadzenFieldset>
 </RadzenStack>
 @code{
-    [Parameter]
-    public EventCallback Connect { get; set; }
-    
-    [Parameter]
-    public EventCallback<bool> StartPause { get; set; }
-    
-    [Parameter]
-    public EventCallback UsbConnect { get; set; }
-    
-    [Parameter]
-    public EventCallback Reset { get; set; }
-    
-    [Parameter]
-    public EventCallback<StationCurrent> CurrentChanged { get; set; }
-    
-    [Parameter]
-    public EventCallback<double> TempChanged { get; set; }
-    
-    [Parameter]
-    public bool UsbConnected { get; set; }
-    
-    [Parameter]
-    public bool ServiceConnected { get; set; }
+    [Parameter] public EventCallback Connect { get; set; }
+    [Parameter] public EventCallback<bool> StartPause { get; set; }
+    [Parameter] public EventCallback UsbConnect { get; set; }
+    [Parameter] public EventCallback Reset { get; set; }
+    [Parameter] public EventCallback<StationCurrent> CurrentChanged { get; set; }
+    [Parameter] public EventCallback<double> TempChanged { get; set; }
+    [Parameter] public int SetCurrent { get; set; } = StationCurrent._150mA.Value;
+    [Parameter] public int SetTemperature { get; set; } = 85;
+    [Parameter] public bool UsbConnected { get; set; }
+    [Parameter] public bool ServiceConnected { get; set; }
     
     private bool _serviceConnectBtnBusy = false;
     private bool _usbBtnBusy = false;
     private bool _testBtnBusy = false;
-    
     private bool _testBtnValue = false;
     
     

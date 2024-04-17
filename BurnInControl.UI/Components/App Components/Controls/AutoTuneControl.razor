@@ -1,3 +1,5 @@
+@using BurnInControl.UI.Data
+@inject NotifyPlotOptions NotifyPlotOptions
 @rendermode InteractiveServer
 <RadzenStack Orientation="Orientation.Vertical"
              JustifyContent="JustifyContent.Center"
@@ -20,38 +22,49 @@
         <RadzenButton Text="Discard" Click="@DiscardPressed"/>
     </RadzenFieldset>
     <RadzenStack Orientation="Orientation.Horizontal">
-        <RadzenFieldset Text="YAxis">
-            <RadzenFieldset Text="YMax">
-                <RadzenNumeric TValue="int" @bind-Value="@this._ymin" Change="@(async () => { await this.YMinChanged.InvokeAsync(this._ymin); })"/>
-            </RadzenFieldset>
-            <RadzenFieldset Text="YMin">
-                <RadzenNumeric TValue="int" @bind-Value="@this._ymax" Change="@(async () => { await this.YMaxChanged.InvokeAsync(this._ymax); })"/>
-            </RadzenFieldset>
+        <RadzenFieldset Text="YAxis" Style="width: 100px;">
+            <RadzenFormField Text="Min">
+                <RadzenNumeric TValue="int"
+                               @bind-Value="@this._plotOptions.YAxisMin"
+                               Change="@(async () => { await this.Notify(); })"/>
+            </RadzenFormField>
+            <RadzenFormField Text="Max">
+                <RadzenNumeric TValue="int"
+                               @bind-Value="@this._plotOptions.YAxisMax"
+                               Change="@(async () => { await this.Notify(); })"/>
+            </RadzenFormField>
         </RadzenFieldset>
-        <RadzenFieldset Text="XAxis">
-            <RadzenFieldset Text="XMax">
-                <RadzenNumeric TValue="int" @bind-Value="@this._xmin" Change="@(async () => { await this.XMinChanged.InvokeAsync(this._xmin); })"/>
-            </RadzenFieldset>
-            <RadzenFieldset Text="XMin">
-                <RadzenNumeric TValue="int" @bind-Value="@this._xmax" Change="@(async () => { await this.XMaxChanged.InvokeAsync(this._xmax); })"/>
-            </RadzenFieldset>
+        <RadzenFieldset Text="XAxis" Style="width: 100px;">
+            <RadzenFormField Text="Min" >
+                <RadzenNumeric TValue="int"
+                               @bind-Value="@this._plotOptions.XAxisMin"
+                               Change="@(async () => { await this.Notify(); })"/>
+            </RadzenFormField>
+            <RadzenFormField Text="Max" >
+                <RadzenNumeric TValue="int"
+                               @bind-Value="@this._plotOptions.XAxisMax"
+                               Change="@(async () => { await this.Notify(); })"/>
+            </RadzenFormField>
         </RadzenFieldset>
-        <RadzenFieldset Text="XY Step">
-            <RadzenFieldset Text="X Step">
-                <RadzenNumeric TValue="int" @bind-Value="@this._xstep" Change="@(async () => { await this.XMinChanged.InvokeAsync(this._xmin); })"/>
-            </RadzenFieldset>
-            <RadzenFieldset Text="Y Step">
-                <RadzenNumeric TValue="int" @bind-Value="@this._ystep" Change="@(async () => { await this.YStepChanged.InvokeAsync(this._xmax); })"/>
-            </RadzenFieldset>
+        <RadzenFieldset Text="XY Step" Style="width: 100px;">
+            <RadzenFormField Text="X">
+                <RadzenNumeric TValue="int"
+                               @bind-Value="@this._plotOptions.XAxisStep"
+                               Change="@(async () => { await this.Notify(); })"/>
+            </RadzenFormField>
+            <RadzenFormField Text="Y">
+                <RadzenNumeric TValue="int"
+                               @bind-Value="@this._plotOptions.YAxisStep"
+                               Change="@(async () => { await this.Notify(); })"/>
+            </RadzenFormField>
         </RadzenFieldset>
-
     </RadzenStack>
-
 </RadzenStack>
 
 @code {
     private bool _swButtonValue=false;
     private string _swButtonText="AutoTune";
+    private PlotAxisOptions _plotOptions=new PlotAxisOptions();
     
     [Parameter]
     public EventCallback ModeSwPressed { get; set; }
@@ -63,36 +76,17 @@
     public EventCallback SavePressed { get; set; }
     [Parameter]
     public EventCallback DiscardPressed { get; set; }
-    [Parameter]
-    public EventCallback<int> XMinChanged { get; set; }
-    [Parameter]
-    public EventCallback<int> XMaxChanged { get; set; }
-    [Parameter]
-    public EventCallback<int> YMinChanged { get; set; }
-    [Parameter]
-    public EventCallback<int> YMaxChanged { get; set; }
-    [Parameter]
-    public EventCallback<int> YStepChanged { get; set; }
-    [Parameter]
-    public EventCallback<int> XStepChanged { get; set; }
-
-    private int _ymin = 20; 
-    private int _ymax = 100; 
-    private int _xmin = 0; 
-    private int _xmax = 200; 
-    private int _ystep = 10;
-    private int _xstep = 10;
     
-
     private Task StartPressedHandler() {
         return this.StartPressed.InvokeAsync();
     }
+    
     private Task CancelPressedHandler() {
         return this.CancelPressed.InvokeAsync();
     }
-
-    private Task OnYMaxChanged() {
-        return this.YMaxChanged.InvokeAsync(_ymax);
+    
+    private Task Notify() {
+        return NotifyPlotOptions.Set(_plotOptions);
     }
 
 }

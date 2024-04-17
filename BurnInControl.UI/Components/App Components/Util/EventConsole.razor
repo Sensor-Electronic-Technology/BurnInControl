@@ -7,7 +7,7 @@
 @implements IAsyncDisposable
 <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem" Class="rz-mt-4 rz-p-4 rz-border-radius-1" @attributes=@Attributes Style="border: var(--rz-grid-cell-border)">
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-        <RadzenText TextStyle="TextStyle.Subtitle1" TextAlign="TextAlign.Center" TagName="TagName.P" Class="rz-m-0">@this.LogTitle</RadzenText>
+        <RadzenText TextStyle="TextStyle.Overline" TextAlign="TextAlign.Center" TagName="TagName.P" Class="rz-m-0">@this.LogTitle</RadzenText>
         <RadzenButton Click=@OnClearClick Text="Clear console" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Small" />
     </RadzenStack>
     <RadzenStack Orientation="Orientation.Vertical" Gap="0" ID="event-console" Class="rz-pt-1" Style="border-top: var(--rz-grid-cell-border); min-height: 2rem; max-height: 12rem; overflow: auto;">

@@ -86,16 +86,14 @@
    private bool _runtimePaneCollapsed = false;
 
    protected override async Task OnInitializedAsync() {
-        /*
         var hubAddress=Environment.GetEnvironmentVariable("StationHub");
         string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
         this._hubConnection = new HubConnectionBuilder()
             .WithUrl(addr)
             .Build();
-        */
-        this._hubConnection = new HubConnectionBuilder()
+        /*this._hubConnection = new HubConnectionBuilder()
             .WithUrl("http://localhost:5066/hubs/station")
-            .Build();
+            .Build();*/
         this._hubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,this.OnSerialComReceived);
         this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
         this._hubConnection.On<string>(HubConstants.Events.OnTestStatus, this.OnSerialComMessageReceived);
@@ -103,7 +101,7 @@
         this._hubConnection.On<string>(HubConstants.Events.OnUsbConnectFailed,this.UsbConnectFailedHandler);
         this._hubConnection.On<string>(HubConstants.Events.OnUsbConnect, this.UsbConnectHandler);
         this._hubConnection.On<bool>(HubConstants.Events.OnStationConnection, this.OnStationConnection);
-        //await this.StartConnection();
+        await this.StartConnection();
    }
 
    private Task OnStationConnection(bool usbStatus) {

@@ -6,33 +6,15 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using BurnInControl.UI.Components.App_Components.Displays
 @rendermode InteractiveServer
-
-@*<RadzenStack Orientation="Orientation.Vertical">
-    <AutoTuneControl StartPressed="@this.StartHandler"
-                     CancelPressed="@this.CancelHandler"/>
-    <TuningDataView H1Data="@this._h1Data"
-                                    H2Data="@this._h2Data"
-                                    H3Data="@this._h3Data"
-                                    HeaterStates="@this._data.HeaterStates"
-                                    HeaterTemperatures="@this._data.Temperatures"/>
-    <EventConsole @ref="@this._eventConsole"
-                  LogTitle="AutoTune Log"/>
-</RadzenStack>*@
-
 <RadzenSplitter Orientation="Orientation.Horizontal">
-    <RadzenSplitterPane Size="15%" Collapsed="@this._runtimePaneCollapsed">
+    <RadzenSplitterPane Size="20%" Collapsed="@this._runtimePaneCollapsed">
         <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
             <RadzenStack Orientation="Orientation.Vertical">
                 <RadzenText TextStyle="TextStyle.DisplayH5" Text="Tuning Controls"></RadzenText>
                 <AutoTuneControl StartPressed="@this.StartHandler"
-                                 CancelPressed="@this.CancelHandler"
-                                 YMinChanged="YMinCallback"
-                                 YMaxChanged="YMaxCallback"
-                                 XMinChanged="XMinCallback"
-                                 XMaxChanged="XMaxCallback"/>
+                                 CancelPressed="@this.CancelHandler"/>
             </RadzenStack>
         </RadzenRow>
-
     </RadzenSplitterPane>
     <RadzenSplitterPane Size="80%" Collapsible="false">
         <RadzenSplitter Orientation="Orientation.Vertical" style=" border: 1px solid rgba(0,0,0,.08);">
@@ -67,10 +49,6 @@
     private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;
     Timer? _timer;
     int count = 0;
-    private int _ymin = 20; 
-    private int _ymax = 100; 
-    private int _xmin = 0; 
-    private int _xmax = 200; 
         
     List<TemperatureData> _h1Data = new List<TemperatureData>();
     List<TemperatureData> _h2Data = new List<TemperatureData>();
@@ -136,19 +114,6 @@
             this._h3Data.Add(new TemperatureData { TimeSecs = data.ElapsedSeconds, TempC = data.Temperatures[2] });
         }
         return InvokeAsync(StateHasChanged);
-    }
-
-    private void YMinCallback(int obj) {
-        throw new NotImplementedException();
-    }
-    private void YMaxCallback(int obj) {
-        throw new NotImplementedException();
-    }
-    private void XMinCallback(int obj) {
-        throw new NotImplementedException();
-    }
-    private void XMaxCallback(int obj) {
-        throw new NotImplementedException();
     }
 
 }

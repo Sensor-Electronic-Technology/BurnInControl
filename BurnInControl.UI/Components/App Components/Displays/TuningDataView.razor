@@ -1,10 +1,11 @@
 @using BurnInControl.UI.Data
+@inject NotifyPlotOptions NotifyPlotOptions
+@implements IAsyncDisposable
 @rendermode InteractiveServer
-
-    <RadzenStack Orientation="Orientation.Vertical" Style="margin: 5rem">
+    <RadzenStack Orientation="Orientation.Vertical" Gap="1">
         <HeaterDisplays Temperatures="@this.HeaterTemperatures"
                         HeaterStates="@this.HeaterStates"/>
-        <RadzenChart Style="height: 500px;">
+        <RadzenChart Style="height: 400px;">
             <RadzenLineSeries Smooth="false"
                               Data="@H1Data"
                               CategoryProperty="TimeSecs"
@@ -32,11 +33,16 @@
                 <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
                 <RadzenSeriesDataLabels Visible="false"/>
             </RadzenLineSeries>
-            <RadzenCategoryAxis  Min="@this.YAxisMin" Max="@this.YAxisMax" Max="200" LineType="LineType.Solid">
+            <RadzenCategoryAxis  Min="@this._plotAxisOptions.XAxisMin" 
+                                 Max="@this._plotAxisOptions.XAxisMax" 
+                                 Step="@this._plotAxisOptions.XAxisStep" 
+                                 LineType="LineType.Solid">
                 <RadzenAxisTitle Text="Time(s)"/>
                 <RadzenGridLines Visible="true" StrokeWidth="3"/>
             </RadzenCategoryAxis>
-            <RadzenValueAxis  Min="@this.YAxisMin" Max="@this.YAxisMax" Step="10">
+            <RadzenValueAxis  Min="@this._plotAxisOptions.YAxisMin"
+                              Max="@this._plotAxisOptions.YAxisMax"
+                              Step="@this._plotAxisOptions.YAxisStep" >
                 <RadzenGridLines Visible="true" StrokeWidth="3"/>
                 <RadzenAxisTitle Text="Temperature(C)"/>
             </RadzenValueAxis>
@@ -56,10 +62,21 @@
     public List<double> HeaterTemperatures { get; set; }=[0,0,0];
     [Parameter] 
     public List<bool> HeaterStates { get; set; } = [false,false,false];
+    
+    private PlotAxisOptions _plotAxisOptions = new PlotAxisOptions();
 
-    [Parameter] public int YAxisMin { get; set; } = 20;
-    [Parameter] public int YAxisMax { get; set; } = 100;
-    [Parameter] public int XAxisMin { get; set; } = 0;
-    [Parameter] public int XAxisMax { get; set; } = 2000;
+    protected override Task OnInitializedAsync() {
+        this.NotifyPlotOptions.OnDataAvailable += NotifyPlotOptionsChangedHandler;
+        return base.OnInitializedAsync();
+    }
 
+    private void NotifyPlotOptionsChangedHandler(PlotAxisOptions options) {
+        this._plotAxisOptions = options;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public ValueTask DisposeAsync() {
+        this.NotifyPlotOptions.OnDataAvailable -= NotifyPlotOptionsChangedHandler;
+        return ValueTask.CompletedTask;
+    }
 }

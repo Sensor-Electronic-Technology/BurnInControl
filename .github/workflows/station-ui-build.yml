@@ -1,4 +1,4 @@
-﻿name: Docker Image CI
+﻿name: Station UI Workflow
 on:
   push:
     branches: [ "master" ]

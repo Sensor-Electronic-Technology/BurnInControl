@@ -1,3 +1,7 @@
-﻿namespace BurnInControl.Application.FirmwareUpdate.Messages;
+﻿using BurnInControl.Application.FirmwareUpdate.Interfaces;
+using MediatR;
+using ErrorOr;
 
-public class CheckForUpdateCommand:IFirmwareUpdaterMessage{ }
+namespace BurnInControl.Application.FirmwareUpdate.Messages;
+
+public class CheckForUpdateCommand:IRequest{ }

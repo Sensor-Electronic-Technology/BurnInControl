@@ -1,7 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Diagnostics;
 using System.Net;
-using BurnInControl.ConsoleTesting.TestStateMachine;
 using BurnInControl.ConsoleTesting.TestWorkflow;
 using BurnInControl.Data.ComponentConfiguration.ProbeController;
 using BurnInControl.Data.StationModel;
@@ -13,7 +13,11 @@ using MongoDB.Driver;
 using System.Net.Http;
 using System.Text.Json;
 using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
+using BurnInControl.Data.VersionModel;
 using BurnInControl.Shared.ComDefinitions;
+using MongoDB.Bson;
+using Octokit;
+using Octokit.Internal;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
 using WorkflowCore.Services;
@@ -22,7 +26,120 @@ using WorkflowCore.Services;
 
 //TestStateMachine();
 
-HttpClient client = new HttpClient();
+//await CheckLatest();
+//await CreateRelease();
+//await GetVersionFromString();
+
+/*await TestRunProcess();
+
+async Task TestRunProcess() {
+    using Process process = new Process();
+    ProcessStartInfo startInfo = new ProcessStartInfo(" C:\\Program Files\\Arduino CLI\\arduino-cli.exe");
+    startInfo.Arguments="upload -p COM3 -i \"C:\\Users\\aelmendo\\Documents\\Arduino\\burn-build\\BurnInFirmwareV3.ino.hex\" -b arduino:avr:mega -v --log";
+    startInfo.RedirectStandardOutput = true;
+    startInfo.UseShellExecute = false;
+    process.StartInfo = startInfo;
+    process.Start();
+    var output=await process.StandardOutput.ReadToEndAsync();
+    process.StandardOutput.
+    Console.WriteLine(output);
+}*/
+
+async Task UpdateFirmware() {
+    var org = "Sensor-Electronic-Technology";
+    var repo = "BurnInFirmware";
+    var firmwarePath = "/source/ControlUpload/";
+    var firmwareFileName = "BurnInFirmwareV3.ino.hex";
+    var command = ""; 
+    var program = "arduino-cli";
+    var firmwareFullPath = firmwarePath + firmwareFileName;
+}
+
+
+async Task CheckLatest() {
+    var org = "Sensor-Electronic-Technology";
+    var repo = "BurnInFirmware";
+    GitHubClient github = new GitHubClient(new ProductHeaderValue("Sensor-Electronic-Technology"));
+    var release=await github.Repository.Release.GetLatest(org, repo);
+    Console.WriteLine($"Release: {release.Name}");
+}
+
+async Task CreateRelease() {
+    var org = "Sensor-Electronic-Technology";
+    var repo = "BurnInFirmware";
+    GitHubClient github = new GitHubClient(new ProductHeaderValue("Sensor-Electronic-Technology"),
+        new InMemoryCredentialStore(new Credentials("aelmendorf","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")));
+
+    
+    /*var commit=(await github.Repository.Commit.GetAll(org, repo)).First();*/
+    var refs = await github.Git.Reference.Get(org, repo, "heads/main");
+    Console.WriteLine($"Sha: {refs.Object.Sha}");
+    var commit=await github.Git.Commit.Get(org, repo, refs.Object.Sha);
+    Console.WriteLine($"Sha: {commit.Sha}");
+    Console.ReadKey();
+    var tag = new NewTag {
+        Message = "New Release tag",
+        Tag = "V0.1.0",
+        Type = TaggedType.Commit, // TODO: what are the defaults when nothing specified?
+        Object = commit.Sha,
+        Tagger = new Committer("aelmendorf","aelmendorf234@gmail.com",DateTimeOffset.Now)
+    };
+    
+    var tadResult=await github.Git.Tag.Create(org,repo,tag);
+    Console.WriteLine($"Tag: {tadResult.Tag}");
+    var newRelease = new NewRelease(tag.Tag);
+    newRelease.MakeLatest = MakeLatestQualifier.True;
+    newRelease.Name = "Version: "+tag.Tag;
+    newRelease.Body = "Release: "+tag.Tag;
+    newRelease.Draft = false;
+    newRelease.Prerelease = false;
+    
+    var result = await github.Repository.Release.Create(org, repo, newRelease);
+    await using var archiveContents = File.OpenRead(@"C:\Users\aelmendo\Documents\Arduino\burn-build\BurnInFirmwareV3.ino.hex");
+        
+    var assetUpload = new ReleaseAssetUpload() 
+    {
+        FileName = "BurnInFirmwareV3.ino.hex",
+        ContentType = "application/file",
+        RawData = archiveContents
+    };
+    
+    var release = await github.Repository.Release.Get(org,repo,result.Id);
+    var asset = await github.Repository.Release.UploadAsset(release, assetUpload);
+    Console.WriteLine($"Uploaded asset: {asset.Name}, {asset.Id}");
+}
+
+async Task GetVersionFromString() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("burn_in_db");
+    var collection=database.GetCollection<VersionLog>("version_log");
+    var latest = "V0.0.0";
+    var split=latest.Split('.');
+    var startidx=latest.IndexOf('V');
+    var endidx=latest.IndexOf('.');
+    var majorStr = latest.Substring(startidx + 1, (endidx - startidx) - 1);
+    var minorstr = split[1];
+    var patchstr = split[2];
+
+    VersionLog versionLogEntry = new VersionLog();
+    versionLogEntry._id= ObjectId.GenerateNewId();
+    versionLogEntry.Version = latest;
+    versionLogEntry.Major = int.Parse(majorStr);
+    versionLogEntry.Minor = int.Parse(minorstr);
+    versionLogEntry.Patch = int.Parse(patchstr);
+    versionLogEntry.Latest = true;
+
+    await collection.InsertOneAsync(versionLogEntry);
+    Console.WriteLine("Check Database");
+
+    Console.WriteLine($"Version: {versionLogEntry.Version}, Major: {versionLogEntry.Major}, Minor: {versionLogEntry.Minor}, Patch: {versionLogEntry.Patch}");
+
+    foreach(var str in split) {
+        Console.WriteLine(str);
+    }
+}
+
+/*HttpClient client = new HttpClient();
 client.DefaultRequestHeaders.Add("Authorization", "Bearer mytoken");
 //client.BaseAddress = new Uri("192.168.68.112:8080");
 var response=await client.SendAsync(new HttpRequestMessage(HttpMethod.Get,"http://192.168.68.112:8080/v1/update"));
@@ -30,7 +147,7 @@ if (response.StatusCode == HttpStatusCode.OK) {
     Console.WriteLine("Updates ran");
 } else {
     Console.WriteLine("Updates Failed");
-}
+}*/
 
 
 /*string text = "AutoTune";

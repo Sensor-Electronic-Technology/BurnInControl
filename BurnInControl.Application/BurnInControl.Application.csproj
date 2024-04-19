@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\BurnInControl.Data\BurnInControl.Data.csproj" />
+      <ProjectReference Include="..\BurnInControl.HubDefinitions\BurnInControl.HubDefinitions.csproj" />
       <ProjectReference Include="..\BurnInControl.Infrastructure\BurnInControl.Infrastructure.csproj" />
       <ProjectReference Include="..\BurnInControl.Shared\BurnInControl.Shared.csproj" />
     </ItemGroup>
@@ -17,12 +18,6 @@
       <PackageReference Include="MediatR" Version="12.2.0" />
       <PackageReference Include="WorkflowCore" Version="3.9.0" />
       
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="Microsoft.AspNetCore.SignalR.Core">
-        <HintPath>..\..\..\..\..\Program Files\dotnet\shared\Microsoft.AspNetCore.App\8.0.0\Microsoft.AspNetCore.SignalR.Core.dll</HintPath>
-      </Reference>
     </ItemGroup>
 
     <ItemGroup>

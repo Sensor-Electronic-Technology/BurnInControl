@@ -1,6 +1,8 @@
 ﻿using BurnInControl.HubDefinitions.HubTransports;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Station;
+using BurnInControl.Shared.FirmwareData;
+
 namespace BurnInControl.HubDefinitions.Hubs;
 
 public interface IStationHub {
@@ -24,6 +26,16 @@ public interface IStationHub {
     Task OnTestCompleted(string message);
     Task OnTestSetup(bool success, string message);
     
+#endregion
+
+#region FirmwareUpdateNotifications
+    Task OnFirmwareUpdateCheck(UpdateCheckStatus checkStatus);
+    Task OnFirmwareUpdateCheckFailed(string message);
+    Task OnFirmwareUpdateStarted();
+    Task OnFirmwareUpdateFailed(string errorMessage);
+    Task OnFirmwareUpdateCompleted();
+    Task OnFirmwareDownloaded(bool success,string message);
+    Task OnFirmwareUpdated(string version,string avrOutput);
 #endregion
 
 #region ConnectionStatus

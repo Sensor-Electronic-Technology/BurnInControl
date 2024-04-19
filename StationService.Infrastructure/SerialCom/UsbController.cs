@@ -39,7 +39,6 @@ public class UsbController:IDisposable {
         this._loggingEnabled = false;
         this._channelWriter = channelWriter;
         this._serialPort = new SerialPortInput(true);
-
         this._serialPort.MessageLineReceived+= SerialPortOnMessageLineReceived;
         this._serialPort.ConnectionStatusChanged+= SerialPortOnConnectionStatusChanged;
         this._serialPort.ReconnectDelay = 1000;
@@ -53,26 +52,6 @@ public class UsbController:IDisposable {
             }
         }
     }
-
-    /*private void SerialPortOnMessageReceived(Object sender, MessageReceivedEventArgs args) {
-        var input=System.Text.Encoding.Default.GetString(args.Data);
-        
-        args.Data.Contains((byte)'\n');
-        this._inputBuffer.Append(input);
-        if (input.Contains("\n")) {
-            var output = this._inputBuffer.ToString();
-            var lines=output.Split('\n',StringSplitOptions.RemoveEmptyEntries);
-            foreach(string line in lines) {
-                if (line.Contains('{')) {
-                    if (!this._channelWriter.TryWrite(line)){
-                        this.Log($"Channel Write Failed, ThreadId: {Thread.CurrentThread.ManagedThreadId}",true);
-                    }
-                }
-            }
-            this._inputBuffer.Clear();
-        }
-    }*/
-    
     private void SerialPortOnConnectionStatusChanged(Object sender, ConnectionStatusChangedEventArgs args) {
         this.OnUsbStateChangedHandler?.Invoke(this,args);
     }

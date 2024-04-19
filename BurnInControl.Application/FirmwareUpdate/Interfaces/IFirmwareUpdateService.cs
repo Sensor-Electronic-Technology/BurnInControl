@@ -1,8 +1,9 @@
-﻿using ErrorOr;
+﻿using BurnInControl.Shared.FirmwareData;
+using ErrorOr;
 namespace BurnInControl.Application.FirmwareUpdate.Interfaces;
-
 public interface IFirmwareUpdateService {
-    public Task<ErrorOr<string>> GetLatestVersion();
-    public Task<ErrorOr<(string ver, string avrOutput)>> UploadFirmwareUpdate();
-    public Task<ErrorOr<Success>> DownloadFirmwareUpdate();
+    public bool UpdateAvailable { get; }
+    public Task GetLatestVersion();
+    public Task<UpdateCheckStatus> CheckForUpdate();
+    public Task UploadFirmwareUpdate();
 }

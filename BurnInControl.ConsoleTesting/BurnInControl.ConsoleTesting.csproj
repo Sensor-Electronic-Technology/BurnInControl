@@ -13,7 +13,9 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="MongoDB.Driver" Version="2.25.0" />
         <PackageReference Include="Stateless" Version="5.15.0" />
+        <PackageReference Include="Octokit" Version="10.0.0" />
         <PackageReference Include="WorkflowCore" Version="3.9.0" />
         <PackageReference Include="WorkflowCore.Persistence.MongoDB" Version="3.9.0" />
         <PackageReference Include="Automatonymous" Version="5.1.3" />

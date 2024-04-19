@@ -38,6 +38,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BurnInControl.Api", "BurnIn
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BurnInControl.HubDefinitions", "BurnInControl.HubDefinitions\BurnInControl.HubDefinitions.csproj", "{11102E3C-0168-473E-89C1-D3200DAA5AFD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BurnInControl.Dashboard", "BurnInControl.Dashboard\BurnInControl.Dashboard.csproj", "{CF575AB9-2909-49A1-855D-10BE754F7F00}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,6 +90,10 @@ Global
 		{11102E3C-0168-473E-89C1-D3200DAA5AFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11102E3C-0168-473E-89C1-D3200DAA5AFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{11102E3C-0168-473E-89C1-D3200DAA5AFD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF575AB9-2909-49A1-855D-10BE754F7F00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF575AB9-2909-49A1-855D-10BE754F7F00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF575AB9-2909-49A1-855D-10BE754F7F00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF575AB9-2909-49A1-855D-10BE754F7F00}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -107,5 +113,6 @@ Global
 		{D65B3FD2-1E07-49C4-AC49-393CB5AD916C} = {08CDAECA-A104-4CD7-AA48-B6FF451ADDE1}
 		{ECCD7356-60D0-460F-9236-20C8A879F26B} = {BCD822C5-DD11-4027-92A2-FFFBC558855F}
 		{11102E3C-0168-473E-89C1-D3200DAA5AFD} = {605F2C0B-4B99-405B-9076-E094874C3AE8}
+		{CF575AB9-2909-49A1-855D-10BE754F7F00} = {ED5556C3-9BEA-4E3E-ADB7-C91FC63B6637}
 	EndGlobalSection
 EndGlobal

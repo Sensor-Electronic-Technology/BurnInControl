@@ -13,13 +13,14 @@ using StationService.Infrastructure.TestLogs;
 using System.Threading.Channels;
 using BurnInControl.Application.BurnInTest;
 using BurnInControl.Application.BurnInTest.Handlers;
+using Coravel;
+using StationService.Infrastructure.Firmware.Jobs;
 
 namespace StationService.Infrastructure;
 
 public static class DependencyInjection {
     public static IServiceCollection AddStationService(this IServiceCollection services) {
         var channel = Channel.CreateUnbounded<string>();
-
         services.AddSingleton(channel.Reader);
         services.AddSingleton(channel.Writer);
         services.AddSingleton<IBurnInTestService,BurnInTestService>();
@@ -38,6 +39,8 @@ public static class DependencyInjection {
             typeof(UpdateFirmwareCommandHandler).Assembly,
             typeof(TestStartedStatusHandler).Assembly);
         });
+        services.AddTransient<FirmwareUpdateJob>();
+        services.AddScheduler();
         return services;
     }
 }

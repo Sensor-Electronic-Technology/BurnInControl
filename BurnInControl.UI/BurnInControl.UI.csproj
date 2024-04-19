@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <AssemblyName>StationUI</AssemblyName>
+<!--    <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
+    <ContainerUser>root</ContainerUser>-->
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">

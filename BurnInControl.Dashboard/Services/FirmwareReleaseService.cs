@@ -1,4 +1,5 @@
-﻿using BurnInControl.Dashboard.Data;
+﻿using System.Runtime.InteropServices;
+using BurnInControl.Dashboard.Data;
 using BurnInControl.Data.VersionModel;
 using Microsoft.Extensions.Options;
 using Octokit;
@@ -28,13 +29,17 @@ public class FirmwareReleaseService {
         this._versionCollection = database.GetCollection<VersionLog>("version_log");
         this._org=options.Value.Org;
         this._repo=options.Value.Repo;
-        this._token=options.Value.Token;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
+            this._token=Environment.GetEnvironmentVariable("GithubApiToken");
+        } else {
+            this._token=options.Value.Token;
+        }
+        
         this._user=options.Value.User;
         this._email=options.Value.Email;
         this._reference = options.Value.Ref;
         Console.WriteLine($"Org: {this._org} " +
                           $"Repo: {this._repo} " +
-                          $"Token: {this._token} " +
                           $"User: {this._user} " +
                           $"Email: {this._email} " +
                           $"Ref: {this._reference}");

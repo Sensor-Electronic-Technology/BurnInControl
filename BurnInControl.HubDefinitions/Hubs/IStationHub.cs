@@ -33,9 +33,9 @@ public interface IStationHub {
     Task OnFirmwareUpdateCheckFailed(string message);
     Task OnFirmwareUpdateStarted();
     Task OnFirmwareUpdateFailed(string errorMessage);
-    Task OnFirmwareUpdateCompleted();
+    Task OnFirmwareUpdateCompleted(string version);
     Task OnFirmwareDownloaded(bool success,string message);
-    Task OnFirmwareUpdated(string version,string avrOutput);
+    Task OnFirmwareUpdated(string version,string arduinoOutput);
 #endregion
 
 #region ConnectionStatus

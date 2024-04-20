@@ -1,4 +1,5 @@
-﻿using BurnInControl.Infrastructure.StationModel;
+﻿using BurnInControl.Infrastructure.FirmwareModel;
+using BurnInControl.Infrastructure.StationModel;
 using BurnInControl.Infrastructure.TestLogs;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
@@ -13,6 +14,7 @@ public static class DependencyInjection {
     public static IServiceCollection AddPersistence(this IServiceCollection services) {
         services.AddTransient<StationDataService>();
         services.AddTransient<TestLogDataService>();
+        services.AddTransient<FirmwareDataService>();
         return services;
     }
     

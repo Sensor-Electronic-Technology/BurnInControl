@@ -13,6 +13,7 @@ public class CheckForUpdateCommandHandler:IRequestHandler<CheckForUpdateCommand>
     }
     
     public Task Handle(CheckForUpdateCommand request, CancellationToken cancellationToken) {
-        return this._updateService.GetLatestVersion();
+        //return this._updateService.GetLatestVersion();
+        return Task.CompletedTask;
     }
 }

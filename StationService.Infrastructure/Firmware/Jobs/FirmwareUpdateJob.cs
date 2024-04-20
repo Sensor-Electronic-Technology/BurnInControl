@@ -20,7 +20,6 @@ public class FirmwareUpdateJob:IInvocable {
         this._testService = testService;
         this._stationController = stationController;
     }
-    
     public async Task Invoke() {
         this._logger.LogInformation("Checking for firmware update");
         var result=await this._firmwareUpdateService.CheckForUpdate();

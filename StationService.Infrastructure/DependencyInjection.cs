@@ -30,12 +30,12 @@ public static class DependencyInjection {
         
         services.AddSingleton<IStationMessageHandler,StationMessageHandler>();
         services.AddHostedService<StationWorkerService>();
+        services.AddHostedService<UpdateWatcher>();
         services.AddMediatR(config => {
             config.RegisterServicesFromAssemblies(
             typeof(StationSerialMessageHandler).Assembly,
             typeof(ConnectionActionHandler).Assembly, 
             typeof(SendStationCommandHandler).Assembly,
-            typeof(CheckForUpdateCommandHandler).Assembly,
             typeof(UpdateFirmwareCommandHandler).Assembly,
             typeof(TestStartedStatusHandler).Assembly);
         });

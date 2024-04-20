@@ -2,6 +2,8 @@ using Radzen;
 using BurnInControl.Dashboard.Components;
 using BurnInControl.Dashboard.Data;
 using BurnInControl.Dashboard.Services;
+using BurnInControl.Infrastructure.FirmwareModel;
+using BurnInControl.Shared.AppSettings;
 using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
       .AddInteractiveServerComponents().AddHubOptions(options => options.MaximumReceiveMessageSize = 10 * 1024 * 1024);
 builder.Services.Configure<GitHubApiOptions>(builder.Configuration.GetSection(nameof(GitHubApiOptions)));
+builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
 //var token=builder.Configuration["GithubApi:Token"];
 
 var gitHubApiOptions = builder.Configuration.GetSection("GitHubApiOptions").Get<GitHubApiOptions>();
@@ -20,6 +23,7 @@ builder.Services.AddControllers();
 builder.Services.AddRadzenComponents();
 builder.Services.AddHttpClient();
 builder.Services.AddTransient<FirmwareReleaseService>();
+builder.Services.AddTransient<FirmwareDataService>();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();

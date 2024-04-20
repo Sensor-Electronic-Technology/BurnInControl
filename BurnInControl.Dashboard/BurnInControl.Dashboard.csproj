@@ -25,5 +25,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BurnInControl.Data\BurnInControl.Data.csproj" />
+    <ProjectReference Include="..\BurnInControl.Infrastructure\BurnInControl.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

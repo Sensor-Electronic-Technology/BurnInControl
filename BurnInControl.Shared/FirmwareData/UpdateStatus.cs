@@ -1,14 +1,14 @@
 ﻿namespace BurnInControl.Shared.FirmwareData;
 
 public class UpdateStatus {
-    public string? AvrOutput { get; set; }
+    public string? ArduonCliOutput { get; set; }
     public string? Version { get; set; }
     public bool IsError { get; set; } = false;
     public string? ErrorMessage { get; set; } = string.Empty;
     
     public void SetUpdateStatus(string version, string avrOutput) {
         this.Version = version;
-        this.AvrOutput = avrOutput;
+        this.ArduonCliOutput = avrOutput;
         this.IsError = false;
         this.ErrorMessage = string.Empty;
     }

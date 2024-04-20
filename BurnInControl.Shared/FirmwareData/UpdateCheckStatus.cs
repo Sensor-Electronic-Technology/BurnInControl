@@ -28,10 +28,8 @@ public class UpdateCheckStatus {
         this.ErrorMessage = message;
     }
 
-    public void SetError(string message,string? latest=default,string? current=default) {
+    public void SetError(string message) {
         this.UpdateAvailable = false;
-        this.AvailableVersion = latest;
-        this.CurrentVersion = current;
         this.IsError = true;
         this.ErrorMessage = message;
     }

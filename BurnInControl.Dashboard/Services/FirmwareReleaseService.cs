@@ -1,6 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using BurnInControl.Dashboard.Data;
-using BurnInControl.Data.VersionModel;
+using BurnInControl.Data.StationModel;
+using BurnInControl.Infrastructure.FirmwareModel;
+using BurnInControl.Shared.FirmwareData;
 using Microsoft.Extensions.Options;
 using Octokit;
 using FileInfo = Radzen.FileInfo;
@@ -15,7 +17,8 @@ public class ReleaseResult {
 }
 
 public class FirmwareReleaseService {
-    private readonly IMongoCollection<VersionLog> _versionCollection;
+    private readonly IMongoCollection<StationFirmwareTracker> _stationTrackerCollection;
+    private readonly FirmwareDataService _firmwareDataService;
     private GitHubClient _client;
     private string _org;
     private string _repo;
@@ -24,9 +27,9 @@ public class FirmwareReleaseService {
     private string _email;
     private string _reference;
     
-    public FirmwareReleaseService(IMongoClient client,IOptions<GitHubApiOptions> options) {
-        var database = client.GetDatabase("burn_in_db");
-        this._versionCollection = database.GetCollection<VersionLog>("version_log");
+    public FirmwareReleaseService(FirmwareDataService firmwareDataService,
+        IOptions<GitHubApiOptions> options) {
+        this._firmwareDataService=firmwareDataService;
         this._org=options.Value.Org;
         this._repo=options.Value.Repo;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
@@ -34,7 +37,6 @@ public class FirmwareReleaseService {
         } else {
             this._token=options.Value.Token;
         }
-        
         this._user=options.Value.User;
         this._email=options.Value.Email;
         this._reference = options.Value.Ref;
@@ -107,33 +109,9 @@ public class FirmwareReleaseService {
             };
         }
 
-        await this.ClearLatest();
-        await this.CreateLatest(version);
+        await this._firmwareDataService.CreateLatest(version);
+        await this._firmwareDataService.UpdateStationTracker(version);
         return new ReleaseResult() { Success = true, Message = "Release created" };
-    }
-
-    public  Task CreateLatest(string version) {
-        var split=version.Split('.');
-        var startidx=version.IndexOf('V');
-        var endidx=version.IndexOf('.');
-        var majorStr = version.Substring(startidx + 1, (endidx - startidx) - 1);
-        var minorstr = split[1];
-        var patchstr = split[2];
-
-        VersionLog versionLogEntry = new VersionLog();
-        versionLogEntry._id= ObjectId.GenerateNewId();
-        versionLogEntry.Version = version;
-        versionLogEntry.Major = int.Parse(majorStr);
-        versionLogEntry.Minor = int.Parse(minorstr);
-        versionLogEntry.Patch = int.Parse(patchstr);
-        versionLogEntry.Latest = true;
-        return this._versionCollection.InsertOneAsync(versionLogEntry);
-    }
-
-    private async Task ClearLatest() {
-        var update = Builders<VersionLog>.Update.Set(e=>e.Latest,false);
-        var filter= Builders<VersionLog>.Filter.Eq(e=>e.Latest,true);
-        await this._versionCollection.UpdateManyAsync(filter,update);
     }
 
     private async Task<string> GetObject() {

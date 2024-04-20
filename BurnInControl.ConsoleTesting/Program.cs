@@ -13,8 +13,8 @@ using MongoDB.Driver;
 using System.Net.Http;
 using System.Text.Json;
 using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
-using BurnInControl.Data.VersionModel;
 using BurnInControl.Shared.ComDefinitions;
+using BurnInControl.Shared.FirmwareData;
 using MongoDB.Bson;
 using Octokit;
 using Octokit.Internal;
@@ -44,6 +44,27 @@ async Task TestRunProcess() {
     process.StandardOutput.
     Console.WriteLine(output);
 }*/
+await CreateStationDatabase();
+await CreateTrackerDatabase();
+
+
+async Task CreateTrackerDatabase() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("burn_in_db");
+    var trackerCollection=database.GetCollection<StationFirmwareTracker>("station_update_tracker");
+    var stationCollection=database.GetCollection<Station>("stations");
+    var stations=await stationCollection.Find(Builders<Station>.Filter.Empty).ToListAsync();
+    foreach(var station in stations) {
+        StationFirmwareTracker tracker = new StationFirmwareTracker();
+        tracker._id=ObjectId.GenerateNewId();
+        tracker.StationId=station.StationId;
+        tracker.CurrentVersion="V0.0.0";
+        tracker.AvailableVersion="";
+        tracker.UpdateAvailable = false;
+        Console.WriteLine($"StationId {tracker.StationId}");
+        await trackerCollection.InsertOneAsync(tracker);
+    }
+}
 
 async Task UpdateFirmware() {
     var org = "Sensor-Electronic-Technology";

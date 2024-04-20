@@ -6,4 +6,5 @@ public class DatabaseSettings {
     public string StationCollectionName { get; set; }
     public string TestConfigCollectionName { get; set; }
     public string VersionCollectionName { get; set; }
+    public string TrackerCollectionName { get; set; }
 }

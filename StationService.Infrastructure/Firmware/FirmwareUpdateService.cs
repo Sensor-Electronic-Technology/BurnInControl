@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Octokit;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using BurnInControl.HubDefinitions.Hubs;
 using BurnInControl.Infrastructure.FirmwareModel;
@@ -41,6 +42,7 @@ public class FirmwareUpdateService:IFirmwareUpdateService {
         this._configuration = configuration;
         this._settings= options.Value;
         this._github=new GitHubClient(new ProductHeaderValue(this._settings.GithubOrg));
+        
         this._stationId = this._configuration["StationId"] ?? "S01"; //TODO: Change to S00 when not debugging
         this._firmwareFullPath = this._settings.FirmwarePath + this._settings.FirmwareFileName;
         
@@ -137,36 +139,3 @@ public class FirmwareUpdateService:IFirmwareUpdateService {
         }
     }
 }
-
-
-/*public async Task GetLatestVersion() {
-    var latest=await this._github.Repository.Release.GetLatest(this._org, this._repo);
-    //var current = await this._versionCollection.Find(e => true).FirstAsync();
-    var result=await this._stationDataService.GetFirmwareVersion(this._stationId);
-    string current = string.Empty;
-    if (!result.IsError) {
-        current=result.Value;
-    }
-    if (latest != null && !string.IsNullOrEmpty(latest.TagName)) {
-        if (!string.IsNullOrEmpty(current)) {
-            this._updateCheckStatus.SetUpdateAvailable(latest.TagName,current);
-            await this._hubContext.Clients.All.OnFirmwareUpdateCheck(this._updateCheckStatus);
-        } else {
-            var lateCheck = await this._versionCollection
-                            .Find(e => e.Version == latest.TagName)
-                            .FirstOrDefaultAsync();
-            if(lateCheck!=null) {
-                await this._versionCollection.DeleteOneAsync(e=>e._id==lateCheck._id);
-            }
-            this._updateCheckStatus.SetUpdateAvailableWithMessage("Warning: Current version not found in database",latest.TagName);
-            await this._hubContext.Clients.All.OnFirmwareUpdateCheck(this._updateCheckStatus);
-        };
-    } else {
-        if (string.IsNullOrEmpty(current)) {
-            this._updateCheckStatus.SetError("Error: Latest version not found",current);
-        } else {
-            this._updateCheckStatus.SetError("Error: Latest version not found");
-        }
-    }
-    await this._hubContext.Clients.All.OnFirmwareUpdateCheck(this._updateCheckStatus);
-}*/

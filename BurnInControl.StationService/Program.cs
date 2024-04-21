@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using BurnInControl.Infrastructure;
 using MongoDB.Driver;
 using Serilog;
@@ -10,8 +11,14 @@ using Coravel.Scheduling.Schedule.Interfaces;
 using StationService.Infrastructure.Firmware.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-connectionString ??= "mongodb://172.20.3.41:27017";
+string? connectionString;
+if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
+    connectionString=builder.Configuration.GetConnectionString("LocalConnection");
+    connectionString ??= "mongodb://192.168.68.112:27017";
+} else {
+    connectionString=builder.Configuration.GetConnectionString("DefaultConnection");
+    connectionString ??= "mongodb://172.20.3.41:27017";
+}
 builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration));
 builder.Services.AddInfrastructure();
 builder.Services.AddSettings(builder);

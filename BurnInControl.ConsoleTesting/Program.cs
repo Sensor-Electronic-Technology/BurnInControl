@@ -44,8 +44,40 @@ async Task TestRunProcess() {
     process.StandardOutput.
     Console.WriteLine(output);
 }*/
-await CreateStationDatabase();
-await CreateTrackerDatabase();
+/*await CreateStationDatabase();
+await CreateTrackerDatabase();*/
+
+await CloneDatabase();
+
+async Task CloneDatabase() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var piClient = new MongoClient("mongodb://192.168.68.112:27017");
+    var database = client.GetDatabase("burn_in_db");
+    var piDatabase = piClient.GetDatabase("burn_in_db");
+    
+    var stationCollection=database.GetCollection<Station>("stations");
+    var piStationCollection=piDatabase.GetCollection<Station>("stations");
+    
+    var stations=await stationCollection.Find(Builders<Station>.Filter.Empty).ToListAsync();
+    foreach(var station in stations) {
+        await piStationCollection.InsertOneAsync(station);
+    }
+    
+    var trackerCollection=database.GetCollection<StationFirmwareTracker>("station_update_tracker");
+    var piTrackerCollection=piDatabase.GetCollection<StationFirmwareTracker>("station_update_tracker");
+    var trackers=await trackerCollection.Find(Builders<StationFirmwareTracker>.Filter.Empty).ToListAsync();
+    foreach(var tracker in trackers) {
+        await piTrackerCollection.InsertOneAsync(tracker);
+    }
+    
+    var versionCollection=database.GetCollection<VersionLog>("version_log");
+    var piVersionCollection=piDatabase.GetCollection<VersionLog>("version_log");
+    var versions=await versionCollection.Find(Builders<VersionLog>.Filter.Empty).ToListAsync();
+    foreach(var version in versions) {
+        await piVersionCollection.InsertOneAsync(version);
+    }
+    
+}
 
 
 async Task CreateTrackerDatabase() {

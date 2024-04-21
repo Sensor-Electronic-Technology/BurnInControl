@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using BurnInControl.Infrastructure;
 using BurnInControl.Shared;
 using Radzen;
@@ -11,8 +12,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
       .AddInteractiveServerComponents()
       .AddHubOptions(options => options.MaximumReceiveMessageSize = 10 * 1024 * 1024);
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-connectionString ??= "mongodb://172.20.3.41:27017";
+string? connectionString;
+if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
+    connectionString=builder.Configuration.GetConnectionString("LocalConnection");
+    connectionString ??= "mongodb://192.168.68.112:27017";
+} else {
+    connectionString=builder.Configuration.GetConnectionString("DefaultConnection");
+    connectionString ??= "mongodb://172.20.3.41:27017";
+}
+
+/*var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+connectionString ??= "mongodb://172.20.3.41:27017";*/
 builder.Services.AddControllers();
 builder.Services.AddRadzenComponents();
 builder.Services.AddHttpClient();

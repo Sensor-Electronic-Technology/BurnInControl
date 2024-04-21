@@ -9,11 +9,11 @@ using Microsoft.Extensions.Logging;
 
 namespace BurnInControl.Application.FirmwareUpdate.Handlers;
 
-public class UpdateFirmwareCommandHandler:IRequestHandler<StartupTryUpdateFirmwareCommand,bool> {
-    private readonly ILogger<UpdateFirmwareCommandHandler> _logger;
+public class StartupTryUpdateFirmwareCommandHandler:IRequestHandler<StartupTryUpdateFirmwareCommand,bool> {
+    private readonly ILogger<StartupTryUpdateFirmwareCommandHandler> _logger;
     private readonly IFirmwareUpdateService _firmwareUpdateService;
     
-    public UpdateFirmwareCommandHandler(ILogger<UpdateFirmwareCommandHandler> logger, IFirmwareUpdateService firmwareUpdateService) {
+    public StartupTryUpdateFirmwareCommandHandler(ILogger<StartupTryUpdateFirmwareCommandHandler> logger, IFirmwareUpdateService firmwareUpdateService) {
         this._logger = logger;
         this._firmwareUpdateService = firmwareUpdateService;
     }

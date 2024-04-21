@@ -1,26 +1,32 @@
 ﻿using BurnInControl.Application.BurnInTest;
 using BurnInControl.Application.FirmwareUpdate.Interfaces;
+using BurnInControl.Application.FirmwareUpdate.Messages;
 using BurnInControl.Application.StationControl.Interfaces;
-using Coravel.Invocable;
-using Microsoft.Extensions.Hosting;
+using Coravel;
+using Coravel.Scheduling.Schedule.Interfaces;
+using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace StationService.Infrastructure.Firmware.Jobs;
+namespace BurnInControl.Application.FirmwareUpdate.Handlers;
 
-public class FirmwareUpdateJob:IFirmwareUpdateJob {
-    private readonly ILogger<FirmwareUpdateJob> _logger;
+public class TryUpdateFirmwareCommandHandler:IRequestHandler<TryUpdateFirmwareCommand,bool>  {
+    private readonly ILogger<TryUpdateFirmwareCommandHandler> _logger;
     private readonly IFirmwareUpdateService _firmwareUpdateService;
     private readonly IBurnInTestService _testService;
     private readonly IStationController _stationController;
+    private readonly IScheduler _scheduler;
     
-    public FirmwareUpdateJob(ILogger<FirmwareUpdateJob> logger, IBurnInTestService testService,
-        IFirmwareUpdateService firmwareUpdateService, IStationController stationController) {
+    public TryUpdateFirmwareCommandHandler(ILogger<TryUpdateFirmwareCommandHandler> logger, IBurnInTestService testService,
+        IFirmwareUpdateService firmwareUpdateService, IStationController stationController,
+        IScheduler scheduler) {
         this._logger = logger;
         this._firmwareUpdateService = firmwareUpdateService;
         this._testService = testService;
         this._stationController = stationController;
+        this._scheduler = scheduler;
     }
-    public async Task Invoke() {
+    
+    public async Task<bool> Handle(TryUpdateFirmwareCommand request, CancellationToken cancellationToken) {
         this._logger.LogInformation("Checking for firmware update");
         var result=await this._firmwareUpdateService.CheckForUpdate();
         if (result.UpdateAvailable && !this._testService.IsRunning) {
@@ -28,6 +34,11 @@ public class FirmwareUpdateJob:IFirmwareUpdateJob {
             await this._stationController.Disconnect();
             await this._firmwareUpdateService.UploadFirmwareUpdate();
             await this._stationController.ConnectUsb();
+            return true;
+        } else {
+            this._scheduler.Schedule<IFirmwareUpdateJob>()
+                .Hourly();
+            return false;
         }
     }
 }

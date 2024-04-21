@@ -11,13 +11,13 @@
     public int Current { get; set; }
     
     [Parameter]
-    public EventCallback<StationCurrent> CurrentChanged { get; set; }
+    public EventCallback<int> CurrentChanged { get; set; }
     
     private string? _selectedItem;
 
 
     private async Task CurrentChangedHandler(string current) {
-        await CurrentChanged.InvokeAsync(StationCurrent.FromName(current));
+        await CurrentChanged.InvokeAsync(StationCurrent.FromName(current).Value);
     }
 
     protected override Task OnParametersSetAsync() {

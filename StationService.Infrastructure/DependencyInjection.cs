@@ -13,6 +13,7 @@ using StationService.Infrastructure.TestLogs;
 using System.Threading.Channels;
 using BurnInControl.Application.BurnInTest;
 using BurnInControl.Application.BurnInTest.Handlers;
+using BurnInControl.Application.FirmwareUpdate.Messages;
 using Coravel;
 using StationService.Infrastructure.Firmware.Jobs;
 
@@ -27,19 +28,21 @@ public static class DependencyInjection {
         services.AddSingleton<IFirmwareUpdateService,FirmwareUpdateService>();
         services.AddSingleton<IStationController,StationController>();
         services.AddSingleton<UsbController>();
-        
+        services.AddTransient<IFirmwareUpdateJob,FirmwareUpdateJob>();
         services.AddSingleton<IStationMessageHandler,StationMessageHandler>();
         services.AddHostedService<StationWorkerService>();
         services.AddHostedService<UpdateWatcher>();
+        
         services.AddMediatR(config => {
             config.RegisterServicesFromAssemblies(
             typeof(StationSerialMessageHandler).Assembly,
             typeof(ConnectionActionHandler).Assembly, 
             typeof(SendStationCommandHandler).Assembly,
-            typeof(UpdateFirmwareCommandHandler).Assembly,
+            typeof(StartupTryUpdateFirmwareCommandHandler).Assembly,
+            typeof(TryUpdateFirmwareCommandHandler).Assembly,
             typeof(TestStartedStatusHandler).Assembly);
         });
-        services.AddTransient<FirmwareUpdateJob>();
+        
         services.AddScheduler();
         return services;
     }

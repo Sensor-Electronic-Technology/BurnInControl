@@ -1,4 +1,6 @@
-﻿using BurnInControl.HubDefinitions.Hubs;
+﻿using BurnInControl.Application.FirmwareUpdate.Messages;
+using BurnInControl.HubDefinitions.Hubs;
+using BurnInControl.Shared.AppSettings;
 using BurnInControl.Shared.FirmwareData;
 using Coravel.Scheduling.Schedule.Interfaces;
 using MediatR;
@@ -6,6 +8,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using StationService.Infrastructure.Firmware.Jobs;
 using StationService.Infrastructure.Hub;
@@ -26,26 +29,26 @@ public class UpdateWatcher:BackgroundService {
         IScheduler scheduler,
         IMongoClient client,
         ILogger<UpdateWatcher> logger,
+        IOptions<DatabaseSettings> options,
         IHubContext<StationHub,IStationHub> hubContext){
         this._mediator = mediator;
         this._scheduler= scheduler;
         this._Configuration = configuration;
         this._hubContext = hubContext;
         this._logger = logger;
-        this._trackerCollection = client.GetDatabase("burn_in_db")
-            .GetCollection<StationFirmwareTracker>("station_update_tracker");
-        this._stationId= this._Configuration["StationId"] ?? "S01";
+        this._trackerCollection = client.GetDatabase(options.Value.DatabaseName ?? "burn_in_db")
+            .GetCollection<StationFirmwareTracker>(options.Value.TrackerCollectionName ?? "station_update_tracker");
+        this._stationId= this._Configuration["StationId"] ?? "S01";  //TODO: Replace S01 with S00
     } 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-        using var cursor =await this._trackerCollection.WatchAsync(cancellationToken: stoppingToken);
+        using var cursor =await this._trackerCollection.WatchAsync(options:new ChangeStreamOptions() {
+            FullDocument = ChangeStreamFullDocumentOption.UpdateLookup
+        },cancellationToken: stoppingToken);
         foreach(var change in cursor.ToEnumerable()) {
             var tracker=change.FullDocument;
-            if (tracker.UpdateAvailable) {
-                this._logger.LogInformation("Firmware update available for station, update job scheduled to run once " +
-                                            "a test is not running"); 
-                this._scheduler.Schedule<FirmwareUpdateJob>()
-                    .Hourly().RunOnceAtStart();
-            }
+            if (!tracker.UpdateAvailable || tracker.StationId != this._stationId) continue;
+            this._logger.LogInformation("Firmware update available for station");
+            await this._mediator.Send(new TryUpdateFirmwareCommand(), stoppingToken);
         }
     }
 }

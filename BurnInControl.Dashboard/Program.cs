@@ -13,11 +13,11 @@ builder.Services.AddRazorComponents()
       .AddInteractiveServerComponents().AddHubOptions(options => options.MaximumReceiveMessageSize = 10 * 1024 * 1024);
 builder.Services.Configure<GitHubApiOptions>(builder.Configuration.GetSection(nameof(GitHubApiOptions)));
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
-//var token=builder.Configuration["GithubApi:Token"];
+var token=builder.Configuration["GithubApiToken"];
 
-var gitHubApiOptions = builder.Configuration.GetSection("GitHubApiOptions").Get<GitHubApiOptions>();
-Console.WriteLine($"Token {gitHubApiOptions.Token}");
-builder.Configuration.GetSection("GitHubApiOptions").Bind(gitHubApiOptions);
+/*var gitHubApiOptions = builder.Configuration.GetSection("GitHubApiOptions").Get<GitHubApiOptions>();*/
+Console.WriteLine($"Token {token}");
+/*builder.Configuration.GetSection("GitHubApiOptions").Bind(gitHubApiOptions);*/
 
 builder.Services.AddControllers();
 builder.Services.AddRadzenComponents();

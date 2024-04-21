@@ -43,6 +43,7 @@ public class FirmwareReleaseService {
         Console.WriteLine($"Org: {this._org} " +
                           $"Repo: {this._repo} " +
                           $"User: {this._user} " +
+                          $"Token: {this._token} " +
                           $"Email: {this._email} " +
                           $"Ref: {this._reference}");
         this._client=new GitHubClient(new ProductHeaderValue(this._org));

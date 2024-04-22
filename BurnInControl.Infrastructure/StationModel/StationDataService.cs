@@ -57,18 +57,14 @@ public class StationDataService {
         var id=await this._stationCollection.Find(e => e.StationId == stationId)
             .Project(e => e.RunningTest)
             .FirstOrDefaultAsync();
-        if(id==null) {
-            return Error.NotFound();
-        } else {
-            return id.Value;
-        }
+        return id==null? Error.NotFound():id.Value;
     }
     
     public async Task<ErrorOr<Success>> ClearRunningTest(string stationId) {
         var filter=Builders<Station>.Filter.Eq(e => e.StationId,stationId);
         var updateBuilder = Builders<Station>.Update;
         var update=updateBuilder.Set(e => e.RunningTest, null)
-            .Set(e => e.State, StationState.Running);
+            .Set(e => e.State, StationState.Idle);
          var result=await this._stationCollection.UpdateOneAsync(filter, update);
          if (result.IsAcknowledged) {
              return Result.Success;

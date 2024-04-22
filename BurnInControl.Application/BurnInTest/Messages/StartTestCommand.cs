@@ -1,3 +1,5 @@
-﻿namespace BurnInControl.Application.BurnInTest.Messages;
+﻿using MediatR;
 
-public class StartTestCommand:IBurnInTestMessage { }
+namespace BurnInControl.Application.BurnInTest.Messages;
+
+public class StartTestCommand:IRequest { }

@@ -87,12 +87,7 @@ public class BurnInTestService:IBurnInTestService{
 
     public async Task StartTestFrom() {
         if (!string.IsNullOrEmpty(this._stationId)) {
-            var result=await this._testLogDataService.CheckContinue(this._stationId);
-            if (!result.IsError) {
-                //TODO: 
-            } else {
-                
-            }
+
         } else {
             //this._hubContext.Clients.All.OnTestStarted
             this._logger.LogCritical("StationId is null or empty, cannot continue test.  " +

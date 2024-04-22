@@ -17,7 +17,7 @@ public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
     public static readonly StationMsgPrefix IdRequestPrefix = new StationMsgPrefix(nameof(IdRequestPrefix), "IDREQ");
     public static readonly StationMsgPrefix VersionReceivePrefix = new StationMsgPrefix(nameof(VersionReceivePrefix), "VERREC");
     public static readonly StationMsgPrefix VersionRequestPrefix = new StationMsgPrefix(nameof(VersionRequestPrefix), "VERREQ");
-    public static readonly StationMsgPrefix TestStatusPrefix = new StationMsgPrefix(nameof(TestStatusPrefix), "TSTAT");
+    public static readonly StationMsgPrefix TestStartStatusPrefix = new StationMsgPrefix(nameof(TestStartStatusPrefix), "TSTAT");
     public static readonly StationMsgPrefix TestCompletedPrefix = new StationMsgPrefix(nameof(TestCompletedPrefix), "TCOMP");
     public static readonly StationMsgPrefix TestStartFromLoadPrefix = new StationMsgPrefix(nameof(TestStartFromLoadPrefix), "TLOAD");
     public static readonly StationMsgPrefix HeaterNotifyPrefix = new StationMsgPrefix(nameof(HeaterNotifyPrefix), "HNOTIFY");
@@ -26,5 +26,6 @@ public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
     public static readonly StationMsgPrefix UpdateCurrentPrefix = new StationMsgPrefix(nameof(AcknowledgePrefix), "UC");
     public static readonly StationMsgPrefix UpdateTempPrefix = new StationMsgPrefix(nameof(AcknowledgePrefix), "UT");
     public static readonly StationMsgPrefix TuneComPrefix = new StationMsgPrefix(nameof(AcknowledgePrefix), "TCOM");
+    public static readonly StationMsgPrefix SendTestId = new StationMsgPrefix(nameof(SendTestId), "TID");
     private StationMsgPrefix(string name, string value) : base(name, value) {  }
 }

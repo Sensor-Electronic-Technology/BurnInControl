@@ -1,3 +1,5 @@
-﻿namespace BurnInControl.Application.BurnInTest.Messages;
+﻿using MediatR;
 
-public class TestCompletedMessage {  }
+namespace BurnInControl.Application.BurnInTest.Messages;
+
+public class TestCompletedMessage:IRequest {  }

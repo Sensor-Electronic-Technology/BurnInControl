@@ -13,6 +13,7 @@ using StationService.Infrastructure.Hub;
 using StationService.Infrastructure.TestLogs;
 using System.Text.Json;
 using BurnInControl.Application.ProcessSerial.Messages;
+using BurnInControl.Data.StationModel.Components;
 using MediatR;
 namespace StationService.Infrastructure.SerialCom;
 
@@ -90,7 +91,7 @@ public class StationMessageHandler:IStationMessageHandler{
                         //Send to UI
                         return Task.CompletedTask;
                     }
-                    case nameof(StationMsgPrefix.TestStatusPrefix): {
+                    case nameof(StationMsgPrefix.TestStartStatusPrefix): {
                         //Send to BurnInTestService and start logging
                         return this.HandleTestStatus(packetElem);
                     }
@@ -129,9 +130,7 @@ public class StationMessageHandler:IStationMessageHandler{
         try {
             var serialData=element.Deserialize<StationSerialData>();
             if (serialData != null) {
-                /*this._mediator.Send(new LogCommand() {
-                    Data = serialData
-                });*/
+                this._mediator.Send(new LogCommand() { Data = serialData });
                 return this._hubContext.Clients.All.OnStationData(serialData);
             }
             return Task.CompletedTask;
@@ -155,7 +154,6 @@ public class StationMessageHandler:IStationMessageHandler{
     }
 
     private Task HandleMessage(JsonElement element,bool isInit) {
-        //var message=element.GetProperty("Message").ToString();
         try {
             var message = element.Deserialize<StationMessagePacket>();
             switch (message.MessageType) {
@@ -196,23 +194,35 @@ public class StationMessageHandler:IStationMessageHandler{
         try {
             var success = element.GetProperty("Status").GetBoolean();
             var message = element.GetProperty("Message").GetString();
-            if (success) {
-                //send to BurnInService and start logging
-                //Send to UI
-            } else {
-                //Send to UI
-            }
-            return success ? 
-                this._hubContext.Clients.All.OnTestStarted($"Test Started, Message: {message}")
-                : this._hubContext.Clients.All.OnTestStartedFailed($"Error, Message: {message}");
+            var testId=element.GetProperty("TestId").GetString();
+            return this._mediator.Send(new StartStatusCommand() {
+                Status= success,
+                Message = message,
+                TestId = testId,
+            });
         } catch(Exception e) {
             var message = $"Failed to parse test status message packet. Exception: {e.Message}";
             this._logger.LogError(message);
-            return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStatusPrefix,$"Error: {message}");
+            return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStartStatusPrefix,$"Error: {message}");
         }
     }
 
     private Task HandleTestStartedFrom(JsonElement element) {
-        return Task.CompletedTask;
+        try {
+            var message = element.GetProperty("Message").GetString();
+            var testId=element.GetProperty("TestId").GetString();
+            var current=element.GetProperty("SetCurrent").GetInt32();
+            var setTemp=element.GetProperty("SetTemp").GetInt32();
+            return this._mediator.Send(new StartFromLoadCommand() {
+                Message=message,
+                TestId=testId,
+                Current = StationCurrent.FromValue(current),
+                SetTemperature=setTemp
+            });
+        } catch(Exception e) {
+            var message = $"Failed to parse test status message packet. Exception: {e.Message}";
+            this._logger.LogError(message);
+            return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStartStatusPrefix,$"Error: {message}");
+        }
     }
 }

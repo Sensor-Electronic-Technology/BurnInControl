@@ -1,4 +1,5 @@
-﻿using BurnInControl.HubDefinitions.HubTransports;
+﻿using BurnInControl.Data.StationModel.Components;
+using BurnInControl.HubDefinitions.HubTransports;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Station;
 using BurnInControl.Shared.FirmwareData;
@@ -20,8 +21,8 @@ public interface IStationHub {
 
 #region BurnInTest
     Task OnTestStarted(string message);
-    Task OnTestStartedFrom();
-    Task OnTestStartedFromUnknown(TestSetupTransport testSetup);
+    Task OnTestStartedFrom(TestSetupTransport testSetupTransport);
+    Task OnTestStartedFromUnknown(TestSetupTransport testSetupTransport);
     Task OnTestStartedFailed(string message);
     Task OnTestCompleted(string message);
     Task OnTestSetup(bool success, string message);

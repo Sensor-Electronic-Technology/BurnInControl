@@ -47,7 +47,9 @@ async Task TestRunProcess() {
 /*await CreateStationDatabase();
 await CreateTrackerDatabase();*/
 
-await CloneDatabase();
+var objectId=ObjectId.GenerateNewId().ToString();
+Console.WriteLine(objectId);
+//await CloneDatabase();
 
 async Task CloneDatabase() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");

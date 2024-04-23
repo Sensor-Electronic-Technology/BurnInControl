@@ -1,4 +1,5 @@
 ﻿using BurnInControl.Application.BurnInTest;
+using BurnInControl.Application.BurnInTest.Interfaces;
 using BurnInControl.Application.FirmwareUpdate.Interfaces;
 using BurnInControl.Application.FirmwareUpdate.Messages;
 using BurnInControl.Application.StationControl.Interfaces;
@@ -12,11 +13,12 @@ namespace BurnInControl.Application.FirmwareUpdate.Handlers;
 public class TryUpdateFirmwareCommandHandler:IRequestHandler<TryUpdateFirmwareCommand,bool>  {
     private readonly ILogger<TryUpdateFirmwareCommandHandler> _logger;
     private readonly IFirmwareUpdateService _firmwareUpdateService;
-    private readonly IBurnInTestService _testService;
+    private readonly ITestService _testService;
     private readonly IStationController _stationController;
     private readonly IScheduler _scheduler;
     
-    public TryUpdateFirmwareCommandHandler(ILogger<TryUpdateFirmwareCommandHandler> logger, IBurnInTestService testService,
+    public TryUpdateFirmwareCommandHandler(ILogger<TryUpdateFirmwareCommandHandler> logger, 
+        ITestService testService,
         IFirmwareUpdateService firmwareUpdateService, IStationController stationController,
         IScheduler scheduler) {
         this._logger = logger;

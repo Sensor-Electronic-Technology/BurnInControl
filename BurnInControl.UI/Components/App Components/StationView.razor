@@ -8,6 +8,8 @@
 @using BurnInControl.HubDefinitions.Hubs
 @using Microsoft.AspNetCore.SignalR.Client
 @using BurnInControl.Application.StationControl.Messages
+@using BurnInControl.Data.BurnInTests.Wafers
+@using BurnInControl.HubDefinitions.HubTransports
 @inject ILogger<StationView> _logger
 @inject StationHubConnection StationHubConnection
 @inject NotificationService NotificationService
@@ -185,10 +187,49 @@
        return Task.CompletedTask;
    }
    
+   private Task OnSaveClicked() {
+       if (this.Connected) {
+           List<WaferSetup> waferSetups = new List<WaferSetup>();
+           waferSetups.Add(new WaferSetup() {
+               WaferId = "W01",
+               BurnNumber = 1,
+               Probe1=StationProbe.Probe1,
+               Probe2=StationProbe.Probe2,
+               Probe1Pad = "a",
+               Probe2Pad = "b",
+               StationPocket = StationPocket.LeftPocket,
+           });
+           waferSetups.Add(new WaferSetup() {
+               WaferId = "W02",
+               BurnNumber = 1,
+               Probe1=StationProbe.Probe1,
+               Probe2=StationProbe.Probe2,
+               Probe1Pad = "a",
+               Probe2Pad = "b",
+               StationPocket = StationPocket.LeftPocket,
+           });
+           waferSetups.Add(new WaferSetup() {
+               WaferId = "W03",
+               BurnNumber = 1,
+               Probe1=StationProbe.Probe1,
+               Probe2=StationProbe.Probe2,
+               Probe1Pad = "a",
+               Probe2Pad = "b",
+               StationPocket = StationPocket.LeftPocket,
+           });
+           return this._hubConnection.SendAsync(HubConstants.Methods.SetupTest,new TestSetupTransport() {
+               WaferSetups = waferSetups,
+               SetCurrent = StationCurrent._60mA,
+               SetTemperature = 85,
+           });
+       }
+       this.NotifyNotConnected();
+       return Task.CompletedTask;
+   }
+   
    private Task OnStartClicked(bool state) {
        if (this.Connected) {
            var command = state ? StationCommand.Pause : StationCommand.Start;
-           return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand, command);
        }
        this.NotifyNotConnected();
        return Task.CompletedTask;

@@ -167,7 +167,7 @@ public class TestLogDataService {
             if(updateResult.ModifiedCount>0){
                 return Result.Success;
             } else {
-                return Error.Unexpected(description: "Unknown State. The test may not be marked as running");
+                return Error.Unexpected(description: "Unknown State. Log may not have start time set");
             }
         } else {
             return Error.Failure(description: "Failed Mart Test as Running");

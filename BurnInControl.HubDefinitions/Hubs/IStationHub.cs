@@ -21,8 +21,8 @@ public interface IStationHub {
 
 #region BurnInTest
     Task OnTestStarted(string message);
-    Task OnTestStartedFrom(TestSetupTransport testSetupTransport);
-    Task OnTestStartedFromUnknown(TestSetupTransport testSetupTransport);
+    Task OnTestStartedFrom(LoadTestSetupTransport loadTestSetupTransport);
+    Task OnTestStartedFromUnknown(LoadTestSetupTransport loadTestSetupTransport);
     Task OnTestStartedFailed(string message);
     Task OnTestCompleted(string message);
     Task OnTestSetup(bool success, string message);

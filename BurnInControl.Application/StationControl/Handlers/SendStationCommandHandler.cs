@@ -5,13 +5,13 @@ using ErrorOr;
 using MediatR;
 namespace BurnInControl.Application.StationControl.Handlers;
 
-public class SendStationCommandHandler:IRequestHandler<SendStationCommand,ErrorOr<Success>> {
+public class SendStationCommandHandler:IRequestHandler<SendStationCommand> {
     private readonly IStationController _controller;
     public SendStationCommandHandler(IStationController controller) {
         _controller = controller;
     }
     
-    public async Task<ErrorOr<Success>> Handle(SendStationCommand command, CancellationToken cancellationToken) {
-        return await this._controller.Send(StationMsgPrefix.CommandPrefix, command.Command);
+    public Task Handle(SendStationCommand command, CancellationToken cancellationToken) {
+        return this._controller.Send(StationMsgPrefix.CommandPrefix, command.Command);
     }
 }

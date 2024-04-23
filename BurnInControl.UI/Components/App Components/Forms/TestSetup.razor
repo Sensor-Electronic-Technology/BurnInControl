@@ -6,11 +6,17 @@
     </RadzenStack>
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" 
                  JustifyContent="JustifyContent.Center">
-        <RadzenButton Text="Save" Size="Radzen.ButtonSize.Large" ButtonStyle="Radzen.ButtonStyle.Secondary" Icon="save" Style="width: 170px"/>
-        <RadzenButton Text="Cancel/Clear" ButtonStyle="Radzen.ButtonStyle.Danger" Size="Radzen.ButtonSize.Large" Icon="cancel" IsBusy="false" Shade="Radzen.Shade.Default" Disabled="false"/>
+        <RadzenButton Text="Save" Size="ButtonSize.Large" 
+                      Click="@this.Save"
+                      ButtonStyle="ButtonStyle.Secondary" 
+                      Icon="save" Style="width: 170px"/>
+        <RadzenButton Text="Cancel/Clear" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Large" Icon="cancel" IsBusy="false" Shade="Radzen.Shade.Default" Disabled="false"/>
     </RadzenStack>
 </RadzenStack>
 
 @code {
+    [Parameter]
+    public EventCallback Save { get; set; }
+    
     
 }

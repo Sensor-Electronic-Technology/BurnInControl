@@ -19,13 +19,13 @@ namespace StationService.Infrastructure.TestLogs;
 
 public class TestService:ITestService {
     private readonly TestLogDataService _testLogDataService;
-    private StationSerialData _latestData;
+    private StationSerialData _latestData=new StationSerialData();
     private BurnInTestLog _runningTest=new BurnInTestLog();
     private IHubContext<StationHub, IStationHub> _hubContext;
     private IMediator _mediator;
     private string? _stationId;
     private DateTime _lastLog;
-    private readonly TimeSpan _interval=new TimeSpan(0,0,60);
+    private readonly TimeSpan _interval=new TimeSpan(0,0,10);
     private readonly ILogger<TestService> _logger;
     private List<StationSerialData> _readings=new List<StationSerialData>();
 
@@ -46,105 +46,27 @@ public class TestService:ITestService {
         this._hubContext = hubContext;
     }
     
-    public Task Start(bool success, string? testId, string? message) {
-        if (success) {
-            this._running = true;
-            this._paused = false;
-            this._loggingEnabled = true;
-            this._first = true;
-            return this._hubContext.Clients.All.OnTestStarted($"Test Started Successfully, Message: {message ?? "No Message"}");
-        }
-        return this._hubContext.Clients.All.OnTestStartedFailed($"Test failed to start, " +
-                                                                $"Message: {message ?? "Unknown Error"}");
-    }
-
-    public async Task StartFrom(string? message, string? testId,StationCurrent current,int setTemp) {
-        if (!string.IsNullOrEmpty(testId)) {
-            if (ObjectId.TryParse(testId, out var id)) {
-                if (this._runningTest._id == id) {
-                    this._running = true;
-                    this._paused = false;
-                    this._loggingEnabled = true;
-                    this._first = false;
-                    await this._hubContext.Clients.All.OnTestStartedFrom(new TestSetupTransport() {
-                        Success = true,
-                        Message ="Test loaded from saved state.  Continuing test",
-                        WaferSetups = this._runningTest.TestSetup,
-                        SetCurrent = this._runningTest.SetCurrent,
-                        SetTemperature = this._runningTest.SetTemperature
-                    });
-                } else {
-                    var result= await this._testLogDataService.TryContinueFrom(this._stationId ?? "S00",id);
-                    if (!result.IsError) {
-                        this._running = true;
-                        this._paused = false;
-                        this._loggingEnabled = true; 
-                        this._first = false;
-                        this._runningTest= result.Value;
-                        await this._hubContext.Clients.All.OnTestStartedFrom(new TestSetupTransport() {
-                            Success = true,
-                            Message ="Test loaded from saved state.  Continuing test",
-                            WaferSetups = this._runningTest.TestSetup,
-                            SetCurrent = this._runningTest.SetCurrent,
-                            SetTemperature = this._runningTest.SetTemperature
-                        });
-                    } else {
-                        if (result.FirstError == Error.NotFound()) {
-                        }else if (result.FirstError == Error.Conflict()) {
-       
-                        }else if(result.FirstError == Error.Failure()) {
-
-                        }
-                        this.CreateUnknownTest(current, setTemp);
-                        this._loggingEnabled = false;
-                        this._running = true;
-                        this._paused = false;
-                        this._first = false;
-                        await this._hubContext.Clients.All.OnTestStartedFrom(new TestSetupTransport() {
-                            Success = true,
-                            Message ="Error: Could not find logged test. " +
-                                     "\n Test will continue running without logging enabled",
-                            WaferSetups = this._runningTest.TestSetup,
-                            SetCurrent = this._runningTest.SetCurrent,
-                            SetTemperature = this._runningTest.SetTemperature
-                        });
-                    }
-                }
-            } else {
-                var result=await this._testLogDataService.TryContinueFrom(this._stationId ?? "S00");
-                if(result.FirstError==Error.NotFound()) {
-                    await this._hubContext.Clients.All.OnTestStartedFailed("Failed to parse test id and no running test found");
-                } else if (result.FirstError == Error.Conflict()) {
-                    await this._hubContext.Clients.All.OnTestStartedFailed("Failed to parse test id and running test id does not match");
-                } else if (result.FirstError == Error.Unexpected()) {
-                    await this._hubContext.Clients.All.OnTestStartedFailed("Failed to parse test id and failed to parse running test id");
-                }
-            }
-        } else {
-            var result=await this._testLogDataService.TryContinueFrom(this._stationId ?? "S00");
-            if(result.FirstError==Error.NotFound()) {
-                await this._hubContext.Clients.All.OnTestStartedFailed("No test id provided and no running test found");
-            } else if (result.FirstError == Error.Conflict()) {
-                await this._hubContext.Clients.All.OnTestStartedFailed("No test id provided and running test id does not match");
-            } else if (result.FirstError == Error.Unexpected()) {
-                await this._hubContext.Clients.All.OnTestStartedFailed("No test id provided and failed to parse running test id");
-            }
-        }
-        await this._mediator.Send(new SendAckCommand(){AcknowledgeType = AcknowledgeType.TestStartAck});
-    }
-
-    public async Task SetupTest(List<WaferSetup> setup,StationCurrent current,int setTemp) {
+    public async Task SetupTest(TestSetupTransport testSetup) {
         if (!this.IsRunning) {
             this._runningTest.Reset();
-            this._runningTest.StartNew(setup,setTemp,current);
+            this._runningTest.StartNew(testSetup.WaferSetups,
+                testSetup.SetTemperature,
+                testSetup.SetCurrent);
             var result=await this._testLogDataService.StartNew(this._runningTest);
             if (!result.IsError) {
                 this._testSetupComplete = true;
-                await this._hubContext.Clients.All.OnTestSetup(true, "Test Setup Complete, start test when ready");
+                await this._mediator.Send(new SendTestIdCommand() {
+                    TestId=this._runningTest._id.ToString()
+                });
+                await this._hubContext.Clients.All.OnTestSetup(true, "Test Setup Complete, " +
+                                                                     "start the test when ready");
             } else {
                 this._testSetupComplete = false;
-                await this._hubContext.Clients.All.OnTestSetup(false,result.FirstError.Description);
-                this._logger.LogError("Failed to start new test.  Internal Error: " + result.FirstError);
+                await this._hubContext.Clients.All.OnTestSetup(false,$"Test setup failed. " +
+                                                                     $"Internal Error: " +
+                                                                     $"{result.FirstError.Description}");
+                this._logger.LogError("Test setup failed. Internal " +
+                                      "Error: {ErrMessage}",result.FirstError.Description);
             }
         } else {
             await this._hubContext.Clients.All.OnTestSetup(false,"Test is already running, " +
@@ -152,7 +74,89 @@ public class TestService:ITestService {
                                                                  "test to complete before starting new test");
         }
     }
+    public async Task Start(bool success, string? message) {
+        if (success) {
+            this._running = true;
+            this._paused = false;
+            this._loggingEnabled = true;
+            this._first = true;
+            await this._hubContext.Clients.All.OnTestStarted($"Test Started Successfully, Message: {message ?? "No Message"}");
+        }
+        await this._hubContext.Clients.All.OnTestStartedFailed($"Test failed to start, " +
+                                                                $"Message: {message ?? "Unknown Error"}");
+        await this._mediator.Send(new SendAckCommand() { AcknowledgeType = AcknowledgeType.TestStartAck });
+    }
+    public async Task StartFrom(string? message, string? testId,StationCurrent current,int setTemp) {
+        if(ObjectId.TryParse(testId, out var id)) {
+            var result = await this._testLogDataService.GetTestLog(id);
+            if (!result.IsError) {
+                this._runningTest = result.Value;
+                this._running = true;
+                this._paused = false;
+                this._loggingEnabled = true;
+                this._first = true;
+                await this._hubContext.Clients.All.OnTestStartedFrom(new LoadTestSetupTransport() {
+                    Success = true,
+                    Message = "Test loaded from saved state",
+                    WaferSetups = this._runningTest.TestSetup,
+                    SetTemperature = this._runningTest.SetTemperature,
+                    SetCurrent = this._runningTest.SetCurrent
+                });
+            } else {
+                await this.StartUnknown(current,setTemp);   
+            }
+        } else {
+            await this.StartUnknown(current,setTemp);
+        }
+        await this._mediator.Send(new SendAckCommand(){AcknowledgeType = AcknowledgeType.TestStartAck});
+    }
+    private async Task StartUnknown(StationCurrent current,int setTemp) {
+        this.CreateUnknownTest(current,setTemp);
+        var testResult=await this._testLogDataService.StartNewUnknown(this._runningTest,current);
+        if (!testResult.IsError) {
+            this._runningTest = testResult.Value;
+            this._running = true;
+            this._paused = false;
+            this._loggingEnabled = true;
+            this._first = true;
+            await this._hubContext.Clients.All.OnTestStartedFrom(new LoadTestSetupTransport() {
+                Success = false,
+                Message = "Warning: failed to load savedState. An Unknown test was started instead.",
+                WaferSetups = this._runningTest.TestSetup,
+                SetTemperature = this._runningTest.SetTemperature,
+                SetCurrent = this._runningTest.SetCurrent
+            });
+        } else {
+            this._runningTest = testResult.Value;
+            this._running = true;
+            this._paused = false;
+            this._loggingEnabled = false;
+            this._first = false;
+            await this._hubContext.Clients.All.OnTestStartedFrom(new LoadTestSetupTransport() {
+                Success = false,
+                Message = "Error: Failed to load saved state and failed to create fallback unknown test." +
+                          "test will continue to run but no logs will be available",
+                WaferSetups = this._runningTest.TestSetup,
+                SetTemperature = this._runningTest.SetTemperature,
+                SetCurrent = this._runningTest.SetCurrent
+            });
+        }
+    }
 
+    private async Task StopTest() {
+        if (this._running) {
+            var result=await this._testLogDataService.SetCompleted(this._runningTest._id,
+                this._stationId ?? "S01",DateTime.Now);
+            if (!result.IsError) {
+                await this._hubContext.Clients.All.OnTestCompleted("Test Completed");
+            } else {
+                await this._hubContext.Clients.All.OnTestCompleted("Error: Failed to mark test as completed");
+            }
+        } else {
+            await this._hubContext.Clients.All.OnTestCompleted("Waring: Received stop command but no test is running");
+        }
+        await this._mediator.Send(new SendAckCommand() { AcknowledgeType = AcknowledgeType.TestCompleteAck });
+    }
     private void CreateUnknownTest(StationCurrent current,int setTemp) {
         BurnInTestLog log=new BurnInTestLog { _id = ObjectId.GenerateNewId() };
         log.TestSetup.Add(new WaferSetup() {
@@ -181,12 +185,18 @@ public class TestService:ITestService {
         log.ElapsedTime = 0;
         this._runningTest = log;
     }
-
-    public Task Log(StationSerialData data) {
+    public async Task Log(StationSerialData data) {
         if (this._loggingEnabled) {
-            
+            if (this._first) {
+                this._first = false;
+                await this._testLogDataService.SetStart(this._runningTest._id,DateTime.Now,data);
+            } else {
+                if ((DateTime.Now - this._lastLog).Seconds > this._interval.Seconds) {
+                    this._lastLog = DateTime.Now;
+                    await this._testLogDataService.InsertReading(this._runningTest._id,data);
+                }
+            }
         }
-        return Task.CompletedTask;
     }
     
 }

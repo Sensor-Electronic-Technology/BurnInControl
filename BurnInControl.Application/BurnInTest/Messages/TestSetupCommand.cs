@@ -1,8 +1,9 @@
 ﻿using BurnInControl.Data.BurnInTests.Wafers;
+using BurnInControl.HubDefinitions.HubTransports;
 using MediatR;
 
 namespace BurnInControl.Application.BurnInTest.Messages;
 
 public class TestSetupCommand:IRequest {
-    public List<WaferSetup> TestSetup { get; set; }
+    public TestSetupTransport TestSetupTransport { get; set; }
 }

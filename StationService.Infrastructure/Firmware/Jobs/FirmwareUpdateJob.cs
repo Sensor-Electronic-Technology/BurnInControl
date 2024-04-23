@@ -1,4 +1,5 @@
 ﻿using BurnInControl.Application.BurnInTest;
+using BurnInControl.Application.BurnInTest.Interfaces;
 using BurnInControl.Application.FirmwareUpdate.Interfaces;
 using BurnInControl.Application.StationControl.Interfaces;
 using Coravel.Invocable;
@@ -10,10 +11,10 @@ namespace StationService.Infrastructure.Firmware.Jobs;
 public class FirmwareUpdateJob:IFirmwareUpdateJob {
     private readonly ILogger<FirmwareUpdateJob> _logger;
     private readonly IFirmwareUpdateService _firmwareUpdateService;
-    private readonly IBurnInTestService _testService;
+    private readonly ITestService _testService;
     private readonly IStationController _stationController;
     
-    public FirmwareUpdateJob(ILogger<FirmwareUpdateJob> logger, IBurnInTestService testService,
+    public FirmwareUpdateJob(ILogger<FirmwareUpdateJob> logger, ITestService testService,
         IFirmwareUpdateService firmwareUpdateService, IStationController stationController) {
         this._logger = logger;
         this._firmwareUpdateService = firmwareUpdateService;

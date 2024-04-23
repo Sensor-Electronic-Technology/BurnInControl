@@ -2,4 +2,4 @@
 
 namespace BurnInControl.Application.BurnInTest.Messages;
 
-public class TestCompletedMessage:IRequest {  }
+public class TestCompleteCommand:IRequest {  }

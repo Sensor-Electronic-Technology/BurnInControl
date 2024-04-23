@@ -15,5 +15,9 @@
         <PackageReference Include="Ardalis.SmartEnum" Version="7.0.0" />
         <PackageReference Include="MongoDB.Driver" Version="*" />
     </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="StationComponents\" />
+    </ItemGroup>
 
 </Project>

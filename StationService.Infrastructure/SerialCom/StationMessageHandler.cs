@@ -13,27 +13,29 @@ using StationService.Infrastructure.Hub;
 using StationService.Infrastructure.TestLogs;
 using System.Text.Json;
 using BurnInControl.Application.ProcessSerial.Messages;
+using BurnInControl.Application.StationControl.Messages;
 using BurnInControl.Data.StationModel.Components;
+using BurnInControl.Shared;
 using MediatR;
 namespace StationService.Infrastructure.SerialCom;
 
-public class StationMessageHandler:IStationMessageHandler{
-    private readonly IHubContext<StationHub, IStationHub> _hubContext;
+public class StationMessageHandler : IStationMessageHandler {
     private readonly ILogger<StationMessageHandler> _logger;
-    private readonly IMediator _mediator;
+    private readonly IHubContext<StationHub, IStationHub> _hubContext;
+    private readonly ISender _mediator;
     
     public StationMessageHandler(ILogger<StationMessageHandler> logger,
         IHubContext<StationHub, IStationHub> hubContext,
-        IMediator mediator) {
+        ISender mediator) {
         this._logger = logger;
         this._hubContext = hubContext;
         this._mediator = mediator;
     }
-    
+
     public Task Handle(StationMessage message,CancellationToken cancellationToken) {
         try {
             if (!string.IsNullOrEmpty(message.Message)) {
-                this._logger.LogInformation(message.Message);
+                _logger.LogInformation(message.Message);
                 if (message.Message.Contains("Prefix")) {
                     var doc=JsonSerializer.Deserialize<JsonDocument>(message.Message);
                     if (doc != null) { 
@@ -105,38 +107,42 @@ public class StationMessageHandler:IStationMessageHandler{
                     }
                     case nameof(StationMsgPrefix.IdRequestPrefix): {
                         //Send to controller and respond with ACK
-                        return Task.CompletedTask;
+                        return this._mediator.Send(new SendAckCommand() {
+                            AcknowledgeType = AcknowledgeType.IdAck
+                        });
                     }
                     case nameof(StationMsgPrefix.VersionRequestPrefix): {
                         //Send to firmware Updated and respond with ACK
-                        return Task.CompletedTask;
+                        return this._mediator.Send(new SendAckCommand() {
+                            AcknowledgeType = AcknowledgeType.VersionAck
+                        });
                     }
                     default: {
-                        this._logger.LogWarning($"Prefix value {prefix.Value} not implemented");
+                        _logger.LogWarning("Prefix value {Value} not implemented",prefix.Value);
                         return Task.CompletedTask;
                     }
                 }
             } else {
-                this._logger.LogWarning("ArduinoMsgPrefix.FromValue(prefixValue) was null");
+                _logger.LogWarning("ArduinoMsgPrefix.FromValue(prefixValue) was null");
                 return Task.CompletedTask;
             }
         } else {
-            this._logger.LogWarning("Prefix value null or empty");
+            _logger.LogWarning("Prefix value null or empty");
             return Task.CompletedTask;
         }
     }
     
-    private Task HandleData(JsonElement element) {
+    private async Task HandleData(JsonElement element) {
         try {
             var serialData=element.Deserialize<StationSerialData>();
             if (serialData != null) {
-                this._mediator.Send(new LogCommand() { Data = serialData });
-                return this._hubContext.Clients.All.OnStationData(serialData);
+                await this._mediator.Send(new LogCommand() { Data = serialData });
+                await this._hubContext.Clients.All.OnStationData(serialData);
             }
-            return Task.CompletedTask;
         } catch(Exception e) {
-            this._logger.LogWarning("Failed to deserialize station data");
-            return Task.CompletedTask;
+            this._logger.LogError("Error deserializing StartTestFromPacket.\n {ErrMessage}", e.ToErrorMessage());
+            await _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.DataPrefix,
+                $"Error deserializing StartTestFromPacket.\n {e.ToErrorMessage()}");
         }
     }
     
@@ -148,8 +154,9 @@ public class StationMessageHandler:IStationMessageHandler{
             }
             return Task.CompletedTask;
         } catch(Exception e) {
-            this._logger.LogWarning("Failed to deserialize station data");
-            return Task.CompletedTask;
+            this._logger.LogError("Error deserializing StartTestFromPacket.\n {ErrMessage}", e.ToErrorMessage());
+            return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TuneComPrefix,
+                $"Error deserializing StartTestFromPacket.\n {e.ToErrorMessage()}");
         }
     }
 
@@ -170,23 +177,20 @@ public class StationMessageHandler:IStationMessageHandler{
                     return this._hubContext.Clients.All.OnSerialErrorMessage(message.Message);
                 }
                 default: {
-                    var logMessage = "Error: Invalid StationMessagePacket in StationMessageType";
-                    this._logger.LogWarning(logMessage);
-                    return this._hubContext.Clients.All.OnSerialErrorMessage(logMessage);
+                    this._logger.LogError("Error StationMessageType {Type} not implemented",message.MessageType);
+                    return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.MessagePrefix,
+                        $"Error StationMessageType {message.MessageType} not implemented");
                 }
             }
         } catch(Exception e) {
-            var errorMessage = "Exception: "+e.Message;
-            if (e.InnerException != null) {
-                errorMessage += "\n InnerException: " + e.InnerException;
-            }
-            this._logger.LogError($"Error deserializing SystemMessagePacket.\n {errorMessage}");
-            return this._hubContext.Clients.All.OnSerialErrorMessage($"Error deserializing SystemMessagePacket.\n {errorMessage}");
+            this._logger.LogError("Error deserializing StartTestFromPacket.\n {ErrMessage}", e.ToErrorMessage());
+            return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.MessagePrefix,
+                $"Error deserializing StartTestFromPacket.\n {e.ToErrorMessage()}");
         }
     }
 
     private Task HandleTestCompleted(JsonElement element) {
-        this._mediator.Send(new TestCompletedMessage());
+        this._mediator.Send(new TestCompleteCommand());
         return this._hubContext.Clients.All.OnTestCompleted("Test Completed");   
     }
     
@@ -194,35 +198,36 @@ public class StationMessageHandler:IStationMessageHandler{
         try {
             var success = element.GetProperty("Status").GetBoolean();
             var message = element.GetProperty("Message").GetString();
-            var testId=element.GetProperty("TestId").GetString();
-            return this._mediator.Send(new StartStatusCommand() {
+            return this._mediator.Send(new StartTestCommand() {
                 Status= success,
                 Message = message,
-                TestId = testId,
             });
         } catch(Exception e) {
-            var message = $"Failed to parse test status message packet. Exception: {e.Message}";
-            this._logger.LogError(message);
-            return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStartStatusPrefix,$"Error: {message}");
+            this._logger.LogError("Error deserializing StartTestFromPacket.\n {ErrMessage}", e.ToErrorMessage());
+            return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStartStatusPrefix,
+                $"Error deserializing StartTestFromPacket.\n {e.ToErrorMessage()}");
         }
     }
 
     private Task HandleTestStartedFrom(JsonElement element) {
         try {
-            var message = element.GetProperty("Message").GetString();
-            var testId=element.GetProperty("TestId").GetString();
-            var current=element.GetProperty("SetCurrent").GetInt32();
-            var setTemp=element.GetProperty("SetTemp").GetInt32();
-            return this._mediator.Send(new StartFromLoadCommand() {
-                Message=message,
-                TestId=testId,
-                Current = StationCurrent.FromValue(current),
-                SetTemperature=setTemp
-            });
+            var startFromPacket = element.Deserialize<StartTestFromPacket>();
+            if (startFromPacket != null) {
+                return _mediator.Send(new StartFromLoadCommand() {
+                    Message=startFromPacket.Message,
+                    TestId=startFromPacket.TestId,
+                    Current = StationCurrent.FromValue(startFromPacket.SetCurrent),
+                    SetTemperature=startFromPacket.SetTemperature
+                });
+            }
+            this._logger.LogError("Failed to parse StartTestFromPacket");
+            return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStartFromLoadPrefix,
+                "Failed to parse StartTestFromPacket");
+
         } catch(Exception e) {
-            var message = $"Failed to parse test status message packet. Exception: {e.Message}";
-            this._logger.LogError(message);
-            return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStartStatusPrefix,$"Error: {message}");
+            this._logger.LogError("Error deserializing StartTestFromPacket.\n {ErrMessage}", e.ToErrorMessage());
+            return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStartFromLoadPrefix,
+                $"Error deserializing StartTestFromPacket.\n {e.ToErrorMessage()}");
         }
     }
 }

@@ -3,6 +3,6 @@ using ErrorOr;
 using MediatR;
 namespace BurnInControl.Application.StationControl.Messages;
 
-public class SendStationCommand:IRequest<ErrorOr<Success>> {
+public class SendStationCommand:IRequest {
     public StationCommand Command { get; set; }
 }

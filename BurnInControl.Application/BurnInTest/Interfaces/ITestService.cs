@@ -10,5 +10,6 @@ public interface ITestService {
     public Task Start(bool success,string? message);
     public Task StartFrom(string? message, string? testId,StationCurrent current, int setTemp);
     public Task SetupTest(TestSetupTransport testSetupTransport);
+    public Task StopTest();
     public Task Log(StationSerialData data);
 }

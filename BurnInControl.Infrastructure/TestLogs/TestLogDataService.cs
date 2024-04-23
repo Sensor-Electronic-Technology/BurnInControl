@@ -167,7 +167,7 @@ public class TestLogDataService {
             if(updateResult.ModifiedCount>0){
                 return Result.Success;
             } else {
-                return Error.Unexpected(description: "Unknown State. Log may not have start time set");
+                return Error.Unexpected(description: "Unknown State. The test may not be marked as running");
             }
         } else {
             return Error.Failure(description: "Failed Mart Test as Running");
@@ -204,12 +204,13 @@ public class TestLogDataService {
 
         if (!clearResult.IsError && logResult.IsAcknowledged) {
             return Result.Success;
-        }else if (!clearResult.IsError && !logResult.IsAcknowledged) {
-            return Error.Unexpected(description: "Unknown State. Log may not be finalized with Completed flag and StopTime");
-        }else if (clearResult.IsError && logResult.IsAcknowledged) {
-            return Error.Unexpected(description: "Unknown State. Log was finalize but station Running flag was not cleared");
-        } else {
-            return Error.Failure(description: "Station Running flag not cleared and Log was not finalized");
         }
+        if (!clearResult.IsError && !logResult.IsAcknowledged) {
+            return Error.Unexpected(description: "Unknown State. Log may not be finalized with Completed flag and StopTime");
+        }
+        if (clearResult.IsError && logResult.IsAcknowledged) {
+            return Error.Unexpected(description: "Unknown State. Log was finalize but station Running flag was not cleared");
+        }
+        return Error.Failure(description: "Station Running flag not cleared and Log was not finalized");
     }
 }

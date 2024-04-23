@@ -38,7 +38,6 @@ public class StationHubConnection {
             .Build();
         this._hubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,(data)=>this.OnStationDataReceived?.Invoke(data));
         this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage,(message)=>this.OnStationMessageReceived?.Invoke(message));
-        this._hubConnection.On<string>(HubConstants.Events.OnTestStatus,(status)=>this.OnTestStatus?.Invoke(status));
         this._hubConnection.On<string>(HubConstants.Events.OnUsbDisconnect,(message)=>this.OnUsbDisconnected?.Invoke(message));
         this._hubConnection.On<string>(HubConstants.Events.OnUsbConnectFailed,(message)=>this.OnUsbConnectionFailed?.Invoke(message));
         this._hubConnection.On<string>(HubConstants.Events.OnUsbConnect, (message)=>this.OnUsbConnected?.Invoke(message));

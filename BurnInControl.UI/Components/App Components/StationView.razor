@@ -10,6 +10,7 @@
 @using BurnInControl.Application.StationControl.Messages
 @using BurnInControl.Data.BurnInTests.Wafers
 @using BurnInControl.HubDefinitions.HubTransports
+@using WorkflowCore.Primitives
 @inject ILogger<StationView> _logger
 @inject StationHubConnection StationHubConnection
 @inject NotificationService NotificationService
@@ -41,7 +42,7 @@
                                                      Temps="@this._data.Temperatures"/>
                                 </RadzenTabsItem>
                                 <RadzenTabsItem Text="Test Setup">
-                                    <TestSetup></TestSetup>
+                                    <TestSetup Save="SaveClickedHandler"></TestSetup>
                                 </RadzenTabsItem>
                                 <RadzenTabsItem Text="Plots">
                                     <TestSetup></TestSetup>
@@ -82,7 +83,7 @@
    private HubConnection? _hubConnection;
    private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;
    private bool _usbConnected=false;
-   
+   private List<WaferSetup>? _waferSetups = new List<WaferSetup>();
    private bool _eventPaneCollapsed = false;
    private bool _controlPaneCollapsed = false;
    private bool _runtimePaneCollapsed = false;
@@ -98,17 +99,63 @@
             .Build();*/
         this._hubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,this.OnSerialComReceived);
         this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
-        this._hubConnection.On<string>(HubConstants.Events.OnTestStatus, this.OnSerialComMessageReceived);
         this._hubConnection.On<string>(HubConstants.Events.OnUsbDisconnect,this.UsbDisconnectedHandler);
         this._hubConnection.On<string>(HubConstants.Events.OnUsbConnectFailed,this.UsbConnectFailedHandler);
         this._hubConnection.On<string>(HubConstants.Events.OnUsbConnect, this.UsbConnectHandler);
         this._hubConnection.On<bool>(HubConstants.Events.OnStationConnection, this.OnStationConnection);
-        await this.StartConnection();
+        this._hubConnection.On<string>(HubConstants.Events.OnTestStarted, this.OnTestStartedHandler);
+        this._hubConnection.On<string>(HubConstants.Events.OnTestStartedFailed, this.OnTestStartedFailedHandler);
+        this._hubConnection.On<LoadTestSetupTransport>(HubConstants.Events.OnTestStartedFrom, this.OnTestStartedFromHandler);
+        this._hubConnection.On<LoadTestSetupTransport>(HubConstants.Events.OnTestStartedFromUnknown, this.OnTestStartedFromHandler);
+        this._hubConnection.On<bool, string>(HubConstants.Events.OnTestSetup, this.OnTestSetupHandler);
+        //this._hubConnection.On
    }
 
    private Task OnStationConnection(bool usbStatus) {
      this._usbConnected = usbStatus;
      return Task.CompletedTask;
+   }
+
+   private Task OnTestSetupHandler(bool success, string message) {
+       if (success) {
+           this.Notify("Test Setup Complete",message,NotificationSeverity.Success);
+       } else {
+           this.Notify("Test Setup Failed",message,NotificationSeverity.Error);
+       }
+       return Task.CompletedTask;
+   }
+
+   private Task OnTestStartedHandler(string message) {
+       this.Notify("Test Started",message,NotificationSeverity.Success);
+       return Task.CompletedTask;
+   }
+
+   private Task OnTestStartedFailedHandler(string message) {
+       this.Notify("Test Failed To Start",message,NotificationSeverity.Success);
+       return Task.CompletedTask;
+   }
+
+   private Task OnTestCompletedHandler(string message) {
+       this.Notify("Test Completed",message,NotificationSeverity.Success);
+       return Task.CompletedTask;
+   }
+   
+   private Task OnTestStartedFromUnknownHandler(LoadTestSetupTransport transport) {
+       if (transport.Success) {
+           this.Notify("Unknown Test Started From Memory",transport.Message ?? "No Message",NotificationSeverity.Success);
+       } else {
+           this.Notify("Unkown Test Failed to Started ",transport.Message ?? "No Message",NotificationSeverity.Error);
+       }
+       return Task.CompletedTask;
+   }
+   
+   private Task OnTestStartedFromHandler(LoadTestSetupTransport transport) {
+       if (transport.Success) {
+           this.Notify("Test Started",transport.Message ?? "No Message",NotificationSeverity.Success);
+       } else {
+           this.Notify("Test Failed To Start ",transport.Message ?? "No Message",NotificationSeverity.Error);
+       }
+       return Task.CompletedTask;
    }
 
    private Task ToggleTemperatureHandler() {
@@ -130,40 +177,20 @@
 
    private Task StationHubConnectionOnOnHubConnected(Boolean stat, String arg) {
        if (stat) {
-           var notification=new NotificationMessage { 
-               Severity = NotificationSeverity.Success, 
-               Summary = "Station Service Connected", 
-               Detail = arg, 
-               Duration = 10000 };
-           this.NotificationService.Notify(notification);
+           this.Notify("Station Service Connected",arg,NotificationSeverity.Success);
        } else {
-           var notification=new NotificationMessage { 
-               Severity = NotificationSeverity.Error, 
-               Summary = "Station Service Connection Failed", 
-               Detail = arg, 
-               Duration = 10000 };
-           this.NotificationService.Notify(notification);
+           this.Notify("Station Service Connection Failed",arg,NotificationSeverity.Error);
        }
        return Task.CompletedTask;
    }
   
    private void UsbConnectHandler(string message) {
-       var notification=new NotificationMessage { 
-           Severity = NotificationSeverity.Success, 
-           Summary = "Usb Connected", 
-           Detail = message, 
-           Duration = 10000 };
-       this.NotificationService.Notify(notification);
+       this.Notify("Usb Connected","Usb Connected",NotificationSeverity.Success);
        this._eventConsole.Log(message,AlertStyle.Info);
    }
   
    private Task UsbDisconnectedHandler(string message) {
-       var notification=new NotificationMessage { 
-           Severity = NotificationSeverity.Error, 
-           Summary = "Usb Disconnected", 
-           Detail = message, 
-           Duration = 10000 };
-       this.NotificationService.Notify(notification);
+       this.Notify("Usb Disconnected","Usb Disconnected",NotificationSeverity.Warning);
        this._eventConsole.Log(message, AlertStyle.Danger);
        return Task.CompletedTask;
    }
@@ -187,41 +214,22 @@
        return Task.CompletedTask;
    }
    
-   private Task OnSaveClicked() {
+   private Task SaveClickedHandler(List<WaferSetup> waferSetups) {
        if (this.Connected) {
-           List<WaferSetup> waferSetups = new List<WaferSetup>();
-           waferSetups.Add(new WaferSetup() {
-               WaferId = "W01",
-               BurnNumber = 1,
-               Probe1=StationProbe.Probe1,
-               Probe2=StationProbe.Probe2,
-               Probe1Pad = "a",
-               Probe2Pad = "b",
-               StationPocket = StationPocket.LeftPocket,
-           });
-           waferSetups.Add(new WaferSetup() {
-               WaferId = "W02",
-               BurnNumber = 1,
-               Probe1=StationProbe.Probe1,
-               Probe2=StationProbe.Probe2,
-               Probe1Pad = "a",
-               Probe2Pad = "b",
-               StationPocket = StationPocket.LeftPocket,
-           });
-           waferSetups.Add(new WaferSetup() {
-               WaferId = "W03",
-               BurnNumber = 1,
-               Probe1=StationProbe.Probe1,
-               Probe2=StationProbe.Probe2,
-               Probe1Pad = "a",
-               Probe2Pad = "b",
-               StationPocket = StationPocket.LeftPocket,
-           });
-           return this._hubConnection.SendAsync(HubConstants.Methods.SetupTest,new TestSetupTransport() {
-               WaferSetups = waferSetups,
-               SetCurrent = StationCurrent._60mA,
-               SetTemperature = 85,
-           });
+           if (waferSetups.Any()) {
+               this.Notify("Wafer Setup",$"WaferId {waferSetups[0].WaferId} " +
+                                         $"\nProbe1: {waferSetups[0].Probe1.Name} " +
+                                         $"\nProbe2: {waferSetups[0].Probe2.Name} " +
+                                         $"\nPad1: {waferSetups[0].Probe1Pad} " +
+                                         $"\nPad2: {waferSetups[0].Probe2Pad}");
+               return this._hubConnection.SendAsync(HubConstants.Methods.SetupTest,new TestSetupTransport() {
+                   WaferSetups = waferSetups,
+                   SetCurrent = StationCurrent._60mA,
+                   SetTemperature = 85,
+               });
+           }
+           this.Notify("","");
+           return Task.CompletedTask;
        }
        this.NotifyNotConnected();
        return Task.CompletedTask;
@@ -230,6 +238,7 @@
    private Task OnStartClicked(bool state) {
        if (this.Connected) {
            var command = state ? StationCommand.Pause : StationCommand.Start;
+           return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand, command);
        }
        this.NotifyNotConnected();
        return Task.CompletedTask;
@@ -309,12 +318,12 @@
            Severity = severity, 
            Summary = summary, 
            Detail = message, 
-           Duration = 10000 };
+           Duration = 1000 };
        this.NotificationService.Notify(notification);
    }
 
    private void NotifyNotConnected() {
-       var notification=new NotificationMessage { 
+       var notification=new NotificationMessage {
            Severity = NotificationSeverity.Error, 
            Summary = "Station Service Not Connected", 
            Detail = "Cannot Send Command", 
@@ -335,6 +344,8 @@
            await this._hubConnection.DisposeAsync();
        }
    }
+
+
 
 } 
 

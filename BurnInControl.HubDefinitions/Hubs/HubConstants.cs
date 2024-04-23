@@ -17,19 +17,14 @@ public static class HubConstants {
         public static string OnUsbConnectFailed => "OnUsbConnectFailed";
         public static string OnUsbDisconnectFailed => "OnUsbDisconnectFailed";
         public static string OnExecuteCommand => "OnExecuteCommand";
-        public static string OnIdChanged => "OnIdChanged";
 
-        public static string OnTestStatus => "OnTestStatus";
-        public static string OnTestPaused => "OnTestPaused";
-        public static string OnTestContinued => "OnTestContinued";
-        public static string OnTestCompleted => "OnTestCompleted";
-        
+        public static string OnTestStarted => "OnTestStarted";
+        public static string OnTestStartedFrom => "OnTestStartedFrom";
+        public static string OnTestStartedFromUnknown => "OnTestStartedFromUnknown";
         public static string OnTestStartedFailed => "OnTestStartedFailed";
-        public static string OnTestPausedFailed => "OnTestPausedFailed";
-        public static string OnTestContinuedFailed => "OnTestContinuedFailed";
-        public static string OnTestCompletedFailed => "OnTestCompletedFailed";
-        public static string OnReceiveFirmwareUploadText => "OnReceiveFirmwareUploadText";
-        public static string SetupTest => "SetupTest";
+        public static string OnTestCompleted => "OnTestCompleted";
+
+        public static string OnTestSetup => "OnTestSetup";
 
         public static string OnUpdateChecked => "OnUpdateChecked";
         public static string OnFirmwareUpdated => "OnFirmwareUpdated";
@@ -46,13 +41,6 @@ public static class HubConstants {
         public static string SendProbeConfig => "SendProbeConfig";
         public static string SendStationConfig => "SendStationConfig";
         public static string SendCommand => "SendCommand";
-        public static string SendId => "SendId";
-        public static string RequestId => "RequestId";
-        public static string CheckForUpdate => "CheckForUpdate";
-        public static string UpdateFirmware => "UpdateFirmware";
-        public static string SendFirmwareVersion => "SendFirmwareVersion";
-        public static string OnTestSetupSucceeded => "OnTestSetupSucceeded";
-        public static string OnTestSetupFailed => "OnTestSetupFailed";
         
     }
 

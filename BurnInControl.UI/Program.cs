@@ -12,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
       .AddInteractiveServerComponents()
       .AddHubOptions(options => options.MaximumReceiveMessageSize = 10 * 1024 * 1024);
-string? connectionString;
+string? connectionString="";
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
     connectionString=builder.Configuration.GetConnectionString("LocalConnection");
     connectionString ??= "mongodb://192.168.68.112:27017";

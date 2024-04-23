@@ -25,7 +25,7 @@ public class TestService:ITestService {
     private IMediator _mediator;
     private string? _stationId;
     private DateTime _lastLog;
-    private readonly TimeSpan _interval=new TimeSpan(0,0,10);
+    private readonly TimeSpan _interval;
     private readonly ILogger<TestService> _logger;
     private List<StationSerialData> _readings=new List<StationSerialData>();
 
@@ -36,7 +36,7 @@ public class TestService:ITestService {
 
     public bool IsRunning => this._running;
     
-    TestService(TestLogDataService testLogDataService,
+    public TestService(TestLogDataService testLogDataService,
         IHubContext<StationHub, IStationHub> hubContext,
         IMediator mediator,
         ILogger<TestService> logger) {
@@ -44,6 +44,7 @@ public class TestService:ITestService {
         this._mediator = mediator;
         this._testLogDataService = testLogDataService;
         this._hubContext = hubContext;
+        this._interval = TimeSpan.FromSeconds(10);
     }
     
     public async Task SetupTest(TestSetupTransport testSetup) {
@@ -52,6 +53,7 @@ public class TestService:ITestService {
             this._runningTest.StartNew(testSetup.WaferSetups,
                 testSetup.SetTemperature,
                 testSetup.SetCurrent);
+            this._logger.LogInformation("TestTransport: Temp: {SetTemp} Current:{Current}",testSetup.SetTemperature,testSetup.SetCurrent.Name);
             var result=await this._testLogDataService.StartNew(this._runningTest);
             if (!result.IsError) {
                 this._testSetupComplete = true;
@@ -119,7 +121,7 @@ public class TestService:ITestService {
             this._paused = false;
             this._loggingEnabled = true;
             this._first = true;
-            await this._hubContext.Clients.All.OnTestStartedFrom(new LoadTestSetupTransport() {
+            await this._hubContext.Clients.All.OnTestStartedFromUnknown(new LoadTestSetupTransport() {
                 Success = false,
                 Message = "Warning: failed to load savedState. An Unknown test was started instead.",
                 WaferSetups = this._runningTest.TestSetup,
@@ -132,7 +134,7 @@ public class TestService:ITestService {
             this._paused = false;
             this._loggingEnabled = false;
             this._first = false;
-            await this._hubContext.Clients.All.OnTestStartedFrom(new LoadTestSetupTransport() {
+            await this._hubContext.Clients.All.OnTestStartedFromUnknown(new LoadTestSetupTransport() {
                 Success = false,
                 Message = "Error: Failed to load saved state and failed to create fallback unknown test." +
                           "test will continue to run but no logs will be available",
@@ -142,8 +144,7 @@ public class TestService:ITestService {
             });
         }
     }
-
-    private async Task StopTest() {
+    public async Task StopTest() {
         if (this._running) {
             var result=await this._testLogDataService.SetCompleted(this._runningTest._id,
                 this._stationId ?? "S01",DateTime.Now);
@@ -179,17 +180,19 @@ public class TestService:ITestService {
         });
         log.SetCurrent = current;
         log.SetTemperature= setTemp;
-        log.StationId = this._stationId ?? "S00";
+        log.StationId = this._stationId ?? "S01";
         log.StartTime= DateTime.Now;
         log.Completed = false;
         log.ElapsedTime = 0;
         this._runningTest = log;
     }
     public async Task Log(StationSerialData data) {
+        this._latestData = data;
         if (this._loggingEnabled) {
             if (this._first) {
                 this._first = false;
                 await this._testLogDataService.SetStart(this._runningTest._id,DateTime.Now,data);
+                this._lastLog = DateTime.Now;
             } else {
                 if ((DateTime.Now - this._lastLog).Seconds > this._interval.Seconds) {
                     this._lastLog = DateTime.Now;
@@ -198,5 +201,4 @@ public class TestService:ITestService {
             }
         }
     }
-    
 }

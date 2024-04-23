@@ -30,7 +30,7 @@ public class StationDataService {
     
     public async Task<ErrorOr<TestConfiguration>> GetTestConfiguration(StationCurrent setCurrent) {
         var testConfig=await this._testConfigurationCollection
-            .Find(e => e.SetCurrent == setCurrent)
+            .Find(e => e.SetCurrent.Name == setCurrent.Name)
             .FirstOrDefaultAsync();
         if(testConfig==null) {
             return Error.NotFound();

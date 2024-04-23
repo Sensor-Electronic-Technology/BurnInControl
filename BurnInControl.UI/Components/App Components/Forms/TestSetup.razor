@@ -1,22 +1,78 @@
+@using BurnInControl.Data.BurnInTests.Wafers
+@using BurnInControl.Data.StationModel.Components
 <RadzenStack Orientation="Orientation.Vertical">
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="Radzen.JustifyContent.Center" Gap="50">
-        <PocketSetup PocketCaption="Pocket 1"/>
-        <PocketSetup PocketCaption="Pocket 2"/>
-        <PocketSetup PocketCaption="Pocket 3"/>
+        <PocketSetup PocketCaption="Pocket 1"
+                     @bind-WaferSetup="@this._pocket1Setup"/>
+        <PocketSetup PocketCaption="Pocket 2"
+                     @bind-WaferSetup="@this._pocket2Setup"/>
+        <PocketSetup PocketCaption="Pocket 3"
+                     @bind-WaferSetup="@this._pocket3Setup"/>
     </RadzenStack>
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" 
                  JustifyContent="JustifyContent.Center">
         <RadzenButton Text="Save" Size="ButtonSize.Large" 
-                      Click="@this.Save"
+                      Click="@this.SaveHandler"
                       ButtonStyle="ButtonStyle.Secondary" 
                       Icon="save" Style="width: 170px"/>
-        <RadzenButton Text="Cancel/Clear" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Large" Icon="cancel" IsBusy="false" Shade="Radzen.Shade.Default" Disabled="false"/>
+        <RadzenButton Text="Cancel/Clear" 
+                      ButtonStyle="ButtonStyle.Danger" 
+                      Size="ButtonSize.Large" Icon="cancel"
+                      Click="@this.Cancel"
+                      IsBusy="false" 
+                      Shade="Shade.Default" 
+                      Disabled="false"/>
+        
     </RadzenStack>
 </RadzenStack>
 
 @code {
     [Parameter]
-    public EventCallback Save { get; set; }
+    public EventCallback<List<WaferSetup>> Save { get; set; }
+
+    WaferSetup _pocket1Setup = new WaferSetup() {
+        WaferId = "W01",
+        BurnNumber = 1,
+        StationPocket = StationPocket.LeftPocket,
+        Probe1=StationProbe.Probe1,
+        Probe2=StationProbe.Probe2,
+        Probe1Pad = "a",
+        Probe2Pad = "b",
+    };
+    
+    WaferSetup _pocket2Setup = new WaferSetup() {
+        WaferId = "W02",
+        BurnNumber = 1,
+        StationPocket = StationPocket.MiddlePocket,
+        Probe1=StationProbe.Probe3,
+        Probe2=StationProbe.Probe4,
+        Probe1Pad = "d",
+        Probe2Pad = "l",
+    };
+    
+    WaferSetup _pocket3Setup = new WaferSetup() {
+        WaferId = "W03",
+        BurnNumber = 1,
+        StationPocket = StationPocket.RightPocket,
+        Probe1=StationProbe.Probe5,
+        Probe2=StationProbe.Probe6,
+        Probe1Pad = "t",
+        Probe2Pad = "g",
+    };
+
+
+    private Task SaveHandler() {
+        return this.Save.InvokeAsync(new List<WaferSetup>() {
+            _pocket1Setup,
+            _pocket2Setup,
+            _pocket3Setup
+        });
+    }
+    
+    private Task Cancel() {
+        
+        return Task.CompletedTask;
+    }
     
     
 }

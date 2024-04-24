@@ -1,4 +1,5 @@
-﻿using BurnInControl.Data.ComponentConfiguration;
+﻿using BurnInControl.Data.BurnInTests;
+using BurnInControl.Data.ComponentConfiguration;
 using BurnInControl.Data.ComponentConfiguration.HeaterController;
 using BurnInControl.Data.ComponentConfiguration.ProbeController;
 using BurnInControl.Data.ComponentConfiguration.StationController;
@@ -17,6 +18,7 @@ public class Station {
     public string? FirmwareVersion { get; set; }
     public bool UpdateAvailable { get; set; }
     public StationState State { get; set; }
+    public ControllerSavedState? SavedState { get; set; }
     public ObjectId? RunningTest { get; set; }
     public BurnStationConfiguration? Configuration { get; set; }
     
@@ -27,6 +29,7 @@ public class Station {
         this.FirmwareVersion= "V.1.0";
         this.UpdateAvailable = false;
         this.RunningTest = null;
+        this.SavedState= null;
         this.Configuration = new BurnStationConfiguration() {
             HeaterConfig = new HeaterControllerConfig(),
             ProbesConfiguration = new ProbeControllerConfig(),

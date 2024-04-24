@@ -39,10 +39,18 @@ public class StationDataService {
         }
     }
     
-    public async Task<ErrorOr<Success>> SetRunningTest(string stationId,ObjectId testLogId) {
+    public async Task<ErrorOr<ControllerSavedState>> GetSavedState(string stationId) {
+        var savedState=await this._stationCollection.Find(e => e.StationId == stationId)
+            .Project(e => e.SavedState)
+            .FirstOrDefaultAsync();
+        return savedState!=null ? savedState : Error.NotFound();
+    }
+    
+    
+    public async Task<ErrorOr<Success>> SetSavedState(string stationId,ControllerSavedState savedState) {
         var filter=Builders<Station>.Filter.Eq(e => e.StationId,stationId);
         var updateBuilder = Builders<Station>.Update;
-        var update=updateBuilder.Set(e => e.RunningTest, testLogId)
+        var update=updateBuilder.Set(e => e.SavedState, savedState)
             .Set(e => e.State, StationState.Running);
          var success=await this._stationCollection.UpdateOneAsync(filter,update)
             .ContinueWith(e=>e.Result.IsAcknowledged);
@@ -51,13 +59,6 @@ public class StationDataService {
          } else {
              return Error.Failure(description:"Failed to set running test");
          }
-    }
-    
-    public async Task<ErrorOr<ObjectId>> CheckForRunningTest(string stationId) {
-        var id=await this._stationCollection.Find(e => e.StationId == stationId)
-            .Project(e => e.RunningTest)
-            .FirstOrDefaultAsync();
-        return id==null? Error.NotFound():id.Value;
     }
     
     public async Task<ErrorOr<Success>> ClearRunningTest(string stationId) {
@@ -89,58 +90,6 @@ public class StationDataService {
             .FirstOrDefaultAsync();
     }
 
-    public async Task<ErrorOr<string>> GetControllerFirmwareVersion(string stationId) {
-        var version=await this._stationCollection.Find(e => e.StationId == stationId)
-            .Project(e => e.FirmwareVersion)
-            .FirstOrDefaultAsync();
-        if (string.IsNullOrEmpty(version)) {
-            return Error.NotFound(description: "Firmware Version Not Found");
-        } else {
-            return version;
-        }
-    }
-    
-    public async Task<ErrorOr<Success>> UpdateFirmwareVersion(string stationId,string version) {
-        var filter=Builders<Station>.Filter.Eq(e => e.StationId,stationId);
-        var updateBuilder = Builders<Station>.Update;
-        var result= await this._stationCollection
-            .UpdateOneAsync(filter, updateBuilder.Set(e => e.FirmwareVersion, version));
-        if (result.IsAcknowledged) {
-            return Result.Success;
-        } else {
-            return Error.Failure(description:"Failed to update firmware version");
-        }
-    }
-    
-    public async Task<ErrorOr<string>> GetFirmwareVersion(string stationId) {
-        var version=await this._stationCollection.Find(e => e.StationId == stationId)
-            .Project(e => e.FirmwareVersion)
-            .FirstOrDefaultAsync();
-        if (!string.IsNullOrEmpty(version)) {
-            return version;
-        } else {
-            return Error.Failure(description:"Version was null or empty,continue with update");
-        }
-    }
-    
-    public async Task<ErrorOr<Success>> SetUpdateAvailable(string stationId,bool isAvailable) {
-        var filter=Builders<Station>.Filter.Eq(e => e.StationId,stationId);
-        var updateBuilder = Builders<Station>.Update;
-        var result= await this._stationCollection
-            .UpdateOneAsync(filter, updateBuilder.Set(e => e.UpdateAvailable, isAvailable));
-        if (result.IsAcknowledged) {
-            return Result.Success;
-        } else {
-            return Error.Failure(description:"Failed to set update available");
-        }
-    }
-    
-    public async Task<ErrorOr<bool>> CheckUpdateAvailable(string stationId) {
-        var updateAvailable=await this._stationCollection.Find(e => e.StationId == stationId)
-            .Project(e => e.UpdateAvailable)
-            .FirstOrDefaultAsync();
-        return updateAvailable;
-    }
 
     public Task InsertStation(Station station) {
         return this._stationCollection.InsertOneAsync(station);

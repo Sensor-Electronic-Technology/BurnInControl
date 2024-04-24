@@ -44,6 +44,7 @@ public class BurnInTestLog {
             Data=data
         });
     }
+    
 
     public ErrorOr<IEnumerable<WaferResult>> GetReading(string waferId) {
         var waferSetup=this.TestSetup.FirstOrDefault(e => e.WaferId == waferId);

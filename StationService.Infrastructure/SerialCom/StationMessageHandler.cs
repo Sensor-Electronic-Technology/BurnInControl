@@ -14,6 +14,8 @@ using StationService.Infrastructure.TestLogs;
 using System.Text.Json;
 using BurnInControl.Application.ProcessSerial.Messages;
 using BurnInControl.Application.StationControl.Messages;
+using BurnInControl.Data.BurnInTests;
+using BurnInControl.Data.StationModel;
 using BurnInControl.Data.StationModel.Components;
 using BurnInControl.Shared;
 using MediatR;
@@ -211,14 +213,17 @@ public class StationMessageHandler : IStationMessageHandler {
 
     private Task HandleTestStartedFrom(JsonElement element) {
         try {
-            var startFromPacket = element.Deserialize<StartTestFromPacket>();
+            var startFromPacket = element.Deserialize<ControllerSavedState>();
             if (startFromPacket != null) {
-                return _mediator.Send(new StartFromLoadCommand() {
+                return this._mediator.Send(new StartFromLoadCommand() {
+                    SavedState=startFromPacket
+                });
+                /*return _mediator.Send(new StartFromLoadCommand() {
                     Message=startFromPacket.Message,
                     TestId=startFromPacket.TestId,
                     Current = StationCurrent.FromValue(startFromPacket.SetCurrent),
                     SetTemperature=startFromPacket.SetTemperature
-                });
+                });*/
             }
             this._logger.LogError("Failed to parse StartTestFromPacket");
             return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStartFromLoadPrefix,

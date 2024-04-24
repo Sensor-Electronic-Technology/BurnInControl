@@ -5,10 +5,10 @@ public class WaferResult {
     public int ElapsedSec { get; set; }
     public double Probe1Voltage { get; set; }
     public double Probe1Current { get; set; }
-    public long Probe1RunTime { get; set; }
+    public ulong Probe1RunTime { get; set; }
     
     public double Probe2Voltage { get; set; }
     public double Probe2Current { get; set; }
-    public long Probe2RunTime { get; set; }
+    public ulong Probe2RunTime { get; set; }
     public double PocketTemperature { get; set; }
 }

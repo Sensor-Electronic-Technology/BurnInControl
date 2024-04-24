@@ -26,6 +26,8 @@ public interface IStationHub {
     Task OnTestStartedFailed(string message);
     Task OnTestCompleted(string message);
     Task OnTestSetup(bool success, string message);
+    Task OnSetStationSavedStateFailed(string message);
+    Task OnSavedStateIdMatchStationId(string message);
     
 #endregion
 

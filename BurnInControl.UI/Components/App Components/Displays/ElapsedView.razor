@@ -6,9 +6,9 @@
                     State="true"
                     RuntimeSecs="@this.Elapsed"
                     LabelFontSize=12/>
-    <ProbeRuntimes RunTimes="@this.ProbeRuntimes"/>
+    <ProbeRuntimes RunTimes="@this.ProbeRuntimes" />
 </RadzenStack>
 @code {
-    [Parameter] public List<long> ProbeRuntimes { get; set; } = [0,0,0,0,0,0];
-    [Parameter] public long Elapsed { get; set; } = 0;
+    [Parameter] public List<ulong> ProbeRuntimes { get; set; } = [0,0,0,0,0,0];
+    [Parameter] public ulong Elapsed { get; set; } = 0;
 }

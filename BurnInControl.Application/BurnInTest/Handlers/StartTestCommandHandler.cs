@@ -15,6 +15,7 @@ public class StartTestCommandHandler:IRequestHandler<StartTestCommand>,IRequestH
     }
     
     public Task Handle(StartFromLoadCommand request, CancellationToken cancellationToken) {
-        return this._testService.StartFrom(request.Message, request.TestId,request.Current,request.SetTemperature);
+        return this._testService.StartFrom(request.SavedState);
+        //return this._testService.StartFrom(request.Message, request.TestId,request.Current,request.SetTemperature);
     }
 }

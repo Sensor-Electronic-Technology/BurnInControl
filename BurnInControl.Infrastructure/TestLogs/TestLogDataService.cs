@@ -70,9 +70,6 @@ public class TestLogDataService {
         }
     }
 
-    public Task<ErrorOr<Success>> SetSavedState(string stationId,ControllerSavedState savedState) {
-        return this._stationDataService.SetSavedState(stationId,savedState);
-    }
     
     public async Task<ErrorOr<BurnInTestLog>> GetTestLogWithReadings(ObjectId id) {
         var log=await this._testLogCollection.Find(e => e._id == id).FirstOrDefaultAsync();
@@ -82,10 +79,7 @@ public class TestLogDataService {
             return log;
         }
     }
-    
-    public Task<ErrorOr<ControllerSavedState>> GetSavedState(string stationId) {
-        return this._stationDataService.GetSavedState(stationId);
-    }
+
     
     public Task<bool> LogExists(ObjectId id) {
         return this._testLogCollection.Find(e => e._id == id)
@@ -116,12 +110,10 @@ public class TestLogDataService {
         if (deleteResult.IsAcknowledged) {
             if(deleteResult.DeletedCount>0){
                 return Result.Deleted;
-            } else {
-                return Error.Unexpected(description: "Log may not have been deleted");
             }
-        } else {
-            return Error.Failure(description: "Failed to delete log");
+            return Error.Unexpected(description: "Log may not have been deleted");
         }
+        return Error.Failure(description: "Failed to delete log");
     }
     
     public async Task<ErrorOr<Success>> SetStart(ObjectId id,DateTime start,StationSerialData data) {
@@ -134,14 +126,9 @@ public class TestLogDataService {
             });
         var updateResult=await this._testLogCollection.UpdateOneAsync(filter, update);
         if (updateResult.IsAcknowledged) {
-            if(updateResult.ModifiedCount>0){
-                return Result.Success;
-            } else {
-                return Error.Unexpected(description: "Unknown State. The test may not be marked as running");
-            }
-        } else {
-            return Error.Failure(description: "Failed Mart Test as Running");
+            return Result.Success;
         }
+        return Error.Failure(description: "Failed Mart Test as Running");
     }
     
     public async Task<ErrorOr<Created>> InsertReading(ObjectId logId,StationSerialData data) {

@@ -38,29 +38,6 @@ public class StationDataService {
             return testConfig;
         }
     }
-    
-    public async Task<ErrorOr<ControllerSavedState>> GetSavedState(string stationId) {
-        var savedState=await this._stationCollection.Find(e => e.StationId == stationId)
-            .Project(e => e.SavedState)
-            .FirstOrDefaultAsync();
-        return savedState!=null ? savedState : Error.NotFound();
-    }
-    
-    
-    public async Task<ErrorOr<Success>> SetSavedState(string stationId,ControllerSavedState savedState) {
-        var filter=Builders<Station>.Filter.Eq(e => e.StationId,stationId);
-        var updateBuilder = Builders<Station>.Update;
-        var update=updateBuilder.Set(e => e.SavedState, savedState)
-            .Set(e => e.State, StationState.Running);
-         var success=await this._stationCollection.UpdateOneAsync(filter,update)
-            .ContinueWith(e=>e.Result.IsAcknowledged);
-         if(success) {
-             return Result.Success;
-         } else {
-             return Error.Failure(description:"Failed to set running test");
-         }
-    }
-    
     public async Task<ErrorOr<Success>> ClearRunningTest(string stationId) {
         var filter=Builders<Station>.Filter.Eq(e => e.StationId,stationId);
         var updateBuilder = Builders<Station>.Update;

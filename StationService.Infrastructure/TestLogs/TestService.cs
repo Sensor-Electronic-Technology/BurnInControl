@@ -6,12 +6,14 @@ using BurnInControl.Data.StationModel;
 using BurnInControl.Data.StationModel.Components;
 using BurnInControl.HubDefinitions.Hubs;
 using BurnInControl.HubDefinitions.HubTransports;
+using BurnInControl.Infrastructure.ControllerTestState;
 using BurnInControl.Infrastructure.TestLogs;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Station;
 using ErrorOr;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using StationService.Infrastructure.Hub;
@@ -20,15 +22,16 @@ namespace StationService.Infrastructure.TestLogs;
 
 public class TestService:ITestService {
     private readonly TestLogDataService _testLogDataService;
+    private readonly SavedStateDataService _savedStateDataService;
     private StationSerialData _latestData=new StationSerialData();
     private BurnInTestLog _runningTest=new BurnInTestLog();
-    private IHubContext<StationHub, IStationHub> _hubContext;
-    private IMediator _mediator;
+    private SavedStateLog _savedStateLog=new SavedStateLog();
+    private readonly IHubContext<StationHub, IStationHub> _hubContext;
+    private readonly IMediator _mediator;
     private string? _stationId;
     private DateTime _lastLog;
     private readonly TimeSpan _interval;
     private readonly ILogger<TestService> _logger;
-    private List<StationSerialData> _readings=new List<StationSerialData>();
 
     private bool _running=false, _paused=false;
     private bool _loggingEnabled = false;
@@ -39,13 +42,25 @@ public class TestService:ITestService {
     
     public TestService(TestLogDataService testLogDataService,
         IHubContext<StationHub, IStationHub> hubContext,
-        IMediator mediator,
+        IMediator mediator,SavedStateDataService savedStateDataService,
+        IConfiguration configuration,
         ILogger<TestService> logger) {
         this._logger = logger;
         this._mediator = mediator;
         this._testLogDataService = testLogDataService;
         this._hubContext = hubContext;
+        this._savedStateDataService = savedStateDataService;
         this._interval = TimeSpan.FromSeconds(10);
+        this._stationId=configuration["StationId"] ?? "S01";
+    }
+
+    private void Reset() {
+        this._first = false;
+        this._loggingEnabled = false;
+        this._paused = false;
+        this._running = false;
+        this._runningTest.Reset();
+        this._testSetupComplete = false;
     }
     
     public async Task SetupTest(TestSetupTransport testSetup) {
@@ -54,7 +69,9 @@ public class TestService:ITestService {
             this._runningTest.StartNew(testSetup.WaferSetups,
                 testSetup.SetTemperature,
                 testSetup.SetCurrent);
-            this._logger.LogInformation("TestTransport: Temp: {SetTemp} Current:{Current}",testSetup.SetTemperature,testSetup.SetCurrent.Name);
+            
+            this._logger.LogInformation("TestTransport: Temp: {SetTemp} " +
+                                        "Current:{Current}",testSetup.SetTemperature,testSetup.SetCurrent.Name);
             var result=await this._testLogDataService.StartNew(this._runningTest);
             if (!result.IsError) {
                 this._testSetupComplete = true;
@@ -89,66 +106,107 @@ public class TestService:ITestService {
                                                                 $"Message: {message ?? "Unknown Error"}");
         await this._mediator.Send(new SendAckCommand() { AcknowledgeType = AcknowledgeType.TestStartAck });
     }
-
-
-    
     public async Task StartFrom(ControllerSavedState savedState) {
-        if(ObjectId.TryParse(savedState.TestId,out var id)) {
-            var result = await this._testLogDataService.GetTestLogNoReadings(id);
-            if (!result.IsError) {
-                await StartFromControllerState(result.Value,savedState);
+        var savedStateResult=await this._savedStateDataService.GetSavedState(savedState.TestId);
+        if(!savedStateResult.IsError) {
+            this._savedStateLog=savedStateResult.Value;
+            var logResult = await this._testLogDataService.GetTestLogNoReadings(this._savedStateLog.LogId);
+            if (!logResult.IsError) {
+                this._runningTest = logResult.Value;
+                this._running = true;
+                this._paused = false;
+                this._loggingEnabled = true;
+                this._first = false;
+                await this._hubContext.Clients.All.OnTestStartedFrom(new LoadTestSetupTransport() {
+                    Success = true,
+                    Message = "Test loaded from saved state",
+                    WaferSetups = this._runningTest.TestSetup,
+                    SetTemperature = this._runningTest.SetTemperature,
+                    SetCurrent = this._runningTest.SetCurrent
+                });
+            } else {
+                await this.StartFromUnknown(savedState);
+            }
+        } else {
+            if(ObjectId.TryParse(savedState.TestId,out var id)) {
+                var logResult = await this._testLogDataService.GetTestLogNoReadings(id);
+                if (!logResult.IsError) {
+                    this._runningTest = logResult.Value;
+                    this._running = true;
+                    this._paused = false;
+                    this._loggingEnabled = true;
+                    this._first = false;
+                    await this._hubContext.Clients.All.OnTestStartedFrom(new LoadTestSetupTransport() {
+                        Success = true,
+                        Message = "Test loaded from saved state",
+                        WaferSetups = this._runningTest.TestSetup,
+                        SetTemperature = this._runningTest.SetTemperature,
+                        SetCurrent = this._runningTest.SetCurrent
+                    });
+                } else {
+                    //TODO Handle this, temp start unknown and send warning
+                    await this.StartFromUnknown(savedState);
+                }
             } else {
                 //TODO Handle this, temp start unknown and send warning
                 await this.StartFromUnknown(savedState);
             }
-        } else {
-            //TODO Handle this, temp start unknown and send warning
-            await this.StartFromUnknown(savedState);
         }
     }
 
     public async Task StopAndSaveState() {
         if (this._running) {
-            var savedState = new ControllerSavedState(this._latestData);
-            savedState.TestId = this._runningTest._id.ToString();
-            //TODO: Save state to dababse and send reset signal to controller
+            var savedState = new ControllerSavedState(this._latestData) {
+                TestId = this._runningTest._id.ToString()
+            };
+            var result=await this._savedStateDataService.SaveState(savedState,this._runningTest._id,this._stationId ?? "S00");
+            if (!result.IsError) {
+                this._savedStateLog = null;
+                await this._hubContext.Clients.All.OnStopAndSaved(true,"State is saved. Resetting controller");
+                await this._mediator.Send(new SendStationCommand() {
+                    Command = StationCommand.Reset
+                });
+            } else {
+                await this._hubContext.Clients.All.OnStopAndSaved(false,"Test failed to save. Please try again or hard reset." +
+                                                                        "Note* you will lose the saved state if you hard reset");
+            }
         }
     }
 
-    public Task UpdateSavedState(StationSerialData data) {
-        var savedState = new ControllerSavedState(data);
-        return this._testLogDataService.SetSavedState(this._stationId ?? "S01",savedState);
+    public async Task LoadState(ObjectId savedState) {
+        var savedStateResult=await this._savedStateDataService.GetSavedState(logId:savedState);
+        if (savedStateResult.IsError) {
+            this._savedStateLog=savedStateResult.Value;
+            var logResult = await this._testLogDataService.GetTestLogNoReadings(this._savedStateLog.LogId);
+            if (!logResult.IsError) {
+                this._runningTest = logResult.Value;
+                this._running = true;
+                this._paused = false;
+                this._loggingEnabled = true;
+                this._first = false;
+                await this._hubContext.Clients.All.OnTestStartedFrom(new LoadTestSetupTransport() {
+                    Success = true,
+                    Message = "Test loaded from saved state",
+                    WaferSetups = this._runningTest.TestSetup,
+                    SetTemperature = this._runningTest.SetTemperature,
+                    SetCurrent = this._runningTest.SetCurrent
+                });
+            } else {
+                await this._hubContext.Clients.All.OnLoadFromSavedStateError("Failed to load test from saved state.  " +
+                                                                             "Saved state exists but the log is missing");
+            }
+        } else {
+            await this._hubContext.Clients.All.OnLoadFromSavedStateError("Failed to load saved state. Saved state not found");
+        }
     }
     
-    private async Task StartFromControllerState(BurnInTestLog log,ControllerSavedState savedState) {
-        var setStateResult=await this._testLogDataService.SetSavedState(this._stationId ?? "S01",savedState);
-        if (setStateResult.IsError) {
-            this._logger.LogWarning("Failed to set saved state for station {StationId}",this._stationId ?? "S00");
-            await this._hubContext.Clients.All.OnSetStationSavedStateFailed($"Failed to set saved state for station " +
-                                                                            $"{this._stationId ?? "S00"}");
+    private async Task UpdateSavedState(StationSerialData data) {
+        this._savedStateLog.SavedState=new ControllerSavedState(data);
+        //var result=await this._savedStateDataService.UpdateLog()
+        var result=await this._savedStateDataService.UpdateLog(this._savedStateLog._id,this._savedStateLog.SavedState);
+        if(result.IsError) {
+            this._logger.LogWarning("Failed to update saved state for station {StationId}",this._stationId ?? "S00");
         }
-        
-        if (this._stationId != savedState.TestId) {
-            this._logger.LogWarning("StationId({LogStationId}) from log({TestId}) " +
-                                    "does not match systems stationId({StationId})"
-                ,this._runningTest.StationId,savedState.TestId,this._stationId ?? "S01");
-            await this._hubContext.Clients.All.OnSavedStateIdMatchStationId($"StationId({this._runningTest.StationId}) " +
-                                                                            $"from log({this._runningTest._id}) " +
-                                                                            $"does not match systems stationId({this._stationId ?? "S00"})");
-        }
-        
-        this._runningTest = log;
-        this._running = true;
-        this._paused = false;
-        this._loggingEnabled = true;
-        this._first = false;
-        await this._hubContext.Clients.All.OnTestStartedFrom(new LoadTestSetupTransport() {
-            Success = true,
-            Message = "Test loaded from saved state",
-            WaferSetups = this._runningTest.TestSetup,
-            SetTemperature = this._runningTest.SetTemperature,
-            SetCurrent = this._runningTest.SetCurrent
-        });
     }
     
     private async Task StartFromUnknown(ControllerSavedState savedState) {
@@ -177,40 +235,10 @@ public class TestService:ITestService {
             });
         }
     }
-    private async Task StartUnknown(StationCurrent current,int setTemp) {
-        this.CreateUnknownTest(current,setTemp);
-        var testResult=await this._testLogDataService.StartNewUnknown(this._runningTest,current);
-        if (!testResult.IsError) {
-            this._runningTest = testResult.Value;
-            this._running = true;
-            this._paused = false;
-            this._loggingEnabled = true;
-            this._first = true;
-            await this._hubContext.Clients.All.OnTestStartedFromUnknown(new LoadTestSetupTransport() {
-                Success = false,
-                Message = "Warning: failed to load savedState. An Unknown test was started instead.",
-                WaferSetups = this._runningTest.TestSetup,
-                SetTemperature = this._runningTest.SetTemperature,
-                SetCurrent = this._runningTest.SetCurrent
-            });
-        } else {
-            this._runningTest = testResult.Value;
-            this._running = true;
-            this._paused = false;
-            this._loggingEnabled = false;
-            this._first = false;
-            await this._hubContext.Clients.All.OnTestStartedFromUnknown(new LoadTestSetupTransport() {
-                Success = false,
-                Message = "Error: Failed to load saved state and failed to create fallback unknown test." +
-                          "test will continue to run but no logs will be available",
-                WaferSetups = this._runningTest.TestSetup,
-                SetTemperature = this._runningTest.SetTemperature,
-                SetCurrent = this._runningTest.SetCurrent
-            });
-        }
-    }
-    public async Task StopTest() {
+
+    public async Task CompleteTest() {
         if (this._running) {
+            this.Reset();
             var result=await this._testLogDataService.SetCompleted(this._runningTest._id,
                 this._stationId ?? "S01",DateTime.Now);
             if (!result.IsError) {
@@ -224,41 +252,29 @@ public class TestService:ITestService {
         await this._mediator.Send(new SendAckCommand() { AcknowledgeType = AcknowledgeType.TestCompleteAck });
     }
     
+    private async Task SaveState(StationSerialData data) {
+        var controllerSavedState=new ControllerSavedState(data);
+        var result=await this._savedStateDataService.SaveState(controllerSavedState,this._runningTest._id,this._stationId ?? "S00");
+        if (!result.IsError) {
+            this._savedStateLog = result.Value;
+            this._logger.LogInformation("First state saved for test {TestId}",this._runningTest._id);
+            return;
+        }
+        this._logger.LogWarning("Failed to log saved state.  Message: {Message}",result.FirstError.Description);
+    }
+    
     private void CreateUnknownTest(StationCurrent current,int setTemp) {
         BurnInTestLog log=new BurnInTestLog { _id = ObjectId.GenerateNewId() };
-        log.TestSetup.Add(new WaferSetup() {
-            WaferId = "Unknown",
-            Probe1 = StationProbe.Probe1,
-            Probe2 = StationProbe.Probe2,
-            StationPocket = StationPocket.LeftPocket
-        });
-        log.TestSetup.Add(new WaferSetup() {
-            WaferId = "Unknown",
-            Probe1 = StationProbe.Probe3,
-            Probe2 = StationProbe.Probe4,
-            StationPocket = StationPocket.MiddlePocket
-        });
-        log.TestSetup.Add(new WaferSetup() {
-            WaferId = "Unknown",
-            Probe1 = StationProbe.Probe5,
-            Probe2 = StationProbe.Probe6,
-            StationPocket = StationPocket.LeftPocket
-        });
-        log.SetCurrent = current;
-        log.SetTemperature= setTemp;
-        log.StationId = this._stationId ?? "S01";
-        log.StartTime= DateTime.Now;
-        log.Completed = false;
-        log.ElapsedTime = 0;
+        log.CreateUnknown(current,setTemp,this._stationId ?? "S00");
         this._runningTest = log;
     }
+    
     public async Task Log(StationSerialData data) {
         this._latestData = data;
         if (this._loggingEnabled) {
             if (this._first) {
                 this._first = false;
-                this._running = data.Running;
-                this._paused = data.Paused;
+                await this.SaveState(data);
                 await this._testLogDataService.SetStart(this._runningTest._id,DateTime.Now,data);
                 this._lastLog = DateTime.Now;
             } else {
@@ -274,6 +290,13 @@ public class TestService:ITestService {
                     }
                 }
             }
+        }
+    }
+
+    public async Task Stop() {
+        if(this.IsRunning) {
+            await this._savedStateDataService.ClearSavedState(id:this._savedStateLog._id);
+            this.Reset();
         }
     }
 }

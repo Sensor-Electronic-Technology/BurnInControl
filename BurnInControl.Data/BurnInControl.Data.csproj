@@ -16,8 +16,4 @@
       <ProjectReference Include="..\BurnInControl.Shared\BurnInControl.Shared.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="VersionModel\" />
-    </ItemGroup>
-
 </Project>

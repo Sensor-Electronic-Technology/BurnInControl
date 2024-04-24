@@ -63,6 +63,33 @@ public class BurnInTestLog {
         }
         return Error.NotFound(description:"Wafer not found");
     }
+
+    public void CreateUnknown(StationCurrent setCurrent,int setTemp,string stationId) {
+        this.TestSetup.Add(new WaferSetup() {
+            WaferId = "Unknown",
+            Probe1 = StationProbe.Probe1,
+            Probe2 = StationProbe.Probe2,
+            StationPocket = StationPocket.LeftPocket
+        });
+        this.TestSetup.Add(new WaferSetup() {
+            WaferId = "Unknown",
+            Probe1 = StationProbe.Probe3,
+            Probe2 = StationProbe.Probe4,
+            StationPocket = StationPocket.MiddlePocket
+        });
+        this.TestSetup.Add(new WaferSetup() {
+            WaferId = "Unknown",
+            Probe1 = StationProbe.Probe5,
+            Probe2 = StationProbe.Probe6,
+            StationPocket = StationPocket.LeftPocket
+        });
+        this.SetCurrent = setCurrent;
+        this.SetTemperature= setTemp;
+        this.StationId = stationId;
+        this.StartTime= DateTime.Now;
+        this.Completed = false;
+        this.ElapsedTime = 0;
+    }
     public void Reset() {
         this.TestSetup.Clear();
         this.Readings.Clear();

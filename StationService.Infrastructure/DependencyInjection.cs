@@ -48,6 +48,11 @@ public static class DependencyInjection {
             typeof(TestSetupHandler).Assembly,
             typeof(SendAckHandler).Assembly,
             typeof(SendTestIdCommandHandler).Assembly,
+            typeof(StartLoadStateCommandHandler).Assembly,
+            typeof(StopAndSaveStateCommandHandler).Assembly,
+            typeof(SendSavedStateCommandHandler).Assembly,
+            typeof(HardStopCommandHandler).Assembly,
+            typeof(StartFromLoadCommandHandler).Assembly,
             typeof(ConnectionStatusHandler).Assembly);
         });
         services.AddScheduler();

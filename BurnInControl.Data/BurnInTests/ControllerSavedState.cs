@@ -1,6 +1,7 @@
 ﻿using BurnInControl.Data.StationModel.Components;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.MessagePacket;
+using MongoDB.Bson;
 
 namespace BurnInControl.Data.BurnInTests;
 
@@ -35,4 +36,14 @@ public class ControllerSavedState:IPacket {
         this.SetCurrent = StationCurrent.FromValue(serialData.CurrentSetPoint);
         this.SetTemperature= (byte)serialData.TemperatureSetPoint;
     }
+}
+
+public class SavedStateLog {
+    public ObjectId _id { get; set; }
+    public DateTime TimeStamp { get; set; }
+    public string TestId { get; set; }
+    public string StationId { get; set; }
+    public ObjectId LogId { get; set; }
+    public ControllerSavedState SavedState { get; set; }
+    
 }

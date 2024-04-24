@@ -27,5 +27,6 @@ public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
     public static readonly StationMsgPrefix UpdateTempPrefix = new StationMsgPrefix(nameof(AcknowledgePrefix), "UT");
     public static readonly StationMsgPrefix TuneComPrefix = new StationMsgPrefix(nameof(AcknowledgePrefix), "TCOM");
     public static readonly StationMsgPrefix SendTestId = new StationMsgPrefix(nameof(SendTestId), "TID");
+    public static readonly StationMsgPrefix LoadState = new StationMsgPrefix(nameof(LoadState), "LSTATE");
     private StationMsgPrefix(string name, string value) : base(name, value) {  }
 }

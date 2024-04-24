@@ -3,8 +3,7 @@ using BurnInControl.Application.BurnInTest.Messages;
 using ErrorOr;
 using MediatR;
 namespace BurnInControl.Application.BurnInTest.Handlers;
-
-public class StartTestCommandHandler:IRequestHandler<StartTestCommand>,IRequestHandler<StartFromLoadCommand> {
+public class StartTestCommandHandler:IRequestHandler<StartTestCommand> {
     private readonly ITestService _testService;
     public StartTestCommandHandler(ITestService testService) {
         this._testService = testService;
@@ -12,10 +11,5 @@ public class StartTestCommandHandler:IRequestHandler<StartTestCommand>,IRequestH
 
     public Task Handle(StartTestCommand request, CancellationToken cancellationToken) {
         return this._testService.Start(request.Status,request.Message);
-    }
-    
-    public Task Handle(StartFromLoadCommand request, CancellationToken cancellationToken) {
-        return this._testService.StartFrom(request.SavedState);
-        //return this._testService.StartFrom(request.Message, request.TestId,request.Current,request.SetTemperature);
     }
 }

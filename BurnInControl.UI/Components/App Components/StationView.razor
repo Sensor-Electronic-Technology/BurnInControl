@@ -91,12 +91,12 @@
    protected override async Task OnInitializedAsync() {
         var hubAddress=Environment.GetEnvironmentVariable("StationHub");
         string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
-        this._hubConnection = new HubConnectionBuilder()
-            .WithUrl(addr)
-            .Build();
         /*this._hubConnection = new HubConnectionBuilder()
-            .WithUrl("http://localhost:5066/hubs/station")
+            .WithUrl(addr)
             .Build();*/
+        this._hubConnection = new HubConnectionBuilder()
+            .WithUrl("http://localhost:5066/hubs/station")
+            .Build();
         this._hubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,this.OnSerialComReceived);
         this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
         this._hubConnection.On<string>(HubConstants.Events.OnUsbDisconnect,this.UsbDisconnectedHandler);
@@ -108,7 +108,8 @@
         this._hubConnection.On<LoadTestSetupTransport>(HubConstants.Events.OnTestStartedFrom, this.OnTestStartedFromHandler);
         this._hubConnection.On<LoadTestSetupTransport>(HubConstants.Events.OnTestStartedFromUnknown, this.OnTestStartedFromHandler);
         this._hubConnection.On<bool, string>(HubConstants.Events.OnTestSetup, this.OnTestSetupHandler);
-        //this._hubConnection.On
+        this._hubConnection.On<string>(HubConstants.Events.OnTestCompleted, this.OnTestCompletedHandler);
+        //this._hubConnection.On<string>(HubConstants.Events.,)
    }
 
    private Task OnStationConnection(bool usbStatus) {
@@ -318,7 +319,7 @@
            Severity = severity, 
            Summary = summary, 
            Detail = message, 
-           Duration = 1000 };
+           Duration = 10000 };
        this.NotificationService.Notify(notification);
    }
 

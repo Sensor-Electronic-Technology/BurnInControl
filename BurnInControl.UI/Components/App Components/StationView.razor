@@ -72,14 +72,15 @@
                             UsbConnect="@this.OnUsbConnectClicked"
                             TempChanged="TempChangedHandler"
                             ServiceConnected="@this.Connected"
-                            UsbConnected="@this._usbConnected"/>
+                            UsbConnected="@this._usbConnected"
+                            Paused="@this._data.Paused"/>
         </RadzenRow>
     </RadzenSplitterPane>
 </RadzenSplitter>
 
 @code {
    private EventConsole _eventConsole=new EventConsole();
-   private StationSerialData? _data=new();
+   private StationSerialData _data=new();
    private HubConnection? _hubConnection;
    private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;
    private bool _usbConnected=false;
@@ -96,6 +97,9 @@
             .Build();*/
         this._hubConnection = new HubConnectionBuilder()
             .WithUrl("http://localhost:5066/hubs/station")
+            .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.Zero, 
+                                            TimeSpan.FromSeconds(10),TimeSpan.FromSeconds(30),
+                                            TimeSpan.FromSeconds(60) })
             .Build();
         this._hubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,this.OnSerialComReceived);
         this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
@@ -145,7 +149,7 @@
        if (transport.Success) {
            this.Notify("Unknown Test Started From Memory",transport.Message ?? "No Message",NotificationSeverity.Success);
        } else {
-           this.Notify("Unkown Test Failed to Started ",transport.Message ?? "No Message",NotificationSeverity.Error);
+           this.Notify("Unknown Test Failed to Started ",transport.Message ?? "No Message",NotificationSeverity.Error);
        }
        return Task.CompletedTask;
    }
@@ -236,10 +240,15 @@
        return Task.CompletedTask;
    }
    
-   private Task OnStartClicked(bool state) {
+   private Task OnStartClicked() {
        if (this.Connected) {
-           var command = state ? StationCommand.Pause : StationCommand.Start;
-           return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand, command);
+           if (this._data.Running) {
+               var command = this._data.Paused ? StationCommand.Start : StationCommand.Pause;
+               return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand, command);
+           } else {
+               var command = StationCommand.Start;
+               return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand, command);
+           }
        }
        this.NotifyNotConnected();
        return Task.CompletedTask;

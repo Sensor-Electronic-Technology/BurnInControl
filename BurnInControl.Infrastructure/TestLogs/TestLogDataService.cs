@@ -93,6 +93,7 @@ public class TestLogDataService {
         }
         log.RunTime=result.Value.RunTime;
         await this._testLogCollection.InsertOneAsync(log);
+        //await this._stationDataService.
         return log;
     }
     public async Task<ErrorOr<BurnInTestLog>> StartNewUnknown(BurnInTestLog log,StationCurrent current) {
@@ -116,7 +117,7 @@ public class TestLogDataService {
         return Error.Failure(description: "Failed to delete log");
     }
     
-    public async Task<ErrorOr<Success>> SetStart(ObjectId id,DateTime start,StationSerialData data) {
+    public async Task UpdateStartAndRunning(ObjectId id,string stationId,DateTime start,StationSerialData data) {
         var filter=Builders<BurnInTestLog>.Filter.Eq(e => e._id,id);
         var updateBuilder = Builders<BurnInTestLog>.Update;
         var update=updateBuilder.Set(e => e.StartTime,start)
@@ -124,11 +125,20 @@ public class TestLogDataService {
                 TimeStamp = start,
                 Data=data
             });
-        var updateResult=await this._testLogCollection.UpdateOneAsync(filter, update);
-        if (updateResult.IsAcknowledged) {
-            return Result.Success;
-        }
-        return Error.Failure(description: "Failed Mart Test as Running");
+        await this._testLogCollection.UpdateOneAsync(filter, update);
+        await this._stationDataService.SetRunningTest(stationId, id);
+    }
+
+    public async Task UpdateStopAndRunning(ObjectId id, string stationId, DateTime stop,StationSerialData data) {
+        var update=Builders<BurnInTestLog>.Update
+            .Set(e => e.StopTime,stop)
+            .Set(e=>e.Completed,true)
+            .Push(e=>e.Readings,new StationReading() {
+                TimeStamp = stop,
+                Data=data
+            });
+        await this._testLogCollection.UpdateOneAsync(e => e._id == id, update);
+        await this._stationDataService.ClearRunningTest(stationId);
     }
     
     public async Task<ErrorOr<Created>> InsertReading(ObjectId logId,StationSerialData data) {

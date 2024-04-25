@@ -115,7 +115,7 @@ public class StationController:IStationController,IDisposable {
         };
         var result = this._usbController.Send(msgPacket);
         if (!result.IsError) {
-            this._logger.LogInformation("Msg Sent of type {ArduinoMsgPrefix.Name}",msgPacket.Prefix.Name);
+            this._logger.LogInformation("Msg Sent of type {MessageType}",msgPacket.Prefix.Value);
             return Task.FromResult(result);
         } else {
             var message = $"Failed to send {msgPacket.Prefix.Name}, Error {result.FirstError.Description}";

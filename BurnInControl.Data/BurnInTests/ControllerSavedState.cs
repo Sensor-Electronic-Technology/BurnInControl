@@ -41,7 +41,6 @@ public class ControllerSavedState:IPacket {
 public class SavedStateLog {
     public ObjectId _id { get; set; }
     public DateTime TimeStamp { get; set; }
-    public string TestId { get; set; }
     public string StationId { get; set; }
     public ObjectId LogId { get; set; }
     public ControllerSavedState SavedState { get; set; }

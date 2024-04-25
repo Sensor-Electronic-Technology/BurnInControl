@@ -13,8 +13,8 @@
                  Gap="10">
         <RadzenFieldset Text="Test Control">
             <RadzenStack>
-                <RadzenToggleButton Value="@this._testBtnValue"
-                                    Text="@(this._testBtnValue ? "Pause" : "Start")"
+                <RadzenToggleButton Value="@this.Paused"
+                                    Text="@(this.Paused ? "Pause" : "Start")"
                                     ButtonStyle="ButtonStyle.Success"
                                     ToggleButtonStyle="ButtonStyle.Light"
                                     Click="@OnStartClicked"
@@ -41,7 +41,7 @@
             <RadzenToggleButton Value="@this.UsbConnected"
                                 Text="@(this.UsbConnected ? "Disconnect Usb" : "Connect Usb")"
                                 ButtonStyle="ButtonStyle.Primary"
-                                Size="Radzen.ButtonSize.Medium"
+                                Size="ButtonSize.Medium"
                                 ToggleButtonStyle="ButtonStyle.Secondary"
                                 Click="@this.UsbConnect" Style="width: 170px; height: 52px"/>
         </RadzenStack>
@@ -49,7 +49,7 @@
 </RadzenStack>
 @code{
     [Parameter] public EventCallback Connect { get; set; }
-    [Parameter] public EventCallback<bool> StartPause { get; set; }
+    [Parameter] public EventCallback StartPause { get; set; }
     [Parameter] public EventCallback UsbConnect { get; set; }
     [Parameter] public EventCallback Reset { get; set; }
     [Parameter] public EventCallback<StationCurrent> CurrentChanged { get; set; }
@@ -58,6 +58,7 @@
     [Parameter] public int SetTemperature { get; set; } = 85;
     [Parameter] public bool UsbConnected { get; set; }
     [Parameter] public bool ServiceConnected { get; set; }
+    [Parameter] public bool Paused { get; set; }
     
     private bool _serviceConnectBtnBusy = false;
     private bool _usbBtnBusy = false;
@@ -66,7 +67,7 @@
     
     
     private Task OnStartClicked() {
-        return this.StartPause.InvokeAsync(this._testBtnValue);
+        return this.StartPause.InvokeAsync();
     }
     
     private async Task OnUploadCurrentTemp(StationCurrent stationCurrent) {

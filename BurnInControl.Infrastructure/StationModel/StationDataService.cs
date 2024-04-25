@@ -27,6 +27,12 @@ public class StationDataService {
         this._stationCollection = database.GetCollection<Station>("stations");
         this._testConfigurationCollection = database.GetCollection<TestConfiguration>("test_configurations");
     }
+
+    public async Task SetRunningTest(string stationId,ObjectId logId) {
+        var update=Builders<Station>.Update.Set(e=>e.State,StationState.Running)
+            .Set(e=>e.RunningTest,logId);
+        await this._stationCollection.UpdateOneAsync(e=>e.StationId==stationId,update);
+    }
     
     public async Task<ErrorOr<TestConfiguration>> GetTestConfiguration(StationCurrent setCurrent) {
         var testConfig=await this._testConfigurationCollection

@@ -13,6 +13,7 @@ using MongoDB.Driver;
 using System.Net.Http;
 using System.Text.Json;
 using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
+using BurnInControl.Data.BurnInTests;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.FirmwareData;
 using MongoDB.Bson;
@@ -47,9 +48,9 @@ async Task TestRunProcess() {
 /*await CreateStationDatabase();
 await CreateTrackerDatabase();*/
 
-var objectId=ObjectId.GenerateNewId().ToString();
-Console.WriteLine(objectId);
-//await CloneDatabase();
+/*var objectId=ObjectId.GenerateNewId().ToString();
+Console.WriteLine(objectId);*/
+await CloneDatabase();
 
 async Task CloneDatabase() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");
@@ -61,24 +62,28 @@ async Task CloneDatabase() {
     var piStationCollection=piDatabase.GetCollection<Station>("stations");
     
     var stations=await stationCollection.Find(Builders<Station>.Filter.Empty).ToListAsync();
-    foreach(var station in stations) {
-        await piStationCollection.InsertOneAsync(station);
-    }
+    await piStationCollection.InsertManyAsync(stations);
     
     var trackerCollection=database.GetCollection<StationFirmwareTracker>("station_update_tracker");
     var piTrackerCollection=piDatabase.GetCollection<StationFirmwareTracker>("station_update_tracker");
     var trackers=await trackerCollection.Find(Builders<StationFirmwareTracker>.Filter.Empty).ToListAsync();
-    foreach(var tracker in trackers) {
-        await piTrackerCollection.InsertOneAsync(tracker);
-    }
+    await piTrackerCollection.InsertManyAsync(trackers);
     
     var versionCollection=database.GetCollection<VersionLog>("version_log");
     var piVersionCollection=piDatabase.GetCollection<VersionLog>("version_log");
     var versions=await versionCollection.Find(Builders<VersionLog>.Filter.Empty).ToListAsync();
-    foreach(var version in versions) {
-        await piVersionCollection.InsertOneAsync(version);
-    }
+    await piVersionCollection.InsertManyAsync(versions);
     
+    var testConfigCollection=database.GetCollection<TestConfiguration>("test_configurations");
+    var pitestConfigCollection=piDatabase.GetCollection<TestConfiguration>("test_configurations");
+    var testConfigs=await testConfigCollection.Find(Builders<TestConfiguration>.Filter.Empty).ToListAsync();
+    await pitestConfigCollection.InsertManyAsync(testConfigs);
+    
+    var logCollection=database.GetCollection<BurnInTestLog>("test_logs");
+    var piLogCollection=piDatabase.GetCollection<BurnInTestLog>("test_logs");
+    var logs = await logCollection.Find(_ => true).ToListAsync();
+    await piLogCollection.InsertManyAsync(logs);
+
 }
 
 

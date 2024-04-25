@@ -37,7 +37,7 @@ public class StationMessageHandler : IStationMessageHandler {
     public Task Handle(StationMessage message,CancellationToken cancellationToken) {
         try {
             if (!string.IsNullOrEmpty(message.Message)) {
-                _logger.LogInformation(message.Message);
+                //_logger.LogInformation(message.Message);
                 if (message.Message.Contains("Prefix")) {
                     var doc=JsonSerializer.Deserialize<JsonDocument>(message.Message);
                     if (doc != null) { 
@@ -165,6 +165,11 @@ public class StationMessageHandler : IStationMessageHandler {
     private Task HandleMessage(JsonElement element,bool isInit) {
         try {
             var message = element.Deserialize<StationMessagePacket>();
+            if (message == null) {
+                this._logger.LogError("Error StationMessagePacket null");
+                return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.MessagePrefix,
+                    $"Error StationMessagePacket null");
+            }
             switch (message.MessageType) {
                 case StationMessageType.INIT: {
                     return this._hubContext.Clients.All.OnSerialInitMessage(message.Message);
@@ -213,17 +218,12 @@ public class StationMessageHandler : IStationMessageHandler {
 
     private Task HandleTestStartedFrom(JsonElement element) {
         try {
+            Console.WriteLine(element.ToString());
             var startFromPacket = element.Deserialize<ControllerSavedState>();
             if (startFromPacket != null) {
                 return this._mediator.Send(new StartFromLoadCommand() {
                     SavedState=startFromPacket
                 });
-                /*return _mediator.Send(new StartFromLoadCommand() {
-                    Message=startFromPacket.Message,
-                    TestId=startFromPacket.TestId,
-                    Current = StationCurrent.FromValue(startFromPacket.SetCurrent),
-                    SetTemperature=startFromPacket.SetTemperature
-                });*/
             }
             this._logger.LogError("Failed to parse StartTestFromPacket");
             return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStartFromLoadPrefix,

@@ -22,17 +22,10 @@ public class SavedStateDataService {
         return result.IsAcknowledged ? Result.Success : Error.Failure(description:$"Failed to update log {logId}");
     }
     
-    public async Task<ErrorOr<SavedStateLog>> SaveState(ControllerSavedState savedState,ObjectId logId,string stationId) {
-        var log=new SavedStateLog() {
-            _id = ObjectId.GenerateNewId(),
-            TimeStamp=DateTime.Now,
-            TestId=savedState.TestId,
-            StationId=stationId,
-            LogId=logId,
-            SavedState=savedState
-        };
-        await this._savedStateLogCollection.InsertOneAsync(log);
-        var result=await this._savedStateLogCollection.Find(e=>e._id==log._id).FirstOrDefaultAsync();
+    public async Task<ErrorOr<SavedStateLog>> SaveState(SavedStateLog savedState) {
+        savedState._id=ObjectId.GenerateNewId();
+        await this._savedStateLogCollection.InsertOneAsync(savedState);
+        var result=await this._savedStateLogCollection.Find(e=>e._id==savedState._id).FirstOrDefaultAsync();
         return result != null ? result : Error.Failure(description:"Failed to save state");
     }
 

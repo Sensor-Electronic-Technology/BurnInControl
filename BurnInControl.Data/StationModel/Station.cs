@@ -12,7 +12,6 @@ public enum StationState {
 
 public class Station {
     public ObjectId _id { get; set; }
-    public ObjectId _Id { get; set; }
     public string StationId { get; set; }
     public string StationPosition { get; set; }
     public string? FirmwareVersion { get; set; }

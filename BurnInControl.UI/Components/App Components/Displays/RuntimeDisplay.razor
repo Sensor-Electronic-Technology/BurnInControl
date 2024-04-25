@@ -28,7 +28,7 @@
 
     protected override Task OnParametersSetAsync() {
         ulong hours=this.RuntimeSecs/3600;
-        ulong minutes=(this.RuntimeSecs/3600)%60;
+        ulong minutes=(this.RuntimeSecs/60)%60;
         ulong seconds=this.RuntimeSecs%60;
         string value = "";
         if ((hours / 10) < 1 || hours==0) {

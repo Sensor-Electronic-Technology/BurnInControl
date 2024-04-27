@@ -13,14 +13,8 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.2"/>
+        
         <PackageReference Include="Radzen.Blazor" Version="*" />
-    </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\BurnInControl.Application\BurnInControl.Application.csproj" />
-        <ProjectReference Include="..\BurnInControl.Infrastructure\BurnInControl.Infrastructure.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Forms\Configurations\" />
     </ItemGroup>
 
 </Project>

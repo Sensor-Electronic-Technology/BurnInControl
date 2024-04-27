@@ -1,16 +1,13 @@
 @using BurnInControl.UI.Components.App_Components.Displays
 @using BurnInControl.UI.Components.App_Components.Forms
-@using BurnInControl.UI.Components.App_Components.Util
-@using BurnInControl.UI.Components.App_Components.Controls
+@using BurnInControl.UI.Components.App_Components.Controls.WaferMap
 @using BurnInControl.Data.StationModel.Components
 @using BurnInControl.Shared.ComDefinitions
 @using BurnInControl.Shared.ComDefinitions.Station
 @using BurnInControl.HubDefinitions.Hubs
 @using Microsoft.AspNetCore.SignalR.Client
-@using BurnInControl.Application.StationControl.Messages
 @using BurnInControl.Data.BurnInTests.Wafers
 @using BurnInControl.HubDefinitions.HubTransports
-@using WorkflowCore.Primitives
 @inject ILogger<StationView> _logger
 @inject StationHubConnection StationHubConnection
 @inject NotificationService NotificationService
@@ -45,7 +42,8 @@
                                     <TestSetup Save="SaveClickedHandler"></TestSetup>
                                 </RadzenTabsItem>
                                 <RadzenTabsItem Text="Plots">
-                                    <TestSetup></TestSetup>
+                                    @*<TwoInchWaferMapView></TwoInchWaferMapView>*@
+                                    <WaferImageMap></WaferImageMap>
                                 </RadzenTabsItem>
                             </Tabs>
                         </RadzenTabs>

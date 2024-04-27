@@ -11,11 +11,8 @@ using StationService.Infrastructure.SerialCom;
 using StationService.Infrastructure.StationControl;
 using StationService.Infrastructure.TestLogs;
 using System.Threading.Channels;
-using BurnInControl.Application.BurnInTest;
 using BurnInControl.Application.BurnInTest.Handlers;
 using BurnInControl.Application.BurnInTest.Interfaces;
-using BurnInControl.Application.BurnInTest.Messages;
-using BurnInControl.Application.FirmwareUpdate.Messages;
 using Coravel;
 using StationService.Infrastructure.Firmware.Jobs;
 

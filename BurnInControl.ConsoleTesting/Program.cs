@@ -1,27 +1,13 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using System.Diagnostics;
-using System.Net;
-using BurnInControl.ConsoleTesting.TestWorkflow;
-using BurnInControl.Data.ComponentConfiguration.ProbeController;
 using BurnInControl.Data.StationModel;
 using BurnInControl.Infrastructure.StationModel;
-using BurnInControl.Shared.ComDefinitions.MessagePacket;
-using BurnInControl.Shared.ComDefinitions.Station;
-using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
-using System.Net.Http;
-using System.Text.Json;
-using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
 using BurnInControl.Data.BurnInTests;
-using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.FirmwareData;
 using MongoDB.Bson;
 using Octokit;
 using Octokit.Internal;
-using WorkflowCore.Interface;
-using WorkflowCore.Models;
-using WorkflowCore.Services;
 
 //await TestWorkFlow();
 
@@ -260,31 +246,6 @@ void PrintMenu() {
     Console.WriteLine();
 }
 
-async Task TestWorkFlow() {
-    /*var serviceProvider = ConfigureServices();
-    var host=serviceProvider.GetService<IWorkflowHost>();*/
-    //var workflowHost=new WorkflowHost();
-    /*host.RegisterWorkflow<DataWorkflow,WorkflowData>();
-    host.Start();
-    host.StartWorkflow(nameof(DataWorkflow),new WorkflowData() {
-        Message = "Message",
-        Success = false
-    });*/
-
-}
-
-static IServiceProvider ConfigureServices()
-{
-    //setup dependency injection
-    IServiceCollection services = new ServiceCollection();
-    //services.AddLogging();
-    /*services.AddWorkflow();*/
-    
-    services.AddWorkflow(x => x.UseMongoDB(@"mongodb://172.20.3.41:27017", "burn_test_workflow"));
-    var serviceProvider = services.BuildServiceProvider();
-
-    return serviceProvider;
-}
 
 
 async Task CreateStationDatabase() {

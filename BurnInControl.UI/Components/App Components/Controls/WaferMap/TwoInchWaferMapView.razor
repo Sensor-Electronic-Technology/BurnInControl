@@ -1,0 +1,66 @@
+﻿@inject NotificationService NotificationService
+@rendermode InteractiveServer
+
+<style>
+    circle:hover{
+        cursor: pointer;
+    }
+    .img-overlay-wrap {
+        position: relative;
+        display: inline-block; 
+    }
+
+    .img-overlay-wrap img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+    }
+
+    .img-overlay-wrap svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .outer-pane {
+        width:100vw;
+        height:100vh;
+    }
+</style>
+
+@*<div class="img-overlay-wrap">
+    <img src="images/WaferMask2in.png"/>
+    <svg viewBox="0 0 826 810">
+        <circle cx="160" cy="365" r="8" stroke="#d4ffde" stroke-width=".1" fill="red"/>
+        <circle cx="180" cy="366" r="9" stroke="#d4ffde" stroke-width=".1" fill="yellow"/>
+        <circle cx="142" cy="441" r="9" stroke="#d4ffde" href="#" stroke-width=".1" fill="green" onclick="@(() => this.OnClick("r3"))"/>
+    </svg>
+</div>*@
+
+@*826 810*@
+<div id="outer-pane">
+    <svg viewBox="0 0 826 810" width="800" height="700"  >
+        <image class="mainProject" 
+               xlink:href="images/WaferMask2in.png" 
+               width="826" height="810" />
+        <circle cx="160" cy="365" r="8" stroke="#d4ffde"
+                stroke-width=".1" fill="red"/>
+        <circle cx="180" cy="366" r="9" stroke="#d4ffde"
+                stroke-width=".1" fill="yellow"/>
+        <circle cx="142" cy="441" r="9" stroke="#d4ffde" href="#"
+                stroke-width=".1" fill="green" onclick="@(() => this.OnClick("r3"))"/>
+    </svg>
+    
+</div>
+
+@code {
+
+    void OnClick(string area) {
+        this.NotificationService.Notify(new NotificationMessage() {
+            Severity = NotificationSeverity.Success,
+            Summary = "Area Clicked",
+            Detail = $"You clicked on {area}"
+        });
+    }
+    
+}

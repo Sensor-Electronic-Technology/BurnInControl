@@ -72,7 +72,7 @@ public class TestService:ITestService {
             
             this._logger.LogInformation("TestTransport: Temp: {SetTemp} " +
                                         "Current:{Current}",testSetup.SetTemperature,testSetup.SetCurrent.Name);
-            var result=await this._testLogDataService.StartNew(this._runningTest);
+            var result = await this._testLogDataService.StartNew(this._runningTest);
             if (!result.IsError) {
                 this._testSetupComplete = true;
                 this._runningTest = result.Value;

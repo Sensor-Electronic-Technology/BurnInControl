@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Diagnostics;
 using BurnInControl.Data.StationModel;
 using BurnInControl.Infrastructure.StationModel;
 using MongoDB.Driver;
@@ -36,7 +37,52 @@ await CreateTrackerDatabase();*/
 
 /*var objectId=ObjectId.GenerateNewId().ToString();
 Console.WriteLine(objectId);*/
-await CloneDatabase();
+//await CloneDatabase();
+//await CopyTestLogs();
+//await TestLogsSepCollection();
+await BenchmarkLogFetching();
+async Task BenchmarkLogFetching() {
+    var stopWatch = new Stopwatch();
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("burn_in_db");
+    var collection=database.GetCollection<BurnInTestLog>("test_logs");
+    var entryCollection=database.GetCollection<BurnInTestLogEntry>("test_log_entries");
+    Console.WriteLine("Fetch Log");
+    var id=ObjectId.Parse("662aca68480488cbab83ddf5");
+    stopWatch.Start();
+    var log=await collection.Find(e => e._id == id).FirstOrDefaultAsync();
+    stopWatch.Stop();
+    Console.WriteLine($"Fetch Log Time: {(double)stopWatch.ElapsedMilliseconds/1000} LogCount: {log.Readings.Count}");
+    stopWatch.Reset();
+    stopWatch.Start();
+    var entries = await entryCollection.Find(e => e.TestLogId == id).ToListAsync();
+    stopWatch.Stop();
+    Console.WriteLine($"Entry Time: {(double)stopWatch.ElapsedMilliseconds/1000} EntryCount: {entries.Count}");
+}
+
+async Task TestLogsSepCollection() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("burn_in_db");
+    var collection=database.GetCollection<BurnInTestLog>("test_logs");
+    var entryCollection=database.GetCollection<BurnInTestLogEntry>("test_log_entries");
+    var logs = await collection.Find(_ => true).ToListAsync();
+    List<BurnInTestLogEntry> entries = new List<BurnInTestLogEntry>();
+    foreach (var log in logs) {
+        foreach (var reading in log.Readings) {
+            BurnInTestLogEntry entry = new BurnInTestLogEntry();
+            foreach(var setup in log.TestSetup) {
+                entry.WaferIds.Add(setup.WaferId ?? "none");
+            }
+            entry._id = ObjectId.GenerateNewId();
+            entry.TestLogId = log._id;
+            entry.Reading= reading;
+            entries.Add(entry);
+        }
+        Console.WriteLine($"Inserting: Id:{log._id} Entries: {entries.Count}");
+        await entryCollection.InsertManyAsync(entries);
+        entries.Clear();
+    }
+}
 
 async Task CloneDatabase() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");
@@ -70,6 +116,27 @@ async Task CloneDatabase() {
     var logs = await logCollection.Find(_ => true).ToListAsync();
     await piLogCollection.InsertManyAsync(logs);
 
+}
+
+async Task CopyTestLogs() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var piClient = new MongoClient("mongodb://192.168.68.112:27017");
+    var database = client.GetDatabase("burn_in_db");
+    var piDatabase = piClient.GetDatabase("burn_in_db");
+    
+
+    
+    var logCollection=database.GetCollection<BurnInTestLog>("test_logs");
+    var piLogCollection=piDatabase.GetCollection<BurnInTestLog>("test_logs");
+    var logs = await piLogCollection.Find(_ => true).ToListAsync();
+    foreach (var log in logs) {
+        var other=await logCollection.Find(e => e._id == log._id).FirstOrDefaultAsync();
+        if (other == null) {
+            await logCollection.InsertOneAsync(log);
+        }
+    }
+
+    Console.WriteLine("Done: Check Database");
 }
 
 

@@ -6,6 +6,13 @@ using ErrorOr;
 using MongoDB.Bson;
 namespace BurnInControl.Data.BurnInTests;
 
+public class BurnInTestLogEntry {
+    public ObjectId _id { get; set; }
+    public ObjectId TestLogId { get; set; }
+    public List<string> WaferIds { get; set; } = new List<string>();
+    public StationReading? Reading { get; set; }
+}
+
 public class BurnInTestLog {
     public ObjectId _id { get; set; }
     public string StationId { get; set; }

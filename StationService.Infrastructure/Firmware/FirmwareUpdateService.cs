@@ -42,7 +42,6 @@ public class FirmwareUpdateService:IFirmwareUpdateService {
         this._configuration = configuration;
         this._settings= options.Value;
         this._github=new GitHubClient(new ProductHeaderValue(this._settings.GithubOrg));
-        
         this._stationId = this._configuration["StationId"] ?? "S01"; //TODO: Change to S00 when not debugging
         this._firmwareFullPath = this._settings.FirmwarePath + this._settings.FirmwareFileName;
         

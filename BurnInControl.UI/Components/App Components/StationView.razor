@@ -23,7 +23,8 @@
                                TemperatureToggle="@this.ToggleTemperatureHandler"
                                Disabled="@(!this.Connected)"/>
             <ElapsedView Elapsed="@this._data.ElapsedSeconds" 
-                         ProbeRuntimes="@this._data.ProbeRuntimes"/>
+                         ProbeRuntimes="@this._data.ProbeRuntimes"
+                         />
         </RadzenStack>
     </RadzenSplitterPane>
     <RadzenSplitterPane Size="70%" Collapsible="false">
@@ -89,8 +90,9 @@
 
    protected override async Task OnInitializedAsync() {
         var hubAddress=Environment.GetEnvironmentVariable("StationHub");
-        string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
-        /*this._hubConnection = new HubConnectionBuilder()
+        //string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
+        string addr = "http://localhost:5066/hubs/station";
+       /*this._hubConnection = new HubConnectionBuilder()
             .WithUrl(addr)
             .Build();*/
         /*this._hubConnection = new HubConnectionBuilder()

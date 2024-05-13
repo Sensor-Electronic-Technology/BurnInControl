@@ -1,6 +1,6 @@
 
 <RadzenStack Orientation="Orientation.Vertical" Gap="20">
-    <HeaterDisplays/>
+    <HeaterDisplays Temperatures="@this.Temps" HeaterStates="@this.TempStates"/>
     <VoltCurrentDisplay LabelPrefix="V" Values="@this.Voltages"/>
     <VoltCurrentDisplay LabelPrefix="I" Values="@this.Currents"/>
 </RadzenStack>
@@ -13,7 +13,10 @@
     public List<double> Currents { get; set; }=new List<double>(){150,148,151,149,150,149};
     
     [Parameter]
-    public List<double> Temps { get; set; }=new List<double>(){0,0,0};
+    public List<double> Temps { get; set; }=new List<double>(){75,72,72};
+    
+    [Parameter]
+    public List<bool> TempStates { get; set; }=new List<bool>(){true,false,true};
     
     
 

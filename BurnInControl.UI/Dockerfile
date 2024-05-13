@@ -7,6 +7,7 @@ EXPOSE 5581
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+COPY ["./NuGet.config", "."]
 COPY ["BurnInControl.UI/BurnInControl.UI.csproj", "BurnInControl.UI/"]
 COPY ["BurnInControl.Application/BurnInControl.Application.csproj", "BurnInControl.Application/"]
 COPY ["BurnInControl.Data/BurnInControl.Data.csproj", "BurnInControl.Data/"]

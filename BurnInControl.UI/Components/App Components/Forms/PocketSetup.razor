@@ -2,8 +2,14 @@
 @using Ardalis.SmartEnum;
 @using BurnInControl.Data.BurnInTests.Wafers
 @using BurnInControl.Data.StationModel.Components
-@using QuickTest.Data.Wafer
+@using BurnInControl.Infrastructure.QuickTest
+@using BurnInControl.UI.Components.App_Components.Dialogs
+@using QuickTest.Data.DataTransfer
+@using QuickTest.Data.Models.Wafers.Enums
+@inject QuickTestDataService QuickTestDataService
 @inject NotificationService NotificationService
+@inject DialogService DialogService
+
 @if (this.WaferSetup != null) {
     <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="10" Style="width: fit-content">
         <RadzenText Text="@this.PocketCaption"/>
@@ -12,7 +18,7 @@
                          JustifyContent="JustifyContent.Center" 
                          AlignItems="AlignItems.Center">
                 <RadzenFieldset Text="Wafer" Style="height: fit-content">
-                    <RadzenTextBox Value="@this.WaferSetup.WaferId" ValueChanged="@this.WaferIdChanged"/>
+                    <RadzenTextBox Value="@this._waferId" ValueChanged="@this.WaferIdChanged"/>
                 </RadzenFieldset>
                 <RadzenStack Orientation="Orientation.Horizontal" 
                              AlignItems="AlignItems.Center">
@@ -30,12 +36,14 @@
             <RadzenStack Orientation="Orientation.Horizontal">
                 <RadzenFieldset Text="Probe 1">
                     <RadzenDropDown TValue="string"
+                                    ReadOnly="true"
                                     Data=@this._probes
                                     ValueChanged="@this.Probe1Changed"
                                     Style="width: 100px"/>
                 </RadzenFieldset>
                 <RadzenFieldset Text="Pad 1">
                     <RadzenDropDown TValue="string"
+                                    ReadOnly="true"
                                     Data=@this._pads
                                     ValueChanged="@this.Pad1Changed"
                                     Style="width: 100px"/>
@@ -62,9 +70,10 @@
 
 @code {
     [Parameter] public string PocketCaption { get; set; } = "Pocket X";
-    
-    [Parameter] public WaferSetup? WaferSetup { get; set; }=new WaferSetup();
+    [Parameter] public WaferSetup WaferSetup { get; set; }=new WaferSetup();
     [Parameter] public EventCallback<WaferSetup> WaferSetupChanged { get; set; }
+
+    private string _waferId="Not Set";
     
     private string? _p1="";
     private string? _p2="";
@@ -72,29 +81,43 @@
     private List<string> _pads=PadLocation.List.Select(x => x.Value).ToList();
     private List<string> _probes=StationProbe.List.Select(x => x.Name).ToList();
     private bool _exists = false;
+    private IEnumerable<Pad> _map=[];
+
+    protected override async Task OnInitializedAsync() {
+        this._map = await this.QuickTestDataService.GetWaferMap(2);
+    }
 
     protected override Task OnParametersSetAsync() {
         /*this._pads=PadLocation.List.Select(x => x.Value).ToList();
         this._probes=StationProbe.List.Select(x => x.Name).ToList();*/
-        if (this.WaferSetup != null) {
+        /*if (this.WaferSetup != null) {*/
             this._p1 = this._probes.FirstOrDefault(e => e==this.WaferSetup.Probe1?.Name) ?? StationProbe.Probe1.Name;
             this._p2 = this._probes.FirstOrDefault(e => e==this.WaferSetup.Probe2?.Name) ?? StationProbe.Probe2.Name;
-        } else {
+        /*} else {
             this._p1 = StationProbe.Probe1.Name;
             this._p2 = StationProbe.Probe2.Name;
-        }
-
+        }*/
         return base.OnParametersSetAsync();
     }
 
-    private Task CheckWaferExists() {
+    private async Task CheckWaferExists() {
         this.NotificationService.Notify(NotificationSeverity.Warning, "Not implemented yet.");
-        this._exists = true;
-        return Task.CompletedTask;
+        var result=await this.QuickTestDataService.QuickTestExists(this._waferId);
+        if (result.IsError) {
+            await this.DialogService.Alert($"Error while checking wafer: {result.FirstError.Description}", "Error");
+            this._exists = false;
+        } else {
+            this._exists = result.Value;
+            await this.DialogService.OpenAsync<PadSelector>("Select Two Pads",
+                new Dictionary<string, object>() { { "Map", this._map } },
+                options:new DialogOptions() { Width = "800px", Height = "800px" });
+        }
+       
     }
 
     private Task WaferIdChanged(string value) {
         this.WaferSetup.WaferId = value;
+        this._waferId = value;
         return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
     }
     

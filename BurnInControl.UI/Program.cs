@@ -5,6 +5,7 @@ using Radzen;
 using BurnInControl.UI.Components;
 using BurnInControl.UI.Services;
 using MongoDB.Driver;
+using QuickTest.Data.AppSettings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +21,7 @@ if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
     connectionString=builder.Configuration.GetConnectionString("DefaultConnection");
     connectionString ??= "mongodb://172.20.3.41:27017";
 }
-
+builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
 /*var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 connectionString ??= "mongodb://172.20.3.41:27017";*/
 builder.Services.AddControllers();

@@ -1,5 +1,6 @@
 ﻿using BurnInControl.Infrastructure.ControllerTestState;
 using BurnInControl.Infrastructure.FirmwareModel;
+using BurnInControl.Infrastructure.QuickTest;
 using BurnInControl.Infrastructure.StationModel;
 using BurnInControl.Infrastructure.TestLogs;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,7 @@ public static class DependencyInjection {
         services.AddTransient<TestLogDataService>();
         services.AddTransient<FirmwareDataService>();
         services.AddTransient<SavedStateDataService>();
+        services.AddTransient<QuickTestDataService>();
         return services;
     }
     

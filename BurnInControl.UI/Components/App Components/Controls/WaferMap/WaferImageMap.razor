@@ -1,4 +1,5 @@
 ﻿@using BurnInControl.UI.Data
+@using QuickTest.Data.DataTransfer
 @inject NotificationService NotificationService
 @rendermode InteractiveServer
 <style>
@@ -22,45 +23,32 @@
     }
 </svg>
 
-@*<area target="_self" alt="r1" title="r1" href="" coords="143,365,8" shape="circle" onClick="@(this.OnClick("r1"))">
-<area target="_self" alt="r2" title="r2" href="" coords="160,365,8" shape="circle">
-<area target="_self" alt="r3" title="r3" href="" coords="180,366,9" shape="circle">
-<area target="_self" alt="r4" title="r4" href="" coords="142,441,9" shape="circle">
-<area target="_self" alt="r5" title="r5" href="" coords="161,441,8" shape="circle">
-<area target="" alt="r6" title="r6" href="" coords="179,442,8" shape="circle">
-<area target="" alt="g1" title="g1" href="" coords="364,649,8" shape="circle">
-<area target="" alt="g2" title="g2" href="" coords="364,668,7" shape="circle">
-<area target="" alt="g3" title="g3" href="" coords="364,687,8" shape="circle">
-<area target="" alt="g4" title="g4" href="" coords="443,652,9" shape="circle">
-<area target="" alt="g5" title="g5" href="" coords="442,670,8" shape="circle">
-<area target="" alt="g6" title="g6" href="" coords="442,688,7" shape="circle">
-<area target="" alt="r1" title="r1" href="" coords="632,373,7" shape="circle">
-<area target="" alt="r2" title="r2" href="" coords="651,373,8" shape="circle">
-<area target="" alt="r3" title="r3" href="" coords="669,373,7" shape="circle">
-<area target="" alt="r4" title="r4" href="" coords="634,445,7" shape="circle">
-<area target="" alt="r5" title="r5" href="" coords="653,445,8" shape="circle">
-<area target="" alt="r6" title="r6" href="" coords="672,445,8" shape="circle">
-<area target="" alt="t1" title="t1" href="" coords="365,164,9" shape="circle">
-<area target="" alt="t2" title="t2" href="" coords="365,146,8" shape="circle">
-<area target="" alt="t3" title="t3" href="" coords="366,127,7" shape="circle">
-<area target="" alt="t4" title="t4" href="" coords="445,163,9" shape="circle">
-<area target="" alt="t5" title="t5" href="" coords="446,144,7" shape="circle">
-<area target="" alt="t6" title="t6" href="" coords="446,126,6" shape="circle">
-<area target="" alt="a" title="a" href="" coords="368,365,11" shape="circle">
-<area target="" alt="b" title="b" href="" coords="368,441,9" shape="circle">
-<area target="" alt="c" title="c" href="" coords="445,442,9" shape="circle">
-<area target="" alt="d" title="d" href="" coords="445,366,12" shape="circle">*@
-
-
-
 @code {
+    
+    [Parameter] public IEnumerable<Pad> Map { get; set; }
+    
+    private List<SvgCircle> _svgCircles = new List<SvgCircle>();
 
-    private List<SvgCircle> _svgCircles = new List<SvgCircle>() {
+    /*private List<SvgCircle> _svgCircles = new List<SvgCircle>() {
         new SvgCircle() { X = 143, Y = 365, Radius = 8,AltTex = "r1", PostBackValue = "r1",Fill = "grey",State = false,Opacity = "0"},
         new SvgCircle() { X = 160, Y = 365, Radius = 8,AltTex = "r2", PostBackValue = "r2",Fill = "grey",State = false,Opacity = "0" },
         new SvgCircle() { X = 180, Y = 365, Radius = 8,AltTex = "r3", PostBackValue = "r3",Fill = "grey",State = false,Opacity = "0" },
         new SvgCircle() { X = 142, Y = 441, Radius = 8,AltTex = "r4", PostBackValue = "r4",Fill = "grey",State = false,Opacity = "0" },
-    };
+    };*/
+
+    protected override Task OnParametersSetAsync() {
+        this._svgCircles = this.Map.Select(e => new SvgCircle() {
+            X = e.X,
+            Y = e.Y,
+            Radius = e.Radius,
+            AltTex = e.Identifier,
+            PostBackValue = e.Identifier,
+            Fill = "grey",
+            State = false,
+            Opacity = "0"
+        }).ToList();
+        return base.OnParametersSetAsync();
+    }
 
     private async Task CircleClickHandler(string id) {
         var area = this._svgCircles.FirstOrDefault(e => e.AltTex == id);

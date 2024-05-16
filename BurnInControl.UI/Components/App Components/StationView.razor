@@ -8,9 +8,11 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using BurnInControl.Data.BurnInTests.Wafers
 @using BurnInControl.HubDefinitions.HubTransports
+@using BurnInControl.UI.Components.App_Components.Dialogs
 @inject ILogger<StationView> _logger
 @inject StationHubConnection StationHubConnection
 @inject NotificationService NotificationService
+@inject DialogService DialogService
 @implements IAsyncDisposable
 @rendermode InteractiveServer
 
@@ -44,7 +46,9 @@
                                 </RadzenTabsItem>
                                 <RadzenTabsItem Text="Plots">
                                     @*<TwoInchWaferMapView></TwoInchWaferMapView>*@
-                                    <WaferImageMap></WaferImageMap>
+                                    <div class="rz-p-12 rz-text-align-center">
+                                        <RadzenButton Text="Open Selector" ButtonStyle="ButtonStyle.Secondary" Click=@OpenSelector />
+                                    </div>
                                 </RadzenTabsItem>
                             </Tabs>
                         </RadzenTabs>
@@ -120,6 +124,11 @@
         this._hubConnection.On<bool, string>(HubConstants.Events.OnTestSetup, this.OnTestSetupHandler);
         this._hubConnection.On<string>(HubConstants.Events.OnTestCompleted, this.OnTestCompletedHandler);
         //this._hubConnection.On<string>(HubConstants.Events.,)
+   }
+
+   private async Task OpenSelector() {
+       await DialogService.OpenAsync<PadSelector>("Select Pad",options:
+           new DialogOptions() { Width = "700px", Height = "512px", Resizable = true, Draggable = true });
    }
 
    private Task OnStationConnection(bool usbStatus) {

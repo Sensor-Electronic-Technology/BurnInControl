@@ -1,7 +1,7 @@
 ﻿using BurnInControl.Shared.ComDefinitions.MessagePacket;
 namespace BurnInControl.Data.ComponentConfiguration.StationController;
 
-public class StationConfiguration:IPacket {
+public class StationConfiguration:IPacket,IBurnStationConfiguration {
     public BurnTimerConfig BurnTimerConfig { get; set; }
     public ulong ComInterval { get; set; }
     public ulong UpdateInterval { get; set; }

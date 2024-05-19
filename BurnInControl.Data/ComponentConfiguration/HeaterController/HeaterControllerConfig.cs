@@ -2,7 +2,7 @@
 using BurnInControl.Shared.ComDefinitions.MessagePacket;
 namespace BurnInControl.Data.ComponentConfiguration.HeaterController;
 
-public class HeaterControllerConfig:IPacket {
+public class HeaterControllerConfig:IPacket,IBurnStationConfiguration {
     public List<HeaterConfiguration> HeaterConfigurations { get; set; }
     public ulong ReadInterval { get; set; }
     public int TemperatureSetPoint { get; set; }
@@ -25,5 +25,9 @@ public class HeaterControllerConfig:IPacket {
             heaterConfig3
         };
         this.ReadInterval = 250;
+    }
+
+    public HeaterControllerConfig Clone() {
+        return (HeaterControllerConfig)this.MemberwiseClone();
     }
 }

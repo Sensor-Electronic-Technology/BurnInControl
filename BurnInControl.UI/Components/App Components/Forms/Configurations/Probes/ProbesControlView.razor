@@ -1,38 +1,60 @@
 @using BurnInControl.Data.ComponentConfiguration.ProbeController
 @using BurnInControl.Shared
-@inject ConsoleWriter _consoleWriter
+@inject ConsoleWriter ConsoleWriter
 
-<RadzenFieldset Text="Probe Controller Configuration">
-    <RadzenTabs RenderMode="TabRenderMode.Client" TabPosition="Radzen.TabPosition.Left">
-        <Tabs>
-            <RadzenTabsItem Text="Probes 1-3" Selected="false">
-                <RadzenStack Orientation="Orientation.Horizontal">
-                    @for (int i = 0; i < (ControllerHardwareConstants.PROBE_COUNT / 2); i++) {
-                        <ProbeView ProbeConfig="@this.ProbeController.ProbeConfigurations[i]"
-                                   ProbeConfigChanged="@((config) => { this.ProbeController.ProbeConfigurations[config.ProbeNumber - 1] = config; })"/>
-                    }
-                </RadzenStack>
-            </RadzenTabsItem>
-            <RadzenTabsItem Text="Probes 4-6">
-                <RadzenStack Orientation="Orientation.Horizontal">
-                    @for (int i = 3; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
-                        <ProbeView ProbeConfig="@this.ProbeController.ProbeConfigurations[i]"
-                                   ProbeConfigChanged="@((config) => { this.ProbeController.ProbeConfigurations[config.ProbeNumber - 1] = config; })"/>
-                    }
-                </RadzenStack>
-            </RadzenTabsItem>
+@if (this.ProbeControllerConfig == null) {
+    <p>Loading...</p>
+} else {
+    <RadzenFieldset Text="Probe Controller Configuration">
+        <RadzenTabs RenderMode="TabRenderMode.Client" TabPosition="Radzen.TabPosition.Left">
+            <Tabs>
+                <RadzenTabsItem Text="Probes 1-3" Selected="false">
+                    <RadzenStack Orientation="Orientation.Horizontal">
+                        @for (int i = 0; i < (ControllerHardwareConstants.PROBE_COUNT / 2); i++) {
+                            <ProbeView ProbeConfig="@this.ProbeControllerConfig.ProbeConfigurations[i]"
+                                       ProbeConfigChanged="@((config) => { this.ProbeControllerConfig.ProbeConfigurations[config.ProbeNumber - 1] = config; })"/>
+                        }
+                    </RadzenStack>
+                </RadzenTabsItem>
+                <RadzenTabsItem Text="Probes 4-6">
+                    <RadzenStack Orientation="Orientation.Horizontal">
+                        @for (int i = 3; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
+                            <ProbeView ProbeConfig="@this.ProbeControllerConfig.ProbeConfigurations[i]"
+                                       ProbeConfigChanged="@((config) => { })"/>
+                        }
+                    </RadzenStack>
+                </RadzenTabsItem>
             
-        </Tabs>
-    </RadzenTabs>
-    <RadzenButton Text="Save" Click="@this.SaveConfig"/>
-</RadzenFieldset>
+            </Tabs>
+        </RadzenTabs>
+        <RadzenStack Orientation="Orientation.Horizontal">
+            <RadzenButton Text="Save" Click="@this.SaveHandler"  ButtonStyle="ButtonStyle.Info" Style="width: 125px;height: 50px;"/>
+            <RadzenButton Text="Cancel" Click="@this.CancelPressed" ButtonStyle="ButtonStyle.Danger" Style="width: 125px;height: 50px;"/>
+        </RadzenStack>
+    </RadzenFieldset>
+}
+
 
 
 @code {
-    private ProbeControllerConfig ProbeController = new ProbeControllerConfig();
-    
-    private Task SaveConfig() {
-        this._consoleWriter.LogMessage($"Sensor Voltage Pin: {ProbeController.ProbeConfigurations[0].VoltageSensorConfig.Pin}");
-        return Task.CompletedTask;
+   [Parameter] public ProbeControllerConfig? ProbeControllerConfig { get; set; }
+   [Parameter] public EventCallback<ProbeControllerConfig> ProbeControllerConfigChanged { get; set; }
+   [Parameter] public EventCallback CancelPressed { get; set; }
+   [Parameter] public EventCallback<ProbeControllerConfig> SavePressed { get; set; }
+   
+   private Task ProbeChangedHandler(ProbeConfig config) {
+       if (this.ProbeControllerConfig == null) {
+           return Task.CompletedTask;
+       }
+       this.ProbeControllerConfig.ProbeConfigurations[config.ProbeNumber - 1] = config;
+       this.ConsoleWriter.LogMessage($"Probe-{config.ProbeNumber} Config Changed",AlertStyle.Info);
+       return this.ProbeControllerConfigChanged.InvokeAsync(this.ProbeControllerConfig);
+   }
+
+   private Task SaveHandler() {
+       if (this.ProbeControllerConfig == null) {
+           return Task.CompletedTask;
+       }
+       return this.SavePressed.InvokeAsync(this.ProbeControllerConfig);
     }
 }

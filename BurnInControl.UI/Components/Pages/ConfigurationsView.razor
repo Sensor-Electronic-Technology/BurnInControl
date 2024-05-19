@@ -1,30 +1,157 @@
 ﻿@page "/config-view"
+@using System.Text.Json
 @using BurnInControl.Data.ComponentConfiguration
+@using BurnInControl.Data.ComponentConfiguration.HeaterController
+@using BurnInControl.Data.ComponentConfiguration.ProbeController
+@using BurnInControl.Data.ComponentConfiguration.StationController
+@using BurnInControl.HubDefinitions.Hubs
 @using BurnInControl.UI.Components.App_Components.Forms.Configurations.Heaters
 @using BurnInControl.UI.Components.App_Components.Forms.Configurations.Probes
-@using BurnInControl.Data.ComponentConfiguration.ProbeController
 @using BurnInControl.Infrastructure.StationModel
 @using BurnInControl.UI.Components.App_Components.Forms.Configurations.Station
-@inject StationDataService StationDataService
+@using Microsoft.AspNetCore.SignalR.Client
+@inject StationConfigDataService ConfigurationDataService
+@inject IConfiguration Configuration
+
 
 <RadzenStack Orientation="Orientation.Vertical">
-    <RadzenTabs SelectedIndex="0" RenderMode="TabRenderMode.Client">
-        <Tabs>
-            <RadzenTabsItem Text="Station Configuration">
-                <StationConfigView/>
-            </RadzenTabsItem>
-            <RadzenTabsItem Text="Heater Configuration">
-                <HeaterControlConfigView/>
-            </RadzenTabsItem>
-            <RadzenTabsItem Text="Probes Configuration">
-                <ProbesControlView/>
-            </RadzenTabsItem>
-        </Tabs>
-    </RadzenTabs>
-        <EventConsole @ref="@this._eventConsole"/>
+    @if(this._burnInConfiguration == null) {
+    <RadzenStack AlignItems="AlignItems.Center" Class="rz-m-12" Gap="2rem">
+        <RadzenText TextStyle="TextStyle.DisplayH3" TagName="TagName.H3">Loading......</RadzenText>
+        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large"/>
+    </RadzenStack>
+    } else {
+        <RadzenTabs SelectedIndex="0" RenderMode="TabRenderMode.Client">
+            <Tabs>
+                <RadzenTabsItem Text="Station Configuration">
+                    <StationConfigView StationConfig="@this._burnInConfiguration.StationConfiguration" CancelPressed="@this.CancelHandler" SavePressed="@Callback"/>
+                </RadzenTabsItem>
+                <RadzenTabsItem Text="Heater Configuration">
+                    <HeaterControlConfigView HeaterControllerConfig="@this._burnInConfiguration.HeaterConfig"
+                                             Canceled="@this.CancelHandler"
+                                             Saved="HeaterControllerConfigSaveHandler"/>
+                </RadzenTabsItem>
+                <RadzenTabsItem Text="Probes Configuration">
+                    <ProbesControlView ProbeControllerConfig="@this._burnInConfiguration.ProbesConfiguration"
+                                       CancelPressed="@this.CancelHandler"
+                                       SavePressed="Callback"/>
+                </RadzenTabsItem>
+            </Tabs>
+        </RadzenTabs>
+    }
+    <RadzenStack Orientation="Orientation.Horizontal">
+        <RadzenButton Text="Refresh" Click="@this.CancelHandler" ButtonStyle="ButtonStyle.Danger" Style="width: 125px;height: 50px;"/>
+    </RadzenStack>
+    <EventConsole @ref="@this._eventConsole"/>
 </RadzenStack>
+
+
 @code {
     private EventConsole _eventConsole;
+    private HubConnection? _hubConnection;
+    private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;
 
-    private BurnStationConfiguration _burnInConfiguration;
+    private BurnStationConfiguration? _burnInConfiguration;
+    private string _stationId = "S01";
+    
+    protected override async Task OnInitializedAsync() {
+        this.SetupHub();
+        Console.WriteLine($"StationId: {this.Configuration["StationId"]}");
+        this._stationId = this.Configuration["StationId"] ?? "S01";
+        this._burnInConfiguration = await this.ConfigurationDataService.GetStationBurnInConfig(this._stationId);
+        await this.StartConnection();
+    }
+
+    private void SetupHub() {
+        var hubAddress=Environment.GetEnvironmentVariable("StationHub");
+        //string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
+        string addr = "http://localhost:5066/hubs/station";
+        this._hubConnection = new HubConnectionBuilder()
+            .WithUrl(addr)
+            .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.Zero, 
+                TimeSpan.FromSeconds(10),TimeSpan.FromSeconds(30),
+                TimeSpan.FromSeconds(60) })
+            .Build();
+        this._hubConnection.On<string,bool,string>(HubConstants.Events.OnConfigSaveStatus,this.ReceiveSaveStatus);
+    }
+    
+    private async Task StartConnection() {
+        if (!this.Connected) {
+            try {
+                await this._hubConnection?.StartAsync();
+                if (this.Connected) {
+                    this._eventConsole.Log("Hub Connection Established",AlertStyle.Success);
+                    //this.Notify("Connected Established","Connected to Station Service",NotificationSeverity.Success);
+                } else {
+                    this._eventConsole.Log("Hub Connection Failed",AlertStyle.Danger);
+                    //this.Notify("Connected Failed","Failed to connect to Station Service",NotificationSeverity.Error,30000);
+                }
+            }  catch(Exception e) {
+                string error = e.Message;
+                if (e.InnerException != null) {
+                    error+="\n"+e.InnerException.Message;
+                }
+                //this._logger.LogError($"Hub Connection Failed, Exception: \n {error}");
+                this._eventConsole.Log("Hub Connection Failed",AlertStyle.Danger);
+                //this.Notify("Connected Failed",$"Failed to connect to Station Service. Exception thrown:\n{error}",
+                //    NotificationSeverity.Error,30000);
+            }
+        }
+    }
+
+    private async Task ReceiveSaveStatus(string type, bool success, string message) {
+        if (success) {
+            this._eventConsole.Log($"Configuration saved successfully, Type: {type}", AlertStyle.Success);
+        }else {
+            this._eventConsole.Log($"Failed to save configuration, Type: {type}", AlertStyle.Danger);
+        }
+        
+    }
+    
+    private Task SaveHandler() {
+        return Task.CompletedTask;
+    }
+    
+    private async Task CancelHandler() {
+        this._burnInConfiguration = null;
+        await InvokeAsync(StateHasChanged);
+        this._burnInConfiguration = await this.ConfigurationDataService.GetStationBurnInConfig(this._stationId);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HeaterControllerConfigSaveHandler(HeaterControllerConfig heaterControllerConfig) {
+        var result=await this.ConfigurationDataService.UpdateSubConfig(this._stationId, heaterControllerConfig);
+        var json=JsonSerializer.Serialize(heaterControllerConfig, new JsonSerializerOptions { WriteIndented = true });
+        Console.WriteLine(json);
+        if (result.IsError) {
+            this._eventConsole.Log("Error: Failed to save HeaterControllerConfiguration",AlertStyle.Danger);
+        } else {
+            this._eventConsole.Log("Success: Saved HeaterControllerConfiguration",AlertStyle.Success);
+            if (this.Connected) {
+                this._eventConsole.Log("Sending hub request",AlertStyle.Info);
+                await this._hubConnection.SendAsync(HubConstants.Methods.SendConfiguration, heaterControllerConfig);
+            } else {
+                this._eventConsole.Log("Warning: Service not connected,firmware configuration will not be updated",AlertStyle.Danger);
+            }
+ 
+        }
+    }
+
+    private async Task Callback(ProbeControllerConfig probeControllerConfig) {
+        var result = await this.ConfigurationDataService.UpdateSubConfig(this._stationId, probeControllerConfig);
+        if (result.IsError) {
+            this._eventConsole.Log("Error: Failed to save ProbeControllerConfig",AlertStyle.Danger);
+        } else {
+            this._eventConsole.Log("Success: Saved ProbeControllerConfig",AlertStyle.Success);
+        }
+    }
+
+    private async Task Callback(StationConfiguration stationConfig) {
+        var result = await this.ConfigurationDataService.UpdateSubConfig(this._stationId, stationConfig);
+        if (result.IsError) {
+            this._eventConsole.Log("Error: Failed to save StationConfiguration",AlertStyle.Danger);
+        } else {
+            this._eventConsole.Log("Success: Saved StationConfiguration",AlertStyle.Success);
+        }
+    }
 }

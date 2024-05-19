@@ -12,37 +12,25 @@
                              AlignItems="AlignItems.Center">
                     <ExponentialInput Label="Kp"
                                       Value="@this.PidConfig.Kp"
-                                      ValueChanged="@(async Task (val) => { this.PidConfig.Kp = val; await this.PidConfigChanged.InvokeAsync(this.PidConfig); })"/>
+                                      ValueChanged="@this.KpChangedHandler"/>
                     <ExponentialInput Label="Ki"
                                       Value="@this.PidConfig.Ki"
-                                      ValueChanged="@(async Task (val) => { this.PidConfig.Ki = val; await this.PidConfigChanged.InvokeAsync(this.PidConfig); })"/>
+                                      ValueChanged="@this.KiChangedHandler"/>
                 </RadzenStack>
                 <RadzenRow>
                     <ExponentialInput Label="Kd"
                                       Value="@this.PidConfig.Kd"
-                                      ValueChanged="@(async Task (val) => { this.PidConfig.Kd = val; await this.PidConfigChanged.InvokeAsync(this.PidConfig); })"/>
+                                      ValueChanged="@this.KdChangedHandler"/>
                 </RadzenRow>
-
             </RadzenStack>
-
         </RadzenFieldset>
         <RadzenFieldset Text="Window Size ms">
             <RadzenNumeric TValue="ulong" 
                            Step="100" 
                            Name="WindowSizeMs"
                            Value="@this.PidConfig.WindowSizeMs"
-                           ValueChanged="@(async Task (val) => { this.PidConfig.WindowSizeMs = val; await this.PidConfigChanged.InvokeAsync(this.PidConfig); })"/>
+                           ValueChanged="@this.WindowSizeChangedHandler"/>
         </RadzenFieldset>
-        @*<RadzenStack Orientation="Orientation.Horizontal"
-                     AlignItems="AlignItems.Center"
-                     JustifyContent="JustifyContent.Center">
-            <RadzenButton Text="Submit Changes"
-                          
-                          Click="@(() => PidConfigChanged.InvokeAsync(PidConfig))"/>
-            <RadzenButton Text="Revert"
-                          Click="RevertHandler"
-                          Disabled="@(!this._changed)"/>
-        </RadzenStack>*@
     </RadzenStack>
 
 </RadzenFieldset>
@@ -54,5 +42,25 @@
     
     [Parameter]
     public EventCallback<PidConfiguration> PidConfigChanged { get; set; }
+
+    private async Task KpChangedHandler(double newValue) {
+        this.PidConfig.Kp = newValue; 
+        await this.PidConfigChanged.InvokeAsync(this.PidConfig);
+    }
+    
+    private async Task KdChangedHandler(double newValue) {
+        this.PidConfig.Ki = newValue; 
+        await this.PidConfigChanged.InvokeAsync(this.PidConfig);
+    }
+    
+    private async Task KiChangedHandler(double newValue) {
+        this.PidConfig.Kd = newValue; 
+        await this.PidConfigChanged.InvokeAsync(this.PidConfig);
+    }
+    
+    private async Task WindowSizeChangedHandler(ulong newValue) {
+        this.PidConfig.WindowSizeMs = newValue; 
+        await this.PidConfigChanged.InvokeAsync(this.PidConfig); 
+    }
     
 }

@@ -2,38 +2,44 @@
 @using System.Globalization
 
 @*<RadzenFieldset Text="@this.Label" Style="border: 5px solid #3a6d7c">*@
-<RadzenTabsItem Text="@this.Label" @key="@this.Label">
-    <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
-        <RadzenText TextStyle="TextStyle.H4" Text="@this.Label"></RadzenText>
-        <RadzenStack Orientation="Orientation.Horizontal"
-                     AlignItems="AlignItems.Start"
-                     JustifyContent="JustifyContent.SpaceEvenly">
-            <NtcConfigView NtcConfig="@this.HeaterConfig.NtcConfig" NtcConfigChanged="@this.NtcConfigChanged"/>
-            <PidConfigView PidConfig="@this.HeaterConfig.PidConfig" PidConfigChanged="@this.PidConfigChangedHandler"/>
+@if (this.HeaterConfig == null) {
+    <p>Loading...</p>
+} else {
+    <RadzenTabsItem Text="@this.Label" @key="@this.Label">
+        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
+            <RadzenText TextStyle="TextStyle.H4" Text="@this.Label"></RadzenText>
+            <RadzenStack Orientation="Orientation.Horizontal"
+                         AlignItems="AlignItems.Start"
+                         JustifyContent="JustifyContent.SpaceEvenly">
+
+                <NtcConfigView NtcConfig="@this.HeaterConfig.NtcConfig" NtcConfigChanged="@this.NtcConfigChanged"/>
+                <PidConfigView PidConfig="@this.HeaterConfig.PidConfig" PidConfigChanged="@this.PidConfigChangedHandler"/>
+            </RadzenStack>
         </RadzenStack>
-        <RadzenStack Orientation="Orientation.Horizontal">
-            <RadzenButton Text="Save" Size="ButtonSize.Large" ButtonStyle="ButtonStyle.Info"/>
-            <RadzenButton Text="Cancel" Size="ButtonSize.Large" ButtonStyle="ButtonStyle.Info"/>
-        </RadzenStack>
-    </RadzenStack>
-</RadzenTabsItem>
+    </RadzenTabsItem>
+}
+
 @*</RadzenFieldset>*@
 @code{
     [Parameter]
     public string Label { get; set; }= "Heater Configuration";
     [Parameter]
-    public HeaterConfiguration HeaterConfig { get; set; }
-    
+    public HeaterConfiguration? HeaterConfig { get; set; }
     [Parameter]
     public EventCallback<HeaterConfiguration> HeaterConfigChanged { get; set; }
 
     private async Task NtcConfigChanged(NtcConfiguration config) {
-        this.HeaterConfig.NtcConfig = config;
-        await this.HeaterConfigChanged.InvokeAsync(this.HeaterConfig);
+        if (this.HeaterConfig != null) {
+            this.HeaterConfig.NtcConfig = config;
+            await this.HeaterConfigChanged.InvokeAsync(this.HeaterConfig);
+        }
     }
 
     private async Task PidConfigChangedHandler(PidConfiguration config) {
-        this.HeaterConfig.PidConfig = config;
-        await this.HeaterConfigChanged.InvokeAsync(this.HeaterConfig);
+        if (this.HeaterConfig != null) {
+            this.HeaterConfig.PidConfig = config;
+            await this.HeaterConfigChanged.InvokeAsync(this.HeaterConfig);
+        }
     }
+    
 }

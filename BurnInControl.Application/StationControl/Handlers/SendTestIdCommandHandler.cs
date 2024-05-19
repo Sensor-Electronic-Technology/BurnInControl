@@ -8,7 +8,7 @@ namespace BurnInControl.Application.StationControl.Handlers;
 
 public class SendTestIdCommandHandler(IStationController controller) : IRequestHandler<SendTestIdCommand> {
     public Task Handle(SendTestIdCommand request, CancellationToken cancellationToken) {
-        return controller.Send(StationMsgPrefix.SendTestId, new TestIdPacket() {
+        return controller.Send(StationMsgPrefix.SendTestIdPrefix, new TestIdPacket() {
             TestId = request.TestId
         });
     }

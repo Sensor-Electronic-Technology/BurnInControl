@@ -1,6 +1,6 @@
 ﻿@using BurnInControl.Data.ComponentConfiguration.StationController
 
-<RadzenTemplateForm Data="@this.TimerConfig" Style="width: fit-content">
+<RadzenTemplateForm Data="@this.TimerConfig">
     <RadzenFieldset Text="NTC Configuration" Style="width: fit-content; border: 5px solid #45565e">
         <RadzenStack Gap=".1rem"
                      JustifyContent="JustifyContent.Center"
@@ -9,18 +9,21 @@
                          Gap=".5rem"
                          JustifyContent="JustifyContent.Center"
                          AlignItems="AlignItems.Center">
-                <RadzenFormField Text="Time 60mA(mins)">
+                <RadzenFormField Text="Time 60mA(secs)">
                     <RadzenNumeric TValue="ulong"
-                                   Value="@this.TimerConfig.Time60mASec"/>
+                                   Value="@this.TimerConfig.Time60mASec" 
+                                   ValueChanged="Time60mAChangedHandler"/>
                 </RadzenFormField>
-                <RadzenFormField Text="Time 120mA(mins)">
+                <RadzenFormField Text="Time 120mA(secs)">
                     <RadzenNumeric TValue="ulong"
-                                   Value="@this.TimerConfig.Time120mASec"/>
+                                   Value="@this.TimerConfig.Time120mASec"
+                                   ValueChanged="Time120mAChangedHandler"/>
                 </RadzenFormField>
             </RadzenStack>
-            <RadzenFormField Text="Time 150mA(mins)">
+            <RadzenFormField Text="Time 150mA(secs)">
                 <RadzenNumeric TValue="ulong"
-                               Value="@this.TimerConfig.Time120mASec"/>
+                               Value="@this.TimerConfig.Time150mASec"
+                               ValueChanged="Time150mAChangedHandler"/>
             </RadzenFormField>
         </RadzenStack>
     </RadzenFieldset>
@@ -29,7 +32,19 @@
 @code {
     [Parameter] public BurnTimerConfig TimerConfig { get; set; }
     [Parameter] public EventCallback<BurnTimerConfig> TimerConfigChanged { get; set; }
-    
 
-    
+
+    private Task Time60mAChangedHandler(ulong newValue) {
+        this.TimerConfig.Time60mASec = newValue;
+        return this.TimerConfigChanged.InvokeAsync(this.TimerConfig);
+    }
+    private Task Time120mAChangedHandler(ulong newValue) {
+        this.TimerConfig.Time120mASec = newValue;
+        return this.TimerConfigChanged.InvokeAsync(this.TimerConfig);
+    }
+    private Task Time150mAChangedHandler(ulong newValue) {
+        this.TimerConfig.Time150mASec = newValue;
+        return this.TimerConfigChanged.InvokeAsync(this.TimerConfig);
+    }
+
 }

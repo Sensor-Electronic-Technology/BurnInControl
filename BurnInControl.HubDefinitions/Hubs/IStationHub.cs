@@ -16,6 +16,7 @@ public interface IStationHub {
     Task OnSerialNotifyMessage(string message);
     Task OnSerialErrorMessage(string message);
     Task OnSerialInitMessage(string message);
+    Task OnConfigSaveStatus(string type,bool success, string message);
 
 #endregion  
 

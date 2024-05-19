@@ -50,7 +50,8 @@ public static class DependencyInjection {
             typeof(SendSavedStateCommandHandler).Assembly,
             typeof(HardStopCommandHandler).Assembly,
             typeof(StartFromLoadCommandHandler).Assembly,
-            typeof(ConnectionStatusHandler).Assembly);
+            typeof(ConnectionStatusHandler).Assembly,
+            typeof(SendConfigurationHandler).Assembly);
         });
         services.AddScheduler();
         return services;

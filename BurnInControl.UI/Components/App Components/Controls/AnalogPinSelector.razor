@@ -19,7 +19,6 @@
     
     protected override Task OnParametersSetAsync() {
         this._selectedAnalogPin = this._pins.FirstOrDefault(e => e == StationAnalogPin.FromValue(AnalogPin).Name);
-        InvokeAsync(StateHasChanged);
         return base.OnParametersSetAsync();
     }
     

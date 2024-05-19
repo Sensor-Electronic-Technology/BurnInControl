@@ -1,6 +1,8 @@
 ﻿using BurnInControl.Application.BurnInTest.Messages;
 using BurnInControl.Application.StationControl.Messages;
 using BurnInControl.Data.BurnInTests.Wafers;
+using BurnInControl.Data.ComponentConfiguration;
+using BurnInControl.Data.ComponentConfiguration.HeaterController;
 using BurnInControl.Data.StationModel.Components;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Station;
@@ -23,6 +25,7 @@ public class StationHub:Hub<IStationHub> {
     }
     
     public async Task SendSerialCom(StationSerialData serialData) {
+        
         await this.Clients.All.OnStationData(serialData);
     }
     
@@ -38,11 +41,17 @@ public class StationHub:Hub<IStationHub> {
         await this._mediator.Send(new ConnectionAction(){Action=ConnectAction.Disconnect});
     }
     public async Task SendCommand(StationCommand command) {
+        Console.WriteLine("Received serial data from client.");
         await this._mediator.Send(new SendStationCommand(){Command = command});
     }
     
     public Task SetupTest(TestSetupTransport transport) {
         return this._mediator.Send(new TestSetupCommand() { TestSetupTransport = transport });
+    }
+
+    public Task SendConfiguration(HeaterControllerConfig configuration) {
+        Console.WriteLine("Received configuration from client."); 
+        return this._mediator.Send(new SendConfiguration() { Configuration = configuration });
     }
     
     public Task OnUsbConnectFailed(string message) {

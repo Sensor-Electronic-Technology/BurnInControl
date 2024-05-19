@@ -1,69 +1,118 @@
 ﻿@using BurnInControl.Data.ComponentConfiguration
 @using BurnInControl.Data.ComponentConfiguration.StationController
+@inject ConsoleWriter ConsoleWriter
 
-
-<RadzenTemplateForm Data="@this.StationConfig" Style="width: fit-content">
-    <RadzenFieldset Text="Station Configuration" Style="width: fit-content; border: 5px solid #45565e">
-        <RadzenStack Gap=".1rem"
-                     Orientation="Orientation.Vertical"
-                     JustifyContent="JustifyContent.Center"
-                     AlignItems="AlignItems.Center">
-            <RadzenStack Orientation="Orientation.Vertical"
-                         Gap=".5rem"
+@if (this.StationConfig == null) {
+    <p>Loading...</p>
+} else {
+    <RadzenTemplateForm Data="@this.StationConfig" Style="width: fit-content">
+        <RadzenFieldset Text="Station Configuration" Style="width: fit-content; border: 5px solid #45565e">
+            <RadzenStack Gap=".5rem"
+                         Orientation="Orientation.Vertical"
                          JustifyContent="JustifyContent.Center"
                          AlignItems="AlignItems.Center">
-                <BurnTimerConfigView @bind-TimerConfig="@this.StationConfig.BurnTimerConfig" />
-                <RadzenStack Orientation="Orientation.Horizontal">
-                    <RadzenFormField Text="Com Interval(ms)">
-                        <RadzenNumeric TValue="ulong" Label="Com Interval(ms)"
-                                       @bind-Value="@this.StationConfig.ComInterval"/>
-                    </RadzenFormField>
-                    <RadzenFormField Text="Update Interval(ms)">
-                        <RadzenNumeric TValue="ulong" Label="Update Interval(ms)"
-                                       @bind-Value="@this.StationConfig.UpdateInterval"/>
-                    </RadzenFormField>
+                <RadzenStack Orientation="Orientation.Vertical"
+                             Gap=".5rem"
+                             JustifyContent="JustifyContent.Center"
+                             AlignItems="AlignItems.Center">
+                    <BurnTimerConfigView TimerConfig="@this.StationConfig.BurnTimerConfig" 
+                                         TimerConfigChanged="TimerConfigChangedHandler" />
+                    <RadzenStack Orientation="Orientation.Horizontal">
+                        <RadzenFormField Text="Com Interval(ms)">
+                            <RadzenNumeric TValue="ulong" Label="Com Interval(ms)"
+                                           Value="@this.StationConfig.ComInterval"
+                                           ValueChanged="@this.ComIntervalChangedHandler"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Update Interval(ms)">
+                            <RadzenNumeric TValue="ulong" Label="Update Interval(ms)"
+                                           Value="@this.StationConfig.UpdateInterval"
+                                           ValueChanged="@this.UpdateIntervalChangedHandler"/>
+                        </RadzenFormField>
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal">
+                        <RadzenFormField Text="Log Interval(ms)">
+                            <RadzenNumeric TValue="ulong"
+                                           Value="@this.StationConfig.LogInterval"
+                                           ValueChanged="@this.LogIntervalChangedHandler"/>
+                        </RadzenFormField>
+                        <RadzenFormField Text="Version Interval(ms)">
+                            <RadzenNumeric TValue="ulong" Label="Version Interval(ms)"
+                                           Value="@this.StationConfig.VersionInterval"
+                                           ValueChanged="@this.VersionIntervalChangedHandler"/>
+                        </RadzenFormField>
+                    </RadzenStack>
                 </RadzenStack>
-                <RadzenStack Orientation="Orientation.Horizontal">
-                    <RadzenFormField Text="Log Interval(ms)">
-                        <RadzenNumeric TValue="ulong"
-                                       @bind-Value="@this.StationConfig.LogInterval"/>
-                    </RadzenFormField>
-                    <RadzenFormField Text="Version Interval(ms)">
-                        <RadzenNumeric TValue="ulong" Label="Version Interval(ms)"
-                                       @bind-Value="@this.StationConfig.VersionInterval"/>
-                    </RadzenFormField>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="10">
+                    <RadzenButton Text="Save" Click="@this.SaveHandler"  ButtonStyle="ButtonStyle.Info" Style="width: 125px;height: 50px;"/>
+                    <RadzenButton Text="Cancel" Click="@this.CancelPressed" ButtonStyle="ButtonStyle.Danger" Style="width: 125px;height: 50px;"/>
                 </RadzenStack>
             </RadzenStack>
-            <RadzenStack Orientation="Orientation.Horizontal">
-                <RadzenButton Text="Save" Click="@this.SaveHandler" Style="margin-top: .5rem; width: 150px;"/>
-                <RadzenButton Text="Cancel" Click="@this.CancelHandler" Style="margin-top: .5rem;width: 150px;"/>
-            </RadzenStack>
-        </RadzenStack>
-    </RadzenFieldset>
-</RadzenTemplateForm>
-
+        </RadzenFieldset>
+    </RadzenTemplateForm>
+}
 @code {
-    [Parameter] public StationConfiguration StationConfig { get; set; }=new StationConfiguration();
+    [Parameter] public StationConfiguration? StationConfig { get; set; }=new StationConfiguration();
     [Parameter] public EventCallback<StationConfiguration> StationConfigChanged { get; set; }
-
-    private StationConfiguration _stationConfigUnModified;
-
-    protected override Task OnParametersSetAsync() {
-        _stationConfigUnModified = StationConfig.Clone();
-        return base.OnParametersSetAsync();
-    }
-
-    public async Task ConfigChanged() {
-        await this.StationConfigChanged.InvokeAsync(this.StationConfig);
-    }
-
-    public Task SaveHandler() {
-        return this.StationConfigChanged.InvokeAsync(this.StationConfig);   
-    }
-
-    public Task CancelHandler() {
-        this.StationConfig = this._stationConfigUnModified.Clone();
-        return InvokeAsync(StateHasChanged);
+    [Parameter] public EventCallback CancelPressed { get; set; }
+    [Parameter] public EventCallback<StationConfiguration> SavePressed { get; set; }
+    
+    private Task SaveHandler() {
+        if(this.StationConfig == null) {
+            this.ConsoleWriter.LogMessage("Error: When saved pressed, Station Configuration is null", 
+                AlertStyle.Danger);
+            return Task.CompletedTask;
+        }
+        return this.SavePressed.InvokeAsync(this.StationConfig); 
     }
     
+    private Task ComIntervalChangedHandler(ulong newValue) {
+        if(this.StationConfig == null) {
+            this.ConsoleWriter.LogMessage("Error: When ComInterval changed, Station Configuration is null",
+                AlertStyle.Danger);
+            return Task.CompletedTask;
+        }
+        this.StationConfig.ComInterval = newValue;
+        return this.StationConfigChanged.InvokeAsync(this.StationConfig);
+    }
+    
+    private Task LogIntervalChangedHandler(ulong newValue) {
+        if(this.StationConfig == null) {
+            this.ConsoleWriter.LogMessage("Error: When ComInterval changed, Station Configuration is null",
+                AlertStyle.Danger);
+            return Task.CompletedTask;
+        }
+        this.StationConfig.LogInterval = newValue;
+        return this.StationConfigChanged.InvokeAsync(this.StationConfig);
+    }
+    
+    private Task VersionIntervalChangedHandler(ulong newValue) {
+        if(this.StationConfig == null) {
+            this.ConsoleWriter.LogMessage("Error: When VersionInterval changed, Station Configuration is null",
+                AlertStyle.Danger);
+            return Task.CompletedTask;
+        }
+        this.StationConfig.VersionInterval = newValue;
+        return this.StationConfigChanged.InvokeAsync(this.StationConfig);
+    }
+    
+    private Task UpdateIntervalChangedHandler(ulong newValue) {
+        if(this.StationConfig == null) {
+            this.ConsoleWriter.LogMessage("Error: When UpdateInterval changed, Station Configuration is null",
+                AlertStyle.Danger);
+            return Task.CompletedTask;
+        }
+        this.StationConfig.UpdateInterval = newValue;
+        return this.StationConfigChanged.InvokeAsync(this.StationConfig);
+    }
+    
+    private Task TimerConfigChangedHandler(BurnTimerConfig timerConfig) {
+        if(this.StationConfig == null) {
+            this.ConsoleWriter.LogMessage("Error: When TimerConfig changed, Station Configuration is null",
+                AlertStyle.Danger);
+            return Task.CompletedTask;
+        }
+        this.StationConfig.BurnTimerConfig = timerConfig;
+        return this.StationConfigChanged.InvokeAsync(this.StationConfig);
+    }
+
 }

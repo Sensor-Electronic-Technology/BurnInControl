@@ -19,6 +19,7 @@ public static class DependencyInjection {
         services.AddTransient<FirmwareDataService>();
         services.AddTransient<SavedStateDataService>();
         services.AddTransient<QuickTestDataService>();
+        services.AddTransient<StationConfigDataService>();
         return services;
     }
     

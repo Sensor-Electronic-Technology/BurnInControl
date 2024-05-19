@@ -6,7 +6,7 @@ public class NtcConfiguration {
     public double BCoeff { get; set; } = 0;
     public double CCoeff { get; set; } = 0;
     public sbyte Pin { get; set; } = StationAnalogPin.A01.Value;
-    public double fWeight { get; set; }
+    public double fWeight { get; set; } = .01;
     public NtcConfiguration(){}
     public NtcConfiguration(double a, double b, double c, sbyte pin, double filter) {
         this.ACoeff = a;

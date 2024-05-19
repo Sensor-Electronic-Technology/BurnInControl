@@ -13,7 +13,7 @@
                 <ExponentialInput Label="ACoeff" 
                                   Value="@this.NtcConfig.ACoeff"
                                   ValueChanged="@(async Task (val) => { this.NtcConfig.ACoeff = val; await this.NtcConfigChanged.InvokeAsync(this.NtcConfig); })"/>
-                <ExponentialInput Label="BCoeff" 
+                <ExponentialInput Label="BCoeff"
                                   Value="@this.NtcConfig.BCoeff"
                                   ValueChanged="@(async Task (val) => { this.NtcConfig.BCoeff = val; await this.NtcConfigChanged.InvokeAsync(this.NtcConfig); })"/>
             </RadzenStack>
@@ -26,7 +26,7 @@
                 <AnalogPinSelector AnalogPin="@this.NtcConfig.Pin" 
                                    AnalogPinChanged="@this.AnalogPinChangedHandler"/>
                 <FilterInput FilterWeight="@this.NtcConfig.fWeight"
-                             FilterWeightChanged="@(async Task (val) => { this.NtcConfig.fWeight = val; await this.NtcConfigChanged.InvokeAsync(this.NtcConfig);})"/>
+                             FilterWeightChanged="@this.FilterWeightChangedHandler"/>
             </RadzenStack>
         </RadzenStack>
     </RadzenFieldset>
@@ -39,6 +39,12 @@
     
     [Parameter]
     public EventCallback<NtcConfiguration> NtcConfigChanged { get; set; }
+    
+    private async Task FilterWeightChangedHandler(double newValue) {
+        Console.WriteLine($"FilterWeightChanged: {newValue}");
+        this.NtcConfig.fWeight = newValue;
+        await this.NtcConfigChanged.InvokeAsync(this.NtcConfig);
+    }
     
     private async Task ConfigChanged() {
         await this.NtcConfigChanged.InvokeAsync(this.NtcConfig);

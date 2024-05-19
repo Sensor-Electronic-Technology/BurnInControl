@@ -17,6 +17,7 @@ public static class HubConstants {
         public static string OnUsbConnectFailed => "OnUsbConnectFailed";
         public static string OnUsbDisconnectFailed => "OnUsbDisconnectFailed";
         public static string OnExecuteCommand => "OnExecuteCommand";
+        public static string OnConfigSaveStatus => "OnConfigSaveStatus";
 
         public static string OnTestStarted => "OnTestStarted";
         public static string OnTestStartedFrom => "OnTestStartedFrom";
@@ -37,6 +38,7 @@ public static class HubConstants {
         public static string ConnectUsb => "ConnectUsb";
         public static string DisconnectUsb => "DisconnectUsb";
         public static string SetupTest=> "SetupTest";
+        public static string SendConfiguration => "SendConfiguration";
         public static string SendHeaterConfig => "SendHeaterConfig";
         public static string SendProbeConfig => "SendProbeConfig";
         public static string SendStationConfig => "SendStationConfig";

@@ -13,6 +13,6 @@ public class SendSavedStateCommandHandler:IRequestHandler<SendSavedStateCommand>
     }
 
     public Task Handle(SendSavedStateCommand request, CancellationToken cancellationToken) {
-        return this._controller.Send(StationMsgPrefix.LoadState, request.SavedState);
+        return this._controller.Send(StationMsgPrefix.LoadStatePrefix, request.SavedState);
     }
 }

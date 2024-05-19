@@ -2,7 +2,7 @@
 using BurnInControl.Shared.ComDefinitions.MessagePacket;
 namespace BurnInControl.Data.ComponentConfiguration.ProbeController;
 
-public class ProbeControllerConfig:IPacket {
+public class ProbeControllerConfig:IPacket,IBurnStationConfiguration {
 
     public CurrentSelectorConfig CurrentSelectConfig { get; set; }
     public ProbeConfig[] ProbeConfigurations { get; set; }

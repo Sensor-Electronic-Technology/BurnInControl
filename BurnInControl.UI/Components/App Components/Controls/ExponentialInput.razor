@@ -2,22 +2,15 @@
                     Data=@this.StrValue 
                     Submit="@this.Submit" 
                     Style="width: fit-content">
-    <RadzenFieldset Text="@this.Label" Style="width: fit-content">
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-            <RadzenStack Gap="0">
+    <RadzenFormField Text="@this.Label" Variant="Variant.Text" AllowFloatingLabel="true" Style="width: fit-content;">
                 <RadzenTextBox @bind-Value="@this.StrValue"
-                               Name="Input" Style="width: 100px; height: 36px"/>
-                <RadzenCustomValidator Component="Input" Validator="@Validate" Text="Invalid Number"/>
-            </RadzenStack>
-            <RadzenButton Style="height: 36px"
-                          ButtonType="ButtonType.Submit"
-                          Icon="save"/>
-        </RadzenStack>
-    </RadzenFieldset>
+                               Name="@this.Label" Style="width: 100px; height: 36px"/>
+                <RadzenCustomValidator Component="@this.Label" Validator="@Validate" Visible="true" Popup="false" Text="Invalid Number"/>
+    </RadzenFormField>
 </RadzenTemplateForm>
 
 
-
+@*ValueChanged="@((val) => { this.StrValue = val; this.Validate(); })"*@
 
 @code {
     [Parameter]
@@ -39,8 +32,10 @@
     private bool Validate() {
         if (double.TryParse(this.StrValue, out double parsed)) {
             this.Value= parsed;
+            Console.WriteLine($"{DateTime.Now}: Validated");
             return true;
         }
+        Console.WriteLine($"{DateTime.Now}: Invalid Number");
         return false;
     }
     

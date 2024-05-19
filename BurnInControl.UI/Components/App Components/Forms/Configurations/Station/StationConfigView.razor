@@ -1,0 +1,69 @@
+﻿@using BurnInControl.Data.ComponentConfiguration
+@using BurnInControl.Data.ComponentConfiguration.StationController
+
+
+<RadzenTemplateForm Data="@this.StationConfig" Style="width: fit-content">
+    <RadzenFieldset Text="Station Configuration" Style="width: fit-content; border: 5px solid #45565e">
+        <RadzenStack Gap=".1rem"
+                     Orientation="Orientation.Vertical"
+                     JustifyContent="JustifyContent.Center"
+                     AlignItems="AlignItems.Center">
+            <RadzenStack Orientation="Orientation.Vertical"
+                         Gap=".5rem"
+                         JustifyContent="JustifyContent.Center"
+                         AlignItems="AlignItems.Center">
+                <BurnTimerConfigView @bind-TimerConfig="@this.StationConfig.BurnTimerConfig" />
+                <RadzenStack Orientation="Orientation.Horizontal">
+                    <RadzenFormField Text="Com Interval(ms)">
+                        <RadzenNumeric TValue="ulong" Label="Com Interval(ms)"
+                                       @bind-Value="@this.StationConfig.ComInterval"/>
+                    </RadzenFormField>
+                    <RadzenFormField Text="Update Interval(ms)">
+                        <RadzenNumeric TValue="ulong" Label="Update Interval(ms)"
+                                       @bind-Value="@this.StationConfig.UpdateInterval"/>
+                    </RadzenFormField>
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal">
+                    <RadzenFormField Text="Log Interval(ms)">
+                        <RadzenNumeric TValue="ulong"
+                                       @bind-Value="@this.StationConfig.LogInterval"/>
+                    </RadzenFormField>
+                    <RadzenFormField Text="Version Interval(ms)">
+                        <RadzenNumeric TValue="ulong" Label="Version Interval(ms)"
+                                       @bind-Value="@this.StationConfig.VersionInterval"/>
+                    </RadzenFormField>
+                </RadzenStack>
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenButton Text="Save" Click="@this.SaveHandler" Style="margin-top: .5rem; width: 150px;"/>
+                <RadzenButton Text="Cancel" Click="@this.CancelHandler" Style="margin-top: .5rem;width: 150px;"/>
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenFieldset>
+</RadzenTemplateForm>
+
+@code {
+    [Parameter] public StationConfiguration StationConfig { get; set; }=new StationConfiguration();
+    [Parameter] public EventCallback<StationConfiguration> StationConfigChanged { get; set; }
+
+    private StationConfiguration _stationConfigUnModified;
+
+    protected override Task OnParametersSetAsync() {
+        _stationConfigUnModified = StationConfig.Clone();
+        return base.OnParametersSetAsync();
+    }
+
+    public async Task ConfigChanged() {
+        await this.StationConfigChanged.InvokeAsync(this.StationConfig);
+    }
+
+    public Task SaveHandler() {
+        return this.StationConfigChanged.InvokeAsync(this.StationConfig);   
+    }
+
+    public Task CancelHandler() {
+        this.StationConfig = this._stationConfigUnModified.Clone();
+        return InvokeAsync(StateHasChanged);
+    }
+    
+}

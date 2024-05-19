@@ -14,6 +14,16 @@ public class StationConfiguration:IPacket {
         this.LogInterval = logInterval;
         this.VersionInterval = verInterval;
     }
-    
-    public StationConfiguration(){}
+
+    public StationConfiguration() {
+        this.BurnTimerConfig = new BurnTimerConfig();
+        this.ComInterval = 1000;
+        this.UpdateInterval = 500;
+        this.LogInterval = 300000;
+        this.VersionInterval=3600000;
+    }
+
+    public StationConfiguration Clone() {
+        return (StationConfiguration)MemberwiseClone();
+    }
 }

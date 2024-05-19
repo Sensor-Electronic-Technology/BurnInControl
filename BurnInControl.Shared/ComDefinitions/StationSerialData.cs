@@ -6,9 +6,7 @@ public class StationSerialData {
     public List<double> Temperatures { get; set; } = new List<double>(){0,0,0};
     public List<ulong> ProbeRuntimes { get; set; } = new List<ulong>(){0,0,0,0,0,0};
     public List<bool> ProbeRunTimeOkay { get; set; } = new List<bool>(){false,false,false,false,false,false};
-    public bool Heater1State { get; set; }
-    public bool Heater2State { get; set; }
-    public bool Heater3State { get; set; }
+    public List<bool> HeaterStates { get; set; } = new List<bool>(){false,false,false};
     public int CurrentSetPoint { get; set; }
     public int TemperatureSetPoint { get; set; }
     public ulong RuntimeSeconds { get; set; }

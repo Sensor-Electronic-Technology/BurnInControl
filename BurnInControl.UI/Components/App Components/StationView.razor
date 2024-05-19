@@ -39,7 +39,8 @@
                                 <RadzenTabsItem Text="Live" Selected="true">
                                     <StationDisplays Voltages="@this._data.Voltages" 
                                                      Currents="@this._data.Currents" 
-                                                     Temps="@this._data.Temperatures"/>
+                                                     Temps="@this._data.Temperatures"
+                                                     TempStates="@this._data.HeaterStates"/>
                                 </RadzenTabsItem>
                                 <RadzenTabsItem Text="Test Setup">
                                     <TestSetup Save="SaveClickedHandler"></TestSetup>

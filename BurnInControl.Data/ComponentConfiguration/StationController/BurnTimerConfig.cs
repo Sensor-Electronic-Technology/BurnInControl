@@ -10,5 +10,10 @@ public class BurnTimerConfig {
         this.Time150mASec = t150;
         
     }
-    public BurnTimerConfig(){}
+
+    public BurnTimerConfig() {
+        this.Time60mASec = 72000;
+        this.Time120mASec = 72000;
+        this.Time150mASec = 25200;
+    }
 }

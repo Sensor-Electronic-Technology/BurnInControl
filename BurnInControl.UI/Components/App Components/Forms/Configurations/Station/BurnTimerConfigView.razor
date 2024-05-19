@@ -1,0 +1,35 @@
+﻿@using BurnInControl.Data.ComponentConfiguration.StationController
+
+<RadzenTemplateForm Data="@this.TimerConfig" Style="width: fit-content">
+    <RadzenFieldset Text="NTC Configuration" Style="width: fit-content; border: 5px solid #45565e">
+        <RadzenStack Gap=".1rem"
+                     JustifyContent="JustifyContent.Center"
+                     AlignItems="AlignItems.Center">
+            <RadzenStack Orientation="Orientation.Horizontal"
+                         Gap=".5rem"
+                         JustifyContent="JustifyContent.Center"
+                         AlignItems="AlignItems.Center">
+                <RadzenFormField Text="Time 60mA(mins)">
+                    <RadzenNumeric TValue="ulong"
+                                   Value="@this.TimerConfig.Time60mASec"/>
+                </RadzenFormField>
+                <RadzenFormField Text="Time 120mA(mins)">
+                    <RadzenNumeric TValue="ulong"
+                                   Value="@this.TimerConfig.Time120mASec"/>
+                </RadzenFormField>
+            </RadzenStack>
+            <RadzenFormField Text="Time 150mA(mins)">
+                <RadzenNumeric TValue="ulong"
+                               Value="@this.TimerConfig.Time120mASec"/>
+            </RadzenFormField>
+        </RadzenStack>
+    </RadzenFieldset>
+</RadzenTemplateForm>
+
+@code {
+    [Parameter] public BurnTimerConfig TimerConfig { get; set; }
+    [Parameter] public EventCallback<BurnTimerConfig> TimerConfigChanged { get; set; }
+    
+
+    
+}

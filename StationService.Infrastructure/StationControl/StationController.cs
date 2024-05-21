@@ -53,7 +53,6 @@ public class StationController:IStationController,IDisposable {
             this._cancellationTokenSource = new CancellationTokenSource();
             this.StartReaderAsync(this._cancellationTokenSource.Token)
                 .SafeFireAndForget(e => {
-
                     this._hubContext.Clients.All.OnUsbConnectFailed($"Channel read error: Exception: \n{e.ToErrorMessage()}");
                     this._logger.LogError($"Channel read error: Exception: \n{e.ToErrorMessage()}");
                 });

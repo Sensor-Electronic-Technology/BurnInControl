@@ -1,14 +1,29 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using System.Diagnostics;
+using System.IO.Ports;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Channels;
+using BurnInControl.ConsoleTesting;
 using BurnInControl.Data.StationModel;
 using BurnInControl.Infrastructure.StationModel;
 using MongoDB.Driver;
 using BurnInControl.Data.BurnInTests;
+using BurnInControl.Data.ComponentConfiguration;
+using BurnInControl.Data.ComponentConfiguration.HeaterController;
+using BurnInControl.Data.ComponentConfiguration.ProbeController;
+using BurnInControl.Data.ComponentConfiguration.StationController;
+using BurnInControl.Infrastructure;
+using BurnInControl.Shared.ComDefinitions.MessagePacket;
+using BurnInControl.Shared.ComDefinitions.Station;
 using BurnInControl.Shared.FirmwareData;
+using Microsoft.Extensions.Hosting;
 using MongoDB.Bson;
 using Octokit;
 using Octokit.Internal;
+using SerialPortLib;
+using StationService.Infrastructure.SerialCom;
 
 //await TestWorkFlow();
 
@@ -40,7 +55,162 @@ Console.WriteLine(objectId);*/
 //await CloneDatabase();
 //await CopyTestLogs();
 //await TestLogsSepCollection();
-await BenchmarkLogFetching();
+//await BenchmarkLogFetching();
+//await TestUsbController();
+PrintPackets();
+//StartSerialPort();
+
+Task TestUsbController() {
+    UsbTesting usb = new UsbTesting();
+    Console.Clear();
+    PrintMenu();
+    var key=Console.ReadKey();
+    while (key.Key != ConsoleKey.Escape) {
+        switch (key.Key) {
+            case ConsoleKey.D1:
+                usb.Connect();
+                break;
+            case ConsoleKey.D2:
+                usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
+                    new ConfigPacket<HeaterControllerConfig>() {
+                        ConfigType = ConfigType.HeaterControlConfig,
+                        Configuration = new HeaterControllerConfig()
+                    });
+                break;
+            case ConsoleKey.D3:
+                usb.Send(StationMsgPrefix.ProbeConfigPrefix,new ProbeControllerConfig());
+                break;
+            case ConsoleKey.D4:
+                usb.Send(StationMsgPrefix.StationConfigPrefix,new StationConfiguration());
+                break;
+            case ConsoleKey.D5:
+                usb.Send(StationMsgPrefix.CommandPrefix,StationCommand.Reset);
+                break;
+            case ConsoleKey.D6:
+                usb.Disconnect();
+                break;
+            default:
+                break;
+        }
+        PrintMenu();
+        key=Console.ReadKey();
+    }
+    return Task.CompletedTask;
+}
+
+void PrintMenu() {
+    Console.WriteLine();
+    Console.WriteLine();
+    Console.WriteLine("1. Connect");
+    Console.WriteLine("2. Send Heater");
+    Console.WriteLine("3. Send Probe");
+    Console.WriteLine("4. Send Station");
+    Console.WriteLine("5. Reset");
+    Console.WriteLine("6. Disconnect");
+    Console.WriteLine();
+}
+
+
+
+ void StartSerialPort() {
+     var serialPort= new SerialPortInput();
+     serialPort.SetPort("COM3",38400);
+     StringBuilder builder = new StringBuilder();
+     serialPort.ConnectionStatusChanged += delegate(object sender, ConnectionStatusChangedEventArgs args)
+     {
+         Console.WriteLine("Connection Status: {0}", args.Connected);
+     };
+     serialPort.MessageReceived += delegate(object sender, MessageReceivedEventArgs args) {
+         /*Console.WriteLine("Received message: {0}", BitConverter.ToString(args.Data));*/
+         var str=System.Text.Encoding.ASCII.GetString(args.Data);
+         builder.Append(str);
+         if (str.Contains('\n')) {
+             Console.WriteLine($"Thread = {Thread.CurrentThread.ManagedThreadId} Received message: {builder.ToString()}");
+             builder.Clear();
+         }
+        
+     };
+
+     if (serialPort.Connect()) {
+         Console.WriteLine($"Connected {Thread.CurrentThread.ManagedThreadId}");
+         PrintMenu();
+         var key=Console.ReadKey();
+         while (key.Key != ConsoleKey.Escape) {
+             switch (key.Key) {
+                 case ConsoleKey.D1:
+                     MessagePacket<HeaterControllerConfig> msgPacket = new MessagePacket<HeaterControllerConfig>() {
+                         Prefix = StationMsgPrefix.HeaterConfigPrefix,
+                         Packet = new HeaterControllerConfig()
+                     };
+                     var output = JsonSerializer.Serialize(msgPacket,
+                         new JsonSerializerOptions() {
+                             PropertyNamingPolicy =null,
+                             WriteIndented = false
+                         });
+                     serialPort.SendMessage(System.Text.Encoding.ASCII.GetBytes(output));
+                     break;
+                 case ConsoleKey.D2:
+                     Console.WriteLine("Not Implemented");
+                     break;
+                 case ConsoleKey.D3:
+                     Console.WriteLine("Not Implemented");
+                     break;
+                 case ConsoleKey.D4:
+                     Console.WriteLine("Not Implemented");
+                     break;
+                 case ConsoleKey.D6:
+                     serialPort.Disconnect();
+                     break;
+                 default:
+                     break;
+             }
+             PrintMenu();
+             key=Console.ReadKey();
+         }
+         serialPort.Disconnect();
+         Console.WriteLine($"Goodbye {Thread.CurrentThread.ManagedThreadId}");
+     } else {
+         return;
+     }
+
+
+ }
+
+void PrintPackets() {
+    MessagePacket<ConfigPacket<HeaterControllerConfig>> heaterConfigPacket = new MessagePacket<ConfigPacket<HeaterControllerConfig>>() {
+        Prefix = StationMsgPrefix.ReceiveConfigPrefix, Packet = new ConfigPacket<HeaterControllerConfig>() {
+            ConfigType = ConfigType.HeaterControlConfig, Configuration = new HeaterControllerConfig()
+        }
+    };
+    /*MessagePacket<HeaterControllerConfig> heaterConfigPacket = new MessagePacket<HeaterControllerConfig>() {
+        Prefix = StationMsgPrefix.HeaterConfigPrefix, Packet = new HeaterControllerConfig()
+    };*/
+    /*MessagePacket<ProbeControllerConfig> probeConfigPacket = new MessagePacket<ProbeControllerConfig>() {
+        Prefix = StationMsgPrefix.ProbeConfigPrefix, Packet = new ProbeControllerConfig()
+    };
+    MessagePacket<StationConfiguration> stationConfigPacket = new MessagePacket<StationConfiguration>() {
+        Prefix = StationMsgPrefix.StationConfigPrefix, Packet = new StationConfiguration()
+    };*/
+    Console.WriteLine();
+    PrintPacketJson(heaterConfigPacket);
+    Console.WriteLine();
+    /*PrintPacketJson(probeConfigPacket);
+    Console.WriteLine();
+    PrintPacketJson(stationConfigPacket);
+    Console.WriteLine();*/
+}
+
+void PrintPacketJson<TPacket>(MessagePacket<TPacket> msgPacket) where TPacket:IPacket {
+    var output = JsonSerializer.Serialize(msgPacket,
+        new JsonSerializerOptions() {
+            PropertyNamingPolicy =null,
+            WriteIndented = false
+        });
+    Console.WriteLine(output);
+}
+
+
+
 async Task BenchmarkLogFetching() {
     var stopWatch = new Stopwatch();
     var client = new MongoClient("mongodb://172.20.3.41:27017");
@@ -59,6 +229,9 @@ async Task BenchmarkLogFetching() {
     stopWatch.Stop();
     Console.WriteLine($"Entry Time: {(double)stopWatch.ElapsedMilliseconds/1000} EntryCount: {entries.Count}");
 }
+
+
+
 
 async Task TestLogsSepCollection() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");
@@ -89,28 +262,28 @@ async Task CloneDatabase() {
     var piClient = new MongoClient("mongodb://192.168.68.112:27017");
     var database = client.GetDatabase("burn_in_db");
     var piDatabase = piClient.GetDatabase("burn_in_db");
-    
+
     var stationCollection=database.GetCollection<Station>("stations");
     var piStationCollection=piDatabase.GetCollection<Station>("stations");
-    
+
     var stations=await stationCollection.Find(Builders<Station>.Filter.Empty).ToListAsync();
     await piStationCollection.InsertManyAsync(stations);
-    
+
     var trackerCollection=database.GetCollection<StationFirmwareTracker>("station_update_tracker");
     var piTrackerCollection=piDatabase.GetCollection<StationFirmwareTracker>("station_update_tracker");
     var trackers=await trackerCollection.Find(Builders<StationFirmwareTracker>.Filter.Empty).ToListAsync();
     await piTrackerCollection.InsertManyAsync(trackers);
-    
+
     var versionCollection=database.GetCollection<VersionLog>("version_log");
     var piVersionCollection=piDatabase.GetCollection<VersionLog>("version_log");
     var versions=await versionCollection.Find(Builders<VersionLog>.Filter.Empty).ToListAsync();
     await piVersionCollection.InsertManyAsync(versions);
-    
+
     var testConfigCollection=database.GetCollection<TestConfiguration>("test_configurations");
     var pitestConfigCollection=piDatabase.GetCollection<TestConfiguration>("test_configurations");
     var testConfigs=await testConfigCollection.Find(Builders<TestConfiguration>.Filter.Empty).ToListAsync();
     await pitestConfigCollection.InsertManyAsync(testConfigs);
-    
+
     var logCollection=database.GetCollection<BurnInTestLog>("test_logs");
     var piLogCollection=piDatabase.GetCollection<BurnInTestLog>("test_logs");
     var logs = await logCollection.Find(_ => true).ToListAsync();
@@ -123,9 +296,9 @@ async Task CopyTestLogs() {
     var piClient = new MongoClient("mongodb://192.168.68.112:27017");
     var database = client.GetDatabase("burn_in_db");
     var piDatabase = piClient.GetDatabase("burn_in_db");
-    
 
-    
+
+
     var logCollection=database.GetCollection<BurnInTestLog>("test_logs");
     var piLogCollection=piDatabase.GetCollection<BurnInTestLog>("test_logs");
     var logs = await piLogCollection.Find(_ => true).ToListAsync();
@@ -138,7 +311,6 @@ async Task CopyTestLogs() {
 
     Console.WriteLine("Done: Check Database");
 }
-
 
 async Task CreateTrackerDatabase() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");
@@ -163,11 +335,10 @@ async Task UpdateFirmware() {
     var repo = "BurnInFirmware";
     var firmwarePath = "/source/ControlUpload/";
     var firmwareFileName = "BurnInFirmwareV3.ino.hex";
-    var command = ""; 
+    var command = "";
     var program = "arduino-cli";
     var firmwareFullPath = firmwarePath + firmwareFileName;
 }
-
 
 async Task CheckLatest() {
     var org = "Sensor-Electronic-Technology";
@@ -183,7 +354,7 @@ async Task CreateRelease() {
     GitHubClient github = new GitHubClient(new ProductHeaderValue("Sensor-Electronic-Technology"),
         new InMemoryCredentialStore(new Credentials("aelmendorf","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")));
 
-    
+
     /*var commit=(await github.Repository.Commit.GetAll(org, repo)).First();*/
     var refs = await github.Git.Reference.Get(org, repo, "heads/main");
     Console.WriteLine($"Sha: {refs.Object.Sha}");
@@ -296,22 +467,6 @@ try {
 //var output=JsonSerializer.Serialize<MessagePacket<StationCommand>>(packet);
 /*Console.WriteLine("Input: ");
 Console.WriteLine(jsonString);*/
-
-
-
-
-void PrintMenu() {
-    Console.WriteLine();
-    Console.WriteLine();
-    Console.WriteLine("1. Startup");
-    Console.WriteLine("2. Connect");
-    Console.WriteLine("3. Start");
-    Console.WriteLine("4. Pause");
-    Console.WriteLine("5. Continue");
-    Console.WriteLine("6. Disconnect");
-    Console.WriteLine("7. Exit");
-    Console.WriteLine();
-}
 
 
 

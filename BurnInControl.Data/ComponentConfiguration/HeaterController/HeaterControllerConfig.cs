@@ -15,9 +15,9 @@ public class HeaterControllerConfig:IPacket,IBurnStationConfiguration {
         PidConfiguration pidConfig2 = new PidConfiguration(765.77,1345.82,604.67,250);
         PidConfiguration pidConfig3 = new PidConfiguration(179.95,2216.84,81.62,250);
 
-        HeaterConfiguration heaterConfig1 = new HeaterConfiguration(ntcConfig1, pidConfig1, 5, 3, 1);
-        HeaterConfiguration heaterConfig2 = new HeaterConfiguration(ntcConfig2, pidConfig2, 5, 4, 2);
-        HeaterConfiguration heaterConfig3 = new HeaterConfiguration(ntcConfig3, pidConfig3, 5, 5, 3);
+        HeaterConfiguration heaterConfig1 = new HeaterConfiguration(ntcConfig1, pidConfig1, .01, 3, 1);
+        HeaterConfiguration heaterConfig2 = new HeaterConfiguration(ntcConfig2, pidConfig2, .01, 4, 2);
+        HeaterConfiguration heaterConfig3 = new HeaterConfiguration(ntcConfig3, pidConfig3, .01, 5, 3);
         
         this.HeaterConfigurations = new List<HeaterConfiguration> {
             heaterConfig1, 
@@ -25,6 +25,7 @@ public class HeaterControllerConfig:IPacket,IBurnStationConfiguration {
             heaterConfig3
         };
         this.ReadInterval = 250;
+        this.TemperatureSetPoint = 85;
     }
 
     public HeaterControllerConfig Clone() {

@@ -100,7 +100,6 @@ public class UsbController:IDisposable {
     
     public ErrorOr<Success> Stop() {
         if (!this._serialPort.IsConnected) {
-
             return Result.Success;
         }
         try {

@@ -1,5 +1,6 @@
 ﻿using BurnInControl.Application.StationControl.Interfaces;
 using BurnInControl.Application.StationControl.Messages;
+using BurnInControl.Data.ComponentConfiguration;
 using BurnInControl.Data.ComponentConfiguration.HeaterController;
 using BurnInControl.Data.ComponentConfiguration.ProbeController;
 using BurnInControl.Data.ComponentConfiguration.StationController;
@@ -18,15 +19,27 @@ public class SendConfigurationHandler : IRequestHandler<SendConfiguration> {
     public async Task Handle(SendConfiguration request, CancellationToken cancellationToken) {
         switch (request.Configuration) {
             case HeaterControllerConfig heaterControllerConfig: {
-                await this._stationController.Send(StationMsgPrefix.HeaterConfigPrefix, heaterControllerConfig);
+                await this._stationController.Send(StationMsgPrefix.ReceiveConfigPrefix,
+                    new ConfigPacket<HeaterControllerConfig>() {
+                        ConfigType = ConfigType.HeaterControlConfig,
+                        Configuration = heaterControllerConfig
+                    });
                 break;
             }
             case ProbeControllerConfig probeControllerConfig: {
-                await this._stationController.Send(StationMsgPrefix.ProbeConfigPrefix, probeControllerConfig);
+                await this._stationController.Send(StationMsgPrefix.ReceiveConfigPrefix,
+                    new ConfigPacket<ProbeControllerConfig>() {
+                        ConfigType = ConfigType.HeaterControlConfig,
+                        Configuration = probeControllerConfig
+                    });
                 break;
             }
             case StationConfiguration stationConfiguration: {
-                await this._stationController.Send(StationMsgPrefix.StationConfigPrefix, stationConfiguration);
+                await this._stationController.Send(StationMsgPrefix.ReceiveConfigPrefix,
+                    new ConfigPacket<StationConfiguration>() {
+                        ConfigType = ConfigType.HeaterControlConfig,
+                        Configuration = stationConfiguration
+                    });
                 break;
             }
         }

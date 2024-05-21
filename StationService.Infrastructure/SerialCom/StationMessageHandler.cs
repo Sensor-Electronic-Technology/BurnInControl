@@ -15,6 +15,10 @@ using System.Text.Json;
 using BurnInControl.Application.ProcessSerial.Messages;
 using BurnInControl.Application.StationControl.Messages;
 using BurnInControl.Data.BurnInTests;
+using BurnInControl.Data.ComponentConfiguration;
+using BurnInControl.Data.ComponentConfiguration.HeaterController;
+using BurnInControl.Data.ComponentConfiguration.ProbeController;
+using BurnInControl.Data.ComponentConfiguration.StationController;
 using BurnInControl.Data.StationModel;
 using BurnInControl.Data.StationModel.Components;
 using BurnInControl.Shared;
@@ -123,6 +127,9 @@ public class StationMessageHandler : IStationMessageHandler {
                         //Receive status of save config
                         return this.HandleConfigSaveStatus(packetElem);
                     }
+                    case nameof(StationMsgPrefix.GetConfigPrefix): {
+                        return this.HandleGetConfigResponse(packetElem);
+                    }
                     default: {
                         _logger.LogWarning("Prefix value {Value} not implemented",prefix.Value);
                         return Task.CompletedTask;
@@ -202,13 +209,67 @@ public class StationMessageHandler : IStationMessageHandler {
     
     private Task HandleConfigSaveStatus(JsonElement element) {
         try {
-            var type = element.GetProperty("Type").GetString() ?? "Unknown";
-            var success = element.GetProperty("Status").GetBoolean();
-            var message = element.GetProperty("Message").GetString() ?? "Unknown";
-            return this._hubContext.Clients.All.OnConfigSaveStatus(type, success, message);
+            var configTypeInt=element.GetProperty("Type").GetInt32();
+            if (ConfigType.TryFromValue(configTypeInt, out var configType)) {
+                var success = element.GetProperty("Status").GetBoolean();
+                var message = element.GetProperty("Message").GetString() ?? "Unknown";
+                return this._hubContext.Clients.All.OnConfigSaveStatus(configType.Name, success, message);
+            } else {
+                return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.SaveConfigStatusPrefix,
+                    "Error while deserializing config type");
+            }
+
         } catch(Exception e) {
             this._logger.LogError("Error deserializing StartTestFromPacket.\n {ErrMessage}", e.ToErrorMessage());
-            return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStartStatusPrefix,
+            return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.SaveConfigStatusPrefix,
+                $"Error deserializing StartTestFromPacket.\n {e.ToErrorMessage()}");
+        }
+    }
+
+    private Task HandleGetConfigResponse(JsonElement element) {
+        try {
+            if (element.GetProperty("ConfigType").TryGetInt32(out var configType)) {
+                if (ConfigType.TryFromValue(configType, out var type)) {
+                    switch (type.Name) {
+                        case nameof(ConfigType.HeaterControlConfig): {
+                            var heaterConfig=element.GetProperty("Configuration").Deserialize<HeaterControllerConfig>();
+                            if (heaterConfig != null) {
+                                return this._hubContext.Clients.All.OnRequestConfigHandler(true, type, heaterConfig);
+                            } else {
+                                return this._hubContext.Clients.All.OnRequestConfigHandler(false, type, heaterConfig);
+                            }
+                        }
+                        case nameof(ConfigType.ProbeControlConfig): {
+                            var probeConfig=element.GetProperty("Configuration").Deserialize<ProbeControllerConfig>();
+                            if (probeConfig != null) {
+                                return this._hubContext.Clients.All.OnRequestConfigHandler(true, type, probeConfig);
+                            } else {
+                                return this._hubContext.Clients.All.OnRequestConfigHandler(false, type, probeConfig);
+                            }
+                        }
+                        case nameof(ConfigType.ControllerConfig): {
+                            var stationConfig=element.GetProperty("Configuration").Deserialize<StationConfiguration>();
+                            if (stationConfig != null) {
+                                return this._hubContext.Clients.All.OnRequestConfigHandler(true, type, stationConfig);
+                            } else {
+                                return this._hubContext.Clients.All.OnRequestConfigHandler(false, type, stationConfig);
+                            }
+                        }
+                        default: {
+                            this._logger.LogError("ConfigType {ConfigType} not implemented", configType);
+                            return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.GetConfigPrefix,
+                                $"ConfigType {configType} not implemented");
+                        }
+                    }
+                }
+                return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.GetConfigPrefix,
+                    $"Error while parsing config type ConfigTypeValue: {configType}");
+            }
+            return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.GetConfigPrefix,
+                "Error while deserializing config type");
+        } catch(Exception e) {
+            this._logger.LogError("Error deserializing StartTestFromPacket.\n {ErrMessage}", e.ToErrorMessage());
+            return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.GetConfigPrefix,
                 $"Error deserializing StartTestFromPacket.\n {e.ToErrorMessage()}");
         }
     }

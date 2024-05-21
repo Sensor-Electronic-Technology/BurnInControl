@@ -24,13 +24,15 @@ public class StationHub:Hub<IStationHub> {
         return this._mediator.Send(new RequestConnectionStatus());
     }
     
-    public async Task SendSerialCom(StationSerialData serialData) {
-        
-        await this.Clients.All.OnStationData(serialData);
+    public Task SendSerialCom(StationSerialData serialData) { 
+        return this.Clients.All.OnStationData(serialData);
     }
-    
-    public async Task SendSerialComMessage(string message) {
-        await this.Clients.All.OnSerialComMessage(message);
+
+    public Task RequestConfig(ConfigType type) {
+        return this._mediator.Send(new RequestConfigMessage(){ConfigType = type});
+    }
+    public Task SendSerialComMessage(string message) {
+        return this.Clients.All.OnSerialComMessage(message);
     }
     public async Task ConnectUsb() {
         await this._mediator.Send(new ConnectionAction() {

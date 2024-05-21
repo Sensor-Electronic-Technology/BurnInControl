@@ -22,6 +22,7 @@
     <PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0" />
     <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
     <PackageReference Include="Serilog.Sinks.Grafana.Loki" Version="8.3.0" />
+    <PackageReference Include="BlazorMonaco" Version="3.2.0" />
   </ItemGroup>
 
   <ItemGroup>

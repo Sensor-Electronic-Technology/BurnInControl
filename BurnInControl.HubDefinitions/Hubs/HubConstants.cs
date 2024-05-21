@@ -18,19 +18,16 @@ public static class HubConstants {
         public static string OnUsbDisconnectFailed => "OnUsbDisconnectFailed";
         public static string OnExecuteCommand => "OnExecuteCommand";
         public static string OnConfigSaveStatus => "OnConfigSaveStatus";
-
         public static string OnTestStarted => "OnTestStarted";
         public static string OnTestStartedFrom => "OnTestStartedFrom";
         public static string OnTestStartedFromUnknown => "OnTestStartedFromUnknown";
         public static string OnTestStartedFailed => "OnTestStartedFailed";
         public static string OnTestCompleted => "OnTestCompleted";
-
         public static string OnTestSetup => "OnTestSetup";
-
         public static string OnUpdateChecked => "OnUpdateChecked";
         public static string OnFirmwareUpdated => "OnFirmwareUpdated";
-        
         public static string OnStationConnection => "OnStationConnection";
+        public static string OnRequestConfigHandler => "OnRequestConfigHandler";
 
     }
 
@@ -39,10 +36,8 @@ public static class HubConstants {
         public static string DisconnectUsb => "DisconnectUsb";
         public static string SetupTest=> "SetupTest";
         public static string SendConfiguration => "SendConfiguration";
-        public static string SendHeaterConfig => "SendHeaterConfig";
-        public static string SendProbeConfig => "SendProbeConfig";
-        public static string SendStationConfig => "SendStationConfig";
         public static string SendCommand => "SendCommand";
+        public static string RequestConfig=> "RequestConfig";
         
     }
 

@@ -15,8 +15,15 @@
         </Tabs>
     </RadzenTabs>
     <RadzenStack Orientation="Orientation.Horizontal">
-        <RadzenButton Text="Save" Click="@this.SaveHandler"  ButtonStyle="ButtonStyle.Info" Style="width: 125px;height: 50px;"/>
-        <RadzenButton Text="Cancel" Click="@this.Canceled" ButtonStyle="ButtonStyle.Danger" Style="width: 125px;height: 50px;"/>
+        <RadzenButton Text="Save" Click="@this.SaveHandler" 
+                      ButtonStyle="ButtonStyle.Info" 
+                      Style="width: 125px;height: 50px;"/>
+        <RadzenButton Text="Cancel" Click="@this.Canceled" 
+                      ButtonStyle="ButtonStyle.Danger" 
+                      Style="width: 125px;height: 50px;"/>
+        <RadzenButton Text="Get Config" Click="@this.GetConfig" 
+                      ButtonStyle="ButtonStyle.Secondary" 
+                      Style="width: 125px;height: 50px;"/>
     </RadzenStack>
 }
 @code {
@@ -24,6 +31,7 @@
     [Parameter] public EventCallback<HeaterControllerConfig> HeaterControllerConfigChanged { get; set; }
     [Parameter] public EventCallback Canceled { get; set; }
     [Parameter] public EventCallback<HeaterControllerConfig> Saved { get; set; }
+    [Parameter] public EventCallback GetConfig { get; set; }
     
     private Task SaveHandler() {
         return this.Saved.InvokeAsync(this.HeaterControllerConfig);

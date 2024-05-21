@@ -56,9 +56,21 @@ Console.WriteLine(objectId);*/
 //await CopyTestLogs();
 //await TestLogsSepCollection();
 //await BenchmarkLogFetching();
-//await TestUsbController();
-PrintPackets();
+await TestUsbController();
+//PrintPackets();
 //StartSerialPort();
+
+/*MessagePacket<ConfigType> msgPacket = new MessagePacket<ConfigType>() {
+    Prefix = StationMsgPrefix.GetConfigPrefix,
+    Packet = ConfigType.HeaterControlConfig
+};
+var output = JsonSerializer.Serialize(msgPacket,
+    new JsonSerializerOptions() {
+        PropertyNamingPolicy =null,
+        WriteIndented = false
+    });
+
+Console.WriteLine(output);*/
 
 Task TestUsbController() {
     UsbTesting usb = new UsbTesting();
@@ -78,15 +90,29 @@ Task TestUsbController() {
                     });
                 break;
             case ConsoleKey.D3:
-                usb.Send(StationMsgPrefix.ProbeConfigPrefix,new ProbeControllerConfig());
+                usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
+                    new ConfigPacket<ProbeControllerConfig>() {
+                        ConfigType = ConfigType.ProbeControlConfig,
+                        Configuration = new ProbeControllerConfig()
+                    });
                 break;
             case ConsoleKey.D4:
-                usb.Send(StationMsgPrefix.StationConfigPrefix,new StationConfiguration());
+                usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
+                    new ConfigPacket<StationConfiguration>() {
+                        ConfigType = ConfigType.ControllerConfig,
+                        Configuration = new StationConfiguration()
+                    });
                 break;
             case ConsoleKey.D5:
-                usb.Send(StationMsgPrefix.CommandPrefix,StationCommand.Reset);
+                usb.Send(StationMsgPrefix.GetConfigPrefix,ConfigType.HeaterControlConfig);
                 break;
             case ConsoleKey.D6:
+                usb.Send(StationMsgPrefix.GetConfigPrefix,ConfigType.ProbeControlConfig);
+                break;
+            case ConsoleKey.D7:
+                usb.Send(StationMsgPrefix.GetConfigPrefix,ConfigType.ControllerConfig);
+                break;
+            case ConsoleKey.D8:
                 usb.Disconnect();
                 break;
             default:
@@ -105,8 +131,10 @@ void PrintMenu() {
     Console.WriteLine("2. Send Heater");
     Console.WriteLine("3. Send Probe");
     Console.WriteLine("4. Send Station");
-    Console.WriteLine("5. Reset");
-    Console.WriteLine("6. Disconnect");
+    Console.WriteLine("5. Get Heater");
+    Console.WriteLine("6. Get Probe");
+    Console.WriteLine("7. Get Station");
+    Console.WriteLine("8. Disconnect");
     Console.WriteLine();
 }
 

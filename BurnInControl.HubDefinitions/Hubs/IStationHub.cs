@@ -1,4 +1,5 @@
-﻿using BurnInControl.Data.StationModel.Components;
+﻿using BurnInControl.Data.ComponentConfiguration;
+using BurnInControl.Data.StationModel.Components;
 using BurnInControl.HubDefinitions.HubTransports;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Station;
@@ -17,6 +18,7 @@ public interface IStationHub {
     Task OnSerialErrorMessage(string message);
     Task OnSerialInitMessage(string message);
     Task OnConfigSaveStatus(string type,bool success, string message);
+    Task OnRequestConfigHandler(bool success,ConfigType configType,IBurnStationConfiguration? configuration);
 
 #endregion  
 

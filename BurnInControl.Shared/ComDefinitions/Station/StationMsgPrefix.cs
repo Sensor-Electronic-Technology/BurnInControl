@@ -31,5 +31,6 @@ public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
     public static readonly StationMsgPrefix SaveConfigStatusPrefix= new(nameof(SaveConfigStatusPrefix), "SCONF");
     public static readonly StationMsgPrefix GetConfigPrefix=new(nameof(GetConfigPrefix), "GCONF");
     public static readonly StationMsgPrefix ReceiveConfigPrefix=new(nameof(ReceiveConfigPrefix), "RCONF");
+    public static readonly StationMsgPrefix FormatSdPrefix=new(nameof(FormatSdPrefix), "FSD");
     private StationMsgPrefix(string name, string value) : base(name, value) {  }
 }

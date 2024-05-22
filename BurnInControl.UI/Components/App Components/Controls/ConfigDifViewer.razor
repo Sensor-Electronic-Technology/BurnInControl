@@ -1,60 +1,67 @@
-﻿@using System.Text.Json
-@using BlazorMonaco.Editor
-@using BurnInControl.Data.ComponentConfiguration
-@using BurnInControl.Data.ComponentConfiguration.ProbeController
-@using BurnInControl.Data.ComponentConfiguration.StationController
-@using BurnInControl.Data.ComponentConfiguration.HeaterController
-@inject IJSRuntime jsRuntime
-@typeparam TConfig where TConfig : IBurnStationConfiguration
+﻿@inject IJSRuntime jsRuntime
 
-<StandaloneDiffEditor @ref="_diffEditor" Id="sample-diff-editor-123" ConstructionOptions="DiffEditorConstructionOptions" OnDidInit="EditorOnDidInit" />
+<RadzenRow Style="margin: 1rem; height: 300px; width: 600px;">
+    <BlazorMergelyComponent @ref="BlazorMergelyComponentInstance" MergelyOptions="@MergelyOptions" />
+</RadzenRow>
+
+
 
 @code {
-    private StandaloneDiffEditor _diffEditor = null!;
+    private BlazorMergelyComponent? BlazorMergelyComponentInstance { get; set; } = new BlazorMergelyComponent();
+    private string MergelyOptions { get; set; } = "{\"cmsettings\":{\"mode\":\"text/json\",\"readOnly\":false,\"styleSelectedText\": true}}"; // This is optional
+
+
+    [Parameter] public string ServerConfig { get; set; } = "";
+    [Parameter] public string ControllerConfig { get; set; } = "";
     
-    [Parameter] public TConfig ServerConfig { get; set; }
-    [Parameter] public TConfig ControllerConfig { get; set; } 
-    
-    private StandaloneDiffEditorConstructionOptions DiffEditorConstructionOptions(StandaloneDiffEditor editor) {
-        return new StandaloneDiffEditorConstructionOptions {
-            OriginalEditable = true
-        };
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        await base.OnAfterRenderAsync(firstRender);
+		
+        // Component reference is set after the first render
+        if(firstRender) {
+            await BlazorMergelyComponentInstance!.SetValueAsync(this.ServerConfig, this.ControllerConfig);
+        }
     }
-    
-    private async Task EditorOnDidInit() {
-        // Get or create the original model
-        string json="";
-        switch (ServerConfig) {
+
+    protected override async Task OnParametersSetAsync() {
+        /*switch (ServerConfig) {
             case HeaterControllerConfig heaterControllerConfig: {
-                json=JsonSerializer.Serialize(heaterControllerConfig,new JsonSerializerOptions() {
+                this._serverConfigJson=JsonSerializer.Serialize(heaterControllerConfig,new JsonSerializerOptions() {
                     WriteIndented = true
                 });
                 break;
             }
             case ProbeControllerConfig probeControllerConfig: {
-                JsonSerializer.Serialize(probeControllerConfig, new JsonSerializerOptions() { WriteIndented = true });
+                this._serverConfigJson=JsonSerializer.Serialize(probeControllerConfig, 
+                    new JsonSerializerOptions() { WriteIndented = true });
                 break;
             }
             case StationConfiguration stationConfiguration: {
-                JsonSerializer.Serialize(stationConfiguration, new JsonSerializerOptions() { WriteIndented = true });
+                this._serverConfigJson=JsonSerializer.Serialize(stationConfiguration, 
+                    new JsonSerializerOptions() { WriteIndented = true });
                 break;
             }
         }
-        TextModel original_model = await BlazorMonaco.Editor.Global.GetModel(jsRuntime, "sample-diff-editor-originalModel");
-        if (original_model == null) {
-            original_model = await BlazorMonaco.Editor.Global.CreateModel(jsRuntime, json, "javascript", "sample-diff-editor-originalModel");
-        }
-
-        // Get or create the modified model
-        TextModel modified_model = await BlazorMonaco.Editor.Global.GetModel(jsRuntime, "sample-diff-editor-modifiedModel");
-        if (modified_model == null) {
-            modified_model = await BlazorMonaco.Editor.Global.CreateModel(jsRuntime, json, "javascript", "sample-diff-editor-modifiedModel");
-        }
-
-        // Set the editor model
-        await _diffEditor.SetModel(new DiffEditorModel {
-            Original = original_model,
-            Modified = modified_model
-        });
+        
+        switch (ControllerConfig) {
+            case HeaterControllerConfig heaterControllerConfig: {
+                this._controllerConfigJson=JsonSerializer.Serialize(heaterControllerConfig,
+                    new JsonSerializerOptions() {
+                    WriteIndented = true
+                });
+                break;
+            }
+            case ProbeControllerConfig probeControllerConfig: {
+                this._controllerConfigJson=JsonSerializer.Serialize(probeControllerConfig, 
+                    new JsonSerializerOptions() { WriteIndented = true });
+                break;
+            }
+            case StationConfiguration stationConfiguration: {
+                this._controllerConfigJson=JsonSerializer.Serialize(stationConfiguration, 
+                    new JsonSerializerOptions() { WriteIndented = true });
+                break;
+            }
+        }*/
+        //await BlazorMergelyComponentInstance!.SetValueAsync(this._serverConfigJson, this._controllerConfigJson);
     }
 }

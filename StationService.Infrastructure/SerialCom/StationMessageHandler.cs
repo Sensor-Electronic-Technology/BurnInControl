@@ -228,31 +228,36 @@ public class StationMessageHandler : IStationMessageHandler {
 
     private Task HandleGetConfigResponse(JsonElement element) {
         try {
+            Console.WriteLine("Handling GetConfigResponse");
             if (element.GetProperty("ConfigType").TryGetInt32(out var configType)) {
                 if (ConfigType.TryFromValue(configType, out var type)) {
-                    switch (type.Name) {
+                    return this._hubContext.Clients.All.OnRequestConfigHandler(true, type.Value, element.GetProperty("Configuration").ToString());
+                    /*switch (type.Name) {
                         case nameof(ConfigType.HeaterControlConfig): {
                             var heaterConfig=element.GetProperty("Configuration").Deserialize<HeaterControllerConfig>();
+                            
+                            Console.WriteLine("Type=HeaterControlConfig");
                             if (heaterConfig != null) {
-                                return this._hubContext.Clients.All.OnRequestConfigHandler(true, type, heaterConfig);
+                                Console.WriteLine("Parsed HeaterConfig");
+                                
                             } else {
-                                return this._hubContext.Clients.All.OnRequestConfigHandler(false, type, heaterConfig);
+                                return this._hubContext.Clients.All.OnRequestConfigHandler(false, type.Value, heaterConfig);
                             }
                         }
                         case nameof(ConfigType.ProbeControlConfig): {
                             var probeConfig=element.GetProperty("Configuration").Deserialize<ProbeControllerConfig>();
                             if (probeConfig != null) {
-                                return this._hubContext.Clients.All.OnRequestConfigHandler(true, type, probeConfig);
+                                return this._hubContext.Clients.All.OnRequestConfigHandler(true, type.Value, probeConfig);
                             } else {
-                                return this._hubContext.Clients.All.OnRequestConfigHandler(false, type, probeConfig);
+                                return this._hubContext.Clients.All.OnRequestConfigHandler(false, type.Value, probeConfig);
                             }
                         }
                         case nameof(ConfigType.ControllerConfig): {
                             var stationConfig=element.GetProperty("Configuration").Deserialize<StationConfiguration>();
                             if (stationConfig != null) {
-                                return this._hubContext.Clients.All.OnRequestConfigHandler(true, type, stationConfig);
+                                return this._hubContext.Clients.All.OnRequestConfigHandler(true, type.Value, stationConfig);
                             } else {
-                                return this._hubContext.Clients.All.OnRequestConfigHandler(false, type, stationConfig);
+                                return this._hubContext.Clients.All.OnRequestConfigHandler(false, type.Value, stationConfig);
                             }
                         }
                         default: {
@@ -260,7 +265,7 @@ public class StationMessageHandler : IStationMessageHandler {
                             return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.GetConfigPrefix,
                                 $"ConfigType {configType} not implemented");
                         }
-                    }
+                    }*/
                 }
                 return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.GetConfigPrefix,
                     $"Error while parsing config type ConfigTypeValue: {configType}");

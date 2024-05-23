@@ -1,53 +1,100 @@
-﻿@using BurnInControl.UI.Data
+﻿@using BurnInControl.Infrastructure.QuickTest
+@using BurnInControl.UI.Data
 @using QuickTest.Data.DataTransfer
 @inject NotificationService NotificationService
+@inject QuickTestDataService QuickTestDataService
 @rendermode InteractiveServer
 <style>
     circle:hover{
         cursor: pointer;
     }
 </style>
+<RadzenStack Orientation="Orientation.Vertical">
+    <RadzenFieldset Text="Scaling Factor" AllowCollapse="true">
+        <RadzenStack Orientation="Orientation.Horizontal">
+            <RadzenSlider Value="@this._scalingFactor" 
+                          Change="@this.ScaleChanged" 
+                          Min="0" Max="10" TValue="int"/>
+            <RadzenText Text="@this._dimensions"/>
+        </RadzenStack>
+    </RadzenFieldset>
+    <RadzenStack Orientation="Orientation.Horizontal">
+        <RadzenFieldset Text="Select pads">
+            <svg viewBox="0 0 826 810" width="@_width" height="@_height" >
+                <image class="mainProject"
+                       xlink:href="images/WaferMask2in.png"
+                       width="826" height="810" />
+                @foreach (var circ in _svgCircles) {
+                    <circle cx="@circ.X" cy="@circ.Y"
+                            r="@circ.Radius"
+                            id="@circ.AltTex"
+                            fill="@circ.Fill"
+                            fill-opacity="@circ.Opacity"
+                            onclick="@(()=>this.CircleClickHandler(circ.AltTex))">
+                    </circle>
+                }
+            </svg>
+        </RadzenFieldset>
+        <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center">
+            <RadzenFieldset Text="Probe 1">
+                <RadzenStack Orientation="Orientation.Horizontal">
+                    <RadzenButton Text="Probe 1" Click="ActivateProbe1"/>
+                    <RadzenTextBox Value="@SelectedPad1"/>
+                </RadzenStack>
+            </RadzenFieldset>
+            <RadzenFieldset Text="Probe 2">
+                <RadzenStack Orientation="Orientation.Horizontal">
+                    <RadzenButton Text="Probe 2" Click="ActivateProbe2"/>
+                    <RadzenTextBox Value="@this.SelectedPad2"/>
+                </RadzenStack>
+            </RadzenFieldset>
+        </RadzenStack>
+    </RadzenStack>
+    <RadzenButton Text="Save"></RadzenButton>
+</RadzenStack>
 
-<svg viewBox="0 0 826 810" width="800" height="700"  >
-    <image class="mainProject"
-           xlink:href="images/WaferMask2in.png"
-           width="826" height="810" />
-    @foreach (var circ in _svgCircles) {
-        <circle cx="@circ.X" cy="@circ.Y"
-                r="@circ.Radius"
-                id="@circ.AltTex"
-                fill="@circ.Fill"
-                fill-opacity="@circ.Opacity"
-                onclick="@(()=>this.CircleClickHandler(circ.AltTex))">
-        </circle>
-    }
-</svg>
+
 
 @code {
     
     [Parameter] public IEnumerable<Pad> Map { get; set; }
     
+    [Parameter] public string? SelectedPad1 { get; set; }
+    [Parameter] public string? SelectedPad2 { get; set; }
+    
+    [Parameter] public EventCallback<string> SelectedPad1Changed { get; set; }
+    [Parameter] public EventCallback<string> SelectedPad2Changed { get; set; }
+    
+    [Parameter] public EventCallback Saved { get; set; }
+    
+    
+    private int _height = 410;
+    private int _width = 426;
+    private int _scalingFactor = 0;
+    private string _dimensions = "410,426";
+    
+
+    
+    private bool _probe1Active=false;
+    private bool _probe2Active=false;
+    
     private List<SvgCircle> _svgCircles = new List<SvgCircle>();
-
-    /*private List<SvgCircle> _svgCircles = new List<SvgCircle>() {
-        new SvgCircle() { X = 143, Y = 365, Radius = 8,AltTex = "r1", PostBackValue = "r1",Fill = "grey",State = false,Opacity = "0"},
-        new SvgCircle() { X = 160, Y = 365, Radius = 8,AltTex = "r2", PostBackValue = "r2",Fill = "grey",State = false,Opacity = "0" },
-        new SvgCircle() { X = 180, Y = 365, Radius = 8,AltTex = "r3", PostBackValue = "r3",Fill = "grey",State = false,Opacity = "0" },
-        new SvgCircle() { X = 142, Y = 441, Radius = 8,AltTex = "r4", PostBackValue = "r4",Fill = "grey",State = false,Opacity = "0" },
-    };*/
-
-    protected override Task OnParametersSetAsync() {
+    
+    protected override async Task OnInitializedAsync() {
+        this.Map=await this.QuickTestDataService.GetWaferMap(2);
         this._svgCircles = this.Map.Select(e => new SvgCircle() {
             X = e.X,
             Y = e.Y,
             Radius = e.Radius,
             AltTex = e.Identifier,
             PostBackValue = e.Identifier,
-            Fill = "grey",
+            Fill = "green",
             State = false,
             Opacity = "0"
         }).ToList();
-        return base.OnParametersSetAsync();
+        this._height=410+(100*this._scalingFactor);
+        this._width=426+(100*this._scalingFactor);
+        this._dimensions = $"{this._height},{this._width}";
     }
 
     private async Task CircleClickHandler(string id) {
@@ -55,15 +102,103 @@
         if(area != null) {
             area.State = !area.State;
             area.Opacity = area.State ? "100" : "0";
-            this.StateHasChanged();
+            if (this._probe1Active) {
+                if (this.SelectedPad1 == id) {
+                    this.SelectedPad1 = string.Empty;
+                }else if (string.IsNullOrEmpty(this.SelectedPad1)) {
+                    this.SelectedPad1 = id;
+                } else {
+                    var previous=this._svgCircles.FirstOrDefault(e => e.AltTex == this.SelectedPad1);
+                    if(previous != null) {
+                        previous.State = false;
+                        previous.Opacity = "0";
+                    }
+                    this.SelectedPad1 = id;
+                }
+                
+            }else if (this._probe2Active) {
+                if (this.SelectedPad2 == id) {
+                    this.SelectedPad2 = string.Empty;
+                }else if (string.IsNullOrEmpty(this.SelectedPad2)) {
+                    this.SelectedPad2 = id;
+                } else {
+                    var previous=this._svgCircles.FirstOrDefault(e => e.AltTex == this.SelectedPad2);
+                    if(previous != null) {
+                        previous.State = false;
+                        previous.Opacity = "0";
+                    }
+                    this.SelectedPad2 = id;
+                }
+            }
+            this.NotificationService.Notify(new NotificationMessage() {
+                Severity = NotificationSeverity.Success,
+                Summary = "Area Clicked",
+                Detail = $"You selected on {id}"
+            });
+            await InvokeAsync(StateHasChanged);
         }
-
-        this.NotificationService.Notify(new NotificationMessage() {
-            Severity = NotificationSeverity.Success,
-            Summary = "Area Clicked",
-            Detail = $"You clicked on {id}"
-        });
+    }
+    
+    private void ScaleChanged(int scaleFactor) {
+        this._scalingFactor = scaleFactor;
+        this._height=410+(100*scaleFactor);
+        this._width=426+(100*scaleFactor);
+        this._dimensions = $"{this._height},{this._width}";
     }
 
+    private void ActivateProbe1() {
+        this._probe1Active = true;
+        this._probe2Active = false;
+    }
     
+    private void ActivateProbe2() {
+        this._probe1Active = false;
+        this._probe2Active = true;
+    }
+
+    private Task SaveHandler() {
+        return this.Saved.InvokeAsync();
+    }
+    
+    /*private void Probe1Start() {
+        throw new NotImplementedException();
+    }*/
+    
+    
+    
+    /*private async Task CircleClickHandler(string id) {
+        var area = this._svgCircles.FirstOrDefault(e => e.AltTex == id);
+        if(area != null) {
+            area.State = !area.State;
+            area.Opacity = area.State ? "100" : "0";
+            if (this._probe1Active) {
+                if(this._selectedPad1Circle != null) {
+                    var previous=this._svgCircles.FirstOrDefault(e => e.AltTex == this._selectedPad1Circle.AltTex);
+                    if(previous != null) {
+                        previous.State = false;
+                        previous.Opacity = "0";
+                    }
+                }
+                this._selectedPad1 = id;
+                this._selectedPad1Circle = area;
+            }else if (this._probe2Active) {
+                if(this._selectedPad2Circle != null) {
+                    var previous=this._svgCircles.FirstOrDefault(e => e.AltTex == this._selectedPad2Circle.AltTex);
+                    if(previous != null) {
+                        previous.State = false;
+                        previous.Opacity = "0";
+                    }
+                }
+                this._selectedPad1 = id;
+                this._selectedPad1Circle = area;
+            }
+            this.NotificationService.Notify(new NotificationMessage() {
+                Severity = NotificationSeverity.Success,
+                Summary = "Area Clicked",
+                Detail = $"You selected on {id}"
+            });
+            await InvokeAsync(StateHasChanged);
+        }
+    }*/
+
 }

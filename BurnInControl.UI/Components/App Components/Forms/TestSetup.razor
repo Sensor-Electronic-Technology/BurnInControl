@@ -1,34 +1,48 @@
 @using BurnInControl.Data.BurnInTests.Wafers
 @using BurnInControl.Data.StationModel.Components
+@using BurnInControl.Infrastructure.QuickTest
+@using BurnInControl.UI.Components.App_Components.Controls.WaferMap
+@using BurnInControl.UI.Components.App_Components.Dialogs
+@using QuickTest.Data.DataTransfer
+@inject DialogService DialogService
+@inject QuickTestDataService QuickTestDataService
+
 <RadzenStack Orientation="Orientation.Vertical">
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="Radzen.JustifyContent.Center" Gap="50">
-        <PocketSetup PocketCaption="Pocket 1"
-                     @bind-WaferSetup="@this._pocket1Setup"/>
-        <PocketSetup PocketCaption="Pocket 2"
-                     @bind-WaferSetup="@this._pocket2Setup"/>
-        <PocketSetup PocketCaption="Pocket 3"
-                     @bind-WaferSetup="@this._pocket3Setup"/>
-    </RadzenStack>
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" 
+    <RadzenTabs RenderMode="TabRenderMode.Client">
+        <Tabs>
+            <RadzenTabsItem Text="Right Pocket(P1)">
+                <PocketSetup PocketCaption="Pocket 1"
+                             @bind-WaferSetup="@this._pocket1Setup"/>
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Middle Pocket(P2)">
+                <PocketSetup PocketCaption="Pocket 2"
+                             @bind-WaferSetup="@this._pocket2Setup"/>
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Left Pocket(P3)">
+                <PocketSetup PocketCaption="Pocket 3"
+                             @bind-WaferSetup="@this._pocket3Setup"/>
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
                  JustifyContent="JustifyContent.Center">
-        <RadzenButton Text="Save" Size="ButtonSize.Large" 
+        <RadzenButton Text="Save" Size="ButtonSize.Large"
                       Click="@this.SaveHandler"
-                      ButtonStyle="ButtonStyle.Secondary" 
+                      ButtonStyle="ButtonStyle.Secondary"
                       Icon="save" Style="width: 170px"/>
-        <RadzenButton Text="Cancel/Clear" 
-                      ButtonStyle="ButtonStyle.Danger" 
+        <RadzenButton Text="Cancel/Clear"
+                      ButtonStyle="ButtonStyle.Danger"
                       Size="ButtonSize.Large" Icon="cancel"
                       Click="@this.Cancel"
-                      IsBusy="false" 
-                      Shade="Shade.Default" 
+                      IsBusy="false"
+                      Shade="Shade.Default"
                       Disabled="false"/>
-        
     </RadzenStack>
 </RadzenStack>
-
 @code {
-    [Parameter]
-    public EventCallback<List<WaferSetup>> Save { get; set; }
+    [Parameter] public EventCallback<List<WaferSetup>> Save { get; set; }
+    [Parameter] public IEnumerable<Pad>? Map { get; set; }
+    private IEnumerable<string> _waferList=Enumerable.Empty<string>();
 
     WaferSetup _pocket1Setup = new WaferSetup() {
         WaferId = "W01",
@@ -61,6 +75,11 @@
     };
 
 
+    protected override async Task OnInitializedAsync() {
+        this.Map = await this.QuickTestDataService.GetWaferMap(2);
+        
+    }
+
     private Task SaveHandler() {
         return this.Save.InvokeAsync(new List<WaferSetup>() {
             _pocket1Setup,
@@ -70,7 +89,6 @@
     }
     
     private Task Cancel() {
-        
         return Task.CompletedTask;
     }
     

@@ -24,7 +24,7 @@ public class QuickTestDataService {
     public async Task<ErrorOr<bool>> QuickTestExists(string waferId) {
         try {
             var result = await this._client.GetFromJsonAsync<CheckQuickTestResponse>(
-                $"{QtApiPaths.CheckQuickTestPath}{waferId}");
+                $"{QtApiPaths.CheckQuickTestPath}/1/{waferId}");
             if (result == null) {
                 this._logger.LogError("CheckQuickTest request failed, returned null");
                 return Error.Failure(description: "QuickTest Check Failed.  Please check network connection");

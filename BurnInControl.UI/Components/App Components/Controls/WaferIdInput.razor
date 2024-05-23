@@ -1,0 +1,73 @@
+﻿@using BurnInControl.Infrastructure.QuickTest
+@using BurnInControl.UI.Components.App_Components.Displays
+@inject QuickTestDataService QuickTestDataService
+@inject NotificationService NotificationService
+<h3>WaferIdInput</h3>
+
+<RadzenStack Orientation="Orientation.Vertical"
+             JustifyContent="JustifyContent.Center"
+             AlignItems="AlignItems.Center">
+    <RadzenFieldset Text="Wafer" Style="height: fit-content">
+        @*<RadzenTextBox Value="@this.WaferId"
+                       ValueChanged="@this.WaferIdChanged"/>*@
+        <RadzenAutoComplete FilterOperator="StringFilterOperator.StartsWith" 
+                            FilterDelay="100" 
+                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                            Value="@this.WaferId"
+                            Data="@this.WaferList"
+                            ValueChanged="@this.WaferIdChangeHandler"
+                            Style="width: 13rem" 
+                            InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "WaferId" }})" />
+        <RadzenText TextStyle="TextStyle.Body2" >Start typing e.g. B01-0001-01
+            @((MarkupString)(!string.IsNullOrEmpty(this.WaferId) ? $", Value is: <strong>{this.WaferId}</strong>" : ""))</RadzenText>
+    </RadzenFieldset>
+    <RadzenStack Orientation="Orientation.Horizontal"
+                 AlignItems="AlignItems.Center">
+        <RadzenButton Text="Check" Click="@this.CheckWaferExists" Style="height: 25px; width: 100px"/>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+            <RadzenLabel Text="Exists?"/>
+            <LedIndicator LedOnColor="led-green" State="@this._exists" LedSize="30px"/>
+        </RadzenStack>
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    [Parameter] public string? WaferId { get; set; }
+    [Parameter] public EventCallback<string> WaferIdChanged { get; set; }
+    [Parameter] public IEnumerable<string> WaferList { get; set; }
+    private bool _exists = false;
+    
+    public async Task CheckWaferExists() {
+        if (!string.IsNullOrEmpty(this.WaferId)) {
+            var result=await this.QuickTestDataService.QuickTestExists(this.WaferId);
+            if (!result.IsError) {
+                this._exists = result.Value;
+                await InvokeAsync(StateHasChanged);
+            } else {
+                this.NotificationService.Notify(new NotificationMessage() {
+                    Summary = "Error Checking WaferId",
+                    Detail = "Internal Error Occurred. Please try again later.",
+                    Severity = NotificationSeverity.Error,
+                    Duration = 5000,
+                });
+            }
+        } else {
+            this.NotificationService.Notify(new NotificationMessage() {
+                Summary = "WaferId Empty",
+                Detail = "Please enter a WaferId",
+                Severity = NotificationSeverity.Error,
+                Duration = 5000,
+            });
+        }
+        
+    }
+
+
+    private async Task WaferIdChangeHandler(string waferId) {
+        if(!string.IsNullOrEmpty(waferId)) {
+            this.WaferId = waferId;
+            await this.WaferIdChanged.InvokeAsync(this.WaferId);
+        }
+    }
+
+}

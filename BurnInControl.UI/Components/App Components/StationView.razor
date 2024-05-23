@@ -44,7 +44,7 @@
                                                      TempStates="@this._data.HeaterStates"/>
                                 </RadzenTabsItem>
                                 <RadzenTabsItem Text="Test Setup">
-                                    <TestSetup Save="SaveClickedHandler"></TestSetup>
+                                    <TestSetup Save="SaveClickedHandler"/>
                                 </RadzenTabsItem>
                                 <RadzenTabsItem Text="Plots">
                                     @*<TwoInchWaferMapView></TwoInchWaferMapView>*@
@@ -129,8 +129,7 @@
    }
 
    private async Task OpenSelector() {
-       await DialogService.OpenAsync<PadSelector>("Select Pad",options:
-           new DialogOptions() { Width = "700px", Height = "512px", Resizable = true, Draggable = true });
+
    }
 
    private Task OnStationConnection(bool usbStatus) {
@@ -371,8 +370,5 @@
            await this._hubConnection.DisposeAsync();
        }
    }
-
-
-
 } 
 

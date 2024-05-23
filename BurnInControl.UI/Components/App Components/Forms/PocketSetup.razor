@@ -1,8 +1,10 @@
+@using System.Collections
 @using BurnInControl.UI.Components.App_Components.Displays
 @using Ardalis.SmartEnum;
 @using BurnInControl.Data.BurnInTests.Wafers
 @using BurnInControl.Data.StationModel.Components
 @using BurnInControl.Infrastructure.QuickTest
+@using BurnInControl.UI.Components.App_Components.Controls.WaferMap
 @using BurnInControl.UI.Components.App_Components.Dialogs
 @using QuickTest.Data.DataTransfer
 @using QuickTest.Data.Models.Wafers.Enums
@@ -14,64 +16,63 @@
     <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="10" Style="width: fit-content">
         <RadzenText Text="@this.PocketCaption"/>
         <RadzenStack AlignItems="AlignItems.Center">
-            <RadzenStack Orientation="Orientation.Vertical" 
-                         JustifyContent="JustifyContent.Center" 
-                         AlignItems="AlignItems.Center">
-                <RadzenFieldset Text="Wafer" Style="height: fit-content">
-                    <RadzenTextBox Value="@this._waferId" ValueChanged="@this.WaferIdChanged"/>
-                </RadzenFieldset>
-                <RadzenStack Orientation="Orientation.Horizontal" 
-                             AlignItems="AlignItems.Center">
-                    <RadzenButton Text="Check" Click="@this.CheckWaferExists" 
-                                  Style="height: 25px; width: 100px"/>
-                    <RadzenStack Orientation="Orientation.Horizontal" 
-                                 AlignItems="AlignItems.Center">
-                        <RadzenLabel Text="Exists?"/>
-                        <LedIndicator LedOnColor="led-green" 
-                                      State="@this._exists" 
-                                      LedSize="30px"/>
-                    </RadzenStack>
-                </RadzenStack>
-            </RadzenStack>
-            <RadzenStack Orientation="Orientation.Horizontal">
-                <RadzenFieldset Text="Probe 1">
-                    <RadzenDropDown TValue="string"
-                                    ReadOnly="true"
-                                    Data=@this._probes
-                                    ValueChanged="@this.Probe1Changed"
-                                    Style="width: 100px"/>
-                </RadzenFieldset>
-                <RadzenFieldset Text="Pad 1">
-                    <RadzenDropDown TValue="string"
-                                    ReadOnly="true"
-                                    Data=@this._pads
-                                    ValueChanged="@this.Pad1Changed"
-                                    Style="width: 100px"/>
-                </RadzenFieldset>
+            <WaferIdInput WaferId="@this._waferId"
+                          WaferList="@this.WaferList"
+                          WaferIdChanged="WaferIdChangedHandler"/>
+            <RadzenTabs>
+                <Tabs>
+                    <RadzenTabsItem Text="Map Selector" Selected="true">
+                        <WaferImageMap Map="@this.Map"
+                                       SelectedPad1="@this._p1"
+                                       SelectedPad2="@this._p2"/>
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="Manual Probe">
+                        <RadzenStack>
+                            <RadzenStack Orientation="Orientation.Horizontal">
+                                <RadzenFieldset Text="Probe 1">
+                                    <RadzenDropDown TValue="string"
+                                                    ReadOnly="true"
+                                                    Data=@this._probes
+                                                    ValueChanged="@this.Probe1Changed"
+                                                    Style="width: 100px"/>
+                                </RadzenFieldset>
+                                <RadzenFieldset Text="Pad 1">
+                                    <RadzenDropDown TValue="string"
 
-            </RadzenStack>
-            <RadzenStack Orientation="Orientation.Horizontal">
-                <RadzenFieldset Text="Probe 2">
-                    <RadzenDropDown TValue="string"
-                                    Data=@this._probes
-                                    ValueChanged="@this.Probe2Changed"
-                                    Style="width: 100px"/>
-                </RadzenFieldset>
-                <RadzenFieldset Text="Pad 2">
-                    <RadzenDropDown TValue="string" 
-                                    Data=@this._pads
-                                    ValueChanged="@this.Pad2Changed"
-                                    Style="width: 100px"/>
-                </RadzenFieldset>
-            </RadzenStack>
+                                                    Data=@this._pads
+                                                    ValueChanged="@this.Pad1Changed"
+                                                    Style="width: 100px"/>
+                                </RadzenFieldset>
+
+                            </RadzenStack>
+                            <RadzenStack Orientation="Orientation.Horizontal">
+                                <RadzenFieldset Text="Probe 2">
+                                    <RadzenDropDown TValue="string"
+                                                    Data=@this._probes
+                                                    ValueChanged="@this.Probe2Changed"
+                                                    Style="width: 100px"/>
+                                </RadzenFieldset>
+                                <RadzenFieldset Text="Pad 2">
+                                    <RadzenDropDown TValue="string"
+                                                    Data=@this._pads
+                                                    ValueChanged="@this.Pad2Changed"
+                                                    Style="width: 100px"/>
+                                </RadzenFieldset>
+                            </RadzenStack>
+                        </RadzenStack>
+                    </RadzenTabsItem>
+                </Tabs>
+            </RadzenTabs>
         </RadzenStack>
     </RadzenStack>
 }
 
 @code {
     [Parameter] public string PocketCaption { get; set; } = "Pocket X";
-    [Parameter] public WaferSetup WaferSetup { get; set; }=new WaferSetup();
+    [Parameter] public IEnumerable<Pad> Map { get; set; }
+    [Parameter] public WaferSetup? WaferSetup { get; set; }=new WaferSetup();
     [Parameter] public EventCallback<WaferSetup> WaferSetupChanged { get; set; }
+    [Parameter] public IEnumerable<string> WaferList { get; set; }
 
     private string _waferId="Not Set";
     
@@ -88,18 +89,10 @@
     }
 
     protected override Task OnParametersSetAsync() {
-        /*this._pads=PadLocation.List.Select(x => x.Value).ToList();
-        this._probes=StationProbe.List.Select(x => x.Name).ToList();*/
-        /*if (this.WaferSetup != null) {*/
-            this._p1 = this._probes.FirstOrDefault(e => e==this.WaferSetup.Probe1?.Name) ?? StationProbe.Probe1.Name;
-            this._p2 = this._probes.FirstOrDefault(e => e==this.WaferSetup.Probe2?.Name) ?? StationProbe.Probe2.Name;
-        /*} else {
-            this._p1 = StationProbe.Probe1.Name;
-            this._p2 = StationProbe.Probe2.Name;
-        }*/
+        this._p1 = this._probes.FirstOrDefault(e => e==this.WaferSetup?.Probe1?.Name) ?? StationProbe.Probe1.Name;
+        this._p2 = this._probes.FirstOrDefault(e => e==this.WaferSetup?.Probe2?.Name) ?? StationProbe.Probe2.Name;
         return base.OnParametersSetAsync();
     }
-
     private async Task CheckWaferExists() {
         this.NotificationService.Notify(NotificationSeverity.Warning, "Not implemented yet.");
         var result=await this.QuickTestDataService.QuickTestExists(this._waferId);
@@ -108,11 +101,7 @@
             this._exists = false;
         } else {
             this._exists = result.Value;
-            await this.DialogService.OpenAsync<PadSelector>("Select Two Pads",
-                new Dictionary<string, object>() { { "Map", this._map } },
-                options:new DialogOptions() { Width = "800px", Height = "800px" });
         }
-       
     }
 
     private Task WaferIdChanged(string value) {
@@ -139,5 +128,9 @@
     private Task Probe2Changed(string value) {
         this.WaferSetup.Probe1 = StationProbe.FromName(value);
         return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
+    }
+    
+    private void WaferIdChangedHandler(string waferId) {
+        this._waferId = waferId;
     }
 }

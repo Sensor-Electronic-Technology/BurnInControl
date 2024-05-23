@@ -18,7 +18,7 @@ public interface IStationHub {
     Task OnSerialErrorMessage(string message);
     Task OnSerialInitMessage(string message);
     Task OnConfigSaveStatus(string type,bool success, string message);
-    Task OnRequestConfigHandler(bool success,ConfigType configType,IBurnStationConfiguration? configuration);
+    Task OnRequestConfigHandler(bool success,int configType,string jsonConfig);
 
 #endregion  
 

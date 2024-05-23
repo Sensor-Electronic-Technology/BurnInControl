@@ -11,6 +11,7 @@
 @using BurnInControl.Shared.ComDefinitions.Station
 @using BurnInControl.UI.Components.App_Components.Forms.Configurations.Station
 @using Microsoft.AspNetCore.SignalR.Client
+@using Environment = System.Environment
 @inject StationConfigDataService ConfigurationDataService
 @inject IConfiguration Configuration
 @inject DialogService DialogService
@@ -78,7 +79,7 @@
                 TimeSpan.FromSeconds(60) })
             .Build();
         this._hubConnection.On<string,bool,string>(HubConstants.Events.OnConfigSaveStatus,this.ReceiveSaveStatus);
-        this._hubConnection.On<bool,ConfigType,IBurnStationConfiguration>(HubConstants.Events.OnRequestConfigHandler,this.ReceiveRequestedConfig);
+        this._hubConnection.On<bool,int,string>(HubConstants.Events.OnRequestConfigHandler,this.ReceiveRequestedConfig);
     }
     
     private async Task StartConnection() {
@@ -112,33 +113,38 @@
             this._eventConsole.Log($"Failed to save configuration, Type: {type}", AlertStyle.Danger);
         }
     }
-
-    private async Task ReceiveRequestedConfig(bool success, ConfigType type, IBurnStationConfiguration? configuration) {
-        this._eventConsole.Log("Received HeaterControllerConfig",AlertStyle.Info);
+    
+    private async Task ReceiveRequestedConfig(bool success, int configTypeValue,string jsonString) {
         if (success) {
-            switch (type.Name) {
-                case nameof(ConfigType.HeaterControlConfig): {
-                    if (configuration is HeaterControllerConfig controllerHeaterConfig) {
-                        this._eventConsole.Log("Received HeaterControllerConfig",AlertStyle.Info);
-                        this.DialogService.Open<ConfigDifViewer<HeaterControllerConfig>>("Heater Controller Config",
-                            new Dictionary<string, object> {
-                                {"ServerConfig",controllerHeaterConfig},
-                                {"ControllerConfig",this._burnInConfiguration?.HeaterConfig}
-                            });
-                    } else {
-                        this._eventConsole.Log("Error: Received configuration is not of type HeaterControllerConfig",AlertStyle.Danger);
+            if (ConfigType.TryFromValue(configTypeValue, out var configType)) {
+                switch (configType.Name) {
+                    case nameof(ConfigType.HeaterControlConfig): {
+                            var heaterConfig=JsonSerializer.Deserialize<HeaterControllerConfig>(jsonString);
+                            if (heaterConfig != null) {
+                                var jsonOptions = new JsonSerializerOptions() { WriteIndented = true };
+                                var controlConfig = JsonSerializer.Serialize(heaterConfig,jsonOptions);
+                                var serverConfig=JsonSerializer.Serialize(this._burnInConfiguration?.HeaterConfig,jsonOptions);
+                                await this.DialogService.OpenAsync<ConfigDifViewer>("Heater Controller Config",
+                                    new Dictionary<string, object> {
+                                        {"ServerConfig",serverConfig},
+                                        {"ControllerConfig",controlConfig}
+                                    },options: new DialogOptions(){ Width = "600px",Draggable = true,ShowClose = true,Height = "600px"});
+                            } else {
+                                this._eventConsole.Log("Failed to deserialize HeaterControllerConfig from string",AlertStyle.Danger);
+                            }
+                        break;
                     }
-                    break;
-                }
-                case nameof(ConfigType.ProbeControlConfig): {
-                    break;
-                }
-                case nameof(ConfigType.ControllerConfig): {
-                    break;
+                    case nameof(ConfigType.ProbeControlConfig): {
+                        break;
+                    }
+                    case nameof(ConfigType.ControllerConfig): {
+                        break;
+                    }
                 }
             }
+
         } else {
-            this._eventConsole.Log($"Failed to receive requested configuration. ConfigType: {type.Name}",AlertStyle.Danger);
+            this._eventConsole.Log($"Failed to receive requested configuration. ConfigType: {configTypeValue}",AlertStyle.Danger);
         }
     }
     

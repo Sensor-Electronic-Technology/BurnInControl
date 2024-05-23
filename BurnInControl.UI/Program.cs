@@ -4,6 +4,7 @@ using BurnInControl.Shared;
 using Radzen;
 using BurnInControl.UI.Components;
 using BurnInControl.UI.Services;
+using com.github.akovac35.BlazorMergely;
 using MongoDB.Driver;
 using QuickTest.Data.AppSettings;
 
@@ -36,6 +37,7 @@ builder.Services.AddSingleton<StationHubConnection>();
 builder.Services.AddSingleton<StationStateService>();
 builder.Services.AddScoped<NotifyPlotOptions>();
 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -48,6 +50,7 @@ app.MapControllers();
 app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>()
-   .AddInteractiveServerRenderMode();
+    .AddInteractiveServerRenderMode();
+
 
 app.Run();

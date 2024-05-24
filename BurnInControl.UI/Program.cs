@@ -36,6 +36,7 @@ builder.Services.AddSingleton<ConsoleWriter>();
 builder.Services.AddSingleton<StationHubConnection>();
 builder.Services.AddSingleton<StationStateService>();
 builder.Services.AddScoped<NotifyPlotOptions>();
+builder.Services.AddScoped<NotifyPadSelection>();
 
 
 var app = builder.Build();

@@ -9,6 +9,7 @@
         cursor: pointer;
     }
 </style>
+
 <RadzenStack Orientation="Orientation.Vertical">
     <RadzenFieldset Text="Scaling Factor" AllowCollapse="true">
         <RadzenStack Orientation="Orientation.Horizontal">
@@ -18,39 +19,24 @@
             <RadzenText Text="@this._dimensions"/>
         </RadzenStack>
     </RadzenFieldset>
-    <RadzenStack Orientation="Orientation.Horizontal">
-        <RadzenFieldset Text="Select pads">
-            <svg viewBox="0 0 826 810" width="@_width" height="@_height" >
+    <RadzenStack Orientation="Orientation.Vertical">
+        <RadzenFieldset Text="Select pads" AllowCollapse="true">
+            <svg viewBox="0 0 826 810" width="@_width" height="@_height">
                 <image class="mainProject"
                        xlink:href="images/WaferMask2in.png"
-                       width="826" height="810" />
+                       width="826" height="810"/>
                 @foreach (var circ in _svgCircles) {
                     <circle cx="@circ.X" cy="@circ.Y"
                             r="@circ.Radius"
                             id="@circ.AltTex"
                             fill="@circ.Fill"
                             fill-opacity="@circ.Opacity"
-                            onclick="@(()=>this.CircleClickHandler(circ.AltTex))">
+                            onclick="@(() => this.CircleClickHandler(circ.AltTex))">
                     </circle>
                 }
             </svg>
         </RadzenFieldset>
-        <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center">
-            <RadzenFieldset Text="Probe 1">
-                <RadzenStack Orientation="Orientation.Horizontal">
-                    <RadzenButton Text="Probe 1" Click="ActivateProbe1"/>
-                    <RadzenTextBox Value="@SelectedPad1"/>
-                </RadzenStack>
-            </RadzenFieldset>
-            <RadzenFieldset Text="Probe 2">
-                <RadzenStack Orientation="Orientation.Horizontal">
-                    <RadzenButton Text="Probe 2" Click="ActivateProbe2"/>
-                    <RadzenTextBox Value="@this.SelectedPad2"/>
-                </RadzenStack>
-            </RadzenFieldset>
-        </RadzenStack>
     </RadzenStack>
-    <RadzenButton Text="Save"></RadzenButton>
 </RadzenStack>
 
 
@@ -58,30 +44,31 @@
 @code {
     
     [Parameter] public IEnumerable<Pad> Map { get; set; }
-    
     [Parameter] public string? SelectedPad1 { get; set; }
     [Parameter] public string? SelectedPad2 { get; set; }
-    
     [Parameter] public EventCallback<string> SelectedPad1Changed { get; set; }
     [Parameter] public EventCallback<string> SelectedPad2Changed { get; set; }
+    [Parameter] public bool Probe1Active { get; set; } = false;
+    [Parameter] public bool Probe2Active { get; set; } = false;
     
-    [Parameter] public EventCallback Saved { get; set; }
-    
+    [Parameter] public EventCallback<string> RevertPad1 { get; set; }
+    [Parameter] public EventCallback<string> RevertPad2 { get; set; }
+
+    private string _defaultFill = "grey";
+    private string _probe1Fill = "green";
+    private string _probe2Fill = "blue";
+    private string? _pad1Store;
+    private string? _pad2Store;
     
     private int _height = 410;
     private int _width = 426;
     private int _scalingFactor = 0;
     private string _dimensions = "410,426";
     
-
-    
-    private bool _probe1Active=false;
-    private bool _probe2Active=false;
-    
     private List<SvgCircle> _svgCircles = new List<SvgCircle>();
     
     protected override async Task OnInitializedAsync() {
-        this.Map=await this.QuickTestDataService.GetWaferMap(2);
+        this.Map= await this.QuickTestDataService.GetWaferMap(2);
         this._svgCircles = this.Map.Select(e => new SvgCircle() {
             X = e.X,
             Y = e.Y,
@@ -92,35 +79,187 @@
             State = false,
             Opacity = "0"
         }).ToList();
-        this._height=410+(100*this._scalingFactor);
-        this._width=426+(100*this._scalingFactor);
+        this._height=410+(50*this._scalingFactor);
+        this._width=426+(50*this._scalingFactor);
         this._dimensions = $"{this._height},{this._width}";
+    }
+
+    protected override async Task OnParametersSetAsync() {
+        if(this._pad1Store!=this.SelectedPad1 && this.Probe1Active) {
+            if (string.IsNullOrEmpty(this.SelectedPad1)) {
+                //clear
+                if (!string.IsNullOrEmpty(this._pad1Store)) {
+                    var previous=this._svgCircles.FirstOrDefault(e => e.AltTex == this._pad1Store);
+                    if(previous != null) {
+                        previous.State = false;
+                        previous.Opacity = "0";
+                    }
+                    this._pad1Store = this.SelectedPad1;
+                }
+            }else if (this.SelectedPad1 == this.SelectedPad2) {
+                await this.Notify(NotificationSeverity.Warning,
+                    "Duplicate Pad Selected",
+                    "Probe 1 cannot be the same pad as Probe 2.");
+                this.SelectedPad1=this._pad1Store;
+                await this.RevertPad1.InvokeAsync(this._pad1Store);
+                await InvokeAsync(StateHasChanged);
+            }else {
+                if (!string.IsNullOrEmpty(this._pad1Store)) {
+                    var previous=this._svgCircles.FirstOrDefault(e => e.AltTex == this._pad1Store);
+                    if(previous != null) {
+                        previous.State = false;
+                        previous.Opacity = "0";
+                    }
+                    var area = this._svgCircles.FirstOrDefault(e => e.AltTex == this.SelectedPad1);
+                    if(area != null) {
+                        area.State = true;
+                        area.Opacity = "100";
+                        area.Fill = this._probe1Fill;
+                    }
+                    this._pad1Store = this.SelectedPad1;
+                    await this.Notify(NotificationSeverity.Info,
+                        "Probe 1 pad changed",
+                        $"Probe 1 pad changed from {previous?.AltTex ?? "unknown"} to {this.SelectedPad1}.");
+                } else {
+                    var area = this._svgCircles.FirstOrDefault(e => e.AltTex == this.SelectedPad1);
+                    if(area != null) {
+                        area.State = true;
+                        area.Opacity = "100";
+                        area.Fill = this._probe1Fill;
+                    }
+                    this._pad1Store = this.SelectedPad1;
+                    await this.Notify(NotificationSeverity.Success,
+                        "Probe 1 set",
+                        $"Probe 1 set to {this.SelectedPad1}.");
+                }
+            }
+        }
+        if(this._pad2Store!=this.SelectedPad2 && this.Probe2Active) {
+            if (string.IsNullOrEmpty(this.SelectedPad2)) {
+                //clear
+                if (!string.IsNullOrEmpty(this._pad2Store)) {
+                    var previous=this._svgCircles.FirstOrDefault(e => e.AltTex == this._pad2Store);
+                    if(previous != null) {
+                        previous.State = false;
+                        previous.Opacity = "0";
+                    }
+                    this._pad2Store = this.SelectedPad2;
+                }
+            }else if (this.SelectedPad2 == this.SelectedPad1) {
+                await this.Notify(NotificationSeverity.Warning,
+                    "Duplicate Pad Selected",
+                    "Probe 2 cannot be the same pad as Probe 1.");
+                this.SelectedPad2=this._pad2Store;
+                await this.RevertPad2.InvokeAsync(this._pad2Store);
+            }else {
+                if (!string.IsNullOrEmpty(this._pad2Store)) {
+                    var previous=this._svgCircles.FirstOrDefault(e => e.AltTex == this._pad2Store);
+                    if(previous != null) {
+                        previous.State = false;
+                        previous.Opacity = "0";
+                    }
+                    var area = this._svgCircles.FirstOrDefault(e => e.AltTex == this.SelectedPad2);
+                    if(area != null) {
+                        area.State = true;
+                        area.Opacity = "100";
+                        area.Fill = this._probe2Fill;
+                    }
+                    this._pad2Store = this.SelectedPad2;
+                    await this.Notify(NotificationSeverity.Info,
+                        "Probe 1 pad changed",
+                        $"Probe 1 pad changed from {previous?.AltTex ?? "unknown"} to {this.SelectedPad2}.");
+                } else {
+                    var area = this._svgCircles.FirstOrDefault(e => e.AltTex == this.SelectedPad2);
+                    if(area != null) {
+                        area.State = true;
+                        area.Opacity = "100";
+                        area.Fill = this._probe2Fill;
+                    }
+                    this._pad2Store = this.SelectedPad2;
+                    await this.Notify(NotificationSeverity.Success,
+                        "Probe 1 set",
+                        $"Probe 1 set to {this.SelectedPad2}.");
+                }
+            }
+        }
     }
 
     private async Task CircleClickHandler(string id) {
         var area = this._svgCircles.FirstOrDefault(e => e.AltTex == id);
-        if(area != null) {
-            area.State = !area.State;
-            area.Opacity = area.State ? "100" : "0";
-            if (this._probe1Active) {
+        if(area != null && (this.Probe1Active || this.Probe2Active)) {
+            if (this.Probe1Active) {
+                if (!string.IsNullOrEmpty(this.SelectedPad2)) {
+                    if(this.SelectedPad2==id) {
+                        await this.Notify(NotificationSeverity.Warning, 
+                            "Duplicate Pad Selected", 
+                            "Probe 1 cannot be the same pad as Probe 2.");
+                        return;
+                    }
+                } 
                 if (this.SelectedPad1 == id) {
                     this.SelectedPad1 = string.Empty;
+                    this._pad1Store = string.Empty;
+                    area.State = false;
+                    area.Opacity = "0";
+                    await this.Notify(NotificationSeverity.Info,
+                        "Probe 1 pad cleared",
+                        $"Probe 1 pad cleared from {id}.");
+                    await this.SelectedPad1Changed.InvokeAsync(this.SelectedPad1);
                 }else if (string.IsNullOrEmpty(this.SelectedPad1)) {
                     this.SelectedPad1 = id;
+                    this._pad1Store = id;
+                    area.State = true;
+                    area.Opacity = "100";
+                    area.Fill = this._probe1Fill;
+                    await this.Notify(NotificationSeverity.Success,
+                        "Probe 1 pad set!",
+                        $"Probe 1 pad set to {id}.");
+                    await this.SelectedPad1Changed.InvokeAsync(this.SelectedPad1);
                 } else {
                     var previous=this._svgCircles.FirstOrDefault(e => e.AltTex == this.SelectedPad1);
                     if(previous != null) {
                         previous.State = false;
                         previous.Opacity = "0";
                     }
+                    area.State = true;
+                    area.Opacity = "100";
+                    area.Fill = this._probe1Fill;
+                    
                     this.SelectedPad1 = id;
+                    this._pad1Store = id;
+                    await this.Notify(NotificationSeverity.Info,
+                        "Probe 2 pad changed",
+                        $"Probe 2 pad changed from {previous?.AltTex ?? "unknown"} to {id}.");
+                    await this.SelectedPad1Changed.InvokeAsync(this.SelectedPad1);
                 }
-                
-            }else if (this._probe2Active) {
+            }else if (this.Probe2Active) {
+                if (!string.IsNullOrEmpty(this.SelectedPad1)) {
+                    if(this.SelectedPad1==id) {
+                        await this.Notify(NotificationSeverity.Warning, 
+                            "Duplicate Pad Selected", 
+                            "Probe 2 cannot be the same pad as Probe 1.");
+                        return;
+                    }
+                } 
                 if (this.SelectedPad2 == id) {
                     this.SelectedPad2 = string.Empty;
+                    this._pad2Store = string.Empty;
+                    area.State = false;
+                    area.Opacity = "0";
+                    await this.Notify(NotificationSeverity.Info,
+                        "Probe 1 pad cleared",
+                        $"Probe 1 pad cleared from {id}.");
+                    await this.SelectedPad2Changed.InvokeAsync(this.SelectedPad2);
                 }else if (string.IsNullOrEmpty(this.SelectedPad2)) {
                     this.SelectedPad2 = id;
+                    this._pad2Store = this.SelectedPad2;
+                    area.State = true;
+                    area.Opacity = "100";
+                    area.Fill=this._probe2Fill;
+                    await this.Notify(NotificationSeverity.Success,
+                        "Probe 2 pad set!",
+                        $"Probe 2 pad set to {id}.");
+                    await this.SelectedPad2Changed.InvokeAsync(this.SelectedPad2);
                 } else {
                     var previous=this._svgCircles.FirstOrDefault(e => e.AltTex == this.SelectedPad2);
                     if(previous != null) {
@@ -128,77 +267,37 @@
                         previous.Opacity = "0";
                     }
                     this.SelectedPad2 = id;
+                    this._pad2Store = this.SelectedPad2;
+                    area.State = true;
+                    area.Opacity = "100";
+                    area.Fill = this._probe2Fill;
+                    await this.Notify(NotificationSeverity.Info,
+                        "Probe 2 pad changed",
+                        $"Probe 2 pad changed from {previous?.AltTex ?? "unknown"} to {id}.");
+                    await this.SelectedPad2Changed.InvokeAsync(this.SelectedPad2);
                 }
             }
-            this.NotificationService.Notify(new NotificationMessage() {
-                Severity = NotificationSeverity.Success,
-                Summary = "Area Clicked",
-                Detail = $"You selected on {id}"
-            });
             await InvokeAsync(StateHasChanged);
+        } else {
+            await this.Notify(NotificationSeverity.Warning, 
+                "No Probe Selected", 
+                "Please select a probe before selecting a pad.");
         }
     }
     
     private void ScaleChanged(int scaleFactor) {
         this._scalingFactor = scaleFactor;
-        this._height=410+(100*scaleFactor);
-        this._width=426+(100*scaleFactor);
+        this._height=410+(50*scaleFactor);
+        this._width=426+(50*scaleFactor);
         this._dimensions = $"{this._height},{this._width}";
     }
 
-    private void ActivateProbe1() {
-        this._probe1Active = true;
-        this._probe2Active = false;
+    private Task Notify(NotificationSeverity severity, string summary, string detail) {
+        this.NotificationService.Notify(new NotificationMessage() {
+            Severity = severity,
+            Summary=summary,
+            Detail=detail
+        });
+        return Task.CompletedTask;
     }
-    
-    private void ActivateProbe2() {
-        this._probe1Active = false;
-        this._probe2Active = true;
-    }
-
-    private Task SaveHandler() {
-        return this.Saved.InvokeAsync();
-    }
-    
-    /*private void Probe1Start() {
-        throw new NotImplementedException();
-    }*/
-    
-    
-    
-    /*private async Task CircleClickHandler(string id) {
-        var area = this._svgCircles.FirstOrDefault(e => e.AltTex == id);
-        if(area != null) {
-            area.State = !area.State;
-            area.Opacity = area.State ? "100" : "0";
-            if (this._probe1Active) {
-                if(this._selectedPad1Circle != null) {
-                    var previous=this._svgCircles.FirstOrDefault(e => e.AltTex == this._selectedPad1Circle.AltTex);
-                    if(previous != null) {
-                        previous.State = false;
-                        previous.Opacity = "0";
-                    }
-                }
-                this._selectedPad1 = id;
-                this._selectedPad1Circle = area;
-            }else if (this._probe2Active) {
-                if(this._selectedPad2Circle != null) {
-                    var previous=this._svgCircles.FirstOrDefault(e => e.AltTex == this._selectedPad2Circle.AltTex);
-                    if(previous != null) {
-                        previous.State = false;
-                        previous.Opacity = "0";
-                    }
-                }
-                this._selectedPad1 = id;
-                this._selectedPad1Circle = area;
-            }
-            this.NotificationService.Notify(new NotificationMessage() {
-                Severity = NotificationSeverity.Success,
-                Summary = "Area Clicked",
-                Detail = $"You selected on {id}"
-            });
-            await InvokeAsync(StateHasChanged);
-        }
-    }*/
-
 }

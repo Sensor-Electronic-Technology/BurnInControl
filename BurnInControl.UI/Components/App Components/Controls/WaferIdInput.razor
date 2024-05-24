@@ -2,14 +2,10 @@
 @using BurnInControl.UI.Components.App_Components.Displays
 @inject QuickTestDataService QuickTestDataService
 @inject NotificationService NotificationService
-<h3>WaferIdInput</h3>
-
 <RadzenStack Orientation="Orientation.Vertical"
              JustifyContent="JustifyContent.Center"
              AlignItems="AlignItems.Center">
-    <RadzenFieldset Text="Wafer" Style="height: fit-content">
-        @*<RadzenTextBox Value="@this.WaferId"
-                       ValueChanged="@this.WaferIdChanged"/>*@
+    <RadzenFieldset Text="Wafer">
         <RadzenAutoComplete FilterOperator="StringFilterOperator.StartsWith" 
                             FilterDelay="100" 
                             FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
@@ -18,8 +14,7 @@
                             ValueChanged="@this.WaferIdChangeHandler"
                             Style="width: 13rem" 
                             InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "WaferId" }})" />
-        <RadzenText TextStyle="TextStyle.Body2" >Start typing e.g. B01-0001-01
-            @((MarkupString)(!string.IsNullOrEmpty(this.WaferId) ? $", Value is: <strong>{this.WaferId}</strong>" : ""))</RadzenText>
+        <RadzenText TextStyle="TextStyle.Body2">Start typing e.g. B01-0001-01</RadzenText>
     </RadzenFieldset>
     <RadzenStack Orientation="Orientation.Horizontal"
                  AlignItems="AlignItems.Center">
@@ -34,7 +29,7 @@
 @code {
     [Parameter] public string? WaferId { get; set; }
     [Parameter] public EventCallback<string> WaferIdChanged { get; set; }
-    [Parameter] public IEnumerable<string> WaferList { get; set; }
+    [Parameter] public IEnumerable<string> WaferList { get; set; }=Enumerable.Empty<string>();
     private bool _exists = false;
     
     public async Task CheckWaferExists() {
@@ -59,7 +54,6 @@
                 Duration = 5000,
             });
         }
-        
     }
 
 

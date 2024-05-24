@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Globalization;
+using System.Net.Http.Json;
 using BurnInControl.Shared;
 using BurnInControl.Shared.AppSettings;
 using Microsoft.Extensions.Logging;
@@ -6,7 +7,9 @@ using Microsoft.Extensions.Options;
 using QuickTest.Data.Constants;
 using QuickTest.Data.Contracts.Responses.Get;
 using ErrorOr;
+using QuickTest.Data.Contracts.Requests;
 using QuickTest.Data.Contracts.Requests.Get;
+using QuickTest.Data.Contracts.Responses;
 using QuickTest.Data.DataTransfer;
 
 namespace BurnInControl.Infrastructure.QuickTest;
@@ -23,8 +26,8 @@ public class QuickTestDataService {
 
     public async Task<ErrorOr<bool>> QuickTestExists(string waferId) {
         try {
-            var result = await this._client.GetFromJsonAsync<CheckQuickTestResponse>(
-                $"{QtApiPaths.CheckQuickTestPath}/1/{waferId}");
+            var result = await this._client.GetFromJsonAsync<QtWaferExistsResponse>(
+                $"{QtApiPaths.GetQuickTestExistsPath}{waferId}");
             if (result == null) {
                 this._logger.LogError("CheckQuickTest request failed, returned null");
                 return Error.Failure(description: "QuickTest Check Failed.  Please check network connection");
@@ -66,5 +69,21 @@ public class QuickTestDataService {
             this._logger.LogError("GetWaferMap failed, ErrorMessage: {Message}",msg);
             return Enumerable.Empty<Pad>();;
         }
+    }
+
+    public async Task<IEnumerable<string>> GetQuickTestList(DateTime startDate) {
+        try {
+            var result=await this._client.GetFromJsonAsync<GetQuickTestListResponse>($"{QtApiPaths.GetQuickTestListSincePath}{startDate.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture)}");
+            if (result == null) {
+                this._logger.LogError("GetQuickTestList request failed, returned null");
+                return Enumerable.Empty<string>();
+            }
+            return result.WaferList;
+        } catch(Exception ex) {
+            string msg = ex.ToErrorMessage();
+            this._logger.LogError("GetQuickTestList failed, ErrorMessage: {Message}",msg);
+            return Enumerable.Empty<string>();
+        }
+        
     }
 }

@@ -10,17 +10,20 @@
 <RadzenStack Orientation="Orientation.Vertical">
     <RadzenTabs RenderMode="TabRenderMode.Client">
         <Tabs>
-            <RadzenTabsItem Text="Right Pocket(P1)">
-                <PocketSetup PocketCaption="Pocket 1"
-                             @bind-WaferSetup="@this._pocket1Setup"/>
+            <RadzenTabsItem Text="Left Pocket(P1)">
+                <PocketSetup PocketCaption="Left Pocket(P1)"
+                             @bind-WaferSetup="@this._pocket1Setup"
+                             WaferList="@this._waferList"/>
             </RadzenTabsItem>
             <RadzenTabsItem Text="Middle Pocket(P2)">
-                <PocketSetup PocketCaption="Pocket 2"
-                             @bind-WaferSetup="@this._pocket2Setup"/>
+                <PocketSetup PocketCaption="Middle Pocket(P2)"
+                             @bind-WaferSetup="@this._pocket2Setup"
+                             WaferList="@this._waferList"/>
             </RadzenTabsItem>
-            <RadzenTabsItem Text="Left Pocket(P3)">
-                <PocketSetup PocketCaption="Pocket 3"
-                             @bind-WaferSetup="@this._pocket3Setup"/>
+            <RadzenTabsItem Text="Right Pocket(P3)">
+                <PocketSetup PocketCaption="Right Pocket(P3)"
+                             @bind-WaferSetup="@this._pocket3Setup"
+                             WaferList="@this._waferList"/>
             </RadzenTabsItem>
         </Tabs>
     </RadzenTabs>
@@ -41,7 +44,7 @@
 </RadzenStack>
 @code {
     [Parameter] public EventCallback<List<WaferSetup>> Save { get; set; }
-    [Parameter] public IEnumerable<Pad>? Map { get; set; }
+    [Parameter] public IEnumerable<Pad>? Map { get; set; } = Enumerable.Empty<Pad>();
     private IEnumerable<string> _waferList=Enumerable.Empty<string>();
 
     WaferSetup _pocket1Setup = new WaferSetup() {
@@ -49,9 +52,7 @@
         BurnNumber = 1,
         StationPocket = StationPocket.LeftPocket,
         Probe1=StationProbe.Probe1,
-        Probe2=StationProbe.Probe2,
-        Probe1Pad = "a",
-        Probe2Pad = "b",
+        Probe2=StationProbe.Probe2
     };
     
     WaferSetup _pocket2Setup = new WaferSetup() {
@@ -59,9 +60,7 @@
         BurnNumber = 1,
         StationPocket = StationPocket.MiddlePocket,
         Probe1=StationProbe.Probe3,
-        Probe2=StationProbe.Probe4,
-        Probe1Pad = "d",
-        Probe2Pad = "l",
+        Probe2=StationProbe.Probe4
     };
     
     WaferSetup _pocket3Setup = new WaferSetup() {
@@ -69,15 +68,13 @@
         BurnNumber = 1,
         StationPocket = StationPocket.RightPocket,
         Probe1=StationProbe.Probe5,
-        Probe2=StationProbe.Probe6,
-        Probe1Pad = "t",
-        Probe2Pad = "g",
+        Probe2=StationProbe.Probe6
     };
 
 
     protected override async Task OnInitializedAsync() {
         this.Map = await this.QuickTestDataService.GetWaferMap(2);
-        
+        this._waferList = await this.QuickTestDataService.GetQuickTestList(new DateTime(2024,1,1));
     }
 
     private Task SaveHandler() {

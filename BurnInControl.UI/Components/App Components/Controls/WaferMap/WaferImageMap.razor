@@ -14,7 +14,8 @@
     <RadzenFieldset Text="Scaling Factor" AllowCollapse="true">
         <RadzenStack Orientation="Orientation.Horizontal">
             <RadzenSlider Value="@this._scalingFactor" 
-                          Change="@this.ScaleChanged" 
+                          Change="@this.ScaleChanged"
+                          
                           Min="0" Max="10" TValue="int"/>
             <RadzenText Text="@this._dimensions"/>
         </RadzenStack>
@@ -39,10 +40,7 @@
     </RadzenStack>
 </RadzenStack>
 
-
-
 @code {
-    
     [Parameter] public IEnumerable<Pad> Map { get; set; }
     [Parameter] public string? SelectedPad1 { get; set; }
     [Parameter] public string? SelectedPad2 { get; set; }
@@ -51,8 +49,6 @@
     [Parameter] public bool Probe1Active { get; set; } = false;
     [Parameter] public bool Probe2Active { get; set; } = false;
     
-    [Parameter] public EventCallback<string> RevertPad1 { get; set; }
-    [Parameter] public EventCallback<string> RevertPad2 { get; set; }
 
     private string _defaultFill = "grey";
     private string _probe1Fill = "green";
@@ -101,8 +97,6 @@
                     "Duplicate Pad Selected",
                     "Probe 1 cannot be the same pad as Probe 2.");
                 this.SelectedPad1=this._pad1Store;
-                await this.RevertPad1.InvokeAsync(this._pad1Store);
-                await InvokeAsync(StateHasChanged);
             }else {
                 if (!string.IsNullOrEmpty(this._pad1Store)) {
                     var previous=this._svgCircles.FirstOrDefault(e => e.AltTex == this._pad1Store);
@@ -150,7 +144,6 @@
                     "Duplicate Pad Selected",
                     "Probe 2 cannot be the same pad as Probe 1.");
                 this.SelectedPad2=this._pad2Store;
-                await this.RevertPad2.InvokeAsync(this._pad2Store);
             }else {
                 if (!string.IsNullOrEmpty(this._pad2Store)) {
                     var previous=this._svgCircles.FirstOrDefault(e => e.AltTex == this._pad2Store);
@@ -166,8 +159,8 @@
                     }
                     this._pad2Store = this.SelectedPad2;
                     await this.Notify(NotificationSeverity.Info,
-                        "Probe 1 pad changed",
-                        $"Probe 1 pad changed from {previous?.AltTex ?? "unknown"} to {this.SelectedPad2}.");
+                        "Probe 2 pad changed",
+                        $"Probe 2 pad changed from {previous?.AltTex ?? "unknown"} to {this.SelectedPad2}.");
                 } else {
                     var area = this._svgCircles.FirstOrDefault(e => e.AltTex == this.SelectedPad2);
                     if(area != null) {
@@ -177,8 +170,8 @@
                     }
                     this._pad2Store = this.SelectedPad2;
                     await this.Notify(NotificationSeverity.Success,
-                        "Probe 1 set",
-                        $"Probe 1 set to {this.SelectedPad2}.");
+                        "Probe 2 set",
+                        $"Probe 2 set to {this.SelectedPad2}.");
                 }
             }
         }

@@ -8,29 +8,36 @@
 @using BurnInControl.UI.Components.App_Components.Dialogs
 @using QuickTest.Data.DataTransfer
 @using QuickTest.Data.Models.Wafers.Enums
+@using BurnInControl.UI.Components.App_Components.Controls.ProbePads
 @inject QuickTestDataService QuickTestDataService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 
-@if (this.WaferSetup != null) {
-    <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="1" >
-        <RadzenText Text="@this.PocketCaption"/>
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
-            <RadzenStack>
-                <WaferIdInput WaferId="@this._waferId"
-                              WaferList="@this.WaferList"
-                              WaferIdChanged="WaferIdChangedHandler"/>
-                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
+
+<RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="1" >
+    <RadzenText Text="@this.PocketCaption"/>
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
+            <RadzenFieldset Text="Pocket Loaded?">
+                <RadzenStack Orientation="Orientation.Vertical" 
+                             AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenLabel Text="@(this.WaferSetup.Loaded ? "Loaded":"Not Loaded")" Component="Loaded" />
+                    <RadzenSwitch Value="@this.WaferSetup.Loaded" ValueChanged="@this.LoadedChangedHandler"  Name="Loaded" />
+                </RadzenStack>
+            </RadzenFieldset>
+            <WaferIdInput WaferId="@this.WaferSetup.WaferId"
+                          WaferList="@this.WaferList"
+                          WaferIdChanged="@this.WaferIdChangedHandler"/>
+            @*<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
                     <RadzenFieldset Text="Probe 1">
                         <RadzenStack Orientation="Orientation.Horizontal">
                             <RadzenToggleButton Text="Activate Probe 1" 
                                                 Value="@this._probe1Active" 
                                                 Click="@this.ActivateProbe1"/>
-                            @*<RadzenTextBox Value="@_selectedPad1"/>*@
                             <RadzenDropDown TValue="string"
-                                            @bind-Value="@this._selectedPad1"
+                                            Value="@this.WaferSetup.Probe1Pad"
                                             Data=@this._pads
-                                            SelectedItemChanged="@this.Probe1PadChanged"
+                                            ValueChanged="@this.Probe1PadChanged"
                                             ReadOnly="@(!this._probe1Active)"
                                             Style="width: 100px"/>
                         </RadzenStack>
@@ -41,47 +48,47 @@
                                                 Value="@this._probe2Active"
                                                 Click="@this.ActivateProbe2"/>
                             <RadzenDropDown TValue="string"
-                                            @bind-Value="@this._selectedPad2"
+                                            Value="@this.WaferSetup.Probe2Pad"
                                             ReadOnly="@(!this._probe2Active)"
-                                            SelectedItemChanged="@this.Probe2PadChanged"
+                                            ValueChanged="@this.Probe2PadChanged"
                                             Data=@this._pads
                                             Style="width: 100px"/>
                         </RadzenStack>
                     </RadzenFieldset>
-                </RadzenStack>
-            </RadzenStack>
-            @if (this.Map!=null) {
-                <WaferImageMap Map="@this.Map"
-                               @bind-SelectedPad1="@this._selectedPad1"
-                               @bind-SelectedPad2="@this._selectedPad2"
-                               Probe1Active="@this._probe1Active"
-                               Probe2Active="@this._probe2Active"
-                               RevertPad1="RevertPad1Handler"/>
-            }
-
+                </RadzenStack>*@
+            <PadSelectors Pads="@this._pads"
+                          Probe1Active="@this._probe1Active"
+                          Probe1ActiveChanged="@((bool value) => this._probe1Active = value)"
+                          Probe2Active="@this._probe2Active"
+                          Probe2ActiveChanged="@((bool value) => this._probe2Active = value)"
+                          Probe1Pad="@this.WaferSetup.Probe1Pad"
+                          Probe1PadChanged="@this.Probe1PadChangedHandler"
+                          Probe2Pad="@this.WaferSetup.Probe2Pad"
+                          Probe2PadChanged="@this.Probe2PadChangedHandler"/>
         </RadzenStack>
+        @if (this.Map!=null) {
+            <WaferImageMap Map="@this.Map"
+                           SelectedPad1="@this.WaferSetup.Probe1Pad"
+                           SelectedPad2="@this.WaferSetup.Probe2Pad"
+                           SelectedPad1Changed="@this.MapPad1ChangedHandler"
+                           SelectedPad2Changed="@this.MapPad2ChangedHandler"
+                           Probe1Active="@this._probe1Active"
+                           Probe2Active="@this._probe2Active"/>
+        }
     </RadzenStack>
-}
+</RadzenStack>
+
 
 @code {
     [Parameter] public string PocketCaption { get; set; } = "Pocket X";
     [Parameter] public IEnumerable<Pad>? Map { get; set; }=Enumerable.Empty<Pad>();
-    [Parameter] public WaferSetup? WaferSetup { get; set; }=new WaferSetup();
+    [Parameter] public WaferSetup WaferSetup { get; set; }=new WaferSetup();
     [Parameter] public EventCallback<WaferSetup> WaferSetupChanged { get; set; }
     [Parameter] public IEnumerable<string> WaferList { get; set; }
-
-    private string? _selectedPad1;
-    private string? _selectedPad2;
-
-    private string? _waferId;
     
-    /*private string? _p1="";
-    private string? _p2="";*/
     private bool _probe1Active=false;
     private bool _probe2Active=false;
-
     private List<string>? _pads;
-    private List<string> _probes=StationProbe.List.Select(x => x.Name).ToList();
     private bool _exists = false;
     private IEnumerable<Pad> _map=[];
 
@@ -91,61 +98,49 @@
     }
     
     private async Task CheckWaferExists() {
-        this.NotificationService.Notify(NotificationSeverity.Warning, "Not implemented yet.");
-        var result=await this.QuickTestDataService.QuickTestExists(this._waferId);
-        if (result.IsError) {
-            await this.DialogService.Alert($"Error while checking wafer: {result.FirstError.Description}", "Error");
-            this._exists = false;
+        if (!string.IsNullOrEmpty(this.WaferSetup.WaferId)) {
+            var result=await this.QuickTestDataService.QuickTestExists(this.WaferSetup.WaferId);
+            if (result.IsError) {
+                await this.DialogService.Alert($"Error while checking wafer: {result.FirstError.Description}", "Error");
+                this._exists = false;
+            } else {
+                this._exists = result.Value;
+            }
         } else {
-            this._exists = result.Value;
+            this.NotificationService.Notify(NotificationSeverity.Warning, "Wafer ID is empty", "Please enter a wafer ID");
         }
     }
     
-    private void ActivateProbe1() {
-        this._probe1Active = !this._probe1Active;
-        this._probe2Active = false;
-        StateHasChanged();
-    }
-    
-    private void ActivateProbe2() {
-        this._probe1Active = false;
-        this._probe2Active = !this._probe2Active;
-        StateHasChanged();
+    private void WaferIdChangedHandler(string waferId) {
+        this.WaferSetup.WaferId = waferId;
+        this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
     }
 
-    private Task WaferIdChanged(string value) {
-        this.WaferSetup.WaferId = value;
-        this._waferId = value;
+    private Task Probe1PadChangedHandler(object obj) {
+        var selected=obj as string;
+        this.WaferSetup.Probe1Pad = selected;
         return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
     }
     
-    private void WaferIdChangedHandler(string waferId) {
-        this._waferId = waferId;
-    }
-
-    private void Probe1ValueChanged(string obj) {
-        throw new NotImplementedException();
-    }
-
-    private async Task RevertPad1Handler(string obj) {
-        this._selectedPad1= obj;
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private void Probe1PadChanged(object obj) {
+    private Task Probe2PadChangedHandler(object obj) {
         var selected=obj as string;
-        if (selected == this._selectedPad2) {
-            this.NotificationService.Notify(NotificationSeverity.Warning, "Duplicate Pad Selected","Probe 1 cannot be the same pad as probe 2");
-            this._selectedPad1 = string.Empty;
-        } 
+        this.WaferSetup.Probe2Pad = selected;
+        return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
+    }
+
+    private Task MapPad1ChangedHandler(string pad) {
+        this.WaferSetup.Probe1Pad = pad;
+        return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
     }
     
-    private void Probe2PadChanged(object obj) {
-        var selected=obj as string;
-        if (selected == this._selectedPad1) {
-            this.NotificationService.Notify(NotificationSeverity.Warning, "Duplicate Pad Selected","Probe 2 cannot be the same pad as probe 1");
-            this._selectedPad2 = string.Empty;
-        } 
+    private Task MapPad2ChangedHandler(string pad) {
+        this.WaferSetup.Probe2Pad = pad;
+        return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
+    }
+
+    private Task LoadedChangedHandler(bool value) {
+       this.WaferSetup.Loaded= value;
+       return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
     }
 
 }

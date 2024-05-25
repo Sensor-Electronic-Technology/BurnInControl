@@ -303,15 +303,23 @@
        return Task.CompletedTask;
    }
    
-   private void SelectedTabChangedHandler(int obj) {
-       if (obj != 0) {
-           this._controlPaneCollapsed = true;
-           this._runtimePaneCollapsed = true;
+   private void SelectedTabChangedHandler(int tabIndex) {
+       if (tabIndex != 0) {
+           if (tabIndex == 1) {
+               this._controlPaneCollapsed = true;
+               this._runtimePaneCollapsed = true;
+               this._eventPaneCollapsed = true;
+           } else {
+               this._controlPaneCollapsed = true;
+               this._runtimePaneCollapsed = true;
+           }
+
        } else {
            this._controlPaneCollapsed = false;
            this._runtimePaneCollapsed = false;
+           this._eventPaneCollapsed = false;
        }
-       this._eventConsole.Log($"Tab Changed {obj}",AlertStyle.Info);
+       //this._eventConsole.Log($"Tab Changed {tabIndex}",AlertStyle.Info);
    }
    
    private async Task StartConnection() {

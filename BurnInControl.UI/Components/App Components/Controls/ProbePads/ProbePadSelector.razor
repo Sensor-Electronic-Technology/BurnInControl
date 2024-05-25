@@ -1,0 +1,31 @@
+﻿<RadzenFieldset Text="@this.Label">
+    <RadzenStack Orientation="Orientation.Horizontal">
+        <RadzenDropDown TValue="string"
+                        Value="@this.ProbePad"
+                        ReadOnly="@(!this.ProbeActive)"
+                        ValueChanged="@this.ProbePadChanged"
+                        Data=@this.Pads
+                        Style="width: 100px;height: 40px;"/>
+    </RadzenStack>
+</RadzenFieldset>
+
+@code {
+    [Parameter] public string Label { get; set; } = "Probe";
+    [Parameter] public string ButtonLabel { get; set; } = "Activate Probe";
+    
+    [Parameter] public IEnumerable<string> Pads { get; set; } = Enumerable.Empty<string>();
+    
+    [Parameter] public string? ProbePad { get; set; }
+    
+    [Parameter] public EventCallback<string> ProbePadChanged { get; set; }
+    
+    [Parameter] public bool ProbeActive { get; set; }
+    
+    [Parameter] public EventCallback<bool> ProbeActiveChanged { get; set; }
+    
+    public async Task OnClicked() {
+        this.ProbeActive = !this.ProbeActive;
+        await this.ProbeActiveChanged.InvokeAsync(this.ProbeActive);
+    }
+    
+}

@@ -9,4 +9,5 @@ public class WaferSetup {
     public string? Probe1Pad { get; set; } = "";
     public StationProbe? Probe2 { get; set; }=StationProbe.Probe2;
     public string? Probe2Pad { get; set; }="";
+    public bool Loaded { get; set; }
 }

@@ -1,0 +1,95 @@
+﻿@inject NotificationService NotificationService
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
+    <RadzenFieldset Text="Probe 1">
+        <RadzenStack Orientation="Orientation.Horizontal">
+            <RadzenToggleButton Text="Activate P1"
+                                ButtonStyle="ButtonStyle.Info"
+                                Size="ButtonSize.Small"
+                                Value="@this.Probe1Active"
+                                Click="@this.ActivateProbe1"
+                                Style="width:110px; height: 40px;"/>
+            <RadzenDropDown TValue="string"
+                            Value="@Probe1Pad"
+                            Data="@this.Pads"
+                            ValueChanged="@this.Probe1SelectionChanged"
+                            ReadOnly="@(!this.Probe1Active)"
+                            Style="width:100px; height: 40px;"/>
+        </RadzenStack>
+    </RadzenFieldset>
+    <RadzenFieldset Text="Probe 2">
+        <RadzenStack Orientation="Orientation.Horizontal">
+            <RadzenToggleButton Text="Activate P2"
+                                Value="@this.Probe2Active"
+                                ButtonStyle="ButtonStyle.Info"
+                                Size="ButtonSize.Small"
+                                Click="@this.ActivateProbe2"
+                                Style="width:110px; height: 40px;"/>
+            <RadzenDropDown TValue="string"
+                            Value="@Probe2Pad"
+                            ReadOnly="@(!this.Probe2Active)"
+                            ValueChanged="@this.Probe2SelectionChanged"
+                            Data=@this.Pads
+                            Style="width:100px; height: 40px;"/>
+        </RadzenStack>
+    </RadzenFieldset>
+</RadzenStack>
+
+@code {
+    [Parameter] public IEnumerable<string> Pads { get; set; } = Enumerable.Empty<string>();
+    
+    [Parameter] public string? Probe1Pad { get; set; }
+    [Parameter] public string? Probe2Pad { get; set; }
+    
+    [Parameter] public EventCallback<string> Probe1PadChanged { get; set; }
+    [Parameter] public EventCallback<string> Probe2PadChanged { get; set; }
+    
+    [Parameter] public bool Probe1Active { get; set; }
+    [Parameter] public bool Probe2Active { get; set; }
+    
+    [Parameter] public EventCallback<bool> Probe1ActiveChanged { get; set; }
+    [Parameter] public EventCallback<bool> Probe2ActiveChanged { get; set; }
+    
+    private async Task Probe1SelectionChanged(object obj) {
+        var selected=obj as string;
+        if (selected == this.Probe2Pad) {
+            this.NotificationService.Notify(NotificationSeverity.Warning, "Duplicate Pad Selected","Probe 1 cannot be the same pad as probe 2");
+            this.Probe1Pad = string.Empty;
+            await this.Probe1PadChanged.InvokeAsync(this.Probe1Pad);
+            await InvokeAsync(StateHasChanged);
+        } else {
+            this.Probe1Pad = selected;
+            await this.Probe1PadChanged.InvokeAsync(this.Probe1Pad);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+    
+    private async Task Probe2SelectionChanged(object obj) {
+        var selected=obj as string;
+        if (selected == this.Probe1Pad) {
+            this.NotificationService.Notify(NotificationSeverity.Warning, "Duplicate Pad Selected","Probe 2 cannot be the same pad as probe 1");
+            this.Probe2Pad = string.Empty;
+            await this.Probe2PadChanged.InvokeAsync(this.Probe2Pad);
+            await InvokeAsync(StateHasChanged);
+        } else {
+            this.Probe2Pad = selected;
+            await this.Probe2PadChanged.InvokeAsync(this.Probe2Pad);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+    
+    private void ActivateProbe1() {
+        this.Probe1Active=!this.Probe1Active;
+        this.Probe2Active = false;
+        this.Probe1ActiveChanged.InvokeAsync(this.Probe1Active);
+        this.Probe2ActiveChanged.InvokeAsync(this.Probe2Active);
+    }
+
+    private void ActivateProbe2() {
+        this.Probe2Active=!this.Probe2Active;
+        this.Probe1Active = false;
+        this.Probe1ActiveChanged.InvokeAsync(this.Probe1Active);
+        this.Probe2ActiveChanged.InvokeAsync(this.Probe2Active);
+    }
+    
+}

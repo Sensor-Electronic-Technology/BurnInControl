@@ -1,93 +1,414 @@
 @using BurnInControl.Data.BurnInTests.Wafers
 @using BurnInControl.Data.StationModel.Components
 @using BurnInControl.Infrastructure.QuickTest
+@using BurnInControl.Infrastructure.TestLogs
 @using BurnInControl.UI.Components.App_Components.Controls.WaferMap
 @using BurnInControl.UI.Components.App_Components.Dialogs
+@using BurnInControl.UI.Data
 @using QuickTest.Data.DataTransfer
 @inject DialogService DialogService
+@inject NotificationService NotificationService
 @inject QuickTestDataService QuickTestDataService
+@inject TestLogDataService TestLogDataService
 
-<RadzenStack Orientation="Orientation.Vertical">
-    <RadzenTabs RenderMode="TabRenderMode.Client">
-        <Tabs>
-            <RadzenTabsItem Text="Left Pocket(P1)">
-                <PocketSetup PocketCaption="Left Pocket(P1)"
-                             @bind-WaferSetup="@this._pocket1Setup"
-                             WaferList="@this._waferList"/>
-            </RadzenTabsItem>
-            <RadzenTabsItem Text="Middle Pocket(P2)">
-                <PocketSetup PocketCaption="Middle Pocket(P2)"
-                             @bind-WaferSetup="@this._pocket2Setup"
-                             WaferList="@this._waferList"/>
-            </RadzenTabsItem>
-            <RadzenTabsItem Text="Right Pocket(P3)">
-                <PocketSetup PocketCaption="Right Pocket(P3)"
-                             @bind-WaferSetup="@this._pocket3Setup"
-                             WaferList="@this._waferList"/>
-            </RadzenTabsItem>
-        </Tabs>
-    </RadzenTabs>
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
-                 JustifyContent="JustifyContent.Center">
-        <RadzenButton Text="Save" Size="ButtonSize.Large"
-                      Click="@this.SaveHandler"
-                      ButtonStyle="ButtonStyle.Secondary"
-                      Icon="save" Style="width: 170px"/>
-        <RadzenButton Text="Cancel/Clear"
-                      ButtonStyle="ButtonStyle.Danger"
-                      Size="ButtonSize.Large" Icon="cancel"
-                      Click="@this.Cancel"
-                      IsBusy="false"
-                      Shade="Shade.Default"
-                      Disabled="false"/>
-    </RadzenStack>
-</RadzenStack>
+<RadzenSplitter Orientation="Orientation.Horizontal">
+    <RadzenSplitterPane Size="40%">
+        <RadzenStack Orientation="Orientation.Vertical" 
+                     Style="border: 1px solid #0a53be; margin: 0.3rem;">
+            <RadzenDataGrid @ref="@this._waferSetupGrid"
+                            TItem="WaferSetup"
+                            Data="@this._waferSetups"
+                            GridLines="DataGridGridLines.Both"
+                            Responsive="true"
+                            ValueChanged="SelectedItemChangedHandler"
+                            AllowAlternatingRows="false"
+                            AllowColumnResize="true"
+                            SelectionMode="DataGridSelectionMode.Single"
+                            AllowRowSelectOnRowClick="true"
+                            Value="@this._selectedItems"
+                            EditMode="DataGridEditMode.Single"
+                            Style="height: fit-content">
+                <Columns>
+                    <RadzenDataGridColumn Property="WaferId" Title="WaferId" Width="225px">
+                        <EditTemplate Context="waferSetup">
+                            <WaferIdInput WaferId="@waferSetup.WaferId"
+                                          WaferIdChanged="@((id) => { waferSetup.WaferId = id; StateHasChanged(); })"
+                                          WaferList="@this._waferList"/>
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="BurnNumber" Title="Burn Number">
+                        <EditTemplate Context="waferSetup">
+                            <RadzenNumeric TValue="int" Min="1" Max="10"
+                                           @bind-Value="@waferSetup.BurnNumber"/>
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="StationPocket" Title="Pocket"/>
+                    <RadzenDataGridColumn Property="Loaded">
+                        <EditTemplate Context="waferSetup">
+                            <RadzenStack Orientation="Orientation.Vertical"
+                                         AlignItems="AlignItems.Center" Gap="0.5rem">
+                                <RadzenLabel Text="@(waferSetup.Loaded ? "Loaded" : "Not Loaded")" Component="Loaded"/>
+                                <RadzenSwitch @bind-Value="@waferSetup.Loaded" Name="Loaded"/>
+                            </RadzenStack>
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="Probe1Pad" Title="P1 Pad"/>
+                    <RadzenDataGridColumn Property="Probe2Pad" Title="P2 Pad"/>
+                    <RadzenDataGridColumn Context="waferSetup" Title="Edit"
+                                          Filterable="false"
+                                          Sortable="false"
+                                          TextAlign="TextAlign.Center"
+                                          Frozen="true"
+                                          FrozenPosition="FrozenColumnPosition.Right">
+                        <Template Context="waferSetup">
+                            <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light"
+                                          Variant="Variant.Flat"
+                                          Size="ButtonSize.ExtraSmall"
+                                          Click="@(args => EditRow(waferSetup))"
+                                          @onclick:stopPropagation="true"/>
+                        </Template>
+                        <EditTemplate Context="waferSetup">
+                            <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success"
+                                          Variant="Variant.Flat"
+                                          Size="ButtonSize.Medium"
+                                          Click="@((args) => SaveRow(waferSetup))"
+                                          aria-label="Save"/>
+                            <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light"
+                                          Variant="Variant.Flat"
+                                          Size="ButtonSize.Medium"
+                                          class="my-1 ms-1"
+                                          Click="@((args) => CancelEdit(waferSetup))"
+                                          aria-label="Cancel"/>
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+            <RadzenStack Orientation="Orientation.Horizontal"
+                         AlignItems="AlignItems.Center"
+                         JustifyContent="JustifyContent.Center">
+                <RadzenButton Text="Verify" Size="ButtonSize.Medium"
+                              Click="@this.VerifyHandler"
+                              ButtonStyle="ButtonStyle.Info" 
+                              Style="width: 170px"/>
+                <RadzenButton Text="Save" Size="ButtonSize.Medium"
+                              Disabled="@(this._setupError)"
+                              Click="@this.SaveHandler"
+                              ButtonStyle="ButtonStyle.Secondary"
+                              Icon="save" Style="width: 170px"/>
+                <RadzenButton Text="Cancel/Clear"
+                              ButtonStyle="ButtonStyle.Danger"
+                              Size="ButtonSize.Medium" Icon="cancel"
+                              Click="@this.Cancel"
+                              IsBusy="false"
+                              Shade="Shade.Default"
+                              Disabled="false"/>
+            </RadzenStack>
+            <RadzenStack Gap="1" Style="margin: 0.5rem" Visible="@this._setupStatusVisible">
+                <RadzenText TextStyle="TextStyle.H6" 
+                            Text="Wafer Setup Verification Status" 
+                            TextAlign="TextAlign.Center" 
+                            Style="font-family:Verdana; font-weight: bold;"/>
+                @foreach (var alert in this._setupAlerts) {
+                    string message = $"{alert.Pocket}:{alert.Message}";
+                    <RadzenAlert AlertStyle="@alert.Style" 
+                                 Text="@message" 
+                                 AllowClose="false" 
+                                 ShowIcon="true"
+                                 Size="AlertSize.Small" 
+                                 Variant="Variant.Filled"/>
+                }
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenSplitterPane>
+    <RadzenSplitterPane Size="60%" Collapsible="true">
+        <RadzenTabs RenderMode="TabRenderMode.Client" @bind-SelectedIndex="@this._selectedTab" Style="border: 1px solid #2db4dc; margin: 0.3rem;">
+            <Tabs>
+                @for (int i = 0; i < this._waferSetups.Count; i++) {
+                var waferSetup = this._waferSetups[i];
+                int index = i;
+                <RadzenTabsItem Text="@GetPocketLabel(index)">
+                    <PocketSetup PocketCaption="@GetPocketLabel(index)"
+                                 WaferSetup="@waferSetup"
+                                 WaferSetupChanged="@((setup) => { waferSetup = setup; StateHasChanged(); })"
+                                 WaferList="@this._waferList"/>
+                </RadzenTabsItem>
+                }
+            </Tabs>
+        </RadzenTabs>
+    </RadzenSplitterPane>
+</RadzenSplitter>
+@*<RadzenStack Orientation="Orientation.Horizontal" 
+             JustifyContent="JustifyContent.Start">
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenDataGrid @ref="@this._waferSetupGrid"
+                            TItem="WaferSetup"
+                            Data="@this._waferSetups"
+                            GridLines="DataGridGridLines.Both"
+                            Responsive="true"
+                            ValueChanged="SelectedItemChangedHandler"
+                            AllowAlternatingRows="false"
+                            AllowColumnResize="true"
+                            SelectionMode="DataGridSelectionMode.Single"
+                            AllowRowSelectOnRowClick="true"
+                            Value="@this._selectedItems"
+                            EditMode="DataGridEditMode.Single"
+                            Style="height: fit-content">
+                <Columns>
+                    <RadzenDataGridColumn Property="WaferId" Title="WaferId" Width="225px">
+                        <EditTemplate Context="waferSetup">
+                            $1$<RadzenTextBox bind-Value="waferSetup.WaferId"></RadzenTextBox>#1#
+                            <WaferIdInput WaferId="@waferSetup.WaferId"
+                                          WaferIdChanged="@((id) => { waferSetup.WaferId = id; StateHasChanged(); })"
+                                          WaferList="@this._waferList"/>
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="BurnNumber" Title="Burn Number">
+                        <EditTemplate Context="waferSetup">
+                            <RadzenNumeric Min="1" Max="10" bind-Value="waferSetup.BurnNumber"/>
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="StationPocket" Title="Pocket"/>
+                    <RadzenDataGridColumn Property="Loaded">
+                        <EditTemplate Context="waferSetup">
+                            <RadzenStack Orientation="Orientation.Vertical"
+                                         AlignItems="AlignItems.Center" Gap="0.5rem">
+                                <RadzenLabel Text="@(waferSetup.Loaded ? "Loaded":"Not Loaded")" Component="Loaded" />
+                                <RadzenSwitch @bind-Value="@waferSetup.Loaded"  Name="Loaded" />
+                            </RadzenStack>
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="Probe1Pad" Title="P1 Pad"/>
+                    <RadzenDataGridColumn Property="Probe2Pad" Title="P2 Pad"/>
+                    <RadzenDataGridColumn Context="waferSetup" Title="Edit"
+                                          Filterable="false"
+                                          Sortable="false"
+                                          TextAlign="TextAlign.Center"
+                                          Frozen="true"
+                                          FrozenPosition="FrozenColumnPosition.Right">
+                        <Template Context="waferSetup">
+                            <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light"
+                                          Variant="Variant.Flat"
+                                          Size="ButtonSize.ExtraSmall"
+                                          Click="@(args => EditRow(waferSetup))"
+                                          @onclick:stopPropagation="true"/>
+                        </Template>
+                        <EditTemplate Context="waferSetup">
+                            <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success"
+                                          Variant="Variant.Flat"
+                                          Size="ButtonSize.Medium"
+                                          Click="@((args) => SaveRow(waferSetup))"
+                                          aria-label="Save"/>
+                            <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light"
+                                          Variant="Variant.Flat"
+                                          Size="ButtonSize.Medium"
+                                          class="my-1 ms-1"
+                                          Click="@((args) => CancelEdit(waferSetup))"
+                                          aria-label="Cancel"/>
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
+                         JustifyContent="JustifyContent.Center">
+                <RadzenButton Text="Save" Size="ButtonSize.Large"
+                              Click="@this.SaveHandler"
+                              ButtonStyle="ButtonStyle.Secondary"
+                              Icon="save" Style="width: 170px"/>
+                <RadzenButton Text="Cancel/Clear"
+                              ButtonStyle="ButtonStyle.Danger"
+                              Size="ButtonSize.Large" Icon="cancel"
+                              Click="@this.Cancel"
+                              IsBusy="false"
+                              Shade="Shade.Default"
+                              Disabled="false"/>
+            </RadzenStack>
+            <RadzenStack Gap="0">
+                <RadzenAlert AlertStyle="AlertStyle.Danger" Text="Here" Visible="true"/>
+                <RadzenAlert AlertStyle="AlertStyle.Warning" Text="Here"/>
+                <RadzenAlert AlertStyle="AlertStyle.Success" Text="Here"/>
+            </RadzenStack>
+        </RadzenStack>
+        <RadzenTabs RenderMode="TabRenderMode.Client" @bind-SelectedIndex="@this._selectedTab" Style="border: 1px solid #2db4dc">
+            <Tabs>
+                @for (int i = 0; i < this._waferSetups.Count; i++) {
+                    var waferSetup = this._waferSetups[i];
+                    int index = i;
+                    <RadzenTabsItem Text="@GetPocketLabel(index)">
+                        <PocketSetup PocketCaption="@GetPocketLabel(index)"
+                                     WaferSetup="@waferSetup"
+                                     WaferSetupChanged="@((setup) => { waferSetup = setup; StateHasChanged(); })"
+                                     WaferList="@this._waferList"/>
+                    </RadzenTabsItem>
+                }
+            </Tabs>
+        </RadzenTabs>
+    </RadzenStack>*@
 @code {
     [Parameter] public EventCallback<List<WaferSetup>> Save { get; set; }
     [Parameter] public IEnumerable<Pad>? Map { get; set; } = Enumerable.Empty<Pad>();
+    private RadzenDataGrid<WaferSetup> _waferSetupGrid;
     private IEnumerable<string> _waferList=Enumerable.Empty<string>();
-
-    WaferSetup _pocket1Setup = new WaferSetup() {
-        WaferId = "W01",
-        BurnNumber = 1,
-        StationPocket = StationPocket.LeftPocket,
-        Probe1=StationProbe.Probe1,
-        Probe2=StationProbe.Probe2
+    private List<WaferSetup> _selectedItems = new List<WaferSetup>();
+    private int _selectedTab = 0;
+    private bool _setupStatusVisible = true;
+    private bool _setupError = false;
+    private List<SetupAlert> _setupAlerts = new List<SetupAlert>() {
+        new SetupAlert() {
+            Pocket = "Left Pocket(P1)",
+            Style = AlertStyle.Success,
+            Message = "Left Pocket Setup Complete",
+            Okay = false
+        },
+        new SetupAlert() {
+            Pocket = "Middle Pocket(P2)",
+            Style = AlertStyle.Success,
+            Message = "Left Pocket Setup Complete",
+            Okay = false
+        },
+        new SetupAlert() {
+            Pocket = "Right Pocket(P3)",
+            Style = AlertStyle.Success,
+            Message = "Left Pocket Setup Complete",
+            Okay = false
+        }
     };
+
+    private List<WaferSetup> _waferSetups = new List<WaferSetup>() {
+        new WaferSetup() {
+            WaferId = string.Empty,
+            BurnNumber = 1,
+            StationPocket = StationPocket.LeftPocket,
+            Probe1 = StationProbe.Probe1,
+            Probe2 = StationProbe.Probe2
+        },
+        new WaferSetup() {
+            WaferId = string.Empty,
+            BurnNumber = 1,
+            StationPocket = StationPocket.MiddlePocket,
+            Probe1 = StationProbe.Probe3,
+            Probe2 = StationProbe.Probe4
+        },
+        new WaferSetup() {
+            WaferId = string.Empty,
+            BurnNumber = 1,
+            StationPocket = StationPocket.RightPocket,
+            Probe1 = StationProbe.Probe5,
+            Probe2 = StationProbe.Probe6,
+        }
+    };
+
     
-    WaferSetup _pocket2Setup = new WaferSetup() {
-        WaferId = "W02",
-        BurnNumber = 1,
-        StationPocket = StationPocket.MiddlePocket,
-        Probe1=StationProbe.Probe3,
-        Probe2=StationProbe.Probe4
-    };
-    
-    WaferSetup _pocket3Setup = new WaferSetup() {
-        WaferId = "W03",
-        BurnNumber = 1,
-        StationPocket = StationPocket.RightPocket,
-        Probe1=StationProbe.Probe5,
-        Probe2=StationProbe.Probe6
-    };
-
-
     protected override async Task OnInitializedAsync() {
         this.Map = await this.QuickTestDataService.GetWaferMap(2);
         this._waferList = await this.QuickTestDataService.GetQuickTestList(new DateTime(2024,1,1));
     }
+    
+    async Task EditRow(WaferSetup order) {
+        await _waferSetupGrid.EditRow(order);
+    }
+    
+    async Task SaveRow(WaferSetup waferSetup) {
+        await this._waferSetupGrid.UpdateRow(waferSetup);
+    }
 
-    private Task SaveHandler() {
-        return this.Save.InvokeAsync(new List<WaferSetup>() {
-            _pocket1Setup,
-            _pocket2Setup,
-            _pocket3Setup
+    void CancelEdit(WaferSetup waferSetup) {
+        this._waferSetupGrid.CancelEditRow(waferSetup);
+    }
+
+    private async Task VerifyHandler() {
+        for (int i = 0; i < 3; i++) {
+            var setup = this._waferSetups[i];
+            Console.WriteLine($"Setup[{i}]: {setup.WaferId}, {setup.Probe1Pad}, {setup.Probe2Pad}, {setup.Loaded}");
+            if (setup.Loaded) {
+                if(string.IsNullOrEmpty(setup.WaferId)) {
+                    this._setupAlerts[i].Style = AlertStyle.Danger;
+                    this._setupAlerts[i].Message = "Wafer Id is empty.  Please enter a wafer id before continuing";
+                    this._setupAlerts[i].Okay = false;
+                }
+                var result=await this.QuickTestDataService.QuickTestExists(setup.WaferId);
+                if (!result.IsError) {
+                    this._setupAlerts[i].Okay = result.Value;
+                    bool p1Set = !string.IsNullOrEmpty(setup.Probe1Pad);
+                    bool p2Set = !string.IsNullOrEmpty(setup.Probe2Pad);
+
+                    if (!result.Value) {
+                        this._setupAlerts[i].Style = AlertStyle.Danger;
+                        this._setupAlerts[i].Message = "Wafer not found in database, you may continue " +
+                                                       "If you would like to continue anyways please press save";
+                        this._setupAlerts[i].Okay = true;
+                    } else {
+                        if(p1Set==true && p2Set==true) {
+                            this._setupAlerts[i].Style = AlertStyle.Success;
+                            this._setupAlerts[i].Message = "Setup Complete";
+                            this._setupAlerts[i].Okay = true;
+                        } else  {
+                            if (p1Set == false && p2Set == false) {
+                                this._setupAlerts[i].Style = AlertStyle.Danger;
+                                this._setupAlerts[i].Message = "Neither pad is set, please set one " +
+                                                               "or both pads to continue";
+                                this._setupAlerts[i].Okay = false;
+                            } else {
+                                this._setupAlerts[i].Style = AlertStyle.Warning;
+                                this._setupAlerts[i].Message = "One pad is not set, " +
+                                                               "If this was intentional, you may continue";
+                                this._setupAlerts[i].Okay = true;
+                            }
+                        }
+                    }
+                } else {
+                    this._setupAlerts[i].Style = AlertStyle.Danger;
+                    this._setupAlerts[i].Message = $"Error: {result.FirstError.Description}. " +
+                                                   $"\n check network connection";
+                    this._setupAlerts[i].Okay = false;
+                }
+            } else {
+                this._setupAlerts[i].Style = AlertStyle.Info;
+                this._setupAlerts[i].Message = "Pocket not loaded";
+                this._setupAlerts[i].Okay = true;
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+        this._setupAlerts.ForEach(alert => {
+            this._setupError &= !alert.Okay;
         });
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SaveHandler() {
+
+        //await this.Save.InvokeAsync(this._waferSetups);
     }
     
     private Task Cancel() {
         return Task.CompletedTask;
     }
     
+    private string GetPocketLabel(int index) {
+        return index switch {
+            0 => "Left Pocket(P1)",
+            1 => "Middle Pocket(P2)",
+            2 => "Right Pocket(P3)",
+            _ => "Unknown"
+        };
+    }
+
+    private async Task SelectedItemChangedHandler(IList<WaferSetup> obj) {
+        var selected=obj[0];
+        this._selectedTab=this._waferSetups.IndexOf(selected);
+    }
     
+    private Task Notify(NotificationSeverity severity, string summary, string detail) {
+        this.NotificationService.Notify(new NotificationMessage() {
+            Severity = severity,
+            Summary=summary,
+            Detail=detail
+        });
+        return Task.CompletedTask;
+    }
+
+    private Task<bool?> DialogAlert(string message,string title) {
+        return this.DialogService.Alert(title, title, new AlertOptions() { OkButtonText = "Yes",
+            Draggable = true,CloseDialogOnEsc = true});
+    }
 }

@@ -5,6 +5,8 @@
     --led-size: 30px;
     --led-r-width: 100px;
     --led-r-height: 50px;
+    --rz-tabs-tab-selected-background-color:#a05195 !important;
+    --rz-tabs-tab-background-color: #345b6d !important;
 }
 
 .rz-form-field-label {

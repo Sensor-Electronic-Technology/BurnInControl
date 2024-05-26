@@ -6,4 +6,6 @@ public class SetupAlert {
     public AlertStyle Style { get; set; }
     public string? Message { get; set; }
     public bool Okay { get; set; } = false;
+    
+    public SetupAlert? SecondaryAlert { get; set; }
 }

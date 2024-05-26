@@ -1,15 +1,11 @@
 ﻿@page "/config-view"
 @using System.Text.Json
-@using BurnInControl.Data.ComponentConfiguration
-@using BurnInControl.Data.ComponentConfiguration.HeaterController
-@using BurnInControl.Data.ComponentConfiguration.ProbeController
-@using BurnInControl.Data.ComponentConfiguration.StationController
 @using BurnInControl.HubDefinitions.Hubs
-@using BurnInControl.UI.Components.App_Components.Forms.Configurations.Heaters
-@using BurnInControl.UI.Components.App_Components.Forms.Configurations.Probes
+@using BurnInControl.UI.Components.BurnInComponents.Forms.Configurations.Heaters
+@using BurnInControl.UI.Components.BurnInComponents.Forms.Configurations.Probes
 @using BurnInControl.Infrastructure.StationModel
 @using BurnInControl.Shared.ComDefinitions.Station
-@using BurnInControl.UI.Components.App_Components.Forms.Configurations.Station
+@using BurnInControl.UI.Components.BurnInComponents.Forms.Configurations.Station
 @using Microsoft.AspNetCore.SignalR.Client
 @using Environment = System.Environment
 @inject StationConfigDataService ConfigurationDataService

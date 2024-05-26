@@ -1,0 +1,23 @@
+﻿@inject DialogService DialogService
+<RadzenCard Style="border: grey solid 1px; height: 100%;">
+    <RadzenStack Orientation="Orientation.Vertical">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+            <RadzenStack Gap="5" Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
+                <RadzenImage Path="/images/alert-danger.svg" Style="height: 100px; width: 100px;"/>
+                <RadzenText Text="@this.Title" TextStyle="TextStyle.H6"/>
+            </RadzenStack>
+            <RadzenText Text="@Message" TextStyle="TextStyle.H6"/>
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+            <RadzenButton ButtonStyle="ButtonStyle.Info" 
+                          Click="@((args) => DialogService.Close(true))" 
+                          Variant="Variant.Flat" 
+                          Text="Close" Style="width: 120px" />
+        </RadzenStack>
+    </RadzenStack>
+</RadzenCard>
+
+@code {
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public string? Title { get; set; }
+}

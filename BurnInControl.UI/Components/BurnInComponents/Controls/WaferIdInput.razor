@@ -1,5 +1,5 @@
 ﻿@using BurnInControl.Infrastructure.QuickTest
-@using BurnInControl.UI.Components.App_Components.Displays
+@using BurnInControl.UI.Components.BurnInComponents.Displays
 @inject QuickTestDataService QuickTestDataService
 @inject NotificationService NotificationService
 <RadzenStack Orientation="Orientation.Vertical"
@@ -55,13 +55,9 @@
             });
         }
     }
-
-
+    
     private async Task WaferIdChangeHandler(string waferId) {
-        if(!string.IsNullOrEmpty(waferId)) {
-            this.WaferId = waferId;
-            await this.WaferIdChanged.InvokeAsync(this.WaferId);
-        }
+        this.WaferId = waferId;
+        await this.WaferIdChanged.InvokeAsync(this.WaferId);
     }
-
 }

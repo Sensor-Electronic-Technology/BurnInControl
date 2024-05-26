@@ -1,14 +1,8 @@
-@using System.Collections
-@using BurnInControl.UI.Components.App_Components.Displays
-@using Ardalis.SmartEnum;
 @using BurnInControl.Data.BurnInTests.Wafers
-@using BurnInControl.Data.StationModel.Components
 @using BurnInControl.Infrastructure.QuickTest
-@using BurnInControl.UI.Components.App_Components.Controls.WaferMap
-@using BurnInControl.UI.Components.App_Components.Dialogs
 @using QuickTest.Data.DataTransfer
-@using QuickTest.Data.Models.Wafers.Enums
-@using BurnInControl.UI.Components.App_Components.Controls.ProbePads
+@using BurnInControl.UI.Components.BurnInComponents.Controls.ProbePads
+@using BurnInControl.UI.Components.BurnInComponents.Controls.WaferMap
 @inject QuickTestDataService QuickTestDataService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
@@ -28,34 +22,6 @@
             <WaferIdInput WaferId="@this.WaferSetup.WaferId"
                           WaferList="@this.WaferList"
                           WaferIdChanged="@this.WaferIdChangedHandler"/>
-            @*<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
-                    <RadzenFieldset Text="Probe 1">
-                        <RadzenStack Orientation="Orientation.Horizontal">
-                            <RadzenToggleButton Text="Activate Probe 1" 
-                                                Value="@this._probe1Active" 
-                                                Click="@this.ActivateProbe1"/>
-                            <RadzenDropDown TValue="string"
-                                            Value="@this.WaferSetup.Probe1Pad"
-                                            Data=@this._pads
-                                            ValueChanged="@this.Probe1PadChanged"
-                                            ReadOnly="@(!this._probe1Active)"
-                                            Style="width: 100px"/>
-                        </RadzenStack>
-                    </RadzenFieldset>
-                    <RadzenFieldset Text="Probe 2">
-                        <RadzenStack Orientation="Orientation.Horizontal">
-                            <RadzenToggleButton Text="Activate Probe 2"
-                                                Value="@this._probe2Active"
-                                                Click="@this.ActivateProbe2"/>
-                            <RadzenDropDown TValue="string"
-                                            Value="@this.WaferSetup.Probe2Pad"
-                                            ReadOnly="@(!this._probe2Active)"
-                                            ValueChanged="@this.Probe2PadChanged"
-                                            Data=@this._pads
-                                            Style="width: 100px"/>
-                        </RadzenStack>
-                    </RadzenFieldset>
-                </RadzenStack>*@
             <PadSelectors Pads="@this._pads"
                           Probe1Active="@this._probe1Active"
                           Probe1ActiveChanged="@((bool value) => this._probe1Active = value)"

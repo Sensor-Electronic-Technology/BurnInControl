@@ -111,7 +111,10 @@
         </RadzenStack>
     </RadzenSplitterPane>
     <RadzenSplitterPane Size="60%" Collapsible="true">
-        <RadzenTabs RenderMode="TabRenderMode.Client" @bind-SelectedIndex="@this._selectedTab" Style="border: 1px solid #2db4dc; margin: 0.3rem;">
+        <RadzenTabs @ref=@this._tabs
+                    RenderMode="TabRenderMode.Client"
+                    @bind-SelectedIndex="@this._selectedTab" 
+                    Style="border: 1px solid #2db4dc; margin: 0.3rem;">
             <Tabs>
                 @for (int i = 0; i < this._waferSetups.Count; i++) {
                     var waferSetup = this._waferSetups[i];
@@ -131,6 +134,7 @@
     [Parameter] public EventCallback<List<WaferSetup>> Save { get; set; }
     [Parameter] public IEnumerable<Pad>? Map { get; set; } = Enumerable.Empty<Pad>();
     private RadzenDataGrid<WaferSetup> _waferSetupGrid;
+    private RadzenTabs _tabs;
     private IEnumerable<string> _waferList=Enumerable.Empty<string>();
     private List<WaferSetup> _selectedItems = new List<WaferSetup>();
     private int _selectedTab = 0;
@@ -312,13 +316,12 @@
     }
 
     private async Task SaveHandler() {
-        //await this.Save.InvokeAsync(this._waferSetups);
+        await this.Save.InvokeAsync(this._waferSetups);
     }
     
     private async Task Cancel() {
         this._setupStatusVisible = false;
         this._setupError = false;
-        //await InvokeAsync(StateHasChanged);
         for (int i = 0; i < 3; i++) {
             this._setupAlerts[i].WaferIdAlert = new ItemAlert();
             this._setupAlerts[i].ProbePadAlert = new ItemAlert();
@@ -328,7 +331,7 @@
         }
         this._selectedTab = 0;
         await this._waferSetupGrid.Reload();
-        //await InvokeAsync(StateHasChanged);
+        await InvokeAsync(StateHasChanged);
     }
     
     private string GetPocketLabel(int index) {

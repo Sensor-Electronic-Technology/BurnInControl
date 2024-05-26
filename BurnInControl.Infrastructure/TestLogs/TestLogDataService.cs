@@ -13,6 +13,7 @@ namespace BurnInControl.Infrastructure.TestLogs;
 
 public class TestLogDataService {
     private readonly IMongoCollection<BurnInTestLog> _testLogCollection;
+    private readonly IMongoCollection<StationReading> _readingsCollection;
     private readonly StationDataService _stationDataService;
     
     public TestLogDataService(IMongoClient client,StationDataService stationDataService,IOptions<DatabaseSettings> settings){

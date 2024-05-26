@@ -50,7 +50,7 @@ public class TestService:ITestService {
         this._testLogDataService = testLogDataService;
         this._hubContext = hubContext;
         this._savedStateDataService = savedStateDataService;
-        this._interval = TimeSpan.FromSeconds(10);
+        this._interval = TimeSpan.FromSeconds(60);
         this._stationId=configuration["StationId"] ?? "S01";
     }
 
@@ -278,7 +278,6 @@ public class TestService:ITestService {
         }*/
         await this._mediator.Send(new SendAckCommand() { AcknowledgeType = AcknowledgeType.TestCompleteAck });
     }
-    
     private async Task SaveState(StationSerialData data) {
         var controllerSavedState=new ControllerSavedState(data);
         controllerSavedState.TestId=this._runningTest._id.ToString();
@@ -297,24 +296,20 @@ public class TestService:ITestService {
         }
         this._logger.LogWarning("Failed to log saved state.  Message: {Message}",result.FirstError.Description);
     }
-    
     private void CreateUnknownTest(StationCurrent current,int setTemp) {
         BurnInTestLog log=new BurnInTestLog { _id = ObjectId.GenerateNewId() };
         log.CreateUnknown(current,setTemp,this._stationId ?? "S00");
         this._runningTest = log;
     }
-
     private async Task StartLog(StationSerialData data) {
         await this.SaveState(data);
         await this._testLogDataService.UpdateStartAndRunning(this._runningTest._id,
             this._stationId ?? "S01",DateTime.Now,data);
     }
-
     private async Task UpdateLogs(StationSerialData data) {
         await this._testLogDataService.InsertReading(this._runningTest._id,data);
         await this.UpdateSavedState(data);
     }
-    
     public async Task Log(StationSerialData data) {
         this._latestData = data;
         if (this._loggingEnabled) {

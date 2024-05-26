@@ -15,7 +15,6 @@
         <RadzenStack Orientation="Orientation.Horizontal">
             <RadzenSlider Value="@this._scalingFactor" 
                           Change="@this.ScaleChanged"
-                          
                           Min="0" Max="10" TValue="int"/>
             <RadzenText Text="@this._dimensions"/>
         </RadzenStack>
@@ -65,6 +64,7 @@
     
     protected override async Task OnInitializedAsync() {
         this.Map= await this.QuickTestDataService.GetWaferMap(2);
+        this._scalingFactor = 2;
         this._svgCircles = this.Map.Select(e => new SvgCircle() {
             X = e.X,
             Y = e.Y,

@@ -1,4 +1,10 @@
 ﻿@using BurnInControl.UI.Data
+<style>
+    .rz-alert-title{
+        font-size: var(--rz-body-font-size) !important;
+        font-weight: bold !important;
+    }
+</style>
 @if (this.SetupAlerts != null) {
     <RadzenStack Gap="1" Style="margin: 0.5rem" Visible="@this.SetupStatusVisible">
         <RadzenText TextStyle="TextStyle.H5"
@@ -6,42 +12,44 @@
                     TextAlign="TextAlign.Center"
                     Style="font-weight: bold;"/>
         @foreach (var alert in this.SetupAlerts) {
-            var alertMessage = $"WaferId: {alert.Message}";
-            <RadzenCard>
+            <RadzenCard Variant="Variant.Flat">
                 <RadzenStack Orientation="Orientation.Vertical"
                              AlignItems="AlignItems.Center">
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap="10" AlignItems="AlignItems.Center">
+                    <RadzenStack Orientation="Orientation.Horizontal"
+                                 Gap="10" JustifyContent="JustifyContent.Center"
+                                 AlignItems="AlignItems.Center">
                         <RadzenText Text="@alert.Pocket"
                                     TextStyle="TextStyle.H6"
+                                    Style="font-weight: bold;"
                                     TextAlign="TextAlign.Center"/>
-                        <RadzenAlert AlertStyle="AlertStyle.Success" Text="Okay" Size="AlertSize.ExtraSmall" 
-                                     AllowClose="false"/>
+                        <RadzenAlert AlertStyle="@(alert.Okay ? AlertStyle.Success : AlertStyle.Danger)"
+                                     Text="@(alert.Okay ? "Setup OK" : "Setup Error")"
+                                     Shade="(@alert.Okay ? Shade.Darker : Shade.Default)"
+                                     Size="AlertSize.ExtraSmall"
+                                     AllowClose="false" Style="min-width: 1rem !important;"/>
                     </RadzenStack>
                     <RadzenStack AlignItems="AlignItems.Start">
-                        <RadzenAlert AlertStyle="@alert.Style"
+                        <RadzenAlert AlertStyle="@alert.WaferIdAlert.Style"
                                      Title="WaferId Status"
-                                     Text="@alert.Message"
+                                     Text="@alert.WaferIdAlert.Message"
                                      AllowClose="false"
                                      ShowIcon="true"
                                      Size="AlertSize.ExtraSmall"
                                      Variant="Variant.Filled"
-                                     Shade="Shade.Darker"/>
-                        @if (alert.SecondaryAlert != null) {
-                            var secondaryAlertMessage = $"ProbePads: {alert.SecondaryAlert.Message}";
-                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
-                                <RadzenAlert AlertStyle="@alert.SecondaryAlert.Style"
-                                             Title="Probe Pad Status"
-                                             Text="@alert.SecondaryAlert.Message"
-                                             AllowClose="false"
-                                             ShowIcon="true"
-                                             Size="AlertSize.ExtraSmall"
-                                             Variant="Variant.Filled"
-                                             Shade="Shade.Darker"/>
-                            </RadzenStack>
-                        }
+                                     Shade="Shade.Darker"
+                                     Style="min-width: 35rem !important; max-width: 35rem !important;"/>
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+                            <RadzenAlert AlertStyle="@alert.ProbePadAlert.Style"
+                                         Title="Probe Pad Status"
+                                         Text="@alert.ProbePadAlert.Message"
+                                         AllowClose="false"
+                                         ShowIcon="true"
+                                         Size="AlertSize.ExtraSmall"
+                                         Variant="Variant.Filled"
+                                         Shade="Shade.Darker"
+                                         Style="min-width: 35rem !important; max-width: 35rem !important;"/>
+                        </RadzenStack>
                     </RadzenStack>
-
-
                 </RadzenStack>
             </RadzenCard>
         }

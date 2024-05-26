@@ -56,7 +56,7 @@ Console.WriteLine(objectId);*/
 //await CopyTestLogs();
 //await TestLogsSepCollection();
 //await BenchmarkLogFetching();
-await TestUsbController();
+//await TestUsbController();
 //PrintPackets();
 //StartSerialPort();
 
@@ -71,6 +71,11 @@ var output = JsonSerializer.Serialize(msgPacket,
     });
 
 Console.WriteLine(output);*/
+/*string? str = string.Empty;
+Console.WriteLine($"NullorWhitespace: {string.IsNullOrWhiteSpace(str)}");*/
+
+bool p1 = false, p2 = false;
+Console.WriteLine($"And Check: {p1 && p2}");
 
 Task TestUsbController() {
     UsbTesting usb = new UsbTesting();

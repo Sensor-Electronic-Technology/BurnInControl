@@ -12,16 +12,27 @@
     <RadzenText Text="@this.PocketCaption"/>
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
         <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
-            <RadzenFieldset Text="Pocket Loaded?">
-                <RadzenStack Orientation="Orientation.Vertical" 
-                             AlignItems="AlignItems.Center" Gap="0.5rem">
-                    <RadzenLabel Text="@(this.WaferSetup.Loaded ? "Loaded":"Not Loaded")" Component="Loaded" />
-                    <RadzenSwitch Value="@this.WaferSetup.Loaded" ValueChanged="@this.LoadedChangedHandler"  Name="Loaded" />
-                </RadzenStack>
-            </RadzenFieldset>
+
+
             <WaferIdInput WaferId="@this.WaferSetup.WaferId"
                           WaferList="@this.WaferList"
                           WaferIdChanged="@this.WaferIdChangedHandler"/>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="10">
+                <RadzenFieldset Text="Pocket Loaded?">
+                    <RadzenStack Orientation="Orientation.Vertical"
+                                 AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenLabel Text="@(this.WaferSetup.Loaded ? "Loaded" : "Not Loaded")" Component="Loaded"/>
+                        <RadzenSwitch Value="@this.WaferSetup.Loaded" ValueChanged="@this.LoadedChangedHandler" Name="Loaded"/>
+                    </RadzenStack>
+                </RadzenFieldset>
+                <RadzenFieldset Text="Burn-in Number">
+                    <RadzenNumeric TValue="int" 
+                                   Value="@this.WaferSetup.BurnNumber" 
+                                   ValueChanged="@this.BurnInValueChanged"
+                                   Style="width: 5rem"/>
+                </RadzenFieldset>
+            </RadzenStack>
+
             <PadSelectors Pads="@this._pads"
                           Probe1Active="@this._probe1Active"
                           Probe1ActiveChanged="@((bool value) => this._probe1Active = value)"
@@ -61,6 +72,8 @@
     protected override async Task OnInitializedAsync() {
         this._map = await this.QuickTestDataService.GetWaferMap(2);
         this._pads = this._map.Where(e=>!string.IsNullOrEmpty(e.Identifier)).Select(e => e.Identifier!).ToList();
+        this._probe1Active = false;
+        this._probe2Active = false;
     }
     
     private async Task CheckWaferExists() {
@@ -107,6 +120,11 @@
     private Task LoadedChangedHandler(bool value) {
        this.WaferSetup.Loaded= value;
        return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
+    }
+
+    private Task BurnInValueChanged(int burnNumber) {
+        this.WaferSetup.BurnNumber=burnNumber;
+        return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
     }
 
 }

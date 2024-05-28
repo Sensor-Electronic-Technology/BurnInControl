@@ -10,7 +10,7 @@
         <PackageReference Include="Ardalis.SmartEnum" Version="8.0.0" />
         <PackageReference Include="ErrorOr" Version="1.10.0" />
         <PackageReference Include="MongoDB.Driver" Version="2.25.0" />
-        <PackageReference Include="QuickTest.Data" Version="1.0.9" />
+        <PackageReference Include="QuickTest.Data" Version="1.0.15" />
     </ItemGroup>
 
     <ItemGroup>

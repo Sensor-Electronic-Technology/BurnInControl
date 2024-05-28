@@ -21,34 +21,75 @@
     </RadzenFieldset>
     <RadzenStack Orientation="Orientation.Vertical">
         <RadzenFieldset Text="Select pads" AllowCollapse="true">
-            <svg viewBox="0 0 826 810" width="@_width" height="@_height">
-                <image class="mainProject"
-                       xlink:href="images/WaferMask2in.png"
-                       width="826" height="810"/>
-                @foreach (var circ in _svgCircles) {
-                    <circle cx="@circ.X" cy="@circ.Y"
-                            r="@circ.Radius"
-                            id="@circ.AltTex"
-                            fill="@circ.Fill"
-                            fill-opacity="@circ.Opacity"
-                            onclick="@(() => this.CircleClickHandler(circ.AltTex))">
-                    </circle>
+            @if (this.WaferMap != null) {
+                @*<svg viewBox="@this.WaferMap?.ViewBoxString" width="@_width" height="@_height">
+                    <image class="mainProject"
+                           xlink:href="@this.WaferMap?.WaferMapPath"
+                           width="@this.WaferMap?.SvgWidth" 
+                           height="@this.WaferMap?.SvgWidth"/>
+                    @foreach (var circ in this._svgCircles){
+                        <circle cx="@circ.X" cy="@circ.Y"
+                                r="@circ.Radius"
+                                id="@circ.AltTex"
+                                fill="@circ.Fill"
+                                fill-opacity="@circ.Opacity"
+                                onclick="@(() => this.CircleClickHandler(circ.AltTex))">
+                        </circle>
+                    }
+                </svg>*@
+                @if (this.WaferMap.WaferSize == 2) {
+                    <svg viewBox="0 0 826 810" width="@_width" height="@_height">
+                        <image class="mainProject"
+                               xlink:href="images/WaferMask2in.png"
+                               width="826" height="810"/>
+                        @foreach (var circ in _svgCircles) {
+                            <circle cx="@circ.X" cy="@circ.Y"
+                                    r="@circ.Radius"
+                                    id="@circ.AltTex"
+                                    fill="@circ.Fill"
+                                    fill-opacity="@circ.Opacity"
+                                    onclick="@(() => this.CircleClickHandler(circ.AltTex))">
+                            </circle>
+                        }
+                    </svg>
+                } else {
+                    <svg viewBox="0 0 851 852" width="@_width" height="@_height">
+                        <image class="mainProject"
+                               xlink:href="images/Wafer4Inch.PNG"
+                               width="851" height="852"/>
+                        @foreach (var circ in _svgCircles) {
+                            <circle cx="@circ.X" cy="@circ.Y"
+                                    r="@circ.Radius"
+                                    id="@circ.AltTex"
+                                    fill="@circ.Fill"
+                                    fill-opacity="@circ.Opacity"
+                                    onclick="@(() => this.CircleClickHandler(circ.AltTex))">
+                            </circle>
+                        }
+                    </svg>
                 }
-            </svg>
+
+                
+
+            }
         </RadzenFieldset>
     </RadzenStack>
 </RadzenStack>
 
 @code {
-    [Parameter] public IEnumerable<Pad> Map { get; set; }
+    //[Parameter] public IEnumerable<Pad>? Map { get; set; }
     [Parameter] public string? SelectedPad1 { get; set; }
     [Parameter] public string? SelectedPad2 { get; set; }
     [Parameter] public EventCallback<string> SelectedPad1Changed { get; set; }
     [Parameter] public EventCallback<string> SelectedPad2Changed { get; set; }
     [Parameter] public bool Probe1Active { get; set; } = false;
     [Parameter] public bool Probe2Active { get; set; } = false;
+    [Parameter] public WaferMapDto? WaferMap { get; set; }
     
-
+    
+    private string _viewBox = "0 0 0 0";
+    private int _svgWidth = 0;
+    private int _svgHeight = 0;
     private string _defaultFill = "grey";
     private string _probe1Fill = "green";
     private string _probe2Fill = "blue";
@@ -59,25 +100,38 @@
     private int _width = 426;
     private int _scalingFactor = 0;
     private string _dimensions = "410,426";
+    public List<SvgCircle> _svgCircles = new List<SvgCircle>();
     
-    private List<SvgCircle> _svgCircles = new List<SvgCircle>();
     
     protected override async Task OnInitializedAsync() {
-        this.Map= await this.QuickTestDataService.GetWaferMap(2);
-        this._scalingFactor = 2;
-        this._svgCircles = this.Map.Select(e => new SvgCircle() {
-            X = e.X,
-            Y = e.Y,
-            Radius = e.Radius,
-            AltTex = e.Identifier,
-            PostBackValue = e.Identifier,
-            Fill = "green",
-            State = false,
-            Opacity = "0"
-        }).ToList();
-        this._height=410+(50*this._scalingFactor);
-        this._width=426+(50*this._scalingFactor);
-        this._dimensions = $"{this._height},{this._width}";
+        if (this.WaferMap != null) {
+            this._scalingFactor = 2;
+            Console.WriteLine($"{this.WaferMap.WaferMapPath}");
+            Console.WriteLine($"View: {this.WaferMap.ViewBoxString}");
+            this._viewBox=this.WaferMap.ViewBoxString;
+            this._svgWidth=this.WaferMap.SvgWidth;
+            this._svgHeight=this.WaferMap.SvgHeight;
+            this._scalingFactor = 2;
+            this._svgCircles = this.WaferMap.MapPads.Select(e => new SvgCircle() {
+                X = e.X,
+                Y = e.Y,
+                Radius = e.Radius,
+                AltTex = e.Identifier,
+                PostBackValue = e.Identifier,
+                Fill = "green",
+                State = false,
+                Opacity = "0"
+            }).ToList();
+            this._height=410+(50*this._scalingFactor);
+            this._width=426+(50*this._scalingFactor);
+            this._dimensions = $"{this._height},{this._width}";
+            
+            /*Console.WriteLine($"Height: {this._height}, Width: {this._width}");
+            Console.WriteLine($"Dimensions: {this._dimensions}");
+            Console.WriteLine($"ImageDimensions: {this.WaferMap.ImageHeight}, Image Width: {this.WaferMap.ImageWidth}");
+            Console.WriteLine($"ViewBox: {this.WaferMap.ViewBoxString}");
+            Console.WriteLine($"SvgDimensions: {this.WaferMap.SvgHeight}, Image Width: {this.WaferMap.SvgWidth}");*/
+        }
     }
 
     protected override async Task OnParametersSetAsync() {
@@ -280,8 +334,8 @@
     
     private void ScaleChanged(int scaleFactor) {
         this._scalingFactor = scaleFactor;
-        this._height=410+(50*scaleFactor);
-        this._width=426+(50*scaleFactor);
+        this._height=this.WaferMap.ImageHeight+(50*scaleFactor);
+        this._width=this.WaferMap.ImageWidth+(50*scaleFactor);
         this._dimensions = $"{this._height},{this._width}";
     }
 

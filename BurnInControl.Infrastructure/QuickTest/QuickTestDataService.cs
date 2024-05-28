@@ -11,6 +11,7 @@ using QuickTest.Data.Contracts.Requests;
 using QuickTest.Data.Contracts.Requests.Get;
 using QuickTest.Data.Contracts.Responses;
 using QuickTest.Data.DataTransfer;
+using QuickTest.Data.Models.Wafers;
 
 namespace BurnInControl.Infrastructure.QuickTest;
 
@@ -46,28 +47,28 @@ public class QuickTestDataService {
                 $"{QtApiPaths.GetAvailableBurnInPadsPath}{waferId}");
             if (result == null) {
                 this._logger.LogError("GetAvailableBurnInPads request failed, returned null");
-                return Enumerable.Empty<Pad>();
+                return [];
             }
             return result.Pads;
         } catch(Exception ex) {
             string msg = ex.ToErrorMessage();
             this._logger.LogError("GetAvailablePads failed, ErrorMessage: {Message}",msg);
-            return Enumerable.Empty<Pad>();;
+            return [];;
         }
     }
 
-    public async Task<IEnumerable<Pad>> GetWaferMap(int waferSize) {
+    public async Task<WaferMapDto?> GetWaferMap(int waferSize) {
         try {
             var result = await this._client.GetFromJsonAsync<GetMapResponse>($"{QtApiPaths.GetMapPath}{waferSize}");
             if (result == null) {
                 this._logger.LogError("GetWaferMap request failed, returned null");
-                return Enumerable.Empty<Pad>();
+                return null;
             }
-            return result.Pads;
+            return result.WaferMap;
         } catch(Exception ex) {
             string msg = ex.ToErrorMessage();
             this._logger.LogError("GetWaferMap failed, ErrorMessage: {Message}",msg);
-            return Enumerable.Empty<Pad>();;
+            return null;
         }
     }
 

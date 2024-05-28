@@ -27,6 +27,7 @@
                                 Style="width:110px; height: 40px;"/>
             <RadzenDropDown TValue="string"
                             Value="@Probe2Pad"
+                            AllowFiltering="true"
                             ReadOnly="@(!this.Probe2Active)"
                             ValueChanged="@this.Probe2SelectionChanged"
                             Data=@this.Pads

@@ -49,7 +49,7 @@ public class TestSetupService {
     public Task<IEnumerable<string>> GetQtList(TimeSpan history) {
         return this._qtDataService.GetQuickTestList(DateTime.Now-history);
     }
-    public Task<IEnumerable<Pad>> GetMap(int inches) {
+    public Task<WaferMapDto?> GetMap(int inches) {
         return this._qtDataService.GetWaferMap(inches);
     }
     public void Reset() {

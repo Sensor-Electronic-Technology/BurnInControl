@@ -1,10 +1,7 @@
 @using BurnInControl.Data.BurnInTests.Wafers
-@using BurnInControl.Data.StationModel.Components
-@using BurnInControl.Infrastructure.QuickTest
-@using BurnInControl.Infrastructure.TestLogs
 @using BurnInControl.UI.Data
 @using QuickTest.Data.DataTransfer
-@using BurnInControl.UI.Components.BurnInComponents.Controls
+@using EpiData.Data.Models.Epi.Enums
 @inject DialogService DialogService
 @inject NotificationService NotificationService
 @inject TestSetupService _testSetupService
@@ -110,24 +107,32 @@
         </RadzenStack>
     </RadzenSplitterPane>
     <RadzenSplitterPane Size="60%" Collapsible="true">
-        <RadzenTabs @ref=@this._tabs
-                    RenderMode="TabRenderMode.Client"
-                    @bind-SelectedIndex="@this._selectedTab" 
-                    Style="border: 1px solid #2db4dc; margin: 0.3rem;">
-            <Tabs>
-                @for (int i = 0; i < this._testSetupService.SetupCount; i++) {
-                    var waferSetup = this._testSetupService.GetWaferSetup(i);
-                    int index = i;
-                    <RadzenTabsItem Text="@GetPocketLabel(index)">
-                        <PocketSetup PocketCaption="@GetPocketLabel(index)"
-                                     WaferSetup="@waferSetup"
-                                     WaferSetupChanged="@(async Task(setup) => { waferSetup = setup; await InvokeAsync(StateHasChanged);})"
-                                     Map=""
-                                     WaferList="@this._waferList"/>
-                    </RadzenTabsItem>
-                }
-            </Tabs>
-        </RadzenTabs>
+        <RadzenDropDown TValue="string"
+                        Data="@this._waferSizes"
+                        Value="@this._selectedWaferSize" 
+                        ValueChanged="SelectedWaferSizeChanged"/>
+        @if (this._map != null) {
+            <RadzenTabs @ref=@this._tabs
+                        RenderMode="TabRenderMode.Client"
+                        @bind-SelectedIndex="@this._selectedTab"
+                        Style="border: 1px solid #2db4dc; margin: 0.3rem;">
+                <Tabs>
+                    @for (int i = 0; i < this._testSetupService.SetupCount; i++) {
+                        var waferSetup = this._testSetupService.GetWaferSetup(i);
+                        int index = i;
+                        <RadzenTabsItem Text="@GetPocketLabel(index)">
+                            <PocketSetup PocketCaption="@GetPocketLabel(index)"
+                                         WaferSetup="@waferSetup"
+                                         WaferSetupChanged="@(async Task (setup) => { waferSetup = setup; await InvokeAsync(StateHasChanged); })"
+                                         Map="this._map"
+                                         WaferList="@this._waferList"/>
+                        </RadzenTabsItem>
+                    }
+                </Tabs>
+            </RadzenTabs>
+            
+        }
+
     </RadzenSplitterPane>
 </RadzenSplitter>
 @code {
@@ -136,17 +141,18 @@
     private RadzenDataGrid<WaferSetup> _waferSetupGrid;
     private IEnumerable<string>? _waferList=Enumerable.Empty<string>();
     private RadzenTabs _tabs;
-    private IEnumerable<Pad> _map=Enumerable.Empty<Pad>();
+    private WaferMapDto? _map;
     private List<WaferSetup> _selectedItems = new List<WaferSetup>();
+    private IEnumerable<string> _waferSizes=Enumerable.Empty<string>();
+    private string? _selectedWaferSize;
     private int _selectedTab = 0;
     private bool _setupStatusVisible = false;
+    private List<SvgCircle> _svgPads = new List<SvgCircle>();
     
     protected override async Task OnInitializedAsync() {
-        //this.Map = await this._testSetupService.GetMap(2);
-        //this._waferList = await this._testSetupService.GetQtList(new TimeSpan(360, 0, 0, 0));
-
+        this._waferSizes=WaferSize.List.Select(e => e.ToString()).ToList();
         this._waferList = await this._testSetupService.GetQtList(TimeSpan.FromDays(147));
-        this._map = await this._testSetupService.GetMap(2);
+        this._waferSizes = new List<string>() { WaferSize.TwoInch.Name, WaferSize.FourInch.Name };
     }
     
     async Task EditRow(WaferSetup order) {
@@ -167,8 +173,6 @@
             return;
         }
         await this._testSetupService.VerifyHandler();
-        
-        /*this._setupError = this._setupAlerts.Any(e => !e.Okay);*/
         this._setupStatusVisible = true;
         await InvokeAsync(StateHasChanged);
     }
@@ -194,7 +198,6 @@
         };
     }
     
-
     private async Task SelectedItemChangedHandler(IList<WaferSetup> obj) {
         var selected=obj[0];
         this._selectedTab=this._testSetupService.WaferSetups.IndexOf(selected);
@@ -216,5 +219,15 @@
                 CloseDialogOnEsc = true, CloseDialogOnOverlayClick = true,
                 ShowTitle = false
             }, parameters: new Dictionary<string, object>() { { "Title", title }, { "Message", message } });
+    }
+
+    private async Task SelectedWaferSizeChanged(string waferSize) {
+        this._selectedWaferSize=waferSize;
+        var size=WaferSize.FromName(waferSize);
+        this._map = null;
+        await InvokeAsync(StateHasChanged);
+        this._map=await this._testSetupService.GetMap(size);
+        this._testSetupService.Reset();
+        await InvokeAsync(StateHasChanged);
     }
 }

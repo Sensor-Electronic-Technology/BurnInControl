@@ -44,11 +44,11 @@
                           Probe2PadChanged="@this.Probe2PadChangedHandler"/>
         </RadzenStack>
         @if (this.Map!=null) {
-            <WaferImageMap Map="@this.Map"
-                           SelectedPad1="@this.WaferSetup.Probe1Pad"
+            <WaferImageMap SelectedPad1="@this.WaferSetup.Probe1Pad"
                            SelectedPad2="@this.WaferSetup.Probe2Pad"
                            SelectedPad1Changed="@this.MapPad1ChangedHandler"
                            SelectedPad2Changed="@this.MapPad2ChangedHandler"
+                           WaferMap="@this.Map"
                            Probe1Active="@this._probe1Active"
                            Probe2Active="@this._probe2Active"/>
         }
@@ -58,10 +58,11 @@
 
 @code {
     [Parameter] public string PocketCaption { get; set; } = "Pocket X";
-    [Parameter] public IEnumerable<Pad>? Map { get; set; }=Enumerable.Empty<Pad>();
+    [Parameter] public WaferMapDto? Map { get; set; }
     [Parameter] public WaferSetup WaferSetup { get; set; }=new WaferSetup();
     [Parameter] public EventCallback<WaferSetup> WaferSetupChanged { get; set; }
     [Parameter] public IEnumerable<string> WaferList { get; set; }
+    [Parameter] public int WaferSize { get; set; }
     
     private bool _probe1Active=false;
     private bool _probe2Active=false;
@@ -70,17 +71,13 @@
 
 
     protected override async Task OnInitializedAsync() {
-        if (this.Map != null) {
-            this._pads = this.Map?.Where(e=>!string.IsNullOrEmpty(e.Identifier)).Select(e => e.Identifier!).ToList();
-        }
+        this._pads = this.Map?.MapPads?.Where(e=>!string.IsNullOrEmpty(e.Identifier)).Select(e => e.Identifier!).ToList();
         this._probe1Active = false;
         this._probe2Active = false;
     }
 
     protected override Task OnParametersSetAsync() {
-        //this._pads = this.Map?.Where(e=>!string.IsNullOrEmpty(e.Identifier)).Select(e => e.Identifier!).ToList();
-        /*this._probe1Active = false;
-        this._probe2Active = false;*/
+
         return base.OnParametersSetAsync();
     }
 

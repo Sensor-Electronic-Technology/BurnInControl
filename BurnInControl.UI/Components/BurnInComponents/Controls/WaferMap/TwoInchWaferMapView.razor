@@ -1,4 +1,5 @@
-﻿@inject NotificationService NotificationService
+﻿@using BurnInControl.UI.Data
+@inject NotificationService NotificationService
 @rendermode InteractiveServer
 
 <style>
@@ -38,22 +39,28 @@
 </div>*@
 
 @*826 810*@
-<div id="outer-pane">
-    <svg viewBox="0 0 826 810" width="800" height="700"  >
-        <image class="mainProject" 
-               xlink:href="images/WaferMask2in.png" 
-               width="826" height="810" />
-        <circle cx="160" cy="365" r="8" stroke="#d4ffde"
-                stroke-width=".1" fill="red"/>
-        <circle cx="180" cy="366" r="9" stroke="#d4ffde"
-                stroke-width=".1" fill="yellow"/>
-        <circle cx="142" cy="441" r="9" stroke="#d4ffde" href="#"
-                stroke-width=".1" fill="green" onclick="@(() => this.OnClick("r3"))"/>
-    </svg>
-    
-</div>
+@*<svg viewBox="0 0 826 810" width="551" height="552">
+    <image class="mainProject"
+           xlink:href="images/WaferMask2in.png"
+           width="851" height="852"/>
+    @foreach (var circ in _svgCircles) {
+    <circle cx="@circ.X" cy="@circ.Y"
+            r="@circ.Radius"
+            id="@circ.AltTex"
+            fill="@circ.Fill"
+            fill-opacity="@circ.Opacity"
+            onclick="@(() => this.CircleClickHandler(circ.AltTex))">
+    </circle>
+    }
+</svg>*@
 
 @code {
+    
+    List<SvgCircle> _svgCircles = new List<SvgCircle> {
+        new SvgCircle() {X = 121, Y = 369, Radius = 8, Fill = "green", Opacity = "100", AltTex = "R1-E"},
+        new SvgCircle() {X = 180, Y = 366, Radius = 9, Fill = "green", Opacity = "100", AltTex = "R2-E"},
+        new SvgCircle() {X = 142, Y = 441, Radius = 9, Fill = "green", Opacity = "100", AltTex = "R3-E"}
+    };
 
     void OnClick(string area) {
         this.NotificationService.Notify(new NotificationMessage() {

@@ -67,15 +67,23 @@
     private bool _probe2Active=false;
     private List<string>? _pads;
     private bool _exists = false;
-    private IEnumerable<Pad> _map=[];
+
 
     protected override async Task OnInitializedAsync() {
-        this._map = await this.QuickTestDataService.GetWaferMap(2);
-        this._pads = this._map.Where(e=>!string.IsNullOrEmpty(e.Identifier)).Select(e => e.Identifier!).ToList();
+        if (this.Map != null) {
+            this._pads = this.Map?.Where(e=>!string.IsNullOrEmpty(e.Identifier)).Select(e => e.Identifier!).ToList();
+        }
         this._probe1Active = false;
         this._probe2Active = false;
     }
-    
+
+    protected override Task OnParametersSetAsync() {
+        //this._pads = this.Map?.Where(e=>!string.IsNullOrEmpty(e.Identifier)).Select(e => e.Identifier!).ToList();
+        /*this._probe1Active = false;
+        this._probe2Active = false;*/
+        return base.OnParametersSetAsync();
+    }
+
     private async Task CheckWaferExists() {
         if (!string.IsNullOrEmpty(this.WaferSetup.WaferId)) {
             var result=await this.QuickTestDataService.QuickTestExists(this.WaferSetup.WaferId);

@@ -7,8 +7,7 @@
 @using BurnInControl.UI.Components.BurnInComponents.Controls
 @inject DialogService DialogService
 @inject NotificationService NotificationService
-@inject QuickTestDataService QuickTestDataService
-@inject TestLogDataService TestLogDataService
+@inject TestSetupService _testSetupService
 @rendermode InteractiveServer
 
 <RadzenSplitter Orientation="Orientation.Horizontal">
@@ -17,7 +16,7 @@
                      Style="border: 1px solid #0a53be; margin: 0.3rem;">
             <RadzenDataGrid @ref="@this._waferSetupGrid"
                             TItem="WaferSetup"
-                            Data="@this._waferSetups"
+                            Data="@this._testSetupService.WaferSetups"
                             Density="Density.Compact"
                             GridLines="DataGridGridLines.Both"
                             Responsive="true"
@@ -94,7 +93,7 @@
                               ButtonStyle="ButtonStyle.Info" 
                               Style="width: 170px"/>
                 <RadzenButton Text="Save" Size="ButtonSize.Medium"
-                              Disabled="@(this._setupError)"
+                              Disabled="@(this._testSetupService.SetupError)"
                               Click="@this.SaveHandler"
                               ButtonStyle="ButtonStyle.Secondary"
                               Icon="save" Style="width: 170px"/>
@@ -106,7 +105,7 @@
                               Shade="Shade.Default"
                               Disabled="false"/>
             </RadzenStack>
-            <TestSetupStatusView SetupAlerts="@this._setupAlerts" 
+            <TestSetupStatusView SetupAlerts="@this._testSetupService.SetupAlerts" 
                                  SetupStatusVisible="@this._setupStatusVisible"/>
         </RadzenStack>
     </RadzenSplitterPane>
@@ -116,13 +115,14 @@
                     @bind-SelectedIndex="@this._selectedTab" 
                     Style="border: 1px solid #2db4dc; margin: 0.3rem;">
             <Tabs>
-                @for (int i = 0; i < this._waferSetups.Count; i++) {
-                    var waferSetup = this._waferSetups[i];
+                @for (int i = 0; i < this._testSetupService.SetupCount; i++) {
+                    var waferSetup = this._testSetupService.GetWaferSetup(i);
                     int index = i;
                     <RadzenTabsItem Text="@GetPocketLabel(index)">
                         <PocketSetup PocketCaption="@GetPocketLabel(index)"
                                      WaferSetup="@waferSetup"
-                                     WaferSetupChanged="@(async Task(setup) => { waferSetup = setup; await InvokeAsync(StateHasChanged); })"
+                                     WaferSetupChanged="@(async Task(setup) => { waferSetup = setup; await InvokeAsync(StateHasChanged);})"
+                                     Map=""
                                      WaferList="@this._waferList"/>
                     </RadzenTabsItem>
                 }
@@ -132,63 +132,21 @@
 </RadzenSplitter>
 @code {
     [Parameter] public EventCallback<List<WaferSetup>> Save { get; set; }
-    [Parameter] public IEnumerable<Pad>? Map { get; set; } = Enumerable.Empty<Pad>();
+    //[Parameter] public IEnumerable<Pad>? Map { get; set; } = Enumerable.Empty<Pad>();
     private RadzenDataGrid<WaferSetup> _waferSetupGrid;
+    private IEnumerable<string>? _waferList=Enumerable.Empty<string>();
     private RadzenTabs _tabs;
-    private IEnumerable<string> _waferList=Enumerable.Empty<string>();
+    private IEnumerable<Pad> _map=Enumerable.Empty<Pad>();
     private List<WaferSetup> _selectedItems = new List<WaferSetup>();
     private int _selectedTab = 0;
     private bool _setupStatusVisible = false;
-    private bool _setupError = false;
-    private List<SetupAlert> _setupAlerts = new List<SetupAlert>() {
-        new SetupAlert() {
-            Pocket = "Left Pocket(P1)",
-            WaferIdAlert = new ItemAlert(),
-            ProbePadAlert = new ItemAlert(),
-        },
-        new SetupAlert() {
-            Pocket = "Middle Pocket(P2)",
-            Okay = false,
-            ProbePadAlert = new ItemAlert(),
-            WaferIdAlert = new ItemAlert()
-        },
-        new SetupAlert() {
-            Pocket = "Right Pocket(P3)",
-            Okay = false,
-            ProbePadAlert = new ItemAlert(),
-            WaferIdAlert = new ItemAlert()
-        }
-    };
-    private List<WaferSetup> _waferSetups = new List<WaferSetup>() {
-        new WaferSetup() {
-            WaferId = string.Empty,
-            BurnNumber = 1,
-            StationPocket = StationPocket.LeftPocket,
-            Probe1 = StationProbe.Probe1,
-            Probe2 = StationProbe.Probe2,
-            Loaded = true
-        },
-        new WaferSetup() {
-            WaferId = string.Empty,
-            BurnNumber = 1,
-            StationPocket = StationPocket.MiddlePocket,
-            Probe1 = StationProbe.Probe3,
-            Probe2 = StationProbe.Probe4,
-            Loaded = true
-        },
-        new WaferSetup() {
-            WaferId = string.Empty,
-            BurnNumber = 1,
-            StationPocket = StationPocket.RightPocket,
-            Probe1 = StationProbe.Probe5,
-            Probe2 = StationProbe.Probe6,
-            Loaded = true
-        }
-    };
     
     protected override async Task OnInitializedAsync() {
-        this.Map = await this.QuickTestDataService.GetWaferMap(2);
-        this._waferList = await this.QuickTestDataService.GetQuickTestList(new DateTime(2024,1,1));
+        //this.Map = await this._testSetupService.GetMap(2);
+        //this._waferList = await this._testSetupService.GetQtList(new TimeSpan(360, 0, 0, 0));
+
+        this._waferList = await this._testSetupService.GetQtList(TimeSpan.FromDays(147));
+        this._map = await this._testSetupService.GetMap(2);
     }
     
     async Task EditRow(WaferSetup order) {
@@ -204,131 +162,24 @@
     }
 
     private async Task VerifyHandler() {
-        if (this._waferSetups.All(e => !e.Loaded)) {
+        if (this._testSetupService.PocketsLoaded()) {
             await this.DialogAlert("At least one pocket must be loaded before starting a test", "Not Loaded");
             return;
         }
-        for (int i = 0; i < 3; i++) {
-            var setup = this._waferSetups[i];
-            if (setup.Loaded) {
-                if(string.IsNullOrWhiteSpace(setup.WaferId)) {
-                    ItemAlert waferIdAlert = new ItemAlert();
-                    waferIdAlert.Style = AlertStyle.Danger;
-                    waferIdAlert.Message = "Wafer Id is empty. Please enter a wafer id or " +
-                                                   "test designation before continuing";
-                    waferIdAlert.Okay = false;
-                    this._setupAlerts[i].WaferIdAlert= waferIdAlert;
-                    bool p1Set = !string.IsNullOrEmpty(setup.Probe1Pad);
-                    bool p2Set = !string.IsNullOrEmpty(setup.Probe2Pad);
-                    if(p1Set && p2Set) {
-                        var probePadAlert = new ItemAlert() {
-                            Style = AlertStyle.Success, 
-                            Message = "Pad Selection Okay", 
-                            Okay = true
-                        };
-                        this._setupAlerts[i].ProbePadAlert = probePadAlert;
-                    } else  {
-                        if (p1Set == false && p2Set == false) {
-                            var probePadAlert = new ItemAlert() {
-                                Style = AlertStyle.Danger,
-                                Message = "Neither pad is set, please set one or both pads to continue",  
-                                Okay = false
-                            };
-                            this._setupAlerts[i].ProbePadAlert = probePadAlert;
-                        } else {
-                            var probePadAlert = new ItemAlert() {
-                                Style = AlertStyle.Warning,
-                                Message = "One pad is not set, If this was intentional press save to continue", 
-                                Okay = true
-                            };
-                            this._setupAlerts[i].ProbePadAlert = probePadAlert;
-                        }
-                    }
-                    this._setupAlerts[i].Okay = false;
-                    continue;
-                }
-                var result=await this.QuickTestDataService.QuickTestExists(setup?.WaferId);
-                if (!result.IsError) {
-                    this._setupAlerts[i].Okay = result.Value;
-                    bool p1Set = !string.IsNullOrEmpty(setup.Probe1Pad);
-                    bool p2Set = !string.IsNullOrEmpty(setup.Probe2Pad);
-                    if (!result.Value) {
-                        ItemAlert waferIdAlert = new ItemAlert();
-                        waferIdAlert.Style = AlertStyle.Secondary;
-                        waferIdAlert.Message = "Wafer not found in database!! " +
-                                               "If you would like to continue anyways press save";
-                        waferIdAlert.Okay = true;
-                        this._setupAlerts[i].WaferIdAlert= waferIdAlert;
-                    } else {
-                        ItemAlert waferIdAlert = new ItemAlert();
-                        waferIdAlert.Style = AlertStyle.Success;
-                        waferIdAlert.Message = "Wafer Found";
-                        waferIdAlert.Okay = true;
-                        this._setupAlerts[i].WaferIdAlert= waferIdAlert;
-                    }
-                    if(p1Set && p2Set) {
-                        var probePadAlert = new ItemAlert() {
-                            Style = AlertStyle.Success, 
-                            Message = "Pad Selection Okay", 
-                            Okay = true
-                        };
-                        this._setupAlerts[i].ProbePadAlert = probePadAlert;
-                    } else  {
-                        if (p1Set == false && p2Set == false) {
-                            var probePadAlert = new ItemAlert() {
-                                Style = AlertStyle.Danger,
-                                Message = "Neither pad is set, please set one or both pads to continue",  
-                                Okay = false
-                            };
-                            this._setupAlerts[i].ProbePadAlert = probePadAlert;
-                        } else {
-                            var probePadAlert = new ItemAlert() {
-                                Style = AlertStyle.Warning,
-                                Message = "One pad is not set, If this was intentional press save to continue", 
-                                Okay = true
-                            };
-                            this._setupAlerts[i].ProbePadAlert = probePadAlert;
-                        }
-                    }
-                    this._setupAlerts[i].Okay=(this._setupAlerts[i].WaferIdAlert.Okay==true && this._setupAlerts[i].ProbePadAlert.Okay==true);
-                } else {
-                    ItemAlert waferIdAlert = new ItemAlert();
-                    waferIdAlert.Style = AlertStyle.Danger;
-                    waferIdAlert.Message = $"Error: {result.FirstError.Description}. " +
-                                           $"\n check network connection";
-                    waferIdAlert.Okay = false;
-                    this._setupAlerts[i].WaferIdAlert= waferIdAlert;
-                    this._setupAlerts[i].Okay = false;
-                }
-            } else {
-                ItemAlert waferIdAlert = new ItemAlert();
-                waferIdAlert.Style = AlertStyle.Info;
-                waferIdAlert.Message = "Pocket not loaded";
-                waferIdAlert.Okay = true;
-                this._setupAlerts[i].WaferIdAlert= waferIdAlert;
-                this._setupAlerts[i].Okay = true;
-            }
-            await InvokeAsync(StateHasChanged);
-        }
-        this._setupError = this._setupAlerts.Any(e => !e.Okay);
+        await this._testSetupService.VerifyHandler();
+        
+        /*this._setupError = this._setupAlerts.Any(e => !e.Okay);*/
         this._setupStatusVisible = true;
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task SaveHandler() {
-        await this.Save.InvokeAsync(this._waferSetups);
+        await this.Save.InvokeAsync(this._testSetupService.WaferSetups);
     }
     
     private async Task Cancel() {
         this._setupStatusVisible = false;
-        this._setupError = false;
-        for (int i = 0; i < 3; i++) {
-            this._setupAlerts[i].WaferIdAlert = new ItemAlert();
-            this._setupAlerts[i].ProbePadAlert = new ItemAlert();
-            this._setupAlerts[i].Okay = false;
-            this._setupAlerts[i].Pocket = GetPocketLabel(i);
-            this._waferSetups[i] = GenerateWaferSetup(i);
-        }
+        this._testSetupService.Reset();
         this._selectedTab = 0;
         await this._waferSetupGrid.Reload();
         await InvokeAsync(StateHasChanged);
@@ -343,47 +194,10 @@
         };
     }
     
-    private WaferSetup GenerateWaferSetup(int index) {
-        switch (index) {
-            case 0: {
-                return new WaferSetup() {
-                    WaferId = string.Empty,
-                    BurnNumber = 1,
-                    StationPocket = StationPocket.LeftPocket,
-                    Probe1 = StationProbe.Probe1,
-                    Probe2 = StationProbe.Probe2,
-                    Loaded = true
-                };
-            }
-            case 1: {
-                return new WaferSetup() {
-                    WaferId = string.Empty,
-                    BurnNumber = 1,
-                    StationPocket = StationPocket.MiddlePocket,
-                    Probe1 = StationProbe.Probe3,
-                    Probe2 = StationProbe.Probe4,
-                    Loaded = true
-                };
-            }
-            case 2: {
-                return new WaferSetup() {
-                    WaferId = string.Empty,
-                    BurnNumber = 1,
-                    StationPocket = StationPocket.RightPocket,
-                    Probe1 = StationProbe.Probe5,
-                    Probe2 = StationProbe.Probe6,
-                    Loaded = true
-                };
-            }
-            default: {
-                return new WaferSetup();
-            }
-        }
-    }
 
     private async Task SelectedItemChangedHandler(IList<WaferSetup> obj) {
         var selected=obj[0];
-        this._selectedTab=this._waferSetups.IndexOf(selected);
+        this._selectedTab=this._testSetupService.WaferSetups.IndexOf(selected);
         Console.WriteLine($"SelectedTab: {this._selectedTab}");
     }
     

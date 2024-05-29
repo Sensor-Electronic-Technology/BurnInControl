@@ -9,6 +9,7 @@
 @inject ILogger<StationView> _logger
 @inject NotificationService NotificationService
 @inject DialogService DialogService
+@inject StationStatusService StationStatusService
 @implements IAsyncDisposable
 @rendermode InteractiveServer
 
@@ -38,13 +39,10 @@
                                                      TempStates="@this._data.HeaterStates"/>
                                 </RadzenTabsItem>
                                 <RadzenTabsItem Text="Test Setup">
-                                    <TestSetup Save="SaveClickedHandler"/>
+                                    <TestSetup Save="SaveClickedHandler" />
                                 </RadzenTabsItem>
                                 <RadzenTabsItem Text="Plots">
-                                    @*<TwoInchWaferMapView></TwoInchWaferMapView>*@
-                                    <div class="rz-p-12 rz-text-align-center">
-                                        <RadzenButton Text="Open Selector" ButtonStyle="ButtonStyle.Secondary" Click=@OpenSelector />
-                                    </div>
+                                    <h5>Coming Soon...</h5>
                                 </RadzenTabsItem>
                             </Tabs>
                         </RadzenTabs>
@@ -72,7 +70,7 @@
                             TempChanged="TempChangedHandler"
                             ServiceConnected="@this.Connected"
                             UsbConnected="@this._usbConnected"
-                            Paused="@this._data.Paused"/>
+                            Paused="@(!this._data.Paused)"/>
         </RadzenRow>
     </RadzenSplitterPane>
 </RadzenSplitter>
@@ -166,6 +164,7 @@
    
    private Task OnTestStartedFromHandler(LoadTestSetupTransport transport) {
        if (transport.Success) {
+           
            this.Notify("Test Started",transport.Message ?? "No Message",NotificationSeverity.Success);
        } else {
            this.Notify("Test Failed To Start ",transport.Message ?? "No Message",NotificationSeverity.Error);
@@ -276,9 +275,10 @@
    private Task OnConnectClicked() {
        if (this.Connected) {
            this._eventConsole.Log("Disconnect Clicked",AlertStyle.Warning);
+           this.StationStatusService.StationState = StationState.Offline;
            return this._hubConnection.StopAsync();
-          
        } else {
+           this.StationStatusService.StationState = StationState.Idle;
            this._eventConsole.Log("Connect Clicked",AlertStyle.Success);
            return this.StartConnection();
        }

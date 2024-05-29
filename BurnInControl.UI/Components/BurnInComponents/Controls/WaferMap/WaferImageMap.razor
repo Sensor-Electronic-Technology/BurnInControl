@@ -20,14 +20,14 @@
         </RadzenStack>
     </RadzenFieldset>
     <RadzenStack Orientation="Orientation.Vertical">
+        
         <RadzenFieldset Text="Select pads" AllowCollapse="true">
             @if (this.WaferMap != null) {
-                @*<svg viewBox="@this.WaferMap?.ViewBoxString" width="@_width" height="@_height">
+                <svg viewBox="@this.WaferMap.ViewBoxString" height="@this._height" width="@this._width">
                     <image class="mainProject"
-                           xlink:href="@this.WaferMap?.WaferMapPath"
-                           width="@this.WaferMap?.SvgWidth" 
-                           height="@this.WaferMap?.SvgWidth"/>
-                    @foreach (var circ in this._svgCircles){
+                           href="@this.WaferMap.WaferMapPath"
+                           width="@this.WaferMap.SvgWidth" height="@this.WaferMap.SvgHeight"/>
+                    @foreach (var circ in _svgCircles) {
                         <circle cx="@circ.X" cy="@circ.Y"
                                 r="@circ.Radius"
                                 id="@circ.AltTex"
@@ -36,9 +36,10 @@
                                 onclick="@(() => this.CircleClickHandler(circ.AltTex))">
                         </circle>
                     }
-                </svg>*@
-                @if (this.WaferMap.WaferSize == 2) {
-                    <svg viewBox="0 0 826 810" width="@_width" height="@_height">
+                </svg>
+                @*@if (this.WaferMap.WaferSize == 2) {
+
+                    $1$<svg viewBox="0 0 826 810" width="@_width" height="@_height">
                         <image class="mainProject"
                                xlink:href="images/WaferMask2in.png"
                                width="826" height="810"/>
@@ -51,9 +52,9 @@
                                     onclick="@(() => this.CircleClickHandler(circ.AltTex))">
                             </circle>
                         }
-                    </svg>
+                    </svg>#1#
                 } else {
-                    <svg viewBox="0 0 851 852" width="@_width" height="@_height">
+                    $1$<svg viewBox="0 0 851 852" width="@_width" height="@_height">
                         <image class="mainProject"
                                xlink:href="images/Wafer4Inch.PNG"
                                width="851" height="852"/>
@@ -66,11 +67,8 @@
                                     onclick="@(() => this.CircleClickHandler(circ.AltTex))">
                             </circle>
                         }
-                    </svg>
-                }
-
-                
-
+                    </svg>#1#
+                }*@
             }
         </RadzenFieldset>
     </RadzenStack>
@@ -100,37 +98,41 @@
     private int _width = 426;
     private int _scalingFactor = 0;
     private string _dimensions = "410,426";
-    public List<SvgCircle> _svgCircles = new List<SvgCircle>();
+    private string _imagePath = "";
+    private List<SvgCircle> _svgCircles = new List<SvgCircle>();
+    
+    private Dictionary<string, object> InputAttributes { get; set; } = new() {
+            { "viewBox", "10" },
+            { "width", "Input placeholder text" },
+            { "height", "required" },
+        };
     
     
     protected override async Task OnInitializedAsync() {
         if (this.WaferMap != null) {
             this._scalingFactor = 2;
-            Console.WriteLine($"{this.WaferMap.WaferMapPath}");
-            Console.WriteLine($"View: {this.WaferMap.ViewBoxString}");
-            this._viewBox=this.WaferMap.ViewBoxString;
+            this.InputAttributes["viewBox"] = this.WaferMap.ViewBoxString;
+            this.InputAttributes["width"] = this.WaferMap.SvgWidth.ToString();
+            this.InputAttributes["height"] = this.WaferMap.SvgHeight.ToString();
+            this._viewBox=this.WaferMap.ViewBoxString!;
             this._svgWidth=this.WaferMap.SvgWidth;
             this._svgHeight=this.WaferMap.SvgHeight;
+            this._imagePath = this.WaferMap.WaferMapPath;
+            Console.WriteLine(this._imagePath);
             this._scalingFactor = 2;
             this._svgCircles = this.WaferMap.MapPads.Select(e => new SvgCircle() {
                 X = e.X,
                 Y = e.Y,
                 Radius = e.Radius,
-                AltTex = e.Identifier,
-                PostBackValue = e.Identifier,
+                AltTex = e.Identifier ?? "",
+                PostBackValue = e.Identifier ?? "",
                 Fill = "green",
                 State = false,
                 Opacity = "0"
             }).ToList();
-            this._height=410+(50*this._scalingFactor);
-            this._width=426+(50*this._scalingFactor);
+            this._height=this.WaferMap.ImageHeight+(50*this._scalingFactor);
+            this._width=this.WaferMap.ImageHeight+(50*this._scalingFactor);
             this._dimensions = $"{this._height},{this._width}";
-            
-            /*Console.WriteLine($"Height: {this._height}, Width: {this._width}");
-            Console.WriteLine($"Dimensions: {this._dimensions}");
-            Console.WriteLine($"ImageDimensions: {this.WaferMap.ImageHeight}, Image Width: {this.WaferMap.ImageWidth}");
-            Console.WriteLine($"ViewBox: {this.WaferMap.ViewBoxString}");
-            Console.WriteLine($"SvgDimensions: {this.WaferMap.SvgHeight}, Image Width: {this.WaferMap.SvgWidth}");*/
         }
     }
 

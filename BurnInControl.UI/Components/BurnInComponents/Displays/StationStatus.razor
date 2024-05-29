@@ -1,17 +1,70 @@
+@inject StationStatusService StationStatusService
+@implements IAsyncDisposable
+@rendermode InteractiveServer
 
-<RadzenStack Orientation="Orientation.Horizontal" AlignItems="Radzen.AlignItems.Center" Style="width: fit-content; height: fit-content; padding-right: 1rem" Gap="20">
-    <RadzenText Text=@this._stationText TextStyle="TextStyle.DisplayH6" />
-    <LedIndicator LedShape="led-rectangle" LedOnColor="led-green" State="false" LedWidth="150px" LedHeight="30px" OnText="Running" OffText="Idle"/>
-</RadzenStack>
+<style>
+    .rz-alert .rz-alert-title{
+        font-size: medium !important;
+    }
+</style>
+<RadzenAlert Title="@this._stationText"
+             Text="@this._stateText"
+             Shade="Shade.Default"
+             AlertStyle="@this._alertStyle"
+             Variant="Variant.Filled"
+             Size="AlertSize.Small"
+             AllowClose="false"
+             Style="width: 200px; margin: 0.5rem; font-size: 18px !important;">
+</RadzenAlert>
 
 @code {
-    [Parameter]
-    public string StationId {get;set;}="S01";
+    
+    private string _stationId {get;set;}="S00";
+    private StationState _state=StationState.Offline;
+    private string _stationText = "StationId: S00";
+    private string _stateText = nameof(StationState.Offline);
+    private AlertStyle _alertStyle=AlertStyle.Danger;
 
-    private string _stationText="";
-
-    protected override Task OnParametersSetAsync(){
-        this._stationText="StationId: "+this.StationId;
-        return base.OnParametersSetAsync();
+    protected override Task OnInitializedAsync() {
+        this.StationStatusService.OnStationStateChanged += this.StationStateChangedHandler;
+        this.StationStatusService.OnStationIdChanged += this.StationIdChangedHandler;
+        return base.OnInitializedAsync();
     }
+
+    private void StationStateChangedHandler(StationState state) {
+        this._state = state;
+        this._stateText = state.ToString();
+        switch (state) {
+            case StationState.Idle: {
+                this._alertStyle = AlertStyle.Info;
+                break;
+            }
+            case StationState.Running: {
+                this._alertStyle = AlertStyle.Success;
+                break;
+            }
+            case StationState.Paused: {
+                this._alertStyle = AlertStyle.Warning;
+                break;
+            }
+            case StationState.Offline: {
+                this._alertStyle = AlertStyle.Danger;
+                break;
+            }
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void StationIdChangedHandler(string id) {
+        this._stationId = id;
+        this._stationText = $"StationId: {this._stationId}";
+        InvokeAsync(StateHasChanged);
+    }
+
+    public ValueTask DisposeAsync() {
+        this.StationStatusService.OnStationStateChanged -= this.StationStateChangedHandler;
+        this.StationStatusService.OnStationIdChanged -= this.StationIdChangedHandler;
+        return ValueTask.CompletedTask;
+    }
+
 }

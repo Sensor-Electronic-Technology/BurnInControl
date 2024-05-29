@@ -33,9 +33,9 @@ builder.Services.AddUiSettings(builder);
 builder.Services.AddLogging();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(connectionString));
 builder.Services.AddSingleton<ConsoleWriter>();
-builder.Services.AddScoped<NotifyPlotOptions>();
+builder.Services.AddSingleton<NotifyPlotOptions>();
+builder.Services.AddSingleton<StationStatusService>();
 builder.Services.AddScoped<TestSetupService>();
-
 
 var app = builder.Build();
 

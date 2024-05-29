@@ -24,6 +24,12 @@ public class QuickTestDataService {
         this._client = new HttpClient();
         this._client.BaseAddress = new Uri(options.Value.QuickTestEndpoint ?? "http://172.20.4.206");
     }
+    
+    public QuickTestDataService() {
+        /*this._logger = logger;*/
+        this._client = new HttpClient();
+        this._client.BaseAddress = new Uri("http://172.20.4.206");
+    }
 
     public async Task<ErrorOr<bool>> QuickTestExists(string waferId) {
         try {

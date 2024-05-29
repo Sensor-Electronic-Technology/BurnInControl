@@ -2,7 +2,6 @@
 using BurnInControl.Data.StationModel.Components;
 using BurnInControl.Infrastructure.QuickTest;
 using BurnInControl.UI.Data;
-using QuickTest.Data.DataTransfer;
 using Radzen;
 
 namespace BurnInControl.UI.Services;
@@ -23,6 +22,10 @@ public class TestSetupService {
             this.SetupAlerts[i].Pocket = GetPocketLabel(i);
             this.WaferSetups.Add(GenerateWaferSetup(i));
         }
+    }
+
+    public void SetTestSetup(List<WaferSetup> testSetup) {
+        this.WaferSetups = testSetup;
     }
 
     public async Task Load() {
@@ -48,9 +51,6 @@ public class TestSetupService {
     }
     public Task<IEnumerable<string>> GetQtList(TimeSpan history) {
         return this._qtDataService.GetQuickTestList(DateTime.Now-history);
-    }
-    public Task<WaferMapDto?> GetMap(int inches) {
-        return this._qtDataService.GetWaferMap(inches);
     }
     public void Reset() {
         this.SetupError = false;

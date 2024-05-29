@@ -15,6 +15,7 @@ using BurnInControl.Data.ComponentConfiguration.HeaterController;
 using BurnInControl.Data.ComponentConfiguration.ProbeController;
 using BurnInControl.Data.ComponentConfiguration.StationController;
 using BurnInControl.Infrastructure;
+using BurnInControl.Infrastructure.QuickTest;
 using BurnInControl.Shared.ComDefinitions.MessagePacket;
 using BurnInControl.Shared.ComDefinitions.Station;
 using BurnInControl.Shared.FirmwareData;
@@ -74,8 +75,19 @@ Console.WriteLine(output);*/
 /*string? str = string.Empty;
 Console.WriteLine($"NullorWhitespace: {string.IsNullOrWhiteSpace(str)}");*/
 
-bool p1 = false, p2 = false;
-Console.WriteLine($"And Check: {p1 && p2}");
+
+
+Console.WriteLine(nameof(StationState.Idle));
+Console.WriteLine(StationState.Idle.ToString());
+
+async Task GetMapTesting() {
+    QuickTestDataService dataService = new QuickTestDataService();
+    var map=await dataService.GetWaferMap(2);
+    foreach (var pad in map.MapPads) {
+        //Console.WriteLine($"Size: {}");
+    }
+    
+}
 
 Task TestUsbController() {
     UsbTesting usb = new UsbTesting();
@@ -500,8 +512,6 @@ try {
 //var output=JsonSerializer.Serialize<MessagePacket<StationCommand>>(packet);
 /*Console.WriteLine("Input: ");
 Console.WriteLine(jsonString);*/
-
-
 
 async Task CreateStationDatabase() {
     var client = new MongoClient("mongodb://192.168.68.112:27017");

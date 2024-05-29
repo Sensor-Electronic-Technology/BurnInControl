@@ -7,6 +7,11 @@
     box-shadow: #000 0 -1px 6px 1px;
 }
 
+.led-grey {
+    background-color: grey;
+    box-shadow: #000 0 -1px 6px 1px, inset #600 0 -1px 8px, #F00 0 3px 11px;
+}
+
 .led-red {
     background-color: #F00;
     box-shadow: #000 0 -1px 6px 1px, inset #600 0 -1px 8px, #F00 0 3px 11px;

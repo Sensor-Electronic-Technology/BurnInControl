@@ -21,7 +21,7 @@ public class StationHubConnection {
     public event AsyncEventHandler<string>? OnHubDisconnected;
     
     public event AsyncEventHandler<string>? OnStationMessageReceived;
-    public event AsyncEventHandler<StationSerialData>? OnStationDataReceived;
+    public event AsyncEventHandler<StationSerialData> OnStationDataReceived;
     public event AsyncEventHandler<string>? OnTestStatus;
     
     public bool Connected=> this._hubConnection.State == HubConnectionState.Connected;
@@ -36,7 +36,8 @@ public class StationHubConnection {
         this._hubConnection = new HubConnectionBuilder()
             .WithUrl(addr)
             .Build();
-        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,(data)=>this.OnStationDataReceived?.Invoke(data));
+        
+        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,this.OnStationData);
         this._hubConnection.On<string>(HubConstants.Events.OnSerialComMessage,(message)=>this.OnStationMessageReceived?.Invoke(message));
         this._hubConnection.On<string>(HubConstants.Events.OnUsbDisconnect,(message)=>this.OnUsbDisconnected?.Invoke(message));
         this._hubConnection.On<string>(HubConstants.Events.OnUsbConnectFailed,(message)=>this.OnUsbConnectionFailed?.Invoke(message));
@@ -58,6 +59,10 @@ public class StationHubConnection {
                 this.OnHubConnected?.Invoke(false,"Station Service failed to connect, contact administrator");
             }
         }
+    }
+
+    private async Task OnStationData(StationSerialData data) {
+        await this.OnStationDataReceived.Invoke(data);
     }
     
     public async Task StopConnection() {

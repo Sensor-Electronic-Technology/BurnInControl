@@ -1,26 +1,16 @@
-﻿using AsyncAwaitBestPractices;
-using BurnInControl.Application.BurnInTest.Messages;
+﻿using BurnInControl.Application.BurnInTest.Messages;
 using BurnInControl.Application.ProcessSerial.Interfaces;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Packets;
 using BurnInControl.Shared.ComDefinitions.Station;
 using BurnInControl.HubDefinitions.Hubs;
-using ErrorOr;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using StationService.Infrastructure.Firmware;
 using StationService.Infrastructure.Hub;
-using StationService.Infrastructure.TestLogs;
 using System.Text.Json;
 using BurnInControl.Application.ProcessSerial.Messages;
 using BurnInControl.Application.StationControl.Messages;
 using BurnInControl.Data.BurnInTests;
-using BurnInControl.Data.ComponentConfiguration;
-using BurnInControl.Data.ComponentConfiguration.HeaterController;
-using BurnInControl.Data.ComponentConfiguration.ProbeController;
-using BurnInControl.Data.ComponentConfiguration.StationController;
-using BurnInControl.Data.StationModel;
-using BurnInControl.Data.StationModel.Components;
 using BurnInControl.Shared;
 using MediatR;
 namespace StationService.Infrastructure.SerialCom;
@@ -41,7 +31,7 @@ public class StationMessageHandler : IStationMessageHandler {
     public Task Handle(StationMessage message,CancellationToken cancellationToken) {
         try {
             if (!string.IsNullOrEmpty(message.Message)) {
-                this._logger.LogInformation(message.Message);
+                //this._logger.LogInformation(message.Message);
                 if (message.Message.Contains("Prefix")) {
                     var doc=JsonSerializer.Deserialize<JsonDocument>(message.Message);
                     if (doc != null) { 
@@ -130,6 +120,10 @@ public class StationMessageHandler : IStationMessageHandler {
                     case nameof(StationMsgPrefix.GetConfigPrefix): {
                         return this.HandleGetConfigResponse(packetElem);
                     }
+
+                    case nameof(StationMsgPrefix.ProbeTestDone):{
+                        return this._hubContext.Clients.All.OnProbeTestDone();
+                    }
                     default: {
                         _logger.LogWarning("Prefix value {Value} not implemented",prefix.Value);
                         return Task.CompletedTask;
@@ -181,12 +175,13 @@ public class StationMessageHandler : IStationMessageHandler {
                 return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.MessagePrefix,
                     $"Error StationMessagePacket null");
             }
-            switch (message.MessageType) {
+            return this._hubContext.Clients.All.OnSerialComMessage((int)message.MessageType,message.Message);
+            /*switch (message.MessageType) {
                 case StationMessageType.INIT: {
                     return this._hubContext.Clients.All.OnSerialInitMessage(message.Message);
                 }
                 case StationMessageType.GENERAL: {
-                    return this._hubContext.Clients.All.OnSerialComMessage(message.Message);
+                    return this._hubContext.Clients.All.OnSerialComMessage(,message.Message);
                 }
                 case StationMessageType.NOTIFY: {
                     return this._hubContext.Clients.All.OnSerialNotifyMessage(message.Message);
@@ -199,7 +194,7 @@ public class StationMessageHandler : IStationMessageHandler {
                     return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.MessagePrefix,
                         $"Error StationMessageType {message.MessageType} not implemented");
                 }
-            }
+            }*/
         } catch(Exception e) {
             this._logger.LogError("Error deserializing StartTestFromPacket.\n {ErrMessage}", e.ToErrorMessage());
             return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.MessagePrefix,

@@ -13,6 +13,7 @@ using StationService.Infrastructure.TestLogs;
 using System.Threading.Channels;
 using BurnInControl.Application.BurnInTest.Handlers;
 using BurnInControl.Application.BurnInTest.Interfaces;
+using BurnInControl.Application.BurnInTest.Messages;
 using Coravel;
 using StationService.Infrastructure.Firmware.Jobs;
 
@@ -51,7 +52,8 @@ public static class DependencyInjection {
             typeof(HardStopCommandHandler).Assembly,
             typeof(StartFromLoadCommandHandler).Assembly,
             typeof(ConnectionStatusHandler).Assembly,
-            typeof(SendConfigurationHandler).Assembly);
+            typeof(SendConfigurationHandler).Assembly,
+            typeof(RequestRunningTestHandler).Assembly);
         });
         services.AddScheduler();
         return services;

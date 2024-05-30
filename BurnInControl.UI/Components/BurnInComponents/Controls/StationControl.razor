@@ -12,17 +12,28 @@
                  Gap="10">
         <RadzenFieldset Text="Test Control">
             <RadzenStack>
-                <RadzenToggleButton Value="@this.Paused"
-                                    Text="@(this.Paused ? "Pause" : "Start")"
+                <RadzenToggleButton Value="@this.Running"
+                                    Text="@this._runButtonText"
                                     ButtonStyle="ButtonStyle.Success"
-                                    ToggleButtonStyle="ButtonStyle.Light"
-                                    Click="@OnStartClicked"
+                                    ToggleButtonStyle="ButtonStyle.Info"
+                                    Click="@this.OnStartClicked"
+                                    Disabled="@(!this.CanStartPauseReset())"
                                     Size="ButtonSize.Large" Style="width: 170px"/>
                 <RadzenToggleButton Text="Reset"
                                     ButtonStyle="ButtonStyle.Danger"
                                     Size="ButtonSize.Large"
                                     ToggleButtonStyle="ButtonStyle.Danger"
                                     Click="@this.Reset"
+                                    Disabled="@(!this.CanStartPauseReset())"
+                                    ToggleShade="Shade.Dark" Style="width: 170px"/>
+                <RadzenToggleButton Text="Probe Test"
+                                    BusyText="Probe Test Running"
+                                    IsBusy="@this._probeTestRunning"
+                                    ToggleButtonStyle="ButtonStyle.Warning"
+                                    ButtonStyle="ButtonStyle.Secondary"
+                                    Size="ButtonSize.Large"
+                                    Disabled="@(!this.CanProbeTest())"
+                                    Click="@this.ProbeTestClickedHandler"
                                     ToggleShade="Shade.Dark" Style="width: 170px"/>
             </RadzenStack>
         </RadzenFieldset>
@@ -34,7 +45,7 @@
             <RadzenToggleButton Value="@this.ServiceConnected"
                                 Text="@(this.ServiceConnected ? "Disconnect Service" : "Connect Service")"
                                 ButtonStyle="ButtonStyle.Secondary"
-                                Size="Radzen.ButtonSize.Medium"
+                                Size="ButtonSize.Medium"
                                 ToggleButtonStyle="ButtonStyle.Secondary"
                                 Click="@this.Connect" Style="width: 170px; height: 52px"/>
             <RadzenToggleButton Value="@this.UsbConnected"
@@ -48,9 +59,13 @@
 </RadzenStack>
 @code{
     [Parameter] public EventCallback Connect { get; set; }
-    [Parameter] public EventCallback StartPause { get; set; }
     [Parameter] public EventCallback UsbConnect { get; set; }
+    
+    [Parameter] public EventCallback StartPause { get; set; }
     [Parameter] public EventCallback Reset { get; set; }
+    [Parameter] public EventCallback ProbeTest { get; set; }
+    
+    
     [Parameter] public EventCallback<StationCurrent> CurrentChanged { get; set; }
     [Parameter] public EventCallback<double> TempChanged { get; set; }
     [Parameter] public int SetCurrent { get; set; } = StationCurrent._150mA.Value;
@@ -58,17 +73,50 @@
     [Parameter] public bool UsbConnected { get; set; }
     [Parameter] public bool ServiceConnected { get; set; }
     [Parameter] public bool Paused { get; set; }
+    [Parameter] public bool Running { get; set; }
+    [Parameter] public bool ProbeTestRunning { get; set; }
+    
     
     private bool _serviceConnectBtnBusy = false;
     private bool _usbBtnBusy = false;
     private bool _testBtnBusy = false;
     private bool _testBtnValue = false;
-    
-    
-    
+
+    private string _runButtonText="Start";
+    private bool _running = false;
+    private bool _paused = false;
+    private bool _probeTestRunning = false;
+
+    protected override Task OnParametersSetAsync() {
+        if (this.Running) {
+            this._running = this.Running;
+                this._paused = this.Paused;
+                this._runButtonText = this.Paused ? "Continue" : "Pause";
+        } else {
+            this._runButtonText = "Start";
+        }
+
+        this._probeTestRunning = this.ProbeTestRunning;
+        return base.OnParametersSetAsync();
+    }
+
     private Task OnStartClicked() {
+        if (this._running) {
+            this._paused = !this._paused;
+            this._runButtonText = this._paused ? "Continue" : "Pause";
+        }
         return this.StartPause.InvokeAsync();
     }
+
+    private bool CanStartPauseReset() {
+        return !this._probeTestRunning && this.ServiceConnected;
+    }
+
+    private bool CanProbeTest() {
+        return !this._running && this.ServiceConnected;
+    }
+    
+    
     
     private async Task OnUploadCurrentTemp(StationCurrent stationCurrent) {
         await this.CurrentChanged.InvokeAsync(stationCurrent);
@@ -77,4 +125,10 @@
     public ValueTask DisposeAsync() {
         return ValueTask.CompletedTask;
     }
+
+    private Task ProbeTestClickedHandler() {
+        this._probeTestRunning = true;
+        return this.ProbeTest.InvokeAsync();
+    }
+
 }

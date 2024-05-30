@@ -75,7 +75,6 @@
 </RadzenStack>
 
 @code {
-    //[Parameter] public IEnumerable<Pad>? Map { get; set; }
     [Parameter] public string? SelectedPad1 { get; set; }
     [Parameter] public string? SelectedPad2 { get; set; }
     [Parameter] public EventCallback<string> SelectedPad1Changed { get; set; }
@@ -101,24 +100,14 @@
     private string _imagePath = "";
     private List<SvgCircle> _svgCircles = new List<SvgCircle>();
     
-    private Dictionary<string, object> InputAttributes { get; set; } = new() {
-            { "viewBox", "10" },
-            { "width", "Input placeholder text" },
-            { "height", "required" },
-        };
-    
     
     protected override async Task OnInitializedAsync() {
         if (this.WaferMap != null) {
-            this._scalingFactor = 2;
-            this.InputAttributes["viewBox"] = this.WaferMap.ViewBoxString;
-            this.InputAttributes["width"] = this.WaferMap.SvgWidth.ToString();
-            this.InputAttributes["height"] = this.WaferMap.SvgHeight.ToString();
+            this._scalingFactor = this.WaferMap.WaferSize;
             this._viewBox=this.WaferMap.ViewBoxString!;
             this._svgWidth=this.WaferMap.SvgWidth;
             this._svgHeight=this.WaferMap.SvgHeight;
             this._imagePath = this.WaferMap.WaferMapPath;
-            Console.WriteLine(this._imagePath);
             this._scalingFactor = 2;
             this._svgCircles = this.WaferMap.MapPads.Select(e => new SvgCircle() {
                 X = e.X,

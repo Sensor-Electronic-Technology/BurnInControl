@@ -1,8 +1,6 @@
 ﻿using BurnInControl.Application.BurnInTest.Interfaces;
 using BurnInControl.Application.StationControl.Messages;
 using BurnInControl.Data.BurnInTests;
-using BurnInControl.Data.BurnInTests.Wafers;
-using BurnInControl.Data.StationModel;
 using BurnInControl.Data.StationModel.Components;
 using BurnInControl.HubDefinitions.Hubs;
 using BurnInControl.HubDefinitions.HubTransports;
@@ -10,7 +8,6 @@ using BurnInControl.Infrastructure.ControllerTestState;
 using BurnInControl.Infrastructure.TestLogs;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Station;
-using ErrorOr;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
@@ -37,6 +34,7 @@ public class TestService:ITestService {
     private bool _loggingEnabled = false;
     private bool _testSetupComplete = false;
     private bool _first = false;
+    private int _value=0;
 
     public bool IsRunning => this._running;
     
@@ -51,6 +49,7 @@ public class TestService:ITestService {
         this._hubContext = hubContext;
         this._savedStateDataService = savedStateDataService;
         this._interval = TimeSpan.FromSeconds(60);
+        
         this._stationId=configuration["StationId"] ?? "S01";
     }
 
@@ -196,6 +195,22 @@ public class TestService:ITestService {
             await this._hubContext.Clients.All.OnStopAndSaved(false,"Test is not running, nothing to save");
         }
     }
+
+    public Task SendRunningTest() {
+        Console.WriteLine($"Value Request: {this._runningTest._id.ToString()}");
+        if (this._running) {
+            return this._hubContext.Clients.All.OnRequestRunningTest(new LoadTestSetupTransport() {
+                Success = true,
+                Message = "Running Test",
+                WaferSetups = this._runningTest.TestSetup,
+                SetTemperature = this._runningTest.SetTemperature,
+                SetCurrent = this._runningTest.SetCurrent
+            });
+        }
+        
+        return Task.CompletedTask;
+    }
+
     public async Task LoadState(ObjectId savedState) {
         var savedStateResult=await this._savedStateDataService.GetSavedState(logId:savedState);
         if (savedStateResult.IsError) {
@@ -258,7 +273,7 @@ public class TestService:ITestService {
     }
     public async Task CompleteTest() {
         /*if (this._running) {*/
-            
+        
             var result=await this._testLogDataService.SetCompleted(this._runningTest._id,
                 this._stationId ?? "S01",DateTime.Now);
             var delStateResult=await this._savedStateDataService.ClearSavedState(id:this._savedStateLog._id);
@@ -319,6 +334,7 @@ public class TestService:ITestService {
                 await this.StartLog(data);
             } else {
                 if ((DateTime.Now - this._lastLog).Seconds > this._interval.Seconds) {
+                    Console.WriteLine($"Value: {_value++}");
                     this._lastLog = DateTime.Now;
                     await this.UpdateLogs(data);
                 } else {

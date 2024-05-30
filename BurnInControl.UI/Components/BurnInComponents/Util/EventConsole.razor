@@ -11,7 +11,7 @@
         <RadzenButton Click=@OnClearClick Text="Clear console" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Small" />
     </RadzenStack>
     <RadzenStack Orientation="Orientation.Vertical" Gap="0" ID="event-console" Class="rz-pt-1" Style="border-top: var(--rz-grid-cell-border); min-height: 2rem; max-height: 12rem; overflow: auto;">
-        @foreach (var message in messages)
+        @foreach (var message in messages.Reverse())
         {
             <RadzenAlert ShowIcon="false" Variant="Variant.Flat" AlertStyle="message.AlertStyle" Size="AlertSize.ExtraSmall" Shade="Shade.Lighter" AllowClose="false" Style="font-size: 0.75rem">
                 <span Style="opacity: 0.6;">@message.Date.ToString("HH:mm:ss.ff")</span> @message.Text
@@ -43,7 +43,7 @@
     {
         if (!firstRender) {
             await JSRuntime.InvokeVoidAsync("eval", 
-            $"document.getElementById('event-console').scrollTop = document.getElementById('event-console').scrollHeight");
+            $"document.getElementById('event-console').scrollBottom = document.getElementById('event-console').scrollHeight");
         }
     }
 

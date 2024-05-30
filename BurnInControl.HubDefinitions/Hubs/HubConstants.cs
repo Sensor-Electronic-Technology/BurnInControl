@@ -28,7 +28,8 @@ public static class HubConstants {
         public static string OnFirmwareUpdated => "OnFirmwareUpdated";
         public static string OnStationConnection => "OnStationConnection";
         public static string OnRequestConfigHandler => "OnRequestConfigHandler";
-
+        public static string OnProbeTestDone => "OnProbeTestDone";
+        public static string OnRequestRunningTest => "OnRequestRunningTest";
     }
 
     public static class Methods {

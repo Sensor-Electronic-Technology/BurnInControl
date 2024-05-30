@@ -2,10 +2,12 @@
 using BurnInControl.Data.StationModel.Components;
 using BurnInControl.HubDefinitions.HubTransports;
 using BurnInControl.Shared.ComDefinitions;
+using BurnInControl.Shared.ComDefinitions.Packets;
 using BurnInControl.Shared.ComDefinitions.Station;
 using BurnInControl.Shared.FirmwareData;
 
 namespace BurnInControl.HubDefinitions.Hubs;
+
 
 public interface IStationHub {
 
@@ -13,10 +15,8 @@ public interface IStationHub {
     Task OnStationData(StationSerialData serialData);
     Task OnTuningData(TuningSerialData tuningData);
     Task OnSerialComError(StationMsgPrefix prefix,string message);
-    Task OnSerialComMessage(string message);
-    Task OnSerialNotifyMessage(string message);
-    Task OnSerialErrorMessage(string message);
-    Task OnSerialInitMessage(string message);
+    Task OnSerialComMessage(int type,string message);
+    Task OnProbeTestDone();
     Task OnConfigSaveStatus(string type,bool success, string message);
     Task OnRequestConfigHandler(bool success,int configType,string jsonConfig);
 
@@ -30,6 +30,7 @@ public interface IStationHub {
     Task OnTestCompleted(string message);
     Task OnTestSetup(bool success, string message);
     Task OnLoadFromSavedState(TestSetupTransport testSetupTransport);
+    Task OnRequestRunningTest(LoadTestSetupTransport testSetupTransport);
     Task OnLoadFromSavedStateError(string message);
     Task OnStopAndSaved(bool success, string message);
     

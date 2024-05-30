@@ -1,40 +1,34 @@
-﻿using BurnInControl.Application.BurnInTest.Messages;
+using BurnInControl.Application.BurnInTest.Messages;
 using BurnInControl.Application.StationControl.Messages;
-using BurnInControl.Data.BurnInTests.Wafers;
-using BurnInControl.Data.ComponentConfiguration;
 using BurnInControl.Data.ComponentConfiguration.HeaterController;
-using BurnInControl.Data.StationModel.Components;
-using BurnInControl.Shared.ComDefinitions;
-using BurnInControl.Shared.ComDefinitions.Station;
 using BurnInControl.HubDefinitions.Hubs;
 using BurnInControl.HubDefinitions.HubTransports;
-using BurnInControl.Shared.ComDefinitions.Packets;
+using BurnInControl.Shared.ComDefinitions;
+using BurnInControl.Shared.ComDefinitions.Station;
 using Microsoft.AspNetCore.SignalR;
-using MediatR;
-namespace StationService.Infrastructure.Hub;
 
-public class StationHub:Hub<IStationHub> {
-    private readonly IMediator _mediator;
-    public StationHub(IMediator mediator) {
-        this._mediator = mediator;
+namespace BurnInControl.UI.Hub;
+
+/*public class StationHubProxy:Hub<IStationHub> {
+    public StationHubProxy() {
     }
-    public override async Task OnConnectedAsync() {
-        await this._mediator.Send(new RequestConnectionStatus());
-        await this._mediator.Send(new RequestRunningTestCommand());
+    
+    public override Task OnConnectedAsync() {
+        //return this._mediator.Send(new RequestConnectionStatus());
     }
     public Task RequestUsbConnectionStatus() {
-        return this._mediator.Send(new RequestConnectionStatus());
+        //return this._mediator.Send(new RequestConnectionStatus());
     }
     
     public Task SendSerialCom(StationSerialData serialData) { 
-        return this.Clients.All.OnStationData(serialData);
+        //return this.Clients.All.OnStationData(serialData);
     }
 
     public Task RequestConfig(ConfigType type) {
         return this._mediator.Send(new RequestConfigMessage(){ConfigType = type});
     }
-    public Task SendSerialComMessage(int type,string message) {
-        return this.Clients.All.OnSerialComMessage(type,message);
+    public Task SendSerialComMessage(string message) {
+        return this.Clients.All.OnSerialComMessage(message);
     }
     public async Task ConnectUsb() {
         await this._mediator.Send(new ConnectionAction() {
@@ -67,5 +61,5 @@ public class StationHub:Hub<IStationHub> {
     public Task OnUsbDisconnect(string message) {
         return this.Clients.All.OnUsbDisconnect(message);
     }
-    
-}
+   
+}*/

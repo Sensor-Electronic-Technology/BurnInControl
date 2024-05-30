@@ -1,6 +1,16 @@
 @page "/"
 @using BurnInControl.UI.Components.BurnInComponents
+@inject NavigationManager NavManager
 <PageTitle>Main</PageTitle>
 <StationView/>
+
+@code{
+
+    protected override Task OnInitializedAsync() {
+        return base.OnInitializedAsync();
+    }
+
+}
+
 
 

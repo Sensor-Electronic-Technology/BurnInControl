@@ -5,50 +5,91 @@
 @if (this.ProbeControllerConfig == null) {
     <p>Loading...</p>
 } else {
-    <RadzenFieldset Text="Probe Controller Configuration">
-        <RadzenTabs RenderMode="TabRenderMode.Client" TabPosition="Radzen.TabPosition.Left">
-            <Tabs>
-                <RadzenTabsItem Text="Probes 1-3" Selected="false">
-                    <RadzenStack Orientation="Orientation.Horizontal">
-                        @for (int i = 0; i < (ControllerHardwareConstants.PROBE_COUNT / 2); i++) {
-                            <ProbeView ProbeConfig="@this.ProbeControllerConfig.ProbeConfigurations[i]"
-                                       ProbeConfigChanged="@((config) => { this.ProbeControllerConfig.ProbeConfigurations[config.ProbeNumber - 1] = config; })"/>
-                        }
-                    </RadzenStack>
-                </RadzenTabsItem>
-                <RadzenTabsItem Text="Probes 4-6">
-                    <RadzenStack Orientation="Orientation.Horizontal">
-                        @for (int i = 3; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
-                            <ProbeView ProbeConfig="@this.ProbeControllerConfig.ProbeConfigurations[i]"
-                                       ProbeConfigChanged="@((config) => { })"/>
-                        }
-                    </RadzenStack>
-                </RadzenTabsItem>
-            
-            </Tabs>
-        </RadzenTabs>
+    <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Start">
         <RadzenStack Orientation="Orientation.Horizontal">
-            <RadzenButton Text="Save" Click="@this.SaveHandler"  ButtonStyle="ButtonStyle.Info" Style="width: 125px;height: 50px;"/>
+            <RadzenTabs>
+                <Tabs>
+                    <RadzenTabsItem Text="Probe Control">
+                        <RadzenFieldset Text="Probe Control Config">
+                            <RadzenStack Orientation="Orientation.Vertical">
+
+                                <RadzenFormField Text="Current Percent">
+                                    <RadzenNumeric TValue="double"
+                                                   Value="@this.ProbeControllerConfig.CurrentPercent"
+                                                   ValueChanged="CurrentPercentChangedHandler"
+                                                   Format="P"/>
+                                </RadzenFormField>
+                                <CurrentSelector Current="@this.ProbeControllerConfig.ProbeTestCurrent"
+                                                 CurrentChanged="@this.ProbeTestCurrentChangedHandler"/>
+                                <RadzenFormField Text="Read Interval">
+                                    <RadzenNumeric TValue="ulong"
+                                                   Value="@this.ProbeControllerConfig.ReadInterval"
+                                                   ValueChanged="ReadIntervalChangedHandler"/>
+                                </RadzenFormField>
+
+                            </RadzenStack>
+                        </RadzenFieldset>
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="Current Selector Config">
+                        <CurrentSelectView CurrentSelectorConfig="@this.ProbeControllerConfig.CurrentSelectConfig"
+                                           CurrentSelectorConfigChanged="CurrentSelectorChangedHandler"/>
+                    </RadzenTabsItem>
+                </Tabs>
+            </RadzenTabs>
+
+            <RadzenTabs RenderMode="TabRenderMode.Client" TabPosition="Radzen.TabPosition.Left">
+                <Tabs>
+                    <RadzenTabsItem Text="Probes 1-2" Selected="false">
+                        <RadzenStack Orientation="Orientation.Horizontal">
+                            @for (int i = 0; i < 2; i++) {
+                                int index = i;
+                                <ProbeView ProbeConfig="@this.ProbeControllerConfig.ProbeConfigurations[i]"
+                                           ProbeConfigChanged="@(async Task (config) => await this.ProbeConfigChanged(index, config))"/>
+                            }
+                        </RadzenStack>
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="Probes 3-4">
+                        <RadzenStack Orientation="Orientation.Horizontal">
+                            @for (int i = 2; i < 4; i++) {
+                                int index = i;
+                                <ProbeView ProbeConfig="@this.ProbeControllerConfig.ProbeConfigurations[i]"
+                                           ProbeConfigChanged="@(async Task (config) => await this.ProbeConfigChanged(index, config))"/>
+                            }
+                        </RadzenStack>
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="Probes 5-6">
+                        <RadzenStack Orientation="Orientation.Horizontal">
+                            @for (int i = 4; i < 6; i++) {
+                                int index = i;
+                                <ProbeView ProbeConfig="@this.ProbeControllerConfig.ProbeConfigurations[i]"
+                                           ProbeConfigChanged="@(async Task (config) => await this.ProbeConfigChanged(index, config))"/>
+                            }
+                        </RadzenStack>
+                    </RadzenTabsItem>
+
+                </Tabs>
+            </RadzenTabs>
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal">
+            <RadzenButton Text="Save" Click="@this.SaveHandler" ButtonStyle="ButtonStyle.Info" Style="width: 125px;height: 50px;"/>
             <RadzenButton Text="Cancel" Click="@this.CancelPressed" ButtonStyle="ButtonStyle.Danger" Style="width: 125px;height: 50px;"/>
         </RadzenStack>
-    </RadzenFieldset>
+    </RadzenStack>
 }
-
-
-
 @code {
    [Parameter] public ProbeControllerConfig? ProbeControllerConfig { get; set; }
    [Parameter] public EventCallback<ProbeControllerConfig> ProbeControllerConfigChanged { get; set; }
    [Parameter] public EventCallback CancelPressed { get; set; }
    [Parameter] public EventCallback<ProbeControllerConfig> SavePressed { get; set; }
    
-   private Task ProbeChangedHandler(ProbeConfig config) {
+   private Task ProbeConfigChanged(int index,ProbeConfig config) {
        if (this.ProbeControllerConfig == null) {
            return Task.CompletedTask;
        }
-       this.ProbeControllerConfig.ProbeConfigurations[config.ProbeNumber - 1] = config;
-       this.ConsoleWriter.LogMessage($"Probe-{config.ProbeNumber} Config Changed",AlertStyle.Info);
+       this.ProbeControllerConfig.ProbeConfigurations[index] = config;
+       this.ConsoleWriter.LogMessage($"Probe-{index} Config Changed",AlertStyle.Info);
        return this.ProbeControllerConfigChanged.InvokeAsync(this.ProbeControllerConfig);
+       //return Task.CompletedTask;
    }
 
    private Task SaveHandler() {
@@ -57,4 +98,38 @@
        }
        return this.SavePressed.InvokeAsync(this.ProbeControllerConfig);
     }
+
+    private Task CurrentPercentChangedHandler(double currentPercent) {
+        if (this.ProbeControllerConfig == null) {
+            return Task.CompletedTask;
+        }
+        this.ProbeControllerConfig.CurrentPercent = currentPercent;
+        return this.ProbeControllerConfigChanged.InvokeAsync(this.ProbeControllerConfig);
+    }
+
+    private Task ProbeTestCurrentChangedHandler(int current) {
+        if (this.ProbeControllerConfig == null) {
+            return Task.CompletedTask;
+        }
+        this.ProbeControllerConfig.ProbeTestCurrent = current;
+        return this.ProbeControllerConfigChanged.InvokeAsync(this.ProbeControllerConfig);
+    }
+
+    private Task ReadIntervalChangedHandler(ulong interval) {
+        if (this.ProbeControllerConfig == null) {
+            return Task.CompletedTask;
+        }
+
+        this.ProbeControllerConfig.ReadInterval = interval;
+        return this.ProbeControllerConfigChanged.InvokeAsync(this.ProbeControllerConfig);
+    }
+
+    private Task CurrentSelectorChangedHandler(CurrentSelectorConfig currentSelectorConfig) {
+        if (this.ProbeControllerConfig == null) {
+            return Task.CompletedTask;
+        }
+        this.ProbeControllerConfig.CurrentSelectConfig = currentSelectorConfig;
+        return this.ProbeControllerConfigChanged.InvokeAsync(this.ProbeControllerConfig);
+    }
+
 }

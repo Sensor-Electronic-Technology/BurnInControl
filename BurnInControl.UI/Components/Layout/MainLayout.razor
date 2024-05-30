@@ -13,6 +13,7 @@
             <RadzenColumn Size="7">
                 <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
                     <StationStatus/>
+                    @*<RadzenButton Text="Dialog on Side" ButtonStyle="ButtonStyle.Secondary" Click="@OpenSideDialog"/>*@
                 </RadzenStack>
             </RadzenColumn>
         </RadzenRow>
@@ -28,3 +29,16 @@
         </RadzenPanelMenu>
     </RadzenSidebar>
 </RadzenLayout>
+
+@code{
+    
+    async Task OpenSideDialog() {
+        await DialogService.OpenSideAsync<DialogSideContent>("Side Panel", options: 
+            new SideDialogOptions {
+                CloseDialogOnOverlayClick = true, 
+                Position=DialogPosition.Right, 
+                ShowMask = true
+            });
+    }
+
+}

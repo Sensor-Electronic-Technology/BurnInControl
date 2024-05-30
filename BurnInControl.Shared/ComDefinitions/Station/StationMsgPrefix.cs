@@ -3,6 +3,20 @@ using BurnInControl.Shared.ComDefinitions.JsonConverters;
 using BurnInControl.Shared.ComDefinitions.MessagePacket;
 using System.Text.Json.Serialization;
 namespace BurnInControl.Shared.ComDefinitions.Station;
+/*public enum StationMessageType {
+    GENERAL,
+    INIT,
+    NOTIFY,
+    ERROR,
+}*/
+
+/*public class StationMessageType : SmartEnum<StationMessageType, int>, IPacket {
+    public static readonly StationMessageType General = new(nameof(StationMessageType), 0);
+    public static readonly StationMessageType Init = new(nameof(StationMessageType), 0);
+    public static readonly StationMessageType Notify = new(nameof(StationMessageType), 0);
+    public static readonly StationMessageType Error = new(nameof(StationMessageType), 0);
+    public StationMessageType(string name, int value) : base(name, value) { }
+}*/
 
 [JsonConverter(typeof(StationMsgPrefixJsonConverter))]
 public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
@@ -32,5 +46,6 @@ public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
     public static readonly StationMsgPrefix GetConfigPrefix=new(nameof(GetConfigPrefix), "GCONF");
     public static readonly StationMsgPrefix ReceiveConfigPrefix=new(nameof(ReceiveConfigPrefix), "RCONF");
     public static readonly StationMsgPrefix FormatSdPrefix=new(nameof(FormatSdPrefix), "FSD");
+    public static readonly StationMsgPrefix ProbeTestDone = new(nameof(ProbeTestDone), "PTD");
     private StationMsgPrefix(string name, string value) : base(name, value) {  }
 }

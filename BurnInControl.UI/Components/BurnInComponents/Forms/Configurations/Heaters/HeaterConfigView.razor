@@ -7,11 +7,23 @@
 } else {
     <RadzenTabsItem Text="@this.Label" @key="@this.Label">
         <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
-            <RadzenText TextStyle="TextStyle.H4" Text="@this.Label"></RadzenText>
+            <RadzenText TextStyle="TextStyle.H4" Text="@this.Label"/>
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenFormField Text="Digital Pin">
+                    <RadzenNumeric TValue="sbyte"
+                                   Value="@this.HeaterConfig.Pin"
+                                   ValueChanged="PinChangedHandler"/>
+                </RadzenFormField>
+                <RadzenFormField Text="Temp Deviation">
+                    <RadzenNumeric TValue="double"
+                                   Value="@this.HeaterConfig.TempDeviation"
+                                   ValueChanged="TemDevChangedHandler"/>
+                </RadzenFormField>
+            </RadzenStack>
+
             <RadzenStack Orientation="Orientation.Horizontal"
                          AlignItems="AlignItems.Start"
                          JustifyContent="JustifyContent.SpaceEvenly">
-
                 <NtcConfigView NtcConfig="@this.HeaterConfig.NtcConfig" NtcConfigChanged="@this.NtcConfigChanged"/>
                 <PidConfigView PidConfig="@this.HeaterConfig.PidConfig" PidConfigChanged="@this.PidConfigChangedHandler"/>
             </RadzenStack>
@@ -28,18 +40,36 @@
     [Parameter]
     public EventCallback<HeaterConfiguration> HeaterConfigChanged { get; set; }
 
-    private async Task NtcConfigChanged(NtcConfiguration config) {
-        if (this.HeaterConfig != null) {
-            this.HeaterConfig.NtcConfig = config;
-            await this.HeaterConfigChanged.InvokeAsync(this.HeaterConfig);
+    private Task NtcConfigChanged(NtcConfiguration config) {
+        if (this.HeaterConfig == null) {
+            return Task.CompletedTask;
         }
+        this.HeaterConfig.NtcConfig = config;
+        return this.HeaterConfigChanged.InvokeAsync(this.HeaterConfig);
     }
 
-    private async Task PidConfigChangedHandler(PidConfiguration config) {
-        if (this.HeaterConfig != null) {
-            this.HeaterConfig.PidConfig = config;
-            await this.HeaterConfigChanged.InvokeAsync(this.HeaterConfig);
+    private Task PidConfigChangedHandler(PidConfiguration config) {
+        if (this.HeaterConfig == null) {
+            return Task.CompletedTask;
         }
+        this.HeaterConfig.PidConfig = config;
+        return this.HeaterConfigChanged.InvokeAsync(this.HeaterConfig);
     }
-    
+
+    private Task PinChangedHandler(sbyte pin) {
+        if (this.HeaterConfig == null) {
+            return Task.CompletedTask;
+        }
+        this.HeaterConfig.Pin=pin;
+        return this.HeaterConfigChanged.InvokeAsync(this.HeaterConfig);
+    }
+
+    private Task TemDevChangedHandler(double dev) {
+        if (this.HeaterConfig == null) {
+            return Task.CompletedTask;
+        }
+        this.HeaterConfig.TempDeviation=dev;
+        return this.HeaterConfigChanged.InvokeAsync(this.HeaterConfig);
+    }
+
 }

@@ -6,24 +6,50 @@
 @if(this.HeaterControllerConfig == null) {
     <p>Loading...</p>
 } else {
-    <RadzenTabs TabPosition="TabPosition.Left" RenderMode="Radzen.TabRenderMode.Server">
-        <Tabs>
-            @foreach (var config in this.HeaterControllerConfig.HeaterConfigurations) {
-                <HeaterConfigView Label="@GetLabel(config.HeaterId-1)" HeaterConfig="@config"
-                                  HeaterConfigChanged="@this.HeaterChanged"/>
-            }
-        </Tabs>
-    </RadzenTabs>
-    <RadzenStack Orientation="Orientation.Horizontal">
-        <RadzenButton Text="Save" Click="@this.SaveHandler" 
-                      ButtonStyle="ButtonStyle.Info" 
-                      Style="width: 125px;height: 50px;"/>
-        <RadzenButton Text="Cancel" Click="@this.Canceled" 
-                      ButtonStyle="ButtonStyle.Danger" 
-                      Style="width: 125px;height: 50px;"/>
-        <RadzenButton Text="Get Config" Click="@this.GetConfig" 
-                      ButtonStyle="ButtonStyle.Secondary" 
-                      Style="width: 125px;height: 50px;"/>
+    <RadzenStack Orientation="Orientation.Vertical">
+        <RadzenStack Orientation="Orientation.Horizontal">
+            <RadzenFieldset Text="Heater Controller Settings">
+                <RadzenStack Orientation="Orientation.Vertical">
+
+                    <RadzenFormField Text="Target Temperature">
+                        <RadzenNumeric TValue="int"
+                                       Value="@this.HeaterControllerConfig.TemperatureSetPoint"
+                                       ValueChanged="SetTempChangedHandler"
+                                       Min="30"
+                                       Max="95"
+                                       Step="5"/>
+                    </RadzenFormField>
+                    <RadzenFormField Text="Read Interval(ms)">
+                        <RadzenNumeric TValue="ulong"
+                                       Value="@this.HeaterControllerConfig.ReadInterval"
+                                       ValueChanged="@this.ReadIntervalChangedHandler"
+                                       Min="100"
+                                       Max="500"/>
+                    </RadzenFormField>
+                </RadzenStack>
+            </RadzenFieldset>
+            
+
+            <RadzenTabs TabPosition="TabPosition.Left" RenderMode="TabRenderMode.Server">
+                <Tabs>
+                    @foreach (var config in this.HeaterControllerConfig.HeaterConfigurations) {
+                        <HeaterConfigView Label="@GetLabel(config.HeaterId - 1)" HeaterConfig="@config"
+                                          HeaterConfigChanged="@this.HeaterChanged"/>
+                    }
+                </Tabs>
+            </RadzenTabs>
+        </RadzenStack>
+        <RadzenStack Orientation="Orientation.Horizontal">
+            <RadzenButton Text="Save" Click="@this.SaveHandler"
+                          ButtonStyle="ButtonStyle.Info"
+                          Style="width: 125px;height: 50px;"/>
+            <RadzenButton Text="Cancel" Click="@this.Canceled"
+                          ButtonStyle="ButtonStyle.Danger"
+                          Style="width: 125px;height: 50px;"/>
+            <RadzenButton Text="Get Config" Click="@this.GetConfig"
+                          ButtonStyle="ButtonStyle.Secondary"
+                          Style="width: 125px;height: 50px;"/>
+        </RadzenStack>
     </RadzenStack>
 }
 @code {
@@ -55,4 +81,21 @@
             return "Right Heater Configuration";
         }
     }
+
+    private Task SetTempChangedHandler(int setTemp) {
+        if (this.HeaterControllerConfig == null) {
+            return Task.CompletedTask;
+        }
+        this.HeaterControllerConfig.TemperatureSetPoint = setTemp;
+        return this.HeaterControllerConfigChanged.InvokeAsync(this.HeaterControllerConfig);
+    }
+
+    private Task ReadIntervalChangedHandler(ulong interval) {
+        if (this.HeaterControllerConfig == null) {
+            return Task.CompletedTask;
+        }
+        this.HeaterControllerConfig.ReadInterval = interval;
+        return this.HeaterControllerConfigChanged.InvokeAsync(this.HeaterControllerConfig);
+    }
+
 }

@@ -1,5 +1,88 @@
-﻿<h3>CurrentSelectView</h3>
+﻿
+@if (this.CurrentSelectorConfig == null) {
+    <h6><strong>Loading...</strong></h6>
+} else {
+    <RadzenFieldset Text="Current Selector Config">
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenFormField Text="Pin 120mA">
+                    <RadzenNumeric TValue="sbyte"
+                                   Value="@this.CurrentSelectorConfig.Pin120mA"
+                                   ValueChanged="@this.Pin120ChangedHandler"/>
+                </RadzenFormField>
+                <RadzenFormField Text="Pin 60mA">
+                    <RadzenNumeric TValue="sbyte"
+                                   Value="@this.CurrentSelectorConfig.Pin60mA"
+                                   ValueChanged="@this.Pin60ChangedHandler"/>
+                </RadzenFormField>
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenFormField Text="Current Pin(Enable)">
+                    <RadzenNumeric TValue="sbyte"
+                                   Value="@this.CurrentSelectorConfig.CurrentPin"
+                                   ValueChanged="@this.PinCurrentChangedHandler"/>
+                </RadzenFormField>
+                <CurrentSelector Current="@this.CurrentSelectorConfig.SetCurrent"
+                                 CurrentChanged="@this.CurrentChangedHandler"
+                                 Title="Set Current"/>
+            </RadzenStack>
+            <RadzenFieldset Text="Current Switch Enabled">
+                <RadzenStack Orientation="Orientation.Vertical"
+                             AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenLabel Text="@(this.CurrentSelectorConfig.SwitchEnabled ? "Enabled" : "Disabled")" Component="SwEnabled"/>
+                    <RadzenSwitch Value="@this.CurrentSelectorConfig.SwitchEnabled" ValueChanged="@this.SwEnabledChangedHandler" Name="SwEnabled"/>
+                </RadzenStack>
+            </RadzenFieldset>
+        </RadzenStack>
+    </RadzenFieldset>
+}
+
+
 
 @code {
+    [Parameter] public CurrentSelectorConfig? CurrentSelectorConfig { get; set; }
+    [Parameter] public EventCallback<CurrentSelectorConfig> CurrentSelectorConfigChanged { get; set; }
+
+
+    private Task Pin120ChangedHandler(sbyte pin) {
+        if (this.CurrentSelectorConfig == null) {
+            return Task.CompletedTask;
+        }
+        this.CurrentSelectorConfig.Pin120mA = pin;
+        return this.CurrentSelectorConfigChanged.InvokeAsync(this.CurrentSelectorConfig);
+    }
     
+    private Task Pin60ChangedHandler(sbyte pin) {
+        if (this.CurrentSelectorConfig == null) {
+            return Task.CompletedTask;
+        }
+        this.CurrentSelectorConfig.Pin60mA = pin;
+        return this.CurrentSelectorConfigChanged.InvokeAsync(this.CurrentSelectorConfig);
+    }
+    
+    private Task PinCurrentChangedHandler(sbyte pin) {
+        if (this.CurrentSelectorConfig == null) {
+            return Task.CompletedTask;
+        }
+        this.CurrentSelectorConfig.CurrentPin = pin;
+        return this.CurrentSelectorConfigChanged.InvokeAsync(this.CurrentSelectorConfig);
+    }
+
+    private Task CurrentChangedHandler(int current) {
+        if (this.CurrentSelectorConfig == null) {
+            return Task.CompletedTask;
+        }
+
+        this.CurrentSelectorConfig.SetCurrent = current;
+        return this.CurrentSelectorConfigChanged.InvokeAsync(this.CurrentSelectorConfig);
+    }
+    
+    private Task SwEnabledChangedHandler(bool enabled) {
+        if (this.CurrentSelectorConfig == null) {
+            return Task.CompletedTask;
+        }
+        this.CurrentSelectorConfig.SwitchEnabled = enabled;
+        return this.CurrentSelectorConfigChanged.InvokeAsync(this.CurrentSelectorConfig);
+    }
+
 }

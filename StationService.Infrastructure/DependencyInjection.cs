@@ -53,7 +53,8 @@ public static class DependencyInjection {
             typeof(StartFromLoadCommandHandler).Assembly,
             typeof(ConnectionStatusHandler).Assembly,
             typeof(SendConfigurationHandler).Assembly,
-            typeof(RequestRunningTestHandler).Assembly);
+            typeof(RequestRunningTestHandler).Assembly,
+            typeof(UpdateCurrentTempHandler).Assembly);
         });
         services.AddScheduler();
         return services;

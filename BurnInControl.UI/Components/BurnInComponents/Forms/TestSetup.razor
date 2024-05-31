@@ -9,7 +9,7 @@
 <RadzenSplitter Orientation="Orientation.Horizontal">
     <RadzenSplitterPane Size="40%">
         <RadzenStack Orientation="Orientation.Vertical" 
-                     Style="border: 1px solid #0a53be; margin: 0.3rem;">
+                     Style="border: 1px solid #0a53be; margin: 0.3rem;" readonly="@this.TestRunning">
             <RadzenDataGrid @ref="@this._waferSetupGrid"
                             TItem="WaferSetup"
                             Data="@this.TestSetupService.WaferSetups"
@@ -86,10 +86,11 @@
                          JustifyContent="JustifyContent.Center">
                 <RadzenButton Text="Verify" Size="ButtonSize.Medium"
                               Click="@this.VerifyHandler"
+                              Disabled="@this.TestRunning"
                               ButtonStyle="ButtonStyle.Info" 
                               Style="width: 170px"/>
                 <RadzenButton Text="Save" Size="ButtonSize.Medium"
-                              Disabled="@(this.TestSetupService.SetupError)"
+                              Disabled="@(this.TestSetupService.SetupError || this.TestRunning)"
                               Click="@this.SaveHandler"
                               ButtonStyle="ButtonStyle.Secondary"
                               Icon="save" Style="width: 170px"/>
@@ -99,7 +100,7 @@
                               Click="@this.Cancel"
                               IsBusy="false"
                               Shade="Shade.Default"
-                              Disabled="false"/>
+                              Disabled="@this.TestRunning"/>
             </RadzenStack>
             <TestSetupStatusView SetupAlerts="@this.TestSetupService.SetupAlerts" 
                                  SetupStatusVisible="@this._setupStatusVisible"/>
@@ -127,10 +128,13 @@
 </RadzenSplitter>
 @code {
     [Parameter] public EventCallback<List<WaferSetup>> Save { get; set; }
+
+    [Parameter] public bool TestRunning { get; set; } = false;
     //[Parameter] public IEnumerable<Pad>? Map { get; set; } = Enumerable.Empty<Pad>();
     private RadzenDataGrid<WaferSetup> _waferSetupGrid;
     private IEnumerable<string>? _waferList=Enumerable.Empty<string>();
     private RadzenTabs _tabs;
+    
     private List<WaferSetup> _selectedItems = new List<WaferSetup>();
     
     private int _selectedTab = 0;

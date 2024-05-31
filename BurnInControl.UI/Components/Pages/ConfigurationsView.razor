@@ -24,25 +24,27 @@
             <Tabs>
                 <RadzenTabsItem Text="Station Configuration">
                     <StationConfigView StationConfig="@this._burnInConfiguration.StationConfiguration" 
-                                       CancelPressed="@this.StationConfigSaveHandler" 
-                                       SavePressed="@Callback"/>
+                                       CancelPressed="@this.Refresh" 
+                                       SavePressed="@this.StationConfigSaveHandler"/>
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Heater Configuration">
                     <HeaterControlConfigView HeaterControllerConfig="@this._burnInConfiguration.HeaterConfig"
-                                             Canceled="@this.StationConfigSaveHandler"
+                                             Canceled="@this.Refresh"
                                              Saved="HeaterControllerConfigSaveHandler"
-                                             GetConfig="GetHeaterConfigHandler"/>
+                                             GetConfig="@this.GetHeaterConfigHandler"/>
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Probes Configuration">
                     <ProbesControlView ProbeControllerConfig="@this._burnInConfiguration.ProbesConfiguration"
-                                       CancelPressed="@this.StationConfigSaveHandler"
-                                       SavePressed="ProbeConfigSaveHandler"/>
+                                       CancelPressed="@this.Refresh"
+                                       SavePressed="@this.ProbeConfigSaveHandler"/>
                 </RadzenTabsItem>
             </Tabs>
         </RadzenTabs>
     }
     <RadzenStack Orientation="Orientation.Horizontal">
-        <RadzenButton Text="Refresh" Click="@this.StationConfigSaveHandler" ButtonStyle="ButtonStyle.Danger" Style="width: 125px;height: 50px;"/>
+        <RadzenButton Text="Refresh"
+                      Click="@this.Refresh" 
+                      ButtonStyle="ButtonStyle.Danger" Style="width: 125px;height: 50px;"/>
     </RadzenStack>
     <EventConsole @ref="@this._eventConsole"/>
 </RadzenStack>
@@ -84,20 +86,15 @@
                 await this._hubConnection?.StartAsync();
                 if (this.Connected) {
                     this._eventConsole.Log("Hub Connection Established",AlertStyle.Success);
-                    //this.Notify("Connected Established","Connected to Station Service",NotificationSeverity.Success);
                 } else {
                     this._eventConsole.Log("Hub Connection Failed",AlertStyle.Danger);
-                    //this.Notify("Connected Failed","Failed to connect to Station Service",NotificationSeverity.Error,30000);
                 }
             }  catch(Exception e) {
                 string error = e.Message;
                 if (e.InnerException != null) {
                     error+="\n"+e.InnerException.Message;
                 }
-                //this._logger.LogError($"Hub Connection Failed, Exception: \n {error}");
                 this._eventConsole.Log("Hub Connection Failed",AlertStyle.Danger);
-                //this.Notify("Connected Failed",$"Failed to connect to Station Service. Exception thrown:\n{error}",
-                //    NotificationSeverity.Error,30000);
             }
         }
     }
@@ -148,7 +145,7 @@
         return Task.CompletedTask;
     }
     
-    private async Task StationConfigSaveHandler() {
+    private async Task Refresh() {
         this._burnInConfiguration = null;
         await InvokeAsync(StateHasChanged);
         this._burnInConfiguration = await this.ConfigurationDataService.GetStationBurnInConfig(this._stationId);
@@ -157,8 +154,6 @@
 
     private async Task HeaterControllerConfigSaveHandler(HeaterControllerConfig heaterControllerConfig) {
         var result=await this.ConfigurationDataService.UpdateSubConfig(this._stationId, heaterControllerConfig);
-        /*var json=JsonSerializer.Serialize(heaterControllerConfig, new JsonSerializerOptions { WriteIndented = true });
-        Console.WriteLine(json);*/
         if (result.IsError) {
             this._eventConsole.Log("Error: Failed to save HeaterControllerConfiguration",AlertStyle.Danger);
         } else {
@@ -179,15 +174,27 @@
             this._eventConsole.Log("Error: Failed to save ProbeControllerConfig",AlertStyle.Danger);
         } else {
             this._eventConsole.Log("Success: Saved ProbeControllerConfig",AlertStyle.Success);
+            if (this.Connected) {
+                this._eventConsole.Log("Sending hub request",AlertStyle.Info);
+                await this._hubConnection.SendAsync(HubConstants.Methods.SendConfiguration, probeControllerConfig);
+            } else {
+                this._eventConsole.Log("Warning: Service not connected,firmware configuration will not be updated",AlertStyle.Danger);
+            }
         }
     }
 
-    private async Task Callback(StationConfiguration stationConfig) {
+    private async Task StationConfigSaveHandler(StationConfiguration stationConfig) {
         var result = await this.ConfigurationDataService.UpdateSubConfig(this._stationId, stationConfig);
         if (result.IsError) {
             this._eventConsole.Log("Error: Failed to save StationConfiguration",AlertStyle.Danger);
         } else {
             this._eventConsole.Log("Success: Saved StationConfiguration",AlertStyle.Success);
+            if (this.Connected) {
+                this._eventConsole.Log("Sending hub request",AlertStyle.Info);
+                await this._hubConnection.SendAsync(HubConstants.Methods.SendConfiguration,stationConfig);
+            } else {
+                this._eventConsole.Log("Warning: Service not connected,firmware configuration will not be updated",AlertStyle.Danger);
+            }
         }
     }
 

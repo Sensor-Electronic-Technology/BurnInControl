@@ -41,7 +41,7 @@
                                                      TempStates="@this._data.HeaterStates"/>
                                 </RadzenTabsItem>
                                 <RadzenTabsItem Text="Test Setup">
-                                    <TestSetup Save="SaveClickedHandler" />
+                                    <TestSetup Save="SaveClickedHandler" TestRunning="@this._testRunning"/>
                                 </RadzenTabsItem>
                                 <RadzenTabsItem Text="Plots">
                                     <h5>Coming Soon...</h5>
@@ -272,6 +272,8 @@
    }
    private Task OnSerialComReceived(StationSerialData data) {
        this._data = data;
+       this._testRunning = data.Running;
+       this._testPaused = data.Paused;
        return InvokeAsync(StateHasChanged);;
    }
 
@@ -302,11 +304,11 @@
    private Task SaveClickedHandler(List<WaferSetup> waferSetups) {
        if (this.Connected) {
            if (waferSetups.Any()) {
-               this.Notify("Wafer Setup",$"WaferId {waferSetups[0].WaferId} " +
+               /*this.Notify("Wafer Setup",$"WaferId {waferSetups[0].WaferId} " +
                                          $"\nProbe1: {waferSetups[0].Probe1.Name} " +
                                          $"\nProbe2: {waferSetups[0].Probe2.Name} " +
                                          $"\nPad1: {waferSetups[0].Probe1Pad} " +
-                                         $"\nPad2: {waferSetups[0].Probe2Pad}");
+                                         $"\nPad2: {waferSetups[0].Probe2Pad}");*/
                return this._hubConnection.SendAsync(HubConstants.Methods.SetupTest,new TestSetupTransport() {
                    WaferSetups = waferSetups,
                    SetCurrent = StationCurrent._60mA,

@@ -24,7 +24,9 @@
 
     protected override Task OnParametersSetAsync() {
         this._title = string.IsNullOrWhiteSpace(this.Title) ? "Current" : this.Title;
-        this._selectedItem = this._currents.FirstOrDefault(e => e == StationCurrent.FromValue(Current).Name);
+        if(StationCurrent.TryFromValue(this.Current, out var current)) {
+            this._selectedItem = current.Name;
+        }
         return base.OnParametersSetAsync();
     }
 }

@@ -1,14 +1,14 @@
 <RadzenFormField Text="Set Temperature" Style="width: fit-content">
-    <RadzenNumeric TValue="double" Value="@this.Temp" Min="25" Max="100" Placeholder="85" ValueChanged="TempChangedHandler"/>
+    <RadzenNumeric TValue="int" Value="@this.Temp" Min="25" Max="100" Placeholder="85" ValueChanged="TempChangedHandler"/>
 </RadzenFormField>
 @code {
     [Parameter]
-    public double Temp { get; set; }
+    public int Temp { get; set; }
     
     [Parameter]
-    public EventCallback<double> TempChanged { get; set; }
+    public EventCallback<int> TempChanged { get; set; }
     
-    private async Task TempChangedHandler(Double obj) {
+    private async Task TempChangedHandler(int obj) {
         await this.TempChanged.InvokeAsync(obj);
     }
 }

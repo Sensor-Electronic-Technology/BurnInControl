@@ -47,5 +47,6 @@ public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
     public static readonly StationMsgPrefix ReceiveConfigPrefix=new(nameof(ReceiveConfigPrefix), "RCONF");
     public static readonly StationMsgPrefix FormatSdPrefix=new(nameof(FormatSdPrefix), "FSD");
     public static readonly StationMsgPrefix ProbeTestDone = new(nameof(ProbeTestDone), "PTD");
+    public static readonly StationMsgPrefix SendRunningTest = new(nameof(SendRunningTest), "RTEST");
     private StationMsgPrefix(string name, string value) : base(name, value) {  }
 }

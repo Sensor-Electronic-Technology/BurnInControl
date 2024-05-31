@@ -20,7 +20,7 @@ public class SendStationCommandHandler:IRequestHandler<SendStationCommand> {
     
     public Task Handle(SendStationCommand command, CancellationToken cancellationToken) {
         if (command.Command == StationCommand.Reset) {
-            var hardStopTask=this._mediator.Send(new HardStopCommand());
+            var hardStopTask=this._mediator.Send(new HardStopCommand(), cancellationToken);
             var commandTask=this._controller.Send(StationMsgPrefix.CommandPrefix, command.Command);
             this._logger.LogInformation("Received reset, sent command");
             return Task.WhenAll(hardStopTask,commandTask);

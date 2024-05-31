@@ -13,7 +13,7 @@ namespace BurnInControl.Infrastructure.TestLogs;
 
 public class TestLogDataService {
     private readonly IMongoCollection<BurnInTestLog> _testLogCollection;
-    private readonly IMongoCollection<StationReading> _readingsCollection;
+    private readonly IMongoCollection<BurnInTestLogEntry> _readingsCollection;
     private readonly StationDataService _stationDataService;
     
     public TestLogDataService(IMongoClient client,StationDataService stationDataService,IOptions<DatabaseSettings> settings){
@@ -29,6 +29,7 @@ public class TestLogDataService {
     public TestLogDataService(IMongoClient client,StationDataService stationDataService){
         var database = client.GetDatabase("burn_in_db");
         this._testLogCollection=database.GetCollection<BurnInTestLog>("test_logs");
+        this._readingsCollection=database.GetCollection<BurnInTestLogEntry>("test_log_entries");
         this._stationDataService = stationDataService;
     }
 
@@ -94,7 +95,6 @@ public class TestLogDataService {
         }
         log.RunTime=result.Value.RunTime;
         await this._testLogCollection.InsertOneAsync(log);
-        //await this._stationDataService.
         return log;
     }
     public async Task<ErrorOr<BurnInTestLog>> StartNewUnknown(BurnInTestLog log,StationCurrent current) {
@@ -121,45 +121,36 @@ public class TestLogDataService {
     public async Task UpdateStartAndRunning(ObjectId id,string stationId,DateTime start,StationSerialData data) {
         var filter=Builders<BurnInTestLog>.Filter.Eq(e => e._id,id);
         var updateBuilder = Builders<BurnInTestLog>.Update;
-        var update=updateBuilder.Set(e => e.StartTime,start)
-            .Push(e => e.Readings,new StationReading() {
-                TimeStamp = start,
-                Data=data
-            });
+        var update = updateBuilder.Set(e => e.StartTime, start);
+        BurnInTestLogEntry entry = new BurnInTestLogEntry() {
+            _id = ObjectId.GenerateNewId(),
+            TestLogId = id,
+            TimeStamp = start,
+            Reading = data,
+        };
         await this._testLogCollection.UpdateOneAsync(filter, update);
         await this._stationDataService.SetRunningTest(stationId, id);
+        await this._readingsCollection.InsertOneAsync(entry);
     }
 
     public async Task UpdateStopAndRunning(ObjectId id, string stationId, DateTime stop,StationSerialData data) {
-        var update=Builders<BurnInTestLog>.Update
-            .Set(e => e.StopTime,stop)
-            .Set(e=>e.Completed,true)
-            .Push(e=>e.Readings,new StationReading() {
-                TimeStamp = stop,
-                Data=data
-            });
+        var update = Builders<BurnInTestLog>.Update
+            .Set(e => e.StopTime, stop)
+            .Set(e => e.Completed, true);
+        
         await this._testLogCollection.UpdateOneAsync(e => e._id == id, update);
         await this._stationDataService.ClearRunningTest(stationId);
     }
     
     public async Task<ErrorOr<Created>> InsertReading(ObjectId logId,StationSerialData data) {
-        var filter=Builders<BurnInTestLog>.Filter.Eq(e => e._id,logId);
-        var updateBuilder = Builders<BurnInTestLog>.Update;
-        var update=updateBuilder.Push(e => e.Readings,new StationReading() {
+        BurnInTestLogEntry entry = new BurnInTestLogEntry() {
+            _id = ObjectId.GenerateNewId(),
+            TestLogId = logId,
             TimeStamp = DateTime.Now,
-            Data=data
-        });
-        var readingResult = await this._testLogCollection.UpdateOneAsync(filter, update);
-        if(readingResult.IsAcknowledged){
-            if(readingResult.ModifiedCount>0){
-                return Result.Created;
-            } else {
-                return Error.Unexpected(description: "Unknown State.  Reading may not have been inserted");
-            }
-        } else {
-            return Error.Failure(description: "Failed to insert reading");
-        }
-
+            Reading = data,
+        };
+        await this._readingsCollection.InsertOneAsync(entry);
+        return Result.Created;
     }
     
     public async Task<ErrorOr<Success>> SetCompleted(ObjectId id,string stationId,DateTime stop) {

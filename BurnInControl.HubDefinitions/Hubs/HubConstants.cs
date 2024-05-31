@@ -39,7 +39,7 @@ public static class HubConstants {
         public static string SendConfiguration => "SendConfiguration";
         public static string SendCommand => "SendCommand";
         public static string RequestConfig=> "RequestConfig";
-        
+        public static string UpdateCurrentAndTemp => "UpdateCurrentAndTemp";
     }
 
 }

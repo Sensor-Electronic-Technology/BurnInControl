@@ -27,7 +27,7 @@ public class TestService:ITestService {
     private readonly IMediator _mediator;
     private string? _stationId;
     private DateTime _lastLog;
-    private readonly TimeSpan _interval;
+    private readonly TimeSpan _interval=TimeSpan.FromSeconds(60);
     private readonly ILogger<TestService> _logger;
 
     private bool _running=false, _paused=false;
@@ -35,6 +35,7 @@ public class TestService:ITestService {
     private bool _testSetupComplete = false;
     private bool _first = false;
     private int _value=0;
+    private bool _testRequested = false;
 
     public bool IsRunning => this._running;
     
@@ -48,7 +49,7 @@ public class TestService:ITestService {
         this._testLogDataService = testLogDataService;
         this._hubContext = hubContext;
         this._savedStateDataService = savedStateDataService;
-        this._interval = TimeSpan.FromSeconds(60);
+        //this._interval = TimeSpan.FromSeconds(60);
         
         this._stationId=configuration["StationId"] ?? "S01";
     }
@@ -68,7 +69,7 @@ public class TestService:ITestService {
             this._runningTest.StartNew(testSetup.WaferSetups,
                 testSetup.SetTemperature,
                 testSetup.SetCurrent);
-            
+            this._runningTest.StationId = this._stationId ?? "S00";
             this._logger.LogInformation("TestTransport: Temp: {SetTemp} " +
                                         "Current:{Current}",testSetup.SetTemperature,testSetup.SetCurrent.Name);
             var result = await this._testLogDataService.StartNew(this._runningTest);
@@ -108,6 +109,7 @@ public class TestService:ITestService {
         await this._mediator.Send(new SendAckCommand() { AcknowledgeType = AcknowledgeType.TestStartAck });
     }
     public async Task StartFrom(ControllerSavedState savedState) {
+        this._testRequested = false;
         if (this.IsRunning) {
            if(this._savedStateLog.SavedState.TestId==savedState.TestId) {
                this._logger.LogInformation("Received test state,Test already setup and running");
@@ -195,10 +197,9 @@ public class TestService:ITestService {
             await this._hubContext.Clients.All.OnStopAndSaved(false,"Test is not running, nothing to save");
         }
     }
-
     public Task SendRunningTest() {
-        Console.WriteLine($"Value Request: {this._runningTest._id.ToString()}");
         if (this._running) {
+            this._logger.LogInformation("Sending running test.  TestId:{ID}",this._runningTest._id.ToString());
             return this._hubContext.Clients.All.OnRequestRunningTest(new LoadTestSetupTransport() {
                 Success = true,
                 Message = "Running Test",
@@ -207,10 +208,9 @@ public class TestService:ITestService {
                 SetCurrent = this._runningTest.SetCurrent
             });
         }
-        
+        this._logger.LogInformation("Running test requested.  No test running");
         return Task.CompletedTask;
     }
-
     public async Task LoadState(ObjectId savedState) {
         var savedStateResult=await this._savedStateDataService.GetSavedState(logId:savedState);
         if (savedStateResult.IsError) {
@@ -272,25 +272,20 @@ public class TestService:ITestService {
         }
     }
     public async Task CompleteTest() {
-        /*if (this._running) {*/
-        
-            var result=await this._testLogDataService.SetCompleted(this._runningTest._id,
-                this._stationId ?? "S01",DateTime.Now);
-            var delStateResult=await this._savedStateDataService.ClearSavedState(id:this._savedStateLog._id);
-            this.Reset();
-            if (!result.IsError) {
-                await this._hubContext.Clients.All.OnTestCompleted("Test Completed");
-            } else {
-                await this._hubContext.Clients.All.OnTestCompleted("Error: Failed to mark test as completed");
-            }
-            if (!delStateResult.IsError) {
-                this._logger.LogInformation("Cleared saved state");
-            } else {
-                this._logger.LogWarning("Failed to clear saved state");
-            }
-        /*} else {
-            await this._hubContext.Clients.All.OnTestCompleted("Waring: Received stop command but no test is running");
-        }*/
+        var result=await this._testLogDataService.SetCompleted(this._runningTest._id,
+            this._stationId ?? "S01",DateTime.Now);
+        var delStateResult=await this._savedStateDataService.ClearSavedState(id:this._savedStateLog._id);
+        this.Reset();
+        if (!result.IsError) {
+            await this._hubContext.Clients.All.OnTestCompleted("Test Completed");
+        } else {
+            await this._hubContext.Clients.All.OnTestCompleted("Error: Failed to mark test as completed");
+        }
+        if (!delStateResult.IsError) {
+            this._logger.LogInformation("Cleared saved state");
+        } else {
+            this._logger.LogWarning("Failed to clear saved state");
+        }
         await this._mediator.Send(new SendAckCommand() { AcknowledgeType = AcknowledgeType.TestCompleteAck });
     }
     private async Task SaveState(StationSerialData data) {
@@ -327,14 +322,22 @@ public class TestService:ITestService {
     }
     public async Task Log(StationSerialData data) {
         this._latestData = data;
+        if (!this._running && data.Running && !this._testSetupComplete) {
+            if (!this._testRequested) {
+                Console.WriteLine("Requesting test");
+                this._testRequested = true;
+                await this._mediator.Send(new SendStationCommand() { Command = StationCommand.RequestRunningTest });
+            }
+        }
         if (this._loggingEnabled) {
             if (this._first) {
                 this._first = false;
                 this._lastLog = DateTime.Now;
                 await this.StartLog(data);
             } else {
-                if ((DateTime.Now - this._lastLog).Seconds > this._interval.Seconds) {
-                    Console.WriteLine($"Value: {_value++}");
+                if ((DateTime.Now - this._lastLog) >= this._interval) {
+                    /*Console.WriteLine($"Value: {_value++}");
+                    Console.WriteLine($"Running:{this._running}");*/
                     this._lastLog = DateTime.Now;
                     await this.UpdateLogs(data);
                 } else {
@@ -346,7 +349,6 @@ public class TestService:ITestService {
             }
         }
     }
-
     public async Task Stop() {
         if(this.IsRunning) {
             await this._savedStateDataService.ClearSavedState(id:this._savedStateLog._id);

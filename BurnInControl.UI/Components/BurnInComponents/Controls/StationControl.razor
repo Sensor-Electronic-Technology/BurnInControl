@@ -1,5 +1,6 @@
 @using BurnInControl.Data.StationModel.Components
 @inject NotificationService NotificationService
+@inject DialogService DialogService
 @implements IAsyncDisposable
 <RadzenStack Gap="10" Style="margin: .6rem" 
              AlignItems="AlignItems.Center">
@@ -23,7 +24,7 @@
                                     ButtonStyle="ButtonStyle.Danger"
                                     Size="ButtonSize.Large"
                                     ToggleButtonStyle="ButtonStyle.Danger"
-                                    Click="@this.Reset"
+                                    Click="@this.OnResetClicked"
                                     Disabled="@(!this.CanStartPauseReset())"
                                     ToggleShade="Shade.Dark" Style="width: 170px"/>
                 <RadzenToggleButton Text="Probe Test"
@@ -38,8 +39,9 @@
             </RadzenStack>
         </RadzenFieldset>
     </RadzenStack>
-    <TempCurrentControl SetCurrent="@this.SetCurrent"
-                        SetTemperature="@this.SetTemperature"/>
+    @*<TempCurrentControl SetCurrent="@this.SetCurrent"
+                        SetTemperature="@this.SetTemperature"
+                        OnUpload="OnUploadCurrentTemp"/>*@
     <RadzenFieldset Text="Station Service">
         <RadzenStack>
             <RadzenToggleButton Value="@this.ServiceConnected"
@@ -68,6 +70,7 @@
     
     [Parameter] public EventCallback<StationCurrent> CurrentChanged { get; set; }
     [Parameter] public EventCallback<double> TempChanged { get; set; }
+    [Parameter] public EventCallback<(int current,int temp)> Upload { get; set; }
     [Parameter] public int SetCurrent { get; set; } = StationCurrent._150mA.Value;
     [Parameter] public int SetTemperature { get; set; } = 85;
     [Parameter] public bool UsbConnected { get; set; }
@@ -115,11 +118,22 @@
     private bool CanProbeTest() {
         return !this._running && this.ServiceConnected;
     }
-    
-    
-    
-    private async Task OnUploadCurrentTemp(StationCurrent stationCurrent) {
-        await this.CurrentChanged.InvokeAsync(stationCurrent);
+
+    private async Task OnResetClicked() {
+        if (this._running) {
+            var cont=await DialogService.Confirm("Are you sure you want to reset? " +
+                                                 "This will clear the running test on the controller", 
+                "Warning Test Running", new ConfirmOptions() {
+                OkButtonText = "Continue Reset", CancelButtonText = "Cancel"
+            });
+            if (cont.HasValue) {
+                if (cont.Value) {
+                    await this.Reset.InvokeAsync();
+                }   
+            }
+        } else {
+            await this.Reset.InvokeAsync();
+        }
     }
     
     public ValueTask DisposeAsync() {
@@ -131,4 +145,7 @@
         return this.ProbeTest.InvokeAsync();
     }
 
+    private void OnUploadCurrentTemp((int current, int temperature) obj) {
+        this.Upload.InvokeAsync((obj.current,obj.temperature));
+    }
 }

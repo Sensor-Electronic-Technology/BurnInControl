@@ -9,8 +9,8 @@ namespace BurnInControl.Data.BurnInTests;
 public class BurnInTestLogEntry {
     public ObjectId _id { get; set; }
     public ObjectId TestLogId { get; set; }
-    public List<string> WaferIds { get; set; } = new List<string>();
-    public StationReading? Reading { get; set; }
+    public DateTime TimeStamp { get; set; }
+    public StationSerialData? Reading { get; set; }
 }
 
 public class BurnInTestLog {
@@ -25,7 +25,7 @@ public class BurnInTestLog {
     public long ElapsedTime { get; set; }
     
     public List<WaferSetup> TestSetup { get; set; } = new List<WaferSetup>();
-    public List<StationReading> Readings { get; set; } = new List<StationReading>();
+    //public List<StationReading> Readings { get; set; } = new List<StationReading>();
 
     public void StartNew(List<WaferSetup> setup,int setTemp,StationCurrent current) {
         this.Reset();
@@ -36,24 +36,24 @@ public class BurnInTestLog {
 
     public void SetStart(DateTime start,StationSerialData data) {
         this.StartTime = start;
-        this.Readings.Add(new StationReading() {
+        /*this.Readings.Add(new StationReading() {
             TimeStamp = start,
             Data=data
-        });
+        });*/
     }
 
     public void SetCompleted(DateTime stop) {
         this.StopTime = stop;
     }
     public void AddReading(StationSerialData data) {
-        this.Readings.Add(new StationReading() {
+        /*this.Readings.Add(new StationReading() {
             TimeStamp = DateTime.Now,
             Data=data
-        });
+        });*/
     }
     
 
-    public ErrorOr<IEnumerable<WaferResult>> GetReading(string waferId) {
+    /*public ErrorOr<IEnumerable<WaferResult>> GetReading(string waferId) {
         var waferSetup=this.TestSetup.FirstOrDefault(e => e.WaferId == waferId);
         if (waferSetup != null) {
             var waferResults=this.Readings.Select(e => new WaferResult() {
@@ -69,7 +69,7 @@ public class BurnInTestLog {
             return ErrorOrFactory.From(waferResults);
         }
         return Error.NotFound(description:"Wafer not found");
-    }
+    }*/
 
     public void CreateUnknown(StationCurrent setCurrent,int setTemp,string stationId) {
         this.TestSetup.Add(new WaferSetup() {
@@ -99,7 +99,7 @@ public class BurnInTestLog {
     }
     public void Reset() {
         this.TestSetup.Clear();
-        this.Readings.Clear();
+        //this.Readings.Clear();
         this._id = default;
         this.StartTime = DateTime.MinValue;
         this.StopTime = DateTime.MinValue;

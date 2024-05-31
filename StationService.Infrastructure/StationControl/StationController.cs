@@ -47,22 +47,24 @@ public class StationController:IStationController,IDisposable {
        return this._hubContext.Clients.All.OnStationConnection(this._usbController.Connected);
     }
 
-    public async Task<ErrorOr<Success>> ConnectUsb() {
+    public Task<ErrorOr<Success>> ConnectUsb() {
         var result=this._usbController.Connect();
         if (!result.IsError) {
             this._cancellationTokenSource = new CancellationTokenSource();
             this.StartReaderAsync(this._cancellationTokenSource.Token)
                 .SafeFireAndForget(e => {
-                    this._hubContext.Clients.All.OnUsbConnectFailed($"Channel read error: Exception: \n{e.ToErrorMessage()}");
-                    this._logger.LogError($"Channel read error: Exception: \n{e.ToErrorMessage()}");
+                    this._hubContext.Clients.All.OnUsbConnectFailed($"Channel read error: Exception:" +
+                                                                    $" \n{e.ToErrorMessage()}")
+                        .SafeFireAndForget();
+                    this._logger.LogError("Channel read error: Exception: {Exception}",e.ToErrorMessage());
                 });
-            return result;
+            return Task.FromResult(result);
         } else {
             this._hubContext.Clients.All.OnUsbConnectFailed($"Usb failed to connect.  " +
                                                             $"Please check usb cable" +
                                                             $"\n Usb Message: {result.FirstError.Description})")
                 .SafeFireAndForget();
-            return result;
+            return Task.FromResult(result);
         }
     }
 
@@ -80,7 +82,6 @@ public class StationController:IStationController,IDisposable {
     }
 
     public async Task<ErrorOr<Success>> Stop() {
-        //var result = await this.Disconnect();
         var result=this._usbController.Stop();
         await this._cancellationTokenSource.CancelAsync();
         return result;
@@ -96,12 +97,16 @@ public class StationController:IStationController,IDisposable {
     
     private void UsbControllerOnUsbStateChangedHandler(Object? sender, ConnectionStatusChangedEventArgs e) {
         if (e.Connected) {
+            this._logger.LogInformation("Usb Connected");
             this._hubContext.Clients.All.OnUsbConnect("Usb Connected");
         } else {
             if (e.ConnectionEventType == ConnectionEventType.DisconnectWithRetry) {
+                this._logger.LogInformation("Error: Usb Disconnected. Please check usb cable \n" +
+                                            "The system will reconnect once the cable is plugged back in");
                 this._hubContext.Clients.All.OnUsbDisconnect("Error: Usb Disconnected. Please check usb cable \n" +
                                                              "The system will reconnect once the cable is plugged back in.");
             } else {
+                this._logger.LogInformation("Usb Disconnected,to reconnect please press the connect button");
                 this._hubContext.Clients.All.OnUsbDisconnect("Usb Disconnected,to reconnect please press the connect button");
             }
         }
@@ -118,7 +123,7 @@ public class StationController:IStationController,IDisposable {
             return Task.FromResult(result);
         } else {
             var message = $"Failed to send {msgPacket.Prefix.Name}, Error {result.FirstError.Description}";
-            this._logger.LogError(message);
+            this._logger.LogError("Failed to send {Message}, Error: {Error}",msgPacket.Prefix.Name,result.FirstError.Description);
             return Task.FromResult<ErrorOr<Success>>(Error.Failure(description:message));
         }
     }

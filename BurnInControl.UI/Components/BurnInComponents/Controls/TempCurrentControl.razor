@@ -1,16 +1,21 @@
 @using BurnInControl.Data.StationModel.Components
-
 @inject DialogService DialogService
-<RadzenFieldset Text="Current and Temp" Style="width: fit-content">
+<RadzenFieldset Text="Temp and Current Set Points" Style="width: fit-content">
     <RadzenStack Orientation="Orientation.Vertical" 
                 AlignItems="AlignItems.Center" 
-                JustifyContent="JustifyContent.Center" Gap="7" Reverse="false" Style="width: fit-content">
+                JustifyContent="JustifyContent.Center" 
+                Gap="7" 
+                Reverse="false" Style="width: fit-content">
         <RadzenStack Orientation="Orientation.Vertical" Gap="5">
-            <CurrentSelector @bind-Current="@this.SetCurrent"/>
-            <SetTemp @bind-Temp="@this.SetTemperature"/>
+            <CurrentSelector Current="@this._setCurrent"
+                             CurrentChanged="CurrentChangedHandler"/>
+            <SetTemp Temp="@this._setTemperature" 
+                     TempChanged="TempChangedHandler"/>
         </RadzenStack>
         <RadzenStack Orientation="Orientation.Horizontal">
-            <RadzenButton Text="Edit" Click="EditClickHandler" Visible="false"/>
+            <RadzenButton Text="Edit"
+                          Click="EditClickHandler" 
+                          Visible="false"/>
             <RadzenButton Text="Upload" Click="UploadCurrentTemp"/>
         </RadzenStack>
     </RadzenStack>
@@ -21,15 +26,44 @@
     public int SetCurrent { get; set; } 
     
     [Parameter]
-    public double SetTemperature { get; set; }
+    public int SetTemperature { get; set; }
 
     [Parameter]
-    public EventCallback<(StationCurrent current,double temp)> OnUpload { get; set; }
+    public EventCallback<(int current,int temperature)> OnUpload { get; set; }
     
+    bool _currentLocked=false;
+    bool _tempLocked = false;
+    private int _setCurrent;
+    private int _setTemperature;
+
+    protected override Task OnParametersSetAsync() {
+        if (!this._currentLocked) {
+            this._setCurrent=this.SetCurrent;
+            this._setTemperature=(int)this.SetTemperature;
+        }
+
+        return base.OnParametersSetAsync();
+    }
+
     private async Task UploadCurrentTemp() {
-        await this.OnUpload.InvokeAsync((StationCurrent.FromValue(this.SetCurrent),SetTemperature));
+        await this.OnUpload.InvokeAsync((this._setCurrent,this._setTemperature));
+        this._currentLocked = false;
+        this._currentLocked = false;
     }
     private async Task EditClickHandler() {
         var result=await this.DialogService.OpenAsync("",ds=>@<EnableUploadDialog DialogService="@ds"/>);
     }
+    private void CurrentChangedHandler(int obj) {
+        this.SetCurrent = obj;
+        this._currentLocked = true;
+    }
+
+    private void TempChangedHandler(int obj) {
+        this._setTemperature = obj;
+        this._tempLocked = true;
+    }
 }
+
+
+
+

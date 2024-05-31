@@ -256,7 +256,7 @@ void PrintPacketJson<TPacket>(MessagePacket<TPacket> msgPacket) where TPacket:IP
 
 
 
-async Task BenchmarkLogFetching() {
+/*async Task BenchmarkLogFetching() {
     var stopWatch = new Stopwatch();
     var client = new MongoClient("mongodb://172.20.3.41:27017");
     var database = client.GetDatabase("burn_in_db");
@@ -273,12 +273,12 @@ async Task BenchmarkLogFetching() {
     var entries = await entryCollection.Find(e => e.TestLogId == id).ToListAsync();
     stopWatch.Stop();
     Console.WriteLine($"Entry Time: {(double)stopWatch.ElapsedMilliseconds/1000} EntryCount: {entries.Count}");
-}
+}*/
 
 
 
 
-async Task TestLogsSepCollection() {
+/*async Task TestLogsSepCollection() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");
     var database = client.GetDatabase("burn_in_db");
     var collection=database.GetCollection<BurnInTestLog>("test_logs");
@@ -300,7 +300,7 @@ async Task TestLogsSepCollection() {
         await entryCollection.InsertManyAsync(entries);
         entries.Clear();
     }
-}
+}*/
 
 async Task CloneDatabase() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");

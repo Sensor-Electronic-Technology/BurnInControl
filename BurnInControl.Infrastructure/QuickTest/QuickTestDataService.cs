@@ -22,7 +22,8 @@ public class QuickTestDataService {
     public QuickTestDataService(ILogger<QuickTestDataService> logger, IOptions<DatabaseSettings> options) {
         this._logger = logger;
         this._client = new HttpClient();
-        this._client.BaseAddress = new Uri(options.Value.QuickTestEndpoint ?? "http://172.20.4.206");
+        //this._client.BaseAddress = new Uri(options.Value.QuickTestEndpoint ?? "http://172.20.4.206");
+        this._client.BaseAddress = new Uri(options.Value.QuickTestEndpoint ?? "http://10.5.0.13");
     }
     
     public QuickTestDataService() {

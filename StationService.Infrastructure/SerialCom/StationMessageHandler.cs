@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using StationService.Infrastructure.Hub;
 using System.Text.Json;
+using AsyncAwaitBestPractices;
 using BurnInControl.Application.ProcessSerial.Messages;
 using BurnInControl.Application.StationControl.Messages;
 using BurnInControl.Data.BurnInTests;
@@ -78,16 +79,10 @@ public class StationMessageHandler : IStationMessageHandler {
                         return this.HandleMessage(packetElem, false);
                     }
                     case nameof(StationMsgPrefix.HeaterTuneCompletePrefix): {
-                        //TODO: Add handle for received Tuning results
-                        //Send to UI and wait for Save or Discard
-                        return Task.CompletedTask;
-                        //return this.HandleIdChanged(packetElem);
+                        return this.HandleHeaterTuningComplete(packetElem);
                     }
                     case nameof(StationMsgPrefix.HeaterNotifyPrefix): {
-                        //TODO: Add Handle for heater notify that tune is completed
-                        // This only notifies the user of progress
-                        //Send to UI
-                        return Task.CompletedTask;
+                        return this.HandleHeaterTuneStatus(packetElem);
                     }
                     case nameof(StationMsgPrefix.TestStartStatusPrefix): {
                         //Send to BurnInTestService and start logging
@@ -120,13 +115,15 @@ public class StationMessageHandler : IStationMessageHandler {
                     case nameof(StationMsgPrefix.GetConfigPrefix): {
                         return this.HandleGetConfigResponse(packetElem);
                     }
-
-                    case nameof(StationMsgPrefix.ProbeTestDone):{
+                    case nameof(StationMsgPrefix.ProbeTestDonePrefix):{
                         return this._hubContext.Clients.All.OnProbeTestDone();
                     }
-                    case nameof(StationMsgPrefix.SendRunningTest): {
-                        this._logger.LogInformation("Received SendRunningTest");
+                    case nameof(StationMsgPrefix.SendRunningTestPrefix): {
+                        //this._logger.LogInformation("Received SendRunningTest");
                         return this.HandleTestStartedFrom(packetElem);
+                    }
+                    case nameof(StationMsgPrefix.NotifyHeaterModePrefix): {
+                        return this.HandleNotifyHeaterMode(packetElem);
                     }
                     default: {
                         _logger.LogWarning("Prefix value {Value} not implemented",prefix.Value);
@@ -142,21 +139,33 @@ public class StationMessageHandler : IStationMessageHandler {
             return Task.CompletedTask;
         }
     }
-    
     private async Task HandleData(JsonElement element) {
+        StationSerialData? serialData=null;
         try {
-            var serialData=element.Deserialize<StationSerialData>();
-            if (serialData != null) {
-                await this._mediator.Send(new LogCommand() { Data = serialData });
-                await this._hubContext.Clients.All.OnStationData(serialData);
-            }
+            /*Console.WriteLine("In HandleData");
+            Console.WriteLine("Received {0}",element.ToString());*/
+            serialData=element.Deserialize<StationSerialData>();
         } catch(Exception e) {
-            this._logger.LogError("Error deserializing StartTestFromPacket.\n {ErrMessage}", e.ToErrorMessage());
+            this._logger.LogError("Error deserializing StationSerialData.\n {ErrMessage}", e.ToErrorMessage());
             await _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.DataPrefix,
-                $"Error deserializing StartTestFromPacket.\n {e.ToErrorMessage()}");
+                $"Error deserializing StationSerialData.\n {e.ToErrorMessage()}");
+        }
+        
+        if (serialData != null) {
+            this._hubContext.Clients.All.OnStationData(serialData).SafeFireAndForget();
+            await this._mediator.Send(new LogCommand() { Data = serialData });
         }
     }
-    
+    private async Task HandleNotifyHeaterMode(JsonElement element) {
+        try {
+            var mode=element.GetProperty("Mode").GetInt32();
+            await this._hubContext.Clients.All.OnSwTuneNotify(mode);
+        } catch(Exception e) {
+            this._logger.LogError("Error deserializing NotifyHeaterMode.\n {ErrMessage}", e.ToErrorMessage());
+            await _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.NotifyHeaterModePrefix,
+                $"Error deserializing NotifyHeaterMode.\n {e.ToErrorMessage()}");
+        }
+    }
     private Task HandleTuneData(JsonElement element) {
         try {
             var tuningData=element.Deserialize<TuningSerialData>();
@@ -165,12 +174,37 @@ public class StationMessageHandler : IStationMessageHandler {
             }
             return Task.CompletedTask;
         } catch(Exception e) {
-            this._logger.LogError("Error deserializing StartTestFromPacket.\n {ErrMessage}", e.ToErrorMessage());
+            this._logger.LogError("Error deserializing TuningSerialData.\n {ErrMessage}", e.ToErrorMessage());
             return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TuneComPrefix,
-                $"Error deserializing StartTestFromPacket.\n {e.ToErrorMessage()}");
+                $"Error deserializing TuningSerialData.\n {e.ToErrorMessage()}");
         }
     }
-
+    private Task HandleHeaterTuneStatus(JsonElement element) {
+        try {
+            var tuningData=element.Deserialize<HeaterTuneResult>();
+            if (tuningData != null) {
+                return this._hubContext.Clients.All.OnNotifyHeaterTuningStatus(tuningData);
+            }
+            return Task.CompletedTask;
+        } catch(Exception e) {
+            this._logger.LogError("Error deserializing HeaterTuneResult.\n {ErrMessage}", e.ToErrorMessage());
+            return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TuneComPrefix,
+                $"Error deserializing HeaterTuneResult.\n {e.ToErrorMessage()}");
+        }
+    }
+    private Task HandleHeaterTuningComplete(JsonElement element) {
+        try {
+            var results=element.GetProperty("AutoTuneResults").Deserialize<List<HeaterTuneResult>>();
+            if (results != null) {
+                return this._hubContext.Clients.All.OnNotifyHeaterTuneComplete(results);
+            }
+            return Task.CompletedTask;
+        } catch(Exception e) {
+            this._logger.LogError("Error deserializing HeaterTuneResult.\n {ErrMessage}", e.ToErrorMessage());
+            return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TuneComPrefix,
+                $"Error deserializing HeaterTuneResult.\n {e.ToErrorMessage()}");
+        }
+    }
     private Task HandleMessage(JsonElement element,bool isInit) {
         try {
             var message = element.Deserialize<StationMessagePacket>();
@@ -181,9 +215,9 @@ public class StationMessageHandler : IStationMessageHandler {
             }
             return this._hubContext.Clients.All.OnSerialComMessage((int)message.MessageType,message.Message);
         } catch(Exception e) {
-            this._logger.LogError("Error deserializing StartTestFromPacket.\n {ErrMessage}", e.ToErrorMessage());
+            this._logger.LogError("Error deserializing StationMessagePacket.\n {ErrMessage}", e.ToErrorMessage());
             return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.MessagePrefix,
-                $"Error deserializing StartTestFromPacket.\n {e.ToErrorMessage()}");
+                $"Error deserializing StationMessagePacket.\n {e.ToErrorMessage()}");
         }
     }
     
@@ -200,9 +234,9 @@ public class StationMessageHandler : IStationMessageHandler {
             }
 
         } catch(Exception e) {
-            this._logger.LogError("Error deserializing StartTestFromPacket.\n {ErrMessage}", e.ToErrorMessage());
+            this._logger.LogError("Error deserializing ConfigSaveStatus.\n {ErrMessage}", e.ToErrorMessage());
             return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.SaveConfigStatusPrefix,
-                $"Error deserializing StartTestFromPacket.\n {e.ToErrorMessage()}");
+                $"Error deserializing ConfigSaveStatus.\n {e.ToErrorMessage()}");
         }
     }
 
@@ -221,9 +255,9 @@ public class StationMessageHandler : IStationMessageHandler {
             return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.GetConfigPrefix,
                 "Error while deserializing config type");
         } catch(Exception e) {
-            this._logger.LogError("Error deserializing StartTestFromPacket.\n {ErrMessage}", e.ToErrorMessage());
+            this._logger.LogError("Error deserializing ConfigType.\n {ErrMessage}", e.ToErrorMessage());
             return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.GetConfigPrefix,
-                $"Error deserializing StartTestFromPacket.\n {e.ToErrorMessage()}");
+                $"Error deserializing ConfigType.\n {e.ToErrorMessage()}");
         }
     }
 
@@ -234,6 +268,8 @@ public class StationMessageHandler : IStationMessageHandler {
     
     private Task HandleTestStatus(JsonElement element) {
         try {
+            Console.WriteLine("Handling TestStatus. Deserializing");
+            Console.WriteLine($"Received {element.ToString()}");
             var success = element.GetProperty("Status").GetBoolean();
             var message = element.GetProperty("Message").GetString();
             return this._mediator.Send(new StartTestCommand() {
@@ -241,28 +277,29 @@ public class StationMessageHandler : IStationMessageHandler {
                 Message = message,
             });
         } catch(Exception e) {
-            this._logger.LogError("Error deserializing StartTestFromPacket.\n {ErrMessage}", e.ToErrorMessage());
+            this._logger.LogError("Error deserializing TestStatus.\n {ErrMessage}", e.ToErrorMessage());
             return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStartStatusPrefix,
-                $"Error deserializing StartTestFromPacket.\n {e.ToErrorMessage()}");
+                $"Error deserializing TestStatus.\n {e.ToErrorMessage()}");
         }
     }
 
     private Task HandleTestStartedFrom(JsonElement element) {
         try {
+            Console.WriteLine(element.ToString());
             var startFromPacket = element.Deserialize<ControllerSavedState>();
             if (startFromPacket != null) {
                 return this._mediator.Send(new StartFromLoadCommand() {
                     SavedState=startFromPacket
                 });
             }
-            this._logger.LogError("Failed to parse StartTestFromPacket");
+            this._logger.LogError("Failed to parse ControllerSavedState");
             return this._hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStartFromLoadPrefix,
-                "Failed to parse StartTestFromPacket");
+                "Failed to parse ControllerSavedState");
 
         } catch(Exception e) {
-            this._logger.LogError("Error deserializing StartTestFromPacket.\n {ErrMessage}", e.ToErrorMessage());
+            this._logger.LogError("Error deserializing ControllerSavedState.\n {ErrMessage}", e.ToErrorMessage());
             return _hubContext.Clients.All.OnSerialComError(StationMsgPrefix.TestStartFromLoadPrefix,
-                $"Error deserializing StartTestFromPacket.\n {e.ToErrorMessage()}");
+                $"Error deserializing ControllerSavedState.\n {e.ToErrorMessage()}");
         }
     }
 }

@@ -13,8 +13,8 @@
                  Gap="10">
         <RadzenFieldset Text="Test Control">
             <RadzenStack>
-                <RadzenToggleButton Value="@this.Running"
-                                    Text="@this._runButtonText"
+                <RadzenToggleButton Text="@this._runButtonText" 
+                                    Value="@this.Running"
                                     ButtonStyle="ButtonStyle.Success"
                                     ToggleButtonStyle="ButtonStyle.Info"
                                     Click="@this.OnStartClicked"
@@ -35,14 +35,16 @@
                                     Size="ButtonSize.Large"
                                     Disabled="@(!this.CanProbeTest())"
                                     Click="@this.ProbeTestClickedHandler"
+                                    Value="@this._probeTestRunning"
                                     ToggleShade="Shade.Dark" Style="width: 170px"/>
             </RadzenStack>
         </RadzenFieldset>
     </RadzenStack>
-    @*<TempCurrentControl SetCurrent="@this.SetCurrent"
-                        SetTemperature="@this.SetTemperature"
-                        OnUpload="OnUploadCurrentTemp"/>*@
-    <RadzenFieldset Text="Station Service">
+    <StationServiceControl ServiceConnected="@this.ServiceConnected"
+                           UsbConnected="@this.UsbConnected"
+                           Connect="@this.Connect"
+                           UsbConnect="@this.UsbConnect"/>
+    @*<RadzenFieldset Text="Station Service">
         <RadzenStack>
             <RadzenToggleButton Value="@this.ServiceConnected"
                                 Text="@(this.ServiceConnected ? "Disconnect Service" : "Connect Service")"
@@ -57,7 +59,7 @@
                                 ToggleButtonStyle="ButtonStyle.Secondary"
                                 Click="@this.UsbConnect" Style="width: 170px; height: 52px"/>
         </RadzenStack>
-    </RadzenFieldset>
+    </RadzenFieldset>*@
 </RadzenStack>
 @code{
     [Parameter] public EventCallback Connect { get; set; }
@@ -96,6 +98,8 @@
                 this._paused = this.Paused;
                 this._runButtonText = this.Paused ? "Continue" : "Pause";
         } else {
+            this._running=this.Running;
+            this._paused = this.Paused;
             this._runButtonText = "Start";
         }
 

@@ -27,7 +27,7 @@ public class TestService:ITestService {
     private readonly IMediator _mediator;
     private string? _stationId;
     private DateTime _lastLog;
-    private readonly TimeSpan _interval=TimeSpan.FromSeconds(60);
+    private readonly TimeSpan _interval=TimeSpan.FromSeconds(10);
     private readonly ILogger<TestService> _logger;
 
     private bool _running=false, _paused=false;
@@ -36,7 +36,6 @@ public class TestService:ITestService {
     private bool _first = false;
     private int _value=0;
     private bool _testRequested = false;
-
     public bool IsRunning => this._running;
     
     public TestService(TestLogDataService testLogDataService,
@@ -50,7 +49,6 @@ public class TestService:ITestService {
         this._hubContext = hubContext;
         this._savedStateDataService = savedStateDataService;
         //this._interval = TimeSpan.FromSeconds(60);
-        
         this._stationId=configuration["StationId"] ?? "S01";
     }
 
@@ -62,7 +60,6 @@ public class TestService:ITestService {
         this._runningTest.Reset();
         this._testSetupComplete = false;
     }
-    
     public async Task SetupTest(TestSetupTransport testSetup) {
         if (!this.IsRunning) {
             this._runningTest.Reset();
@@ -317,6 +314,7 @@ public class TestService:ITestService {
             this._stationId ?? "S01",DateTime.Now,data);
     }
     private async Task UpdateLogs(StationSerialData data) {
+        Console.WriteLine($"In UpdateLogs {this._runningTest._id.ToString()}");
         await this._testLogDataService.InsertReading(this._runningTest._id,data);
         await this.UpdateSavedState(data);
     }

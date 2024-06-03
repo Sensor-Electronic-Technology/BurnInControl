@@ -19,7 +19,9 @@ public interface IStationHub {
     Task OnProbeTestDone();
     Task OnConfigSaveStatus(string type,bool success, string message);
     Task OnRequestConfigHandler(bool success,int configType,string jsonConfig);
-
+    Task OnSwTuneNotify(int mode);
+    Task OnNotifyHeaterTuningStatus(HeaterTuneResult result);
+    Task OnNotifyHeaterTuneComplete(List<HeaterTuneResult> results);
 #endregion  
 
 #region BurnInTest

@@ -1,7 +1,12 @@
 <RadzenRow>
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="@this.DisplayGap">
-        <GenericDisplay DisplayLabel="@this.DisplayText" DisplayValue="@this.DisplayValue" DisplayTextStyle="@this.TextStyle" LabelFontSize="@this.LabelFontSize"/>
-            <LedIndicator LedSize="24px" LedOnColor="led-green" State="@this.State"/>
+        <GenericDisplay DisplayLabel="@this.DisplayText" 
+                        DisplayValue="@this.DisplayValue" 
+                        DisplayTextStyle="@this.TextStyle" 
+                        LabelFontSize="@this.LabelFontSize"/>
+        <LedIndicator LedSize="24px" 
+                      LedOnColor="led-green" 
+                      State="@this.State"/>
     </RadzenStack>
 </RadzenRow>
 @code {

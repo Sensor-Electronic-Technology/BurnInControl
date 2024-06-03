@@ -1,3 +1,5 @@
+@using BurnInControl.Shared.ComDefinitions
+@using BurnInControl.Shared.ComDefinitions.Station
 @using BurnInControl.UI.Data
 @inject NotifyPlotOptions NotifyPlotOptions
 @rendermode InteractiveServer
@@ -5,21 +7,30 @@
              JustifyContent="JustifyContent.Center"
              AlignItems="AlignItems.Center" Style="width: fit-content">
     <RadzenFieldset Text="Switch Mode">
-        <RadzenToggleButton Text="@(_swButtonValue ? "AutoTune" : "Heating")"
-                            @bind-Value="@_swButtonValue"
-                            Click="@ModeSwPressed"
-                            ToggleButtonStyle="ButtonStyle.Info" 
-                            ToggleShade="Shade.Dark"/>
+        <RadzenButton Text="@this.GetTuneButtonText()"
+                            Click="@this.OnModeSwitchClick"
+                            Disabled="@this.TestRunning"/>
     </RadzenFieldset>
-    <RadzenFieldset Text="Tune Control" Visible="true">
+    <RadzenFieldset Text="Tune Control">
         <RadzenStack Orientation="Orientation.Horizontal">
-            <RadzenButton Text="Start" Click="@StartPressedHandler"/>
-            <RadzenButton Text="Cancel" Click="@CancelPressedHandler"/>
+            <RadzenToggleButton Text="@this.GetStartStopButtonText()" 
+                                Click="@StartPressedHandler" 
+                                Value="@this.IsTuning"
+                                ButtonStyle="ButtonStyle.Info"
+                                ToggleButtonStyle="ButtonStyle.Secondary"
+                                Disabled="@(!this.CanStartStop())"/>
+
         </RadzenStack>
     </RadzenFieldset>
     <RadzenFieldset Text="Tune Save/Discard">
-        <RadzenButton Text="Save" Click="@SavePressed" Style="margin: .2rem; width:100px;"/>
-        <RadzenButton Text="Discard" Click="@DiscardPressed" Style="margin: .2rem; width:100px;"/>
+        <RadzenButton Text="Save" 
+                      Click="@SavePressed" 
+                      Disabled="@this.TestRunning" 
+                      Style="margin: .2rem; width:100px;"/>
+        <RadzenButton Text="Cancel"
+                      Click="@this.CancelPressed"
+                      ButtonStyle="ButtonStyle.Danger"
+                      Disabled="@(!this.CanCancel())"/>
     </RadzenFieldset>
     <RadzenStack Orientation="Orientation.Horizontal">
         <RadzenFieldset Text="YAxis" Style="width: 100px;">
@@ -62,31 +73,67 @@
 </RadzenStack>
 
 @code {
+    [Parameter] public EventCallback<StationCommand> ModeSwPressed { get; set; }
+    [Parameter] public EventCallback<StationCommand> StartPressed { get; set; }
+    [Parameter] public EventCallback CancelPressed { get; set; }
+    [Parameter] public EventCallback SavePressed { get; set; }
+    [Parameter] public EventCallback DiscardPressed { get; set; }
+    [Parameter] public bool TestRunning { get; set; }
+    [Parameter] public bool IsTuning { get; set; }
+    [Parameter] public bool TuningFinished { get; set; }
+    [Parameter] public StationHeaterMode Mode { get; set; }
+    
     private bool _swButtonValue=false;
     private string _swButtonText="AutoTune";
+    private bool _startStopButtonValue = false;
     private PlotAxisOptions _plotOptions=new PlotAxisOptions();
     
-    [Parameter]
-    public EventCallback ModeSwPressed { get; set; }
-    [Parameter]
-    public EventCallback StartPressed { get; set; }
-    [Parameter]
-    public EventCallback CancelPressed { get; set; }
-    [Parameter]
-    public EventCallback SavePressed { get; set; }
-    [Parameter]
-    public EventCallback DiscardPressed { get; set; }
-    
     private Task StartPressedHandler() {
-        return this.StartPressed.InvokeAsync();
-    }
-    
-    private Task CancelPressedHandler() {
-        return this.CancelPressed.InvokeAsync();
+        if (this.IsTuning) {
+            return this.StartPressed.InvokeAsync(StationCommand.StartTune);
+        } else {
+            return this.StartPressed.InvokeAsync(StationCommand.StopTune);
+        }
     }
     
     private Task Notify() {
         return NotifyPlotOptions.Set(_plotOptions);
+    }
+
+    private Task OnModeSwitchClick() {
+        if(this.Mode==StationHeaterMode.TuningMode) {
+            return this.ModeSwPressed.InvokeAsync(StationCommand.ChangeModeNormal);
+        } else {
+            return this.ModeSwPressed.InvokeAsync(StationCommand.ChangeModeATune);
+        }
+    }
+
+    private string GetTuneButtonText() {
+        if(this.Mode==StationHeaterMode.TuningMode) {
+            return "AutoTune";
+        } else {
+            return "Heating";
+        }
+    }
+
+    private string GetStartStopButtonText() {
+        return this.IsTuning ? "Stop":"Start";
+    }
+
+    private bool CanStartStop() {
+        return !this.TestRunning && this.Mode==StationHeaterMode.TuningMode;
+    }
+
+    private bool CanCancel() {
+        return this.IsTuning && !this.TestRunning && this.Mode == StationHeaterMode.TuningMode;
+    }
+
+    private bool CanSave() {
+        return this.TuningFinished && !this.TestRunning && this.Mode==StationHeaterMode.TuningMode;
+    }
+
+    private bool CanDiscard() {
+        return this.TuningFinished && !this.TestRunning && this.Mode==StationHeaterMode.TuningMode;
     }
 
 }

@@ -9,10 +9,10 @@
             <RadzenStack Orientation="Orientation.Horizontal" Gap="30">
                 @for (int i = 0; i < ControllerHardwareConstants.HEATER_COUNT; i++) {
                     var label = $"T{i+1}";
-                    var temp=Temperatures[i];
+                    var temp=Math.Round(Temperatures[i],1,MidpointRounding.ToZero);
                     var state=HeaterStates[i];
                     <HeaterDisplay DisplayLabel="@label" 
-                                   DisplayValue="@temp.ToString(CultureInfo.CurrentCulture)" 
+                                   DisplayValue="@temp.ToString(CultureInfo.CurrentCulture)"
                                    State="@state"/>
                 }
             </RadzenStack>

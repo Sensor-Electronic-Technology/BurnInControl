@@ -19,12 +19,9 @@ public class TestLogDataService {
     public TestLogDataService(IMongoClient client,StationDataService stationDataService,IOptions<DatabaseSettings> settings){
         var database = client.GetDatabase(settings.Value.DatabaseName?? "burn_in_db");
         this._testLogCollection=database.GetCollection<BurnInTestLog>(settings.Value.TestLogCollectionName ?? "test_logs");
+        this._readingsCollection=database.GetCollection<BurnInTestLogEntry>("test_log_entries");
         this._stationDataService = stationDataService;
     }
-
-    /*public async Task<ErrorOr<StationSavedState>> LoadFromSavedState(string stationId) {
-        //this._savedStatesCollection.Find(e=>e.)
-    }*/
     
     public TestLogDataService(IMongoClient client,StationDataService stationDataService){
         var database = client.GetDatabase("burn_in_db");

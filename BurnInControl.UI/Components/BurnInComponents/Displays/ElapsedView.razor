@@ -1,14 +1,18 @@
+@using BurnInControl.UI.Data
 
 <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Gap="2" Style="margin: 10px; border: black">
     <h3>Elapsed</h3>
     <RuntimeDisplay DisplayText="Runtime"
                     TextStyle="TextStyle.H4"
-                    State="true"
+                    State="@this.Running"
                     RuntimeSecs="@this.Elapsed"
-                    LabelFontSize=12/>
-    <ProbeRuntimes RunTimes="@this.ProbeRuntimes" />
+                    LabelFontSize="12" />
+    <ProbeRuntimes ProbeStates="@this.ProbeStates"/>
 </RadzenStack>
 @code {
-    [Parameter] public List<ulong> ProbeRuntimes { get; set; } = [0,0,0,0,0,0];
+    [Parameter] public List<ProbeState> ProbeStates { get; set; } = [];
     [Parameter] public ulong Elapsed { get; set; } = 0;
+    [Parameter] public bool Running { get; set; } = false;
+    [Parameter] public bool Pasued { get; set; } = false;
+
 }

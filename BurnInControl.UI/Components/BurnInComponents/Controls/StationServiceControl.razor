@@ -1,0 +1,24 @@
+<h3>StationServiceControl</h3>
+<RadzenFieldset Text="Station Service">
+    <RadzenStack>
+        <RadzenToggleButton Value="@this.ServiceConnected"
+                            Text="@(this.ServiceConnected ? "Disconnect Service" : "Connect Service")"
+                            ButtonStyle="ButtonStyle.Secondary"
+                            Size="ButtonSize.Medium"
+                            ToggleButtonStyle="ButtonStyle.Secondary"
+                            Click="@this.Connect" Style="width: 170px; height: 52px"/>
+        <RadzenToggleButton Value="@this.UsbConnected"
+                            Text="@(this.UsbConnected ? "Disconnect Usb" : "Connect Usb")"
+                            ButtonStyle="ButtonStyle.Primary"
+                            Size="ButtonSize.Medium"
+                            ToggleButtonStyle="ButtonStyle.Secondary"
+                            Click="@this.UsbConnect" Style="width: 170px; height: 52px"/>
+    </RadzenStack>
+</RadzenFieldset>
+@code {
+    [Parameter] public bool ServiceConnected { get; set; }
+    [Parameter] public bool UsbConnected { get; set; }
+    [Parameter] public EventCallback Connect { get; set; }
+    [Parameter] public EventCallback UsbConnect { get; set; }
+    
+}

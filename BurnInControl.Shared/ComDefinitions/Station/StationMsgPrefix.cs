@@ -3,6 +3,7 @@ using BurnInControl.Shared.ComDefinitions.JsonConverters;
 using BurnInControl.Shared.ComDefinitions.MessagePacket;
 using System.Text.Json.Serialization;
 namespace BurnInControl.Shared.ComDefinitions.Station;
+
 /*public enum StationMessageType {
     GENERAL,
     INIT,
@@ -46,7 +47,8 @@ public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
     public static readonly StationMsgPrefix GetConfigPrefix=new(nameof(GetConfigPrefix), "GCONF");
     public static readonly StationMsgPrefix ReceiveConfigPrefix=new(nameof(ReceiveConfigPrefix), "RCONF");
     public static readonly StationMsgPrefix FormatSdPrefix=new(nameof(FormatSdPrefix), "FSD");
-    public static readonly StationMsgPrefix ProbeTestDone = new(nameof(ProbeTestDone), "PTD");
-    public static readonly StationMsgPrefix SendRunningTest = new(nameof(SendRunningTest), "RTEST");
+    public static readonly StationMsgPrefix ProbeTestDonePrefix = new(nameof(ProbeTestDonePrefix), "PTD");
+    public static readonly StationMsgPrefix SendRunningTestPrefix = new(nameof(SendRunningTestPrefix), "RTEST");
+    public static readonly StationMsgPrefix NotifyHeaterModePrefix = new(nameof(NotifyHeaterModePrefix), "SWHEATER");
     private StationMsgPrefix(string name, string value) : base(name, value) {  }
 }

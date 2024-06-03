@@ -1,4 +1,5 @@
 @using BurnInControl.Shared
+@using BurnInControl.UI.Data
 
 <RadzenStack AlignItems="AlignItems.Center" Style="padding: .5rem">
     <RadzenText Text="Probe Runtimes" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
@@ -6,11 +7,11 @@
     <RadzenStack Gap="5" Reverse="false" Style="border: 1px solid #f6f7fa; padding: .5rem">
         @for (int i = 0; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
             var text = $"P{i + 1}";
-            <RuntimeDisplay DisplayText="@text" RuntimeSecs="@this.RunTimes[i]" />
+            <RuntimeDisplay DisplayText="@text" RuntimeSecs="@this.ProbeStates[i].RunTime" State="ProbeStates[i].RunTimeOkay" />
         }
     </RadzenStack>
 </RadzenStack>
 @code{
     [Parameter]
-    public List<ulong> RunTimes { get; set; }=new List<ulong>(){0,0,0,0,0,0};
+    public List<ProbeState> ProbeStates { get; set; }=[];
 }

@@ -30,6 +30,11 @@ public static class HubConstants {
         public static string OnRequestConfigHandler => "OnRequestConfigHandler";
         public static string OnProbeTestDone => "OnProbeTestDone";
         public static string OnRequestRunningTest => "OnRequestRunningTest";
+        
+        public static string OnNotifyHeaterMode => "OnNotifyHeaterMode";
+        public static string OnNotifyHeaterTuningStatus => "OnNotifyHeaterTuningStatus";
+        public static string OnNotifyHeaterTuneComplete => "OnNotifyHeaterTuneComplete";
+        
     }
 
     public static class Methods {
@@ -39,7 +44,6 @@ public static class HubConstants {
         public static string SendConfiguration => "SendConfiguration";
         public static string SendCommand => "SendCommand";
         public static string RequestConfig=> "RequestConfig";
-        public static string UpdateCurrentAndTemp => "UpdateCurrentAndTemp";
     }
 
 }

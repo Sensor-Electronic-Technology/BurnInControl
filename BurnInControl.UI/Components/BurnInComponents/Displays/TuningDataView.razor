@@ -2,6 +2,7 @@
 @inject NotifyPlotOptions NotifyPlotOptions
 @implements IAsyncDisposable
 @rendermode InteractiveServer
+<RadzenTabsItem Text="Plot">
     <RadzenStack Orientation="Orientation.Vertical" Gap="1">
         <HeaterDisplays Temperatures="@this.HeaterTemperatures"
                         HeaterStates="@this.HeaterStates"/>
@@ -48,20 +49,15 @@
             </RadzenValueAxis>
         </RadzenChart>
     </RadzenStack>
-
+</RadzenTabsItem>
 
 
 @code {
-    [Parameter]
-    public List<TemperatureData> H1Data { get; set; }=new List<TemperatureData>();
-    [Parameter]
-    public List<TemperatureData> H2Data { get; set; }=new List<TemperatureData>();
-    [Parameter]
-    public List<TemperatureData> H3Data { get; set; }=new List<TemperatureData>();
-    [Parameter]
-    public List<double> HeaterTemperatures { get; set; }=[0,0,0];
-    [Parameter] 
-    public List<bool> HeaterStates { get; set; } = [false,false,false];
+    [Parameter] public List<TemperatureData> H1Data { get; set; }=new List<TemperatureData>();
+    [Parameter] public List<TemperatureData> H2Data { get; set; }=new List<TemperatureData>();
+    [Parameter] public List<TemperatureData> H3Data { get; set; }=new List<TemperatureData>();
+    [Parameter] public List<double> HeaterTemperatures { get; set; }=[0,0,0];
+    [Parameter] public List<bool> HeaterStates { get; set; } = [false,false,false];
     
     private PlotAxisOptions _plotAxisOptions = new PlotAxisOptions();
 

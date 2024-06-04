@@ -38,9 +38,9 @@ public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
     public static readonly StationMsgPrefix HeaterNotifyPrefix = new(nameof(HeaterNotifyPrefix), "HNOTIFY");
     public static readonly StationMsgPrefix HeaterTuneCompletePrefix=new(nameof(HeaterTuneCompletePrefix), "HTUNED");
     public static readonly StationMsgPrefix AcknowledgePrefix = new(nameof(AcknowledgePrefix), "ACK");
-    public static readonly StationMsgPrefix UpdateCurrentPrefix = new(nameof(AcknowledgePrefix), "UC");
-    public static readonly StationMsgPrefix UpdateTempPrefix = new(nameof(AcknowledgePrefix), "UT");
-    public static readonly StationMsgPrefix TuneComPrefix = new(nameof(AcknowledgePrefix), "TCOM");
+    public static readonly StationMsgPrefix UpdateCurrentPrefix = new(nameof(UpdateCurrentPrefix), "UC");
+    public static readonly StationMsgPrefix UpdateTempPrefix = new(nameof(UpdateTempPrefix), "UT");
+    public static readonly StationMsgPrefix TuneComPrefix = new(nameof(TuneComPrefix), "TCOM");
     public static readonly StationMsgPrefix SendTestIdPrefix = new(nameof(SendTestIdPrefix), "TID");
     public static readonly StationMsgPrefix LoadStatePrefix = new(nameof(LoadStatePrefix), "LSTATE");
     public static readonly StationMsgPrefix SaveConfigStatusPrefix= new(nameof(SaveConfigStatusPrefix), "SCONF");

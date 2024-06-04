@@ -14,7 +14,7 @@ public class UsbTesting {
     SerialPortInput _serialPort= new SerialPortInput(true);
     
     public UsbTesting() {
-        this._serialPort.SetPort("COM3",38400);
+        this._serialPort.SetPort("COM4",38400);
         this._serialPort.ConnectionStatusChanged += delegate(object sender, ConnectionStatusChangedEventArgs args)
         {
             Console.WriteLine("Connection Status: {0}", args.Connected);

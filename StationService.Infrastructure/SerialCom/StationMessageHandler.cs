@@ -32,8 +32,10 @@ public class StationMessageHandler : IStationMessageHandler {
     public Task Handle(StationMessage message,CancellationToken cancellationToken) {
         try {
             if (!string.IsNullOrEmpty(message.Message)) {
+                Console.WriteLine(message.Message);
                 //this._logger.LogInformation(message.Message);
                 if (message.Message.Contains("Prefix")) {
+                    
                     var doc=JsonSerializer.Deserialize<JsonDocument>(message.Message);
                     if (doc != null) { 
                         return this.Parse(doc);
@@ -54,11 +56,11 @@ public class StationMessageHandler : IStationMessageHandler {
             if(e.InnerException!=null) {
                 exceptionMessage+= $"\n Inner Exception: {e.InnerException.Message}";
             }
-            this._logger.LogWarning($"Message had errors.  Message: {message.Message} {exceptionMessage}");
+            this._logger.LogWarning("Message had errors.  Message: {Received} {ExceptionMessage}", 
+                message.Message, exceptionMessage);
             return Task.CompletedTask;
         }
     }
-    
     private Task Parse(JsonDocument doc) {
         var prefixValue=doc.RootElement.GetProperty("Prefix").ToString();
         if (!string.IsNullOrEmpty(prefixValue)) {
@@ -158,7 +160,7 @@ public class StationMessageHandler : IStationMessageHandler {
     }
     private async Task HandleNotifyHeaterMode(JsonElement element) {
         try {
-            var mode=element.GetProperty("Mode").GetInt32();
+            var mode=element.GetInt32();
             await this._hubContext.Clients.All.OnSwTuneNotify(mode);
         } catch(Exception e) {
             this._logger.LogError("Error deserializing NotifyHeaterMode.\n {ErrMessage}", e.ToErrorMessage());
@@ -168,6 +170,7 @@ public class StationMessageHandler : IStationMessageHandler {
     }
     private Task HandleTuneData(JsonElement element) {
         try {
+            this._logger.LogInformation("Received: {Data}",element.ToString());
             var tuningData=element.Deserialize<TuningSerialData>();
             if (tuningData != null) {
                 return this._hubContext.Clients.All.OnTuningData(tuningData);

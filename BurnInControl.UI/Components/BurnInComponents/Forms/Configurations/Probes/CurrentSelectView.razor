@@ -26,7 +26,7 @@
                                  CurrentChanged="@this.CurrentChangedHandler"
                                  Title="Set Current"/>
             </RadzenStack>
-            <RadzenFieldset Text="Current Switch Enabled">
+            <RadzenFieldset Text="Current Switch Enabled" Style="width: fit-content;">
                 <RadzenStack Orientation="Orientation.Vertical"
                              AlignItems="AlignItems.Center" Gap="0.5rem">
                     <RadzenLabel Text="@(this.CurrentSelectorConfig.SwitchEnabled ? "Enabled" : "Disabled")" Component="SwEnabled"/>

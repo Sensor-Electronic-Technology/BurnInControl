@@ -12,4 +12,8 @@ public class PidConfiguration {
         this.Kd = kd;
         this.WindowSizeMs = window;
     }
+
+    public PidConfiguration Clone() {
+        return MemberwiseClone() as PidConfiguration;
+    }
 }

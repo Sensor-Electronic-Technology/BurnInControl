@@ -22,6 +22,7 @@ public interface IStationHub {
     Task OnSwTuneNotify(int mode);
     Task OnNotifyHeaterTuningStatus(HeaterTuneResult result);
     Task OnNotifyHeaterTuneComplete(List<HeaterTuneResult> results);
+    Task OnTuningResultsSavedDatabase(bool success,string message);
 #endregion  
 
 #region BurnInTest

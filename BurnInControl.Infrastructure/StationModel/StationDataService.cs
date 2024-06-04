@@ -6,6 +6,7 @@ using BurnInControl.Data.ComponentConfiguration.StationController;
 using BurnInControl.Data.StationModel;
 using BurnInControl.Data.StationModel.Components;
 using BurnInControl.Shared.AppSettings;
+using BurnInControl.Shared.ComDefinitions;
 using ErrorOr;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
@@ -26,6 +27,53 @@ public class StationDataService {
         var database = client.GetDatabase("burn_in_db");
         this._stationCollection = database.GetCollection<Station>("stations");
         this._testConfigurationCollection = database.GetCollection<TestConfiguration>("test_configurations");
+    }
+
+    public async Task<bool> SaveTuningResults(string stationId,List<HeaterTuneResult> tuningResults) {
+        bool[] responses = [false,false,false];
+        var pidConfigs = await this._stationCollection.Find(e => e.StationId == stationId)
+            .Project(e=>e.Configuration!.HeaterConfig.HeaterConfigurations.Select(e=>e.PidConfig).ToList())
+            .FirstOrDefaultAsync();
+        if (pidConfigs == null) {
+            return false;
+        }
+        
+        if (pidConfigs.Count != tuningResults.Count || tuningResults.Count != 3) {
+            return false;
+        }
+        for (int i=0;i<3;i++) {
+            var tuneIndex = i;
+            var pidConfig=pidConfigs[i].Clone();
+            pidConfig.Kp=tuningResults[i].kp;
+            pidConfig.Ki=tuningResults[i].ki;
+            pidConfig.Kd=tuningResults[i].kd;
+            var filter = Builders<Station>.Filter.And(Builders<Station>.Filter.Eq(x => x.StationId, stationId), 
+                Builders<Station>.Filter.ElemMatch(x => x.Configuration!.HeaterConfig.HeaterConfigurations,
+                    f => f.HeaterId == tuningResults[tuneIndex].HeaterNumber));
+            var update = Builders<Station>.Update.Set(station => 
+                    station.Configuration!.HeaterConfig.HeaterConfigurations[-1].PidConfig,
+                    pidConfig);
+            var resultUpdate = await this._stationCollection.UpdateOneAsync(filter, update);
+            responses[i] = resultUpdate.IsAcknowledged;
+        }
+        if (!responses.All(e => e)) {
+            //Undo any changes.  There can't be a partial success.
+            for (int i = 0; i < 3; i++) {
+                if (responses[i]) {
+                    int tuneIndex = i;
+                    var filter = Builders<Station>.Filter.And(Builders<Station>.Filter.Eq(x => x.StationId, stationId), 
+                        Builders<Station>.Filter.ElemMatch(x => x.Configuration!.HeaterConfig.HeaterConfigurations,
+                            f => f.HeaterId == tuningResults[tuneIndex].HeaterNumber));
+                    var update = Builders<Station>.Update.Set(station => 
+                            station.Configuration!.HeaterConfig.HeaterConfigurations[-1].PidConfig,
+                        pidConfigs[i]);
+                    await this._stationCollection.UpdateOneAsync(filter,update);
+                }
+            }
+            return false;
+        } else {
+            return true;
+        }
     }
 
     public async Task SetRunningTest(string stationId,ObjectId logId) {

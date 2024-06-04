@@ -1,4 +1,5 @@
 ﻿@page "/tune-view"
+@using System.Text.Json
 @using System.Timers
 @using BurnInControl.HubDefinitions.Hubs
 @using BurnInControl.Shared.ComDefinitions
@@ -18,18 +19,32 @@
                 <AutoTuneControl StartPressed="@this.StartHandler"
                                  ModeSwPressed="@this.ModeSwHandler"
                                  CancelPressed="@this.CancelHandler"
-                                 IsTuning="@this._data.IsTuning"/>
+                                 Mode="@this._mode"
+                                 TemperatureSetPoint="@(this._stationData.TemperatureSetPoint)"
+                                 TemperatureToggle="@this.ToggleTemperatureHandler"
+                                 IsTuning="@this._data.IsTuning"
+                                 Connect="@this.OnConnectClicked"
+                                 ServiceConnected="@this.Connected"
+                                 UsbConnected="@this._usbConnected"
+                                 Reset="@this.OnResetClicked"
+                                 TestRunning="@this._testRunning"/>
             </RadzenStack>
         </RadzenRow>
     </RadzenSplitterPane>
     <RadzenSplitterPane Size="80%" Collapsible="false">
         <RadzenSplitter Orientation="Orientation.Vertical" style=" border: 1px solid rgba(0,0,0,.08);">
-            <RadzenSplitterPane Size="75%" Collapsible="false" >
-                <TuningDataView H1Data="@this._h1Data"
-                                H2Data="@this._h2Data"
-                                H3Data="@this._h3Data"
-                                HeaterStates="@this._data.HeaterStates"
-                                HeaterTemperatures="@this._data.Temperatures"/>
+            <RadzenSplitterPane Size="75%" Collapsible="false">
+                <RadzenTabs>
+                    <Tabs>
+                        <TuningDataView H1Data="@this._h1Data"
+                                        H2Data="@this._h2Data"
+                                        H3Data="@this._h3Data"
+                                        HeaterStates="@this._heaterStates"
+                                        HeaterTemperatures="@this._heaterTemperatures"/>
+                        <TuningResultsView Results="@this._results" />
+                    </Tabs>
+                </RadzenTabs>
+
             </RadzenSplitterPane>
             <RadzenSplitterPane Size="25%"
                                 Resizable="true"
@@ -54,8 +69,22 @@
     TuningSerialData _data=new TuningSerialData();
     StationSerialData _stationData=new StationSerialData();
     private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;
-    Timer? _timer;
-    int count = 0;
+    private Timer? _timer;
+    private int count = 0;
+    private StationHeaterMode _mode = StationHeaterMode.HeatingMode;
+    private bool _testRunning = false;
+    private bool _usbConnected = false;
+    private int _tempSetPoint = 0;
+    private TimeSpan _logInterval = TimeSpan.FromSeconds(1);
+    private DateTime _lastLogTime = DateTime.Now;
+    private int _elapsedSeconds = 0;
+    private List<double> _heaterTemperatures =[0,0,0];
+    private List<bool> _heaterStates = [false, false, false];
+    
+    List<HeaterTuneResult> _results = [
+        new HeaterTuneResult(){HeaterNumber = 1,kp=1,ki=1,kd=1},
+        new HeaterTuneResult(){HeaterNumber = 2,kp=1,ki=1,kd=1},
+        new HeaterTuneResult(){HeaterNumber = 3,kp=1,ki=1,kd=1}];
         
     List<TemperatureData> _h1Data = new List<TemperatureData>();
     List<TemperatureData> _h2Data = new List<TemperatureData>();
@@ -70,10 +99,10 @@
         this._hubConnection = new HubConnectionBuilder()
             .WithUrl("http://localhost:5066/hubs/station")
             .Build();
-        this._hubConnection.On<TuningSerialData>(HubConstants.Events.OnTuningData,this.OnStationDataHandler);
-        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,this.OnSerialComReceived);
-        this._hubConnection.On<int>(HubConstants.Events.OnNotifyHeaterMode,this.OnNotifyHeaterMode);
-        await this.StartConnection();
+        this._hubConnection.On<TuningSerialData>(HubConstants.Events.OnTuningData,this.OnSerialTuningDataReceived);
+        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,this.OnSerialDataReceived);
+        this._hubConnection.On<int>(HubConstants.Events.OnSwTuneNotify,this.OnNotifyHeaterMode);
+        this._hubConnection.On<bool,string>(HubConstants.Events.OnTuningResultsSavedDatabase,this.OnTuningResultsSavedHandler);
     }
     
     private async Task StartConnection() {
@@ -104,6 +133,92 @@
         }
     }
     
+    private Task StartHandler(StationCommand command) {
+        if (this.Connected) {
+            this._eventConsole.Log("Sending start tuning command..");
+            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,command);
+        }
+        this.NotifyNotConnected();
+        return Task.CompletedTask;
+    }
+
+    #region ButtonHandlers
+
+    private Task SaveResultsHandler() {
+        if (this.Connected) {
+            this._eventConsole.Log("Saving Results..");
+            return this._hubConnection.SendAsync(HubConstants.Methods.SaveTuningResults, this._results);
+        }
+        this.NotifyNotConnected();
+        return Task.CompletedTask;
+    }
+    
+    private Task ToggleTemperatureHandler() {
+        if(this.Connected){
+            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,StationCommand.ToggleHeat);
+        }
+
+        this.NotifyNotConnected();
+        return Task.CompletedTask;
+    }
+    
+    private Task CancelHandler() {
+        if (this.Connected) {
+            this._eventConsole.Log("Sending start tuning command..");
+            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,StationCommand.CancelTuning);
+        }
+        this.NotifyNotConnected();
+        return Task.CompletedTask;
+    }
+    
+    private Task ModeSwHandler(StationCommand command) {
+        if (this.Connected) {
+            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand, command);
+        }
+        this.NotifyNotConnected();
+        return Task.CompletedTask;
+    }
+    
+    private Task OnConnectClicked() {
+        if (this.Connected) {
+            this._eventConsole.Log("Disconnect Clicked",AlertStyle.Warning);
+            this.StationStatusService.StationState = StationState.Offline;
+            return this._hubConnection.StopAsync();
+        } else {
+            this.StationStatusService.StationState = StationState.Idle;
+            this._eventConsole.Log("Connect Clicked",AlertStyle.Success);
+            return this.StartConnection();
+        }
+    }
+    
+    private Task OnResetClicked() {
+        if (this.Connected) {
+            this._eventConsole.Log("Reset Clicked",AlertStyle.Warning);
+            this.StationStatusService.StationState = StationState.Idle;
+            this._testRunning = false;
+            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.Reset);
+        }
+        this.NotifyNotConnected();
+        return Task.CompletedTask;
+    }
+    
+    private Task OnUsbConnectClicked() {
+        if (this.Connected) {
+            if (this._usbConnected) {
+                this._eventConsole.Log("Usb Disconnect Clicked",AlertStyle.Warning);
+                return this._hubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
+            } else {
+                this._eventConsole.Log("Usb Connect Clicked",AlertStyle.Info);
+                return this._hubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
+            }
+        }
+        this.NotifyNotConnected();
+        return Task.CompletedTask;
+    }
+    
+    #endregion
+    
+    #region UiNootification
     private void Notify(string summary,string message,NotificationSeverity severity=NotificationSeverity.Info,int duration=5000) {
         var notification=new NotificationMessage { 
             Severity = severity, 
@@ -121,91 +236,72 @@
             Duration = 10000 };
         this.NotificationService.Notify(notification);
     }
+    #endregion
 
-    private Task StartHandler(StationCommand command) {
-        /*this._timer = new Timer();
-        this._timer.Interval = 500;
-        this._timer.AutoReset = true;
-        this._timer.Elapsed+=this.OnTimedEvent;
-        this._timer.Start();
-        this._eventConsole.Log("Starting Timer...");*/
-        if (this.Connected) {
-            this._eventConsole.Log("Sending start tuning command..");
-            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,command);
-        }
-        this.NotifyNotConnected();
-        return Task.CompletedTask;
-    }
-
-    private Task CancelHandler() {
-        /*this._timer?.Stop();
-        this._h1Data.Clear();
-        this._h2Data.Clear();
-        this._h3Data.Clear();
-        this.count = 0;
-        this._eventConsole.Log("Canceling Timer...");
-        return Task.CompletedTask;*/
-        if (this.Connected) {
-            this._eventConsole.Log("Sending start tuning command..");
-            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,StationCommand.CancelTuning);
-        }
-        this.NotifyNotConnected();
-        return Task.CompletedTask;
-    }
-
-    private Task DiscardHandler() {
-        if (this.Connected) {
-            //return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,StationCommand.);
-        }
-        this.NotifyNotConnected();
-        return Task.CompletedTask;
-    }
-    
-    private void OnTimedEvent(object? source, ElapsedEventArgs e) {
-        this.count++;
-        TuningSerialData data = new TuningSerialData {
-            IsTuning = true,
-            ElapsedSeconds = (ulong)count,
-            TemperatureSetPoint = 85
-        };
-        data.Temperatures = new List<double>();
-        for (int i = 0; i < 3; i++) {
-            double value = (23 + (i + 1)) * Math.Exp(0.01 * count);
-            data.Temperatures.Add(Math.Round(value, 0));
-            data.HeaterStates[i]=!this._data.HeaterStates[i];
-        }
-        this._data.Temperatures=data.Temperatures;
-        this._data.HeaterStates=data.HeaterStates;
-        this.OnStationDataHandler(data);
-    }
+    #region HubHandlers
 
     private Task OnNotifyHeaterMode(int mode) {
         this._eventConsole.Log($"Heater Mode Changed to {mode}");
+        this._mode=(StationHeaterMode)mode;
         return Task.CompletedTask;
     }
 
-    private Task OnStationDataHandler(TuningSerialData data) {
-        if (data.IsTuning) {
-            this._h1Data.Add(new TemperatureData { TimeSecs = data.ElapsedSeconds, TempC = data.Temperatures[0] });
-            this._h2Data.Add(new TemperatureData { TimeSecs = data.ElapsedSeconds, TempC = data.Temperatures[1] });
-            this._h3Data.Add(new TemperatureData { TimeSecs = data.ElapsedSeconds, TempC = data.Temperatures[2] });
-        }
+    private Task OnSerialTuningDataReceived(TuningSerialData data) {
+        this._h1Data.Add(new TemperatureData { TimeSecs = data.ElapsedSeconds, TempC = data.Temperatures[0] });
+        this._h2Data.Add(new TemperatureData { TimeSecs = data.ElapsedSeconds, TempC = data.Temperatures[1] });
+        this._h3Data.Add(new TemperatureData { TimeSecs = data.ElapsedSeconds, TempC = data.Temperatures[2] });
+        this._data = data;
         return InvokeAsync(StateHasChanged);
     }
     
-    private Task OnSerialComReceived(StationSerialData data) {
+    private Task OnSerialDataReceived(StationSerialData data) {
         this._stationData = data;
-        
+        this._testRunning = data.Running;
+        this._heaterStates=data.HeaterStates;
+        this._heaterTemperatures = data.Temperatures;
+        if(this._tempSetPoint==0 && data.TemperatureSetPoint!=0){
+            //start
+            this._h1Data.Clear();
+            this._h2Data.Clear();
+            this._h3Data.Clear();
+            this._elapsedSeconds = 0;
+            this._lastLogTime=DateTime.Now;
+            this._h1Data.Add(new TemperatureData { TimeSecs = this._elapsedSeconds, TempC = data.Temperatures[0] });
+            this._h2Data.Add(new TemperatureData { TimeSecs = this._elapsedSeconds, TempC = data.Temperatures[1] });
+            this._h3Data.Add(new TemperatureData { TimeSecs = this._elapsedSeconds, TempC = data.Temperatures[2] });
+        }else if(this._tempSetPoint==0 && data.TemperatureSetPoint==0){
+            //idle
+        }else if(this._tempSetPoint!=0 && data.TemperatureSetPoint==0){
+            //stop
+            this._elapsedSeconds = 0;
+        }else if(this._tempSetPoint!=0 && data.TemperatureSetPoint!=0){
+            //running-log data
+            if((DateTime.Now-this._lastLogTime)>this._logInterval) {
+                this._elapsedSeconds++;
+                this._lastLogTime=DateTime.Now;
+                Console.WriteLine($"Elapsed Seconds: {this._elapsedSeconds}");
+                this._h1Data.Add(new TemperatureData { TimeSecs = this._elapsedSeconds, TempC = data.Temperatures[0] });
+                this._h2Data.Add(new TemperatureData { TimeSecs = this._elapsedSeconds, TempC = data.Temperatures[1] });
+                this._h3Data.Add(new TemperatureData { TimeSecs = this._elapsedSeconds, TempC = data.Temperatures[2] });
+            }
+        }
+        this._tempSetPoint=data.TemperatureSetPoint;
         return InvokeAsync(StateHasChanged);;
     }
 
-
-    private Task ModeSwHandler(StationCommand command) {
-        if (this.Connected) {
-            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand, command);
-        }
-        this.NotifyNotConnected();
+    private Task OnTuningResultsSavedHandler(bool success, string message) {
+        this.Notify(success ? "Results Saved Successfully" : "Failed to save results",
+            message,
+            success ? NotificationSeverity.Success : NotificationSeverity.Error);
         return Task.CompletedTask;
     }
+
+    #endregion
+    
+
+    
+    
+    
+
 
 }

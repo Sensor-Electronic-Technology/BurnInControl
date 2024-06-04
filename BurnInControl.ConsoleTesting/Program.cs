@@ -53,13 +53,7 @@ await CreateTrackerDatabase();*/
 
 /*var objectId=ObjectId.GenerateNewId().ToString();
 Console.WriteLine(objectId);*/
-//await CloneDatabase();
-//await CopyTestLogs();
-//await TestLogsSepCollection();
-//await BenchmarkLogFetching();
-await TestUsbController();
-//PrintPackets();
-//StartSerialPort();
+
 
 /*MessagePacket<ConfigType> msgPacket = new MessagePacket<ConfigType>() {
     Prefix = StationMsgPrefix.GetConfigPrefix,
@@ -79,8 +73,14 @@ Console.WriteLine($"NullorWhitespace: {string.IsNullOrWhiteSpace(str)}");*/
 
 /*Console.WriteLine(nameof(StationState.Idle));
 Console.WriteLine(StationState.Idle.ToString());*/
-
-await CloneDatabase();
+//await CloneDatabase();
+//await CopyTestLogs();
+//await TestLogsSepCollection();
+//await BenchmarkLogFetching();
+//PrintPackets();
+//StartSerialPort();
+//await CloneDatabase();
+await TestUsbController();
 
 async Task CloneDatabase() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");
@@ -122,8 +122,6 @@ async Task CloneDatabase() {
 
 }
 
-
-
 Task TestUsbController() {
     UsbTesting usb = new UsbTesting();
     Console.Clear();
@@ -149,10 +147,10 @@ Task TestUsbController() {
             case ConsoleKey.D6:
                 usb.Send(StationMsgPrefix.CommandPrefix,StationCommand.SaveTuning);
                 break;
-            case ConsoleKey.D6:
+            case ConsoleKey.D7:
                 usb.Send(StationMsgPrefix.CommandPrefix,StationCommand.ChangeModeNormal);
                 break;
-            case ConsoleKey.D7:
+            case ConsoleKey.D8:
                 usb.Disconnect();
                 break;
             default:
@@ -173,11 +171,85 @@ void PrintMenu() {
     Console.WriteLine("4. Stop Tune");
     Console.WriteLine("5. Save Tune");
     Console.WriteLine("6. Cancel Tune");
+    Console.WriteLine("7. Change Mode Normal");
     Console.WriteLine("7. Disconnect");
     Console.WriteLine();
 }
 
+async Task ConfigTestUsbController() {
+        UsbTesting usb = new UsbTesting();
+        IMongoClient client = new MongoClient("mongodb://172.20.3.41:27017");
+        var database = client.GetDatabase("burn_in_db");
+        var collection=database.GetCollection<Station>("stations");
+        var station=await collection.Find(e=>e.StationId=="S01").FirstOrDefaultAsync();
+        if(station!=null) {
+            Console.WriteLine("Station Found");
+        } else {
+            Console.WriteLine("Station Not Found");
+            Console.WriteLine("Exiting...");
+            return;
+        }
+        Console.Clear();
+        PrintMenu();
+        var key=Console.ReadKey();
+        while (key.Key != ConsoleKey.Escape) {
+            switch (key.Key) {
+                case ConsoleKey.D1:
+                    usb.Connect();
+                    break;
+                case ConsoleKey.D2:
+                    usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
+                        new ConfigPacket<HeaterControllerConfig>() { ConfigType = ConfigType.HeaterControlConfig, 
+                            Configuration = station.Configuration.HeaterConfig
+                        });
+                    break;
+                case ConsoleKey.D3:
+                    usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
+                        new ConfigPacket<ProbeControllerConfig>() {
+                            ConfigType = ConfigType.ProbeControlConfig,
+                            Configuration = station.Configuration.ProbesConfiguration
+                        });
+                    break;
+                case ConsoleKey.D4:
+                    usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
+                        new ConfigPacket<StationConfiguration>() {
+                            ConfigType = ConfigType.ControllerConfig,
+                            Configuration = station.Configuration.StationConfiguration
+                        });
+                    break;
+                case ConsoleKey.D5:
+                    usb.Send(StationMsgPrefix.GetConfigPrefix,ConfigType.HeaterControlConfig);
+                    break;
+                case ConsoleKey.D6:
+                    usb.Send(StationMsgPrefix.GetConfigPrefix,ConfigType.ProbeControlConfig);
+                    break;
+                case ConsoleKey.D7:
+                    usb.Send(StationMsgPrefix.GetConfigPrefix,ConfigType.ControllerConfig);
+                    break;
+                case ConsoleKey.D8:
+                    usb.Disconnect();
+                    break;
+                default:
+                    break;
+            }
+            PrintMenu();
+            key=Console.ReadKey();
+        }
+    }
 
+    void PrintMenuConfig() {
+        Console.WriteLine();
+        Console.WriteLine();
+        Console.WriteLine("1. Connect");
+        Console.WriteLine("2. Send Heater");
+        Console.WriteLine("3. Send Probe");
+        Console.WriteLine("4. Send Station");
+        Console.WriteLine("5. Get Heater");
+        Console.WriteLine("6. Get Probe");
+        Console.WriteLine("7. Get Station");
+        Console.WriteLine("8. Disconnect");
+        Console.WriteLine();
+    }
 
  void StartSerialPort() {
      var serialPort= new SerialPortInput();

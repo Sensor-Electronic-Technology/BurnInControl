@@ -35,26 +35,27 @@ public static class DependencyInjection {
         
         services.AddMediatR(config => {
             config.RegisterServicesFromAssemblies(
-            typeof(StationSerialMessageHandler).Assembly,
-            typeof(ConnectionActionHandler).Assembly, 
-            typeof(SendStationCommandHandler).Assembly,
-            typeof(StartupTryUpdateFirmwareCommandHandler).Assembly,
-            typeof(TryUpdateFirmwareCommandHandler).Assembly,
-            typeof(StartTestCommandHandler).Assembly,
-            typeof(LogCommandHandler).Assembly,
-            typeof(TestCompletedHandler).Assembly,
-            typeof(TestSetupHandler).Assembly,
-            typeof(SendAckHandler).Assembly,
-            typeof(SendTestIdCommandHandler).Assembly,
-            typeof(StartLoadStateCommandHandler).Assembly,
-            typeof(StopAndSaveStateCommandHandler).Assembly,
-            typeof(SendSavedStateCommandHandler).Assembly,
-            typeof(HardStopCommandHandler).Assembly,
-            typeof(StartFromLoadCommandHandler).Assembly,
-            typeof(ConnectionStatusHandler).Assembly,
-            typeof(SendConfigurationHandler).Assembly,
-            typeof(RequestRunningTestHandler).Assembly,
-            typeof(UpdateCurrentTempHandler).Assembly);
+                typeof(StationSerialMessageHandler).Assembly,
+                typeof(ConnectionActionHandler).Assembly, 
+                typeof(SendStationCommandHandler).Assembly,
+                typeof(StartupTryUpdateFirmwareCommandHandler).Assembly,
+                typeof(TryUpdateFirmwareCommandHandler).Assembly,
+                typeof(StartTestCommandHandler).Assembly,
+                typeof(LogCommandHandler).Assembly,
+                typeof(TestCompletedHandler).Assembly,
+                typeof(TestSetupHandler).Assembly,
+                typeof(SendAckHandler).Assembly,
+                typeof(SendTestIdCommandHandler).Assembly,
+                typeof(StartLoadStateCommandHandler).Assembly,
+                typeof(StopAndSaveStateCommandHandler).Assembly,
+                typeof(SendSavedStateCommandHandler).Assembly,
+                typeof(HardStopCommandHandler).Assembly,
+                typeof(StartFromLoadCommandHandler).Assembly,
+                typeof(ConnectionStatusHandler).Assembly,
+                typeof(SendConfigurationHandler).Assembly,
+                typeof(RequestRunningTestHandler).Assembly,
+                typeof(UpdateCurrentTempHandler).Assembly,
+                typeof(SaveTuningResultsHandler).Assembly);
         });
         services.AddScheduler();
         return services;

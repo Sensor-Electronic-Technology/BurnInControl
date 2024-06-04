@@ -1,0 +1,37 @@
+@using BurnInControl.Shared.ComDefinitions
+
+<RadzenTabsItem Text="Results">
+    <RadzenStack>
+        <RadzenDataGrid TItem="HeaterTuneResult" Data="@this.Results">
+            <Columns>
+                <RadzenDataGridColumn Property="HeaterNumber" Title="Heater"></RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="kp" Title="Kp"></RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="ki" Title="Ki"></RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="kd" Title="Kd"></RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+        <RadzenFieldset Text="Save/Cancel">
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenButton Text="Save"
+                              Click="@this.Save"
+                              ButtonStyle="ButtonStyle.Info"
+                              Size="ButtonSize.Large"
+                              Disabled="@(!this.IsComplete)"/>
+                <RadzenButton Text="Cancel"
+                              Click="@this.Cancel"
+                              ButtonStyle="ButtonStyle.Info"
+                              Size="ButtonSize.Large"
+                              Disabled="@(!this.IsComplete)"/>
+            </RadzenStack>
+
+        </RadzenFieldset>
+    </RadzenStack>
+    
+</RadzenTabsItem>
+
+@code {
+    [Parameter] public List<HeaterTuneResult> Results { get; set; } = [];
+    [Parameter] public EventCallback Save { get; set; }
+    [Parameter] public EventCallback Cancel { get; set; }
+    [Parameter] public bool IsComplete { get; set; }
+}

@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.SignalR;
 using MediatR;
 namespace StationService.Infrastructure.Hub;
 
-public class StationHub:Hub<IStationHub> {
+public class StationHub:StationHubController {
     private readonly IMediator _mediator;
     public StationHub(IMediator mediator) {
         this._mediator = mediator;
@@ -19,54 +19,58 @@ public class StationHub:Hub<IStationHub> {
         await Task.Delay(500);
         await this._mediator.Send(new RequestRunningTestCommand());
     }
-    public Task RequestUsbConnectionStatus() {
+    public override Task RequestUsbConnectionStatus() {
         return this._mediator.Send(new RequestConnectionStatus());
     }
     
-    public Task SendSerialCom(StationSerialData serialData) { 
+    public override Task SendSerialCom(StationSerialData serialData) { 
         return this.Clients.All.OnStationData(serialData);
     }
 
-    public Task RequestConfig(ConfigType type) {
+    public override Task RequestConfig(ConfigType type) {
         return this._mediator.Send(new RequestConfigMessage(){ConfigType = type});
     }
-    public Task SendSerialComMessage(int type,string message) {
+    public override Task SendSerialComMessage(int type,string message) {
         return this.Clients.All.OnSerialComMessage(type,message);
     }
-    public async Task ConnectUsb() {
+    public override async Task ConnectUsb() {
         await this._mediator.Send(new ConnectionAction() {
             Action=ConnectAction.Connect
         });
     }
-    public async Task DisconnectUsb() {
+    public override async Task DisconnectUsb() {
         await this._mediator.Send(new ConnectionAction(){Action=ConnectAction.Disconnect});
     }
-    public async Task SendCommand(StationCommand command) {
+    public override async Task SendCommand(StationCommand command) {
         await this._mediator.Send(new SendStationCommand(){Command = command});
     }
     
-    public Task SetupTest(TestSetupTransport transport) {
+    public override Task SetupTest(TestSetupTransport transport) {
         return this._mediator.Send(new TestSetupCommand() { TestSetupTransport = transport });
     }
 
-    public Task SendConfiguration(HeaterControllerConfig configuration) {
+    public override Task SendConfiguration(HeaterControllerConfig configuration) {
         Console.WriteLine("Received configuration from client."); 
         return this._mediator.Send(new SendConfiguration() { Configuration = configuration });
     }
     
-    public Task UpdateCurrentAndTemp(int current, int temp) {
+    public override Task UpdateCurrentAndTemp(int current, int temp) {
         return this._mediator.Send(new UpdateCurrentTempCommand() { Current = current, Temperature = temp });
     }
     
-    public Task OnUsbConnectFailed(string message) {
+    public override Task OnUsbConnectFailed(string message) {
         return this.Clients.All.OnUsbConnectFailed(message);
     }
     
-    public Task OnUsbDisconnectFailed(string message) {
+    public override Task OnUsbDisconnectFailed(string message) {
         return this.Clients.All.OnUsbDisconnectFailed(message);
     }
-    public Task OnUsbDisconnect(string message) {
+    
+    public override Task OnUsbDisconnect(string message) {
         return this.Clients.All.OnUsbDisconnect(message);
     }
     
+    public override Task SaveTuningResults(List<HeaterTuneResult> results) {
+        return this._mediator.Send(new SaveTuningResultsCommand() { Results = results });
+    }
 }

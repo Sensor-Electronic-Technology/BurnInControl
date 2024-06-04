@@ -57,7 +57,7 @@ Console.WriteLine(objectId);*/
 //await CopyTestLogs();
 //await TestLogsSepCollection();
 //await BenchmarkLogFetching();
-//await TestUsbController();
+await TestUsbController();
 //PrintPackets();
 //StartSerialPort();
 
@@ -122,14 +122,7 @@ async Task CloneDatabase() {
 
 }
 
-async Task GetMapTesting() {
-    QuickTestDataService dataService = new QuickTestDataService();
-    var map=await dataService.GetWaferMap(2);
-    foreach (var pad in map.MapPads) {
-        //Console.WriteLine($"Size: {}");
-    }
-    
-}
+
 
 Task TestUsbController() {
     UsbTesting usb = new UsbTesting();
@@ -142,36 +135,24 @@ Task TestUsbController() {
                 usb.Connect();
                 break;
             case ConsoleKey.D2:
-                usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
-                    new ConfigPacket<HeaterControllerConfig>() {
-                        ConfigType = ConfigType.HeaterControlConfig,
-                        Configuration = new HeaterControllerConfig()
-                    });
+                usb.Send(StationMsgPrefix.CommandPrefix,StationCommand.ChangeModeATune);
                 break;
             case ConsoleKey.D3:
-                usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
-                    new ConfigPacket<ProbeControllerConfig>() {
-                        ConfigType = ConfigType.ProbeControlConfig,
-                        Configuration = new ProbeControllerConfig()
-                    });
+                usb.Send(StationMsgPrefix.CommandPrefix, StationCommand.StartTune);
                 break;
             case ConsoleKey.D4:
-                usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
-                    new ConfigPacket<StationConfiguration>() {
-                        ConfigType = ConfigType.ControllerConfig,
-                        Configuration = new StationConfiguration()
-                    });
+                usb.Send(StationMsgPrefix.CommandPrefix,StationCommand.StopTune);
                 break;
             case ConsoleKey.D5:
-                usb.Send(StationMsgPrefix.GetConfigPrefix,ConfigType.HeaterControlConfig);
+                usb.Send(StationMsgPrefix.CommandPrefix,StationCommand.SaveTuning);
                 break;
             case ConsoleKey.D6:
-                usb.Send(StationMsgPrefix.GetConfigPrefix,ConfigType.ProbeControlConfig);
+                usb.Send(StationMsgPrefix.CommandPrefix,StationCommand.SaveTuning);
+                break;
+            case ConsoleKey.D6:
+                usb.Send(StationMsgPrefix.CommandPrefix,StationCommand.ChangeModeNormal);
                 break;
             case ConsoleKey.D7:
-                usb.Send(StationMsgPrefix.GetConfigPrefix,ConfigType.ControllerConfig);
-                break;
-            case ConsoleKey.D8:
                 usb.Disconnect();
                 break;
             default:
@@ -187,13 +168,12 @@ void PrintMenu() {
     Console.WriteLine();
     Console.WriteLine();
     Console.WriteLine("1. Connect");
-    Console.WriteLine("2. Send Heater");
-    Console.WriteLine("3. Send Probe");
-    Console.WriteLine("4. Send Station");
-    Console.WriteLine("5. Get Heater");
-    Console.WriteLine("6. Get Probe");
-    Console.WriteLine("7. Get Station");
-    Console.WriteLine("8. Disconnect");
+    Console.WriteLine("2. Change Mode AutoTune");
+    Console.WriteLine("3. Start Tune");
+    Console.WriteLine("4. Stop Tune");
+    Console.WriteLine("5. Save Tune");
+    Console.WriteLine("6. Cancel Tune");
+    Console.WriteLine("7. Disconnect");
     Console.WriteLine();
 }
 

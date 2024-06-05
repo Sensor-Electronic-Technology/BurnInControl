@@ -55,7 +55,8 @@ public static class DependencyInjection {
                 typeof(SendConfigurationHandler).Assembly,
                 typeof(RequestRunningTestHandler).Assembly,
                 typeof(UpdateCurrentTempHandler).Assembly,
-                typeof(SaveTuningResultsHandler).Assembly);
+                typeof(SaveTuningResultsHandler).Assembly,
+                typeof(SendTuningWindowSizeHandler).Assembly);
         });
         services.AddScheduler();
         return services;

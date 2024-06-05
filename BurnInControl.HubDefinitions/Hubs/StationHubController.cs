@@ -22,4 +22,5 @@ public abstract class StationHubController:Hub<IStationHub>{
     public abstract Task OnUsbDisconnectFailed(string message);
     public abstract Task OnUsbDisconnect(string message);
     public abstract Task SaveTuningResults(List<HeaterTuneResult> results);
+    public abstract Task SendTuningWindowSize(int windowSize);
 }

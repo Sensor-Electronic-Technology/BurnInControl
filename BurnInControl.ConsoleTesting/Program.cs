@@ -17,6 +17,7 @@ using BurnInControl.Data.ComponentConfiguration.StationController;
 using BurnInControl.Infrastructure;
 using BurnInControl.Infrastructure.QuickTest;
 using BurnInControl.Shared.ComDefinitions.MessagePacket;
+using BurnInControl.Shared.ComDefinitions.Packets;
 using BurnInControl.Shared.ComDefinitions.Station;
 using BurnInControl.Shared.FirmwareData;
 using Microsoft.Extensions.Hosting;
@@ -97,9 +98,17 @@ MessagePacket<StationCommand> stopPacket = new MessagePacket<StationCommand>() {
     Packet = StationCommand.StopTune
 };
 
+MessagePacket<IntValuePacket> windowSizePacket = new MessagePacket<IntValuePacket>() {
+    Prefix=StationMsgPrefix.SendTuneWindowSizePrefix,
+    Packet = new IntValuePacket() {
+        Value = 10
+    }
+};
+
 Console.WriteLine(JsonSerializer.Serialize(modeTunePacket));
 Console.WriteLine(JsonSerializer.Serialize(startPacket));
 Console.WriteLine(JsonSerializer.Serialize(stopPacket));
+Console.WriteLine(JsonSerializer.Serialize(windowSizePacket));
 
 
 async Task CloneDatabase() {

@@ -50,5 +50,6 @@ public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
     public static readonly StationMsgPrefix ProbeTestDonePrefix = new(nameof(ProbeTestDonePrefix), "PTD");
     public static readonly StationMsgPrefix SendRunningTestPrefix = new(nameof(SendRunningTestPrefix), "RTEST");
     public static readonly StationMsgPrefix NotifyHeaterModePrefix = new(nameof(NotifyHeaterModePrefix), "SWHEATER");
+    public static readonly StationMsgPrefix SendTuneWindowSizePrefix = new(nameof(SendTuneWindowSizePrefix), "WINSIZE");
     private StationMsgPrefix(string name, string value) : base(name, value) {  }
 }

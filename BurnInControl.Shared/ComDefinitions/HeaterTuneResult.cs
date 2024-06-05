@@ -5,4 +5,5 @@ public class HeaterTuneResult {
     public double kp { get; set; }
     public double ki { get; set; }
     public double kd { get; set; }
+    public int WindowSize { get; set; }
 }

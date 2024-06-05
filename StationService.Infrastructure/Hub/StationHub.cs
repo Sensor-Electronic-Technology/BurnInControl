@@ -73,4 +73,8 @@ public class StationHub:StationHubController {
     public override Task SaveTuningResults(List<HeaterTuneResult> results) {
         return this._mediator.Send(new SaveTuningResultsCommand() { Results = results });
     }
+
+    public override Task SendTuningWindowSize(int windowSize) {
+        return this._mediator.Send(new SendTuningWindowSizeCommand() { WindowSize = windowSize });
+    }
 }

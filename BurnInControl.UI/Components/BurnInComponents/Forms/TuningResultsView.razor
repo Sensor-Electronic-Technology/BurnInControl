@@ -4,10 +4,11 @@
     <RadzenStack>
         <RadzenDataGrid TItem="HeaterTuneResult" Data="@this.Results">
             <Columns>
-                <RadzenDataGridColumn Property="HeaterNumber" Title="Heater"></RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="kp" Title="Kp"></RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="ki" Title="Ki"></RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="kd" Title="Kd"></RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="HeaterNumber" Title="Heater"/>
+                <RadzenDataGridColumn Property="kp" Title="Kp"/>
+                <RadzenDataGridColumn Property="ki" Title="Ki"/>
+                <RadzenDataGridColumn Property="kd" Title="Kd"/>
+                <RadzenDataGridColumn Property="WindowSize" Title="Window Size"/>
             </Columns>
         </RadzenDataGrid>
         <RadzenFieldset Text="Save/Cancel">
@@ -23,10 +24,8 @@
                               Size="ButtonSize.Large"
                               Disabled="@(!this.IsComplete)"/>
             </RadzenStack>
-
         </RadzenFieldset>
     </RadzenStack>
-    
 </RadzenTabsItem>
 
 @code {

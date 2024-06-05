@@ -31,11 +31,9 @@ public static class HubConstants {
         public static string OnProbeTestDone => "OnProbeTestDone";
         public static string OnRequestRunningTest => "OnRequestRunningTest";
         public static string OnTuningResultsSavedDatabase => "OnTuningResultsSavedDatabase";
-        
         public static string OnSwTuneNotify => "OnSwTuneNotify";
         public static string OnNotifyHeaterTuningStatus => "OnNotifyHeaterTuningStatus";
         public static string OnNotifyHeaterTuneComplete => "OnNotifyHeaterTuneComplete";
-        
     }
 
     public static class Methods {
@@ -46,6 +44,7 @@ public static class HubConstants {
         public static string SendCommand => "SendCommand";
         public static string RequestConfig=> "RequestConfig";
         public static string SaveTuningResults=> "SaveTuningResults";
+        public static string SendTuningWindowSize=> "SendTuningWindowSize";
     }
 
 }

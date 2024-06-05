@@ -81,9 +81,9 @@
     private List<bool> _heaterStates = [false, false, false];
     
     List<HeaterTuneResult> _results = [
-        new HeaterTuneResult(){HeaterNumber = 1,kp=1,ki=1,kd=1},
-        new HeaterTuneResult(){HeaterNumber = 2,kp=1,ki=1,kd=1},
-        new HeaterTuneResult(){HeaterNumber = 3,kp=1,ki=1,kd=1}];
+        new HeaterTuneResult(){HeaterNumber = 1,kp=1,ki=1,kd=1,WindowSize=1000},
+        new HeaterTuneResult(){HeaterNumber = 2,kp=1,ki=1,kd=1,WindowSize=1000},
+        new HeaterTuneResult(){HeaterNumber = 3,kp=1,ki=1,kd=1,WindowSize=1000}];
         
     List<TemperatureData> _h1Data = new List<TemperatureData>();
     List<TemperatureData> _h2Data = new List<TemperatureData>();

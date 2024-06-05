@@ -1,10 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using System.Diagnostics;
-using System.IO.Ports;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Channels;
 using BurnInControl.ConsoleTesting;
 using BurnInControl.Data.StationModel;
 using BurnInControl.Infrastructure.StationModel;
@@ -14,18 +11,14 @@ using BurnInControl.Data.ComponentConfiguration;
 using BurnInControl.Data.ComponentConfiguration.HeaterController;
 using BurnInControl.Data.ComponentConfiguration.ProbeController;
 using BurnInControl.Data.ComponentConfiguration.StationController;
-using BurnInControl.Infrastructure;
-using BurnInControl.Infrastructure.QuickTest;
+using BurnInControl.Data.StationModel.Components;
 using BurnInControl.Shared.ComDefinitions.MessagePacket;
-using BurnInControl.Shared.ComDefinitions.Packets;
 using BurnInControl.Shared.ComDefinitions.Station;
 using BurnInControl.Shared.FirmwareData;
-using Microsoft.Extensions.Hosting;
 using MongoDB.Bson;
 using Octokit;
 using Octokit.Internal;
 using SerialPortLib;
-using StationService.Infrastructure.SerialCom;
 
 //await TestWorkFlow();
 
@@ -83,7 +76,7 @@ Console.WriteLine(StationState.Idle.ToString());*/
 //await CloneDatabase();
 //await TestUsbController();
 
-MessagePacket<StationCommand> modeTunePacket = new MessagePacket<StationCommand>() {
+/*MessagePacket<StationCommand> modeTunePacket = new MessagePacket<StationCommand>() {
     Prefix = StationMsgPrefix.CommandPrefix,
     Packet = StationCommand.ChangeModeATune
 };
@@ -108,7 +101,9 @@ MessagePacket<IntValuePacket> windowSizePacket = new MessagePacket<IntValuePacke
 Console.WriteLine(JsonSerializer.Serialize(modeTunePacket));
 Console.WriteLine(JsonSerializer.Serialize(startPacket));
 Console.WriteLine(JsonSerializer.Serialize(stopPacket));
-Console.WriteLine(JsonSerializer.Serialize(windowSizePacket));
+Console.WriteLine(JsonSerializer.Serialize(windowSizePacket));*/
+
+await CreateStationDatabase();
 
 
 async Task CloneDatabase() {
@@ -605,9 +600,24 @@ try {
 Console.WriteLine(jsonString);*/
 
 async Task CreateStationDatabase() {
-    var client = new MongoClient("mongodb://192.168.68.112:27017");
-    StationDataService stationService = new StationDataService(client);
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database=client.GetDatabase("burn_in_db");
     Station station = new Station();
+    station.StationId="S01";
+    station.StationPosition="POS1";
+    station.FirmwareVersion="V0.0.1";
+    station.UpdateAvailable=false;
+    station.State=StationState.Idle;
+    station.RunningTest=null;
+    station.SavedState=null;
+    station.Configuration = new BurnStationConfiguration() {
+        HeaterConfig = new HeaterControllerConfig(),
+        ProbesConfiguration = new ProbeControllerConfig(),
+        StationConfiguration = new StationConfiguration()
+    };
+    var collection=database.GetCollection<Station>("stations");
+    await collection.InsertOneAsync(station);
+    Console.WriteLine("Check database");
 }
 
 

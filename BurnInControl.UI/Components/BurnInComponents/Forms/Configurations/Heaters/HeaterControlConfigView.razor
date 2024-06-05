@@ -10,7 +10,6 @@
         <RadzenStack Orientation="Orientation.Horizontal">
             <RadzenFieldset Text="Heater Controller Settings">
                 <RadzenStack Orientation="Orientation.Vertical">
-
                     <RadzenFormField Text="Target Temperature">
                         <RadzenNumeric TValue="int"
                                        Value="@this.HeaterControllerConfig.TemperatureSetPoint"
@@ -26,6 +25,13 @@
                                        Min="100"
                                        Max="500"/>
                     </RadzenFormField>
+                    <RadzenFieldset Text="Window Size ms">
+                        <RadzenNumeric TValue="ulong"
+                                       Step="100"
+                                       Name="WindowSizeMs"
+                                       Value="@this.HeaterControllerConfig.WindowSize"
+                                       ValueChanged="@this.WindowSizeChangedHandler"/>
+                    </RadzenFieldset>
                 </RadzenStack>
             </RadzenFieldset>
             
@@ -95,6 +101,14 @@
             return Task.CompletedTask;
         }
         this.HeaterControllerConfig.ReadInterval = interval;
+        return this.HeaterControllerConfigChanged.InvokeAsync(this.HeaterControllerConfig);
+    }
+    
+    private Task WindowSizeChangedHandler(ulong windowSize) {
+        if (this.HeaterControllerConfig == null) {
+            return Task.CompletedTask;
+        }
+        this.HeaterControllerConfig.WindowSize = windowSize;
         return this.HeaterControllerConfigChanged.InvokeAsync(this.HeaterControllerConfig);
     }
 

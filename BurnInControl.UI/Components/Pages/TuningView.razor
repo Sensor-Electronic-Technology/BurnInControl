@@ -15,7 +15,6 @@
     <RadzenSplitterPane Size="20%" Collapsed="@this._runtimePaneCollapsed">
         <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
             <RadzenStack Orientation="Orientation.Vertical">
-                <RadzenText TextStyle="TextStyle.DisplayH5" Text="Tuning Controls"></RadzenText>
                 <AutoTuneControl StartPressed="@this.StartHandler"
                                  ModeSwPressed="@this.ModeSwHandler"
                                  Mode="@this._mode"
@@ -26,6 +25,7 @@
                                  ServiceConnected="@this.Connected"
                                  UsbConnected="@this._usbConnected"
                                  Reset="@this.OnResetClicked"
+                                 UpdateWindowSize="@this.UpdateWindowSizeHandler"
                                  TestRunning="@this._testRunning"/>
             </RadzenStack>
         </RadzenRow>
@@ -40,10 +40,12 @@
                                         H3Data="@this._h3Data"
                                         HeaterStates="@this._heaterStates"
                                         HeaterTemperatures="@this._heaterTemperatures"/>
-                        <TuningResultsView Results="@this._results" />
+                        <TuningResultsView Results="@this._results" 
+                                           IsComplete="@this._tuningComplete"
+                                           Save="@this.SaveResultsHandler"
+                                           Cancel="@this.CancelHandler"/>
                     </Tabs>
                 </RadzenTabs>
-
             </RadzenSplitterPane>
             <RadzenSplitterPane Size="25%"
                                 Resizable="true"
@@ -79,6 +81,7 @@
     private int _elapsedSeconds = 0;
     private List<double> _heaterTemperatures =[0,0,0];
     private List<bool> _heaterStates = [false, false, false];
+    private bool _tuningComplete = false;
     
     List<HeaterTuneResult> _results = [
         new HeaterTuneResult(){HeaterNumber = 1,kp=1,ki=1,kd=1,WindowSize=1000},
@@ -102,6 +105,7 @@
         this._hubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,this.OnSerialDataReceived);
         this._hubConnection.On<int>(HubConstants.Events.OnSwTuneNotify,this.OnNotifyHeaterMode);
         this._hubConnection.On<HeaterTuneResult>(HubConstants.Events.OnNotifyHeaterTuningStatus,this.OnHeaterTuningStatus);
+        this._hubConnection.On<List<HeaterTuneResult>>(HubConstants.Events.OnNotifyHeaterTuneComplete,this.OnHeaterTuneComplete);
         this._hubConnection.On<bool,string>(HubConstants.Events.OnTuningResultsSavedDatabase,this.OnTuningResultsSavedHandler);
     }
     
@@ -132,9 +136,15 @@
             }
         }
     }
+    
     #region ButtonHandlers
     private Task StartHandler(StationCommand command) {
         if (this.Connected) {
+            this._tuningComplete = false;
+            this._results = [
+                new HeaterTuneResult(){HeaterNumber = 1,kp=0,ki=0,kd=0,WindowSize=1000},
+                new HeaterTuneResult(){HeaterNumber = 2,kp=0,ki=0,kd=0,WindowSize=1000},
+                new HeaterTuneResult(){HeaterNumber = 3,kp=0,ki=0,kd=0,WindowSize=1000}];
             if (command == StationCommand.StartTune) {
                 this._h1Data.Clear();
                 this._h2Data.Clear();
@@ -142,6 +152,15 @@
             }
             this._eventConsole.Log("Sending start tuning command..");
             return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,command);
+        }
+        this.NotifyNotConnected();
+        return Task.CompletedTask;
+    }
+
+    private Task UpdateWindowSizeHandler(ulong windowSize) {
+        if (this.Connected) {
+            this._eventConsole.Log("Sending tuning window size..");
+            return this._hubConnection.SendAsync(HubConstants.Methods.SendTuningWindowSize,windowSize);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
@@ -247,6 +266,12 @@
         return InvokeAsync(StateHasChanged);
     }
 
+    private Task OnHeaterTuneComplete(List<HeaterTuneResult> results) {
+        this._results=results;
+        this._tuningComplete = true;
+        return InvokeAsync(StateHasChanged);
+    }
+
     private Task OnNotifyHeaterMode(int mode) {
         this._eventConsole.Log($"Heater Mode Changed to {mode}");
         this._mode=(StationHeaterMode)mode;
@@ -306,11 +331,4 @@
     }
 
     #endregion
-    
-
-    
-    
-    
-
-
 }

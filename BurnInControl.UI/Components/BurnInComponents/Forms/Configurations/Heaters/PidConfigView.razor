@@ -25,15 +25,7 @@
                 </RadzenRow>
             </RadzenStack>
         </RadzenFieldset>
-        <RadzenFieldset Text="Window Size ms">
-            <RadzenNumeric TValue="ulong" 
-                           Step="100" 
-                           Name="WindowSizeMs"
-                           Value="@this.PidConfig.WindowSizeMs"
-                           ValueChanged="@this.WindowSizeChangedHandler"/>
-        </RadzenFieldset>
     </RadzenStack>
-
 </RadzenFieldset>
 
 
@@ -59,9 +51,6 @@
         await this.PidConfigChanged.InvokeAsync(this.PidConfig);
     }
     
-    private async Task WindowSizeChangedHandler(ulong newValue) {
-        this.PidConfig.WindowSizeMs = newValue; 
-        await this.PidConfigChanged.InvokeAsync(this.PidConfig); 
-    }
+
     
 }

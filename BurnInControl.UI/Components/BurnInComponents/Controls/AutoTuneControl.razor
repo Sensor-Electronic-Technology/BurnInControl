@@ -1,8 +1,11 @@
+@using BurnInControl.Infrastructure.StationModel
 @using BurnInControl.Shared.ComDefinitions
 @using BurnInControl.Shared.ComDefinitions.Station
 @using BurnInControl.UI.Data
 @inject NotifyPlotOptions NotifyPlotOptions
+@inject StationConfigDataService ConfigurationDataService
 @rendermode InteractiveServer
+
 <RadzenStack Orientation="Orientation.Vertical"
              JustifyContent="JustifyContent.Center"
              AlignItems="AlignItems.Center" Style="width: fit-content">
@@ -31,6 +34,20 @@
                                             ToggleButtonStyle="ButtonStyle.Secondary"
                                             Click="@StartPressedHandler"
                                             Disabled="@(!this.CanStartStop())"/>
+                        <RadzenStack Orientation="Orientation.Vertical">
+                            <RadzenFormField Text="WindowSize(ms)">
+                                <RadzenNumeric TValue="ulong" 
+                                               ShowUpDown="true"
+                                               Min="500"
+                                               Max="5000"
+                                               Step="100"
+                                               @bind-Value="@this._windowSize"
+                                               Disabled="@this.IsTuning"/>
+                            </RadzenFormField>
+                            <RadzenButton Text="Update"
+                                          Click="@this.UpdateWindowSizeClick"
+                                          Disabled="@this.IsTuning"/>
+                        </RadzenStack>
                     </RadzenStack>
                 </RadzenFieldset>
                 <StationServiceControl Connect="@this.Connect"
@@ -76,7 +93,6 @@
         </RadzenFieldset>
     </RadzenStack>
 </RadzenStack>
-
 @code {
     [Parameter] public EventCallback<StationCommand> ModeSwPressed { get; set; }
     [Parameter] public EventCallback<StationCommand> StartPressed { get; set; }
@@ -94,12 +110,19 @@
     [Parameter] public EventCallback Connect { get; set; }
     [Parameter] public EventCallback UsbConnect { get; set; }
     [Parameter] public EventCallback Reset { get; set; }
+    [Parameter] public EventCallback<ulong> UpdateWindowSize { get; set; }
     
     private bool _swButtonValue=false;
     private string _swButtonText="AutoTune";
     private bool _startStopButtonValue = false;
+    private ulong _windowSize = 1000;
     private PlotAxisOptions _plotOptions=new PlotAxisOptions();
-    
+
+    protected override async Task OnInitializedAsync() {
+        var stationId=Environment.GetEnvironmentVariable("StationId") ?? "S01";
+        this._windowSize = await this.ConfigurationDataService.GetWindowSize(stationId);
+    }
+
     private Task StartPressedHandler() {
         if (!this.IsTuning) {
             Console.WriteLine("Send Start Tune");
@@ -168,4 +191,7 @@
         return this.Mode == StationHeaterMode.HeatingMode && !this.TestRunning;
     }
 
+    private Task UpdateWindowSizeClick() {
+        return this.UpdateWindowSize.InvokeAsync(this._windowSize);
+    }
 }

@@ -18,7 +18,6 @@
                 <RadzenText TextStyle="TextStyle.DisplayH5" Text="Tuning Controls"></RadzenText>
                 <AutoTuneControl StartPressed="@this.StartHandler"
                                  ModeSwPressed="@this.ModeSwHandler"
-                                 CancelPressed="@this.CancelHandler"
                                  Mode="@this._mode"
                                  TemperatureSetPoint="@(this._stationData.TemperatureSetPoint)"
                                  TemperatureToggle="@this.ToggleTemperatureHandler"
@@ -102,6 +101,7 @@
         this._hubConnection.On<TuningSerialData>(HubConstants.Events.OnTuningData,this.OnSerialTuningDataReceived);
         this._hubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,this.OnSerialDataReceived);
         this._hubConnection.On<int>(HubConstants.Events.OnSwTuneNotify,this.OnNotifyHeaterMode);
+        this._hubConnection.On<HeaterTuneResult>(HubConstants.Events.OnNotifyHeaterTuningStatus,this.OnHeaterTuningStatus);
         this._hubConnection.On<bool,string>(HubConstants.Events.OnTuningResultsSavedDatabase,this.OnTuningResultsSavedHandler);
     }
     
@@ -132,18 +132,20 @@
             }
         }
     }
-    
+    #region ButtonHandlers
     private Task StartHandler(StationCommand command) {
         if (this.Connected) {
+            if (command == StationCommand.StartTune) {
+                this._h1Data.Clear();
+                this._h2Data.Clear();
+                this._h3Data.Clear();
+            }
             this._eventConsole.Log("Sending start tuning command..");
             return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,command);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
     }
-
-    #region ButtonHandlers
-
     private Task SaveResultsHandler() {
         if (this.Connected) {
             this._eventConsole.Log("Saving Results..");
@@ -239,6 +241,11 @@
     #endregion
 
     #region HubHandlers
+    
+    private Task OnHeaterTuningStatus(HeaterTuneResult result) {
+        this._results[result.HeaterNumber-1]=result;
+        return InvokeAsync(StateHasChanged);
+    }
 
     private Task OnNotifyHeaterMode(int mode) {
         this._eventConsole.Log($"Heater Mode Changed to {mode}");
@@ -247,10 +254,12 @@
     }
 
     private Task OnSerialTuningDataReceived(TuningSerialData data) {
+        this._data = data;
+        this._heaterTemperatures = data.Temperatures;
+        this._heaterStates = data.HeaterStates;
         this._h1Data.Add(new TemperatureData { TimeSecs = data.ElapsedSeconds, TempC = data.Temperatures[0] });
         this._h2Data.Add(new TemperatureData { TimeSecs = data.ElapsedSeconds, TempC = data.Temperatures[1] });
         this._h3Data.Add(new TemperatureData { TimeSecs = data.ElapsedSeconds, TempC = data.Temperatures[2] });
-        this._data = data;
         return InvokeAsync(StateHasChanged);
     }
     

@@ -31,11 +31,6 @@
                                             ToggleButtonStyle="ButtonStyle.Secondary"
                                             Click="@StartPressedHandler"
                                             Disabled="@(!this.CanStartStop())"/>
-                        <RadzenButton Text="Cancel"
-                                      ButtonStyle="ButtonStyle.Secondary"
-                                      Size="ButtonSize.Large"
-                                      Disabled="@(!this.CanCancel())"
-                                      Click="@this.CancelPressed"/>
                     </RadzenStack>
                 </RadzenFieldset>
                 <StationServiceControl Connect="@this.Connect"
@@ -56,6 +51,11 @@
                                @bind-Value="@this._plotOptions.YAxisMax"
                                Change="@(async () => { await this.Notify(); })"/>
             </RadzenFormField>
+            <RadzenFormField Text="Step">
+                <RadzenNumeric TValue="int"
+                               @bind-Value="@this._plotOptions.YAxisStep"
+                               Change="@(async () => { await this.Notify(); })"/>
+            </RadzenFormField>
         </RadzenFieldset>
         <RadzenFieldset Text="XAxis" Style="width: 100px;">
             <RadzenFormField Text="Min" >
@@ -68,16 +68,9 @@
                                @bind-Value="@this._plotOptions.XAxisMax"
                                Change="@(async () => { await this.Notify(); })"/>
             </RadzenFormField>
-        </RadzenFieldset>
-        <RadzenFieldset Text="XY Step" Style="width: 100px;">
-            <RadzenFormField Text="X">
+            <RadzenFormField Text="Step">
                 <RadzenNumeric TValue="int"
                                @bind-Value="@this._plotOptions.XAxisStep"
-                               Change="@(async () => { await this.Notify(); })"/>
-            </RadzenFormField>
-            <RadzenFormField Text="Y">
-                <RadzenNumeric TValue="int"
-                               @bind-Value="@this._plotOptions.YAxisStep"
                                Change="@(async () => { await this.Notify(); })"/>
             </RadzenFormField>
         </RadzenFieldset>
@@ -87,9 +80,7 @@
 @code {
     [Parameter] public EventCallback<StationCommand> ModeSwPressed { get; set; }
     [Parameter] public EventCallback<StationCommand> StartPressed { get; set; }
-    [Parameter] public EventCallback CancelPressed { get; set; }
     [Parameter] public EventCallback SavePressed { get; set; }
-    [Parameter] public EventCallback DiscardPressed { get; set; }
     [Parameter] public bool TestRunning { get; set; }
     [Parameter] public bool IsTuning { get; set; }
     [Parameter] public bool TuningFinished { get; set; }
@@ -110,7 +101,7 @@
     private PlotAxisOptions _plotOptions=new PlotAxisOptions();
     
     private Task StartPressedHandler() {
-        if (this.IsTuning) {
+        if (!this.IsTuning) {
             Console.WriteLine("Send Start Tune");
             return this.StartPressed.InvokeAsync(StationCommand.StartTune);
         } else {

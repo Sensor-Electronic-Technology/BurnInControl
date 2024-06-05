@@ -80,7 +80,27 @@ Console.WriteLine(StationState.Idle.ToString());*/
 //PrintPackets();
 //StartSerialPort();
 //await CloneDatabase();
-await TestUsbController();
+//await TestUsbController();
+
+MessagePacket<StationCommand> modeTunePacket = new MessagePacket<StationCommand>() {
+    Prefix = StationMsgPrefix.CommandPrefix,
+    Packet = StationCommand.ChangeModeATune
+};
+
+MessagePacket<StationCommand> startPacket = new MessagePacket<StationCommand>() {
+    Prefix = StationMsgPrefix.CommandPrefix,
+    Packet = StationCommand.StartTune
+};
+
+MessagePacket<StationCommand> stopPacket = new MessagePacket<StationCommand>() {
+    Prefix = StationMsgPrefix.CommandPrefix,
+    Packet = StationCommand.StopTune
+};
+
+Console.WriteLine(JsonSerializer.Serialize(modeTunePacket));
+Console.WriteLine(JsonSerializer.Serialize(startPacket));
+Console.WriteLine(JsonSerializer.Serialize(stopPacket));
+
 
 async Task CloneDatabase() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");

@@ -4,8 +4,10 @@ using BurnInControl.Data.ComponentConfiguration.StationController;
 using BurnInControl.Shared.ComDefinitions.MessagePacket;
 namespace BurnInControl.Data.ComponentConfiguration;
 
-public class BurnStationConfiguration:IPacket {
-    public StationConfiguration StationConfiguration { get; set; }
-    public HeaterControllerConfig HeaterConfig { get; set; }
-    public ProbeControllerConfig ProbesConfiguration { get; set; }
+public class BurnStationConfiguration:IPacket,IBurnStationConfiguration{
+    public HeaterControllerConfig HeaterControllerConfig { get; set; }
+    public ProbeControllerConfig ProbeControllerConfig { get; set; }
+    public StationConfiguration ControllerConfig { get; set; }
+    
+    
 }

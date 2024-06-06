@@ -19,6 +19,7 @@ public class SendConfigurationHandler : IRequestHandler<SendConfiguration> {
     public async Task Handle(SendConfiguration request, CancellationToken cancellationToken) {
         switch (request.Configuration) {
             case HeaterControllerConfig heaterControllerConfig: {
+                Console.WriteLine("Sending heater config..");
                 await this._stationController.Send(StationMsgPrefix.ReceiveConfigPrefix,
                     new ConfigPacket<HeaterControllerConfig>() {
                         ConfigType = ConfigType.HeaterControlConfig,
@@ -27,17 +28,19 @@ public class SendConfigurationHandler : IRequestHandler<SendConfiguration> {
                 break;
             }
             case ProbeControllerConfig probeControllerConfig: {
+                Console.WriteLine("Sending probe config...");
                 await this._stationController.Send(StationMsgPrefix.ReceiveConfigPrefix,
                     new ConfigPacket<ProbeControllerConfig>() {
-                        ConfigType = ConfigType.HeaterControlConfig,
+                        ConfigType = ConfigType.ProbeControlConfig,
                         Configuration = probeControllerConfig
                     });
                 break;
             }
             case StationConfiguration stationConfiguration: {
+                Console.WriteLine("Sending station config...");
                 await this._stationController.Send(StationMsgPrefix.ReceiveConfigPrefix,
                     new ConfigPacket<StationConfiguration>() {
-                        ConfigType = ConfigType.HeaterControlConfig,
+                        ConfigType = ConfigType.ControllerConfig,
                         Configuration = stationConfiguration
                     });
                 break;

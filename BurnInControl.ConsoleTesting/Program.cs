@@ -76,7 +76,7 @@ Console.WriteLine(StationState.Idle.ToString());*/
 //await CloneDatabase();
 //await TestUsbController();
 
-/*MessagePacket<StationCommand> modeTunePacket = new MessagePacket<StationCommand>() {
+MessagePacket<StationCommand> modeTunePacket = new MessagePacket<StationCommand>() {
     Prefix = StationMsgPrefix.CommandPrefix,
     Packet = StationCommand.ChangeModeATune
 };
@@ -91,19 +91,19 @@ MessagePacket<StationCommand> stopPacket = new MessagePacket<StationCommand>() {
     Packet = StationCommand.StopTune
 };
 
-MessagePacket<IntValuePacket> windowSizePacket = new MessagePacket<IntValuePacket>() {
+/*MessagePacket<IntValuePacket> windowSizePacket = new MessagePacket<IntValuePacket>() {
     Prefix=StationMsgPrefix.SendTuneWindowSizePrefix,
     Packet = new IntValuePacket() {
         Value = 10
     }
-};
+};*/
 
 Console.WriteLine(JsonSerializer.Serialize(modeTunePacket));
 Console.WriteLine(JsonSerializer.Serialize(startPacket));
 Console.WriteLine(JsonSerializer.Serialize(stopPacket));
-Console.WriteLine(JsonSerializer.Serialize(windowSizePacket));*/
+/*Console.WriteLine(JsonSerializer.Serialize(windowSizePacket));*/
 
-await CreateStationDatabase();
+/*await CreateStationDatabase();*/
 
 
 async Task CloneDatabase() {
@@ -224,21 +224,21 @@ async Task ConfigTestUsbController() {
                 case ConsoleKey.D2:
                     usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
                         new ConfigPacket<HeaterControllerConfig>() { ConfigType = ConfigType.HeaterControlConfig, 
-                            Configuration = station.Configuration.HeaterConfig
+                            Configuration = station.Configuration.HeaterControllerConfig
                         });
                     break;
                 case ConsoleKey.D3:
                     usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
                         new ConfigPacket<ProbeControllerConfig>() {
                             ConfigType = ConfigType.ProbeControlConfig,
-                            Configuration = station.Configuration.ProbesConfiguration
+                            Configuration = station.Configuration.ProbeControllerConfig
                         });
                     break;
                 case ConsoleKey.D4:
                     usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
                         new ConfigPacket<StationConfiguration>() {
                             ConfigType = ConfigType.ControllerConfig,
-                            Configuration = station.Configuration.StationConfiguration
+                            Configuration = station.Configuration.ControllerConfig
                         });
                     break;
                 case ConsoleKey.D5:
@@ -611,9 +611,9 @@ async Task CreateStationDatabase() {
     station.RunningTest=null;
     station.SavedState=null;
     station.Configuration = new BurnStationConfiguration() {
-        HeaterConfig = new HeaterControllerConfig(),
-        ProbesConfiguration = new ProbeControllerConfig(),
-        StationConfiguration = new StationConfiguration()
+        HeaterControllerConfig = new HeaterControllerConfig(),
+        ProbeControllerConfig = new ProbeControllerConfig(),
+        ControllerConfig = new StationConfiguration()
     };
     var collection=database.GetCollection<Station>("stations");
     await collection.InsertOneAsync(station);

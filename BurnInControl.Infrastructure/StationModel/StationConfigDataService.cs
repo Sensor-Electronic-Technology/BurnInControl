@@ -15,15 +15,25 @@ public class StationConfigDataService {
         var database = client.GetDatabase(settings.Value.DatabaseName?? "burn_in_db");
         this._stationCollection = database.GetCollection<Station>(settings.Value.StationCollectionName ?? "stations");
     }
-
     public Task<BurnStationConfiguration?> GetStationBurnInConfig(string stationId) {
        return this._stationCollection.Find(e=>e.StationId==stationId).Project(e=>e.Configuration).FirstOrDefaultAsync();
     }
 
     public async Task<ulong> GetWindowSize(string stationId) {
         var windowSize = await this._stationCollection.Find(e => e.StationId == stationId)
-            .Project(e => e.Configuration!.HeaterConfig.WindowSize).FirstOrDefaultAsync();
+            .Project(e => e.Configuration!.HeaterControllerConfig.WindowSize).FirstOrDefaultAsync();
         return windowSize;
+    }
+
+    public async Task<ErrorOr<Success>> UpdateAllConfig(string stationId, BurnStationConfiguration config) {
+        var filter=Builders<Station>.Filter.Eq(e => e.StationId,stationId);
+        var updateBuilder = Builders<Station>.Update.Set(station=>station.Configuration,config);
+        var result=await this._stationCollection.UpdateOneAsync(filter, updateBuilder);
+        if (result.IsAcknowledged) {
+            return Result.Success;
+        } else {
+            return Error.Failure(description:"Failed to update Station Configuration");
+        }
     }
     
     public async Task<ErrorOr<Success>> UpdateSubConfig<TConfig>(string stationId,TConfig config) {
@@ -32,7 +42,7 @@ public class StationConfigDataService {
         switch (config) {
             case HeaterControllerConfig heatControlConfig: {
                 var result=await this._stationCollection
-                    .UpdateOneAsync(filter, updateBuilder.Set(e => e.Configuration.HeaterConfig, heatControlConfig));
+                    .UpdateOneAsync(filter, updateBuilder.Set(e => e.Configuration.HeaterControllerConfig, heatControlConfig));
                 if (result.IsAcknowledged) {
                     return Result.Success;
                 } else {
@@ -41,7 +51,7 @@ public class StationConfigDataService {
             }
             case ProbeControllerConfig probeControlConfig: {
                 var result=await this._stationCollection
-                    .UpdateOneAsync(filter, updateBuilder.Set(e => e.Configuration.ProbesConfiguration, probeControlConfig));
+                    .UpdateOneAsync(filter, updateBuilder.Set(e => e.Configuration.ProbeControllerConfig, probeControlConfig));
                 if (result.IsAcknowledged) {
                     return Result.Success;
                 } else {
@@ -50,7 +60,7 @@ public class StationConfigDataService {
             }
             case StationConfiguration stationConfig: {
                 var result=await this._stationCollection
-                    .UpdateOneAsync(filter, updateBuilder.Set(e => e.Configuration.StationConfiguration, stationConfig));
+                    .UpdateOneAsync(filter, updateBuilder.Set(e => e.Configuration.ControllerConfig, stationConfig));
                 if (result.IsAcknowledged) {
                     return Result.Success;
                 } else {

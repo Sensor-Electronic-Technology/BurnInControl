@@ -30,50 +30,21 @@ public class StationDataService {
     }
 
     public async Task<bool> SaveTuningResults(string stationId,List<HeaterTuneResult> tuningResults) {
-        bool[] responses = [false,false,false];
-        var pidConfigs = await this._stationCollection.Find(e => e.StationId == stationId)
-            .Project(e=>e.Configuration!.HeaterConfig.HeaterConfigurations.Select(e=>e.PidConfig).ToList())
+        var heaterControllerConfig = await this._stationCollection.Find(e => e.StationId == stationId)
+            .Project(e=>e.Configuration.HeaterControllerConfig)
             .FirstOrDefaultAsync();
-        if (pidConfigs == null) {
+        if (heaterControllerConfig == null) {
             return false;
         }
-        
-        if (pidConfigs.Count != tuningResults.Count || tuningResults.Count != 3) {
-            return false;
+        heaterControllerConfig.WindowSize = tuningResults[0].WindowSize;
+        for (int i = 0; i < 3; i++) {
+            heaterControllerConfig.HeaterConfigurations[i].PidConfig.Kp = tuningResults[i].kp;
+            heaterControllerConfig.HeaterConfigurations[i].PidConfig.Ki = tuningResults[i].ki;
+            heaterControllerConfig.HeaterConfigurations[i].PidConfig.Kd = tuningResults[i].kd;
         }
-        for (int i=0;i<3;i++) {
-            var tuneIndex = i;
-            var pidConfig=pidConfigs[i].Clone();
-            pidConfig.Kp=tuningResults[i].kp;
-            pidConfig.Ki=tuningResults[i].ki;
-            pidConfig.Kd=tuningResults[i].kd;
-            var filter = Builders<Station>.Filter.And(Builders<Station>.Filter.Eq(x => x.StationId, stationId), 
-                Builders<Station>.Filter.ElemMatch(x => x.Configuration!.HeaterConfig.HeaterConfigurations,
-                    f => f.HeaterId == tuningResults[tuneIndex].HeaterNumber));
-            var update = Builders<Station>.Update.Set(station => 
-                    station.Configuration!.HeaterConfig.HeaterConfigurations[-1].PidConfig,
-                    pidConfig);
-            var resultUpdate = await this._stationCollection.UpdateOneAsync(filter, update);
-            responses[i] = resultUpdate.IsAcknowledged;
-        }
-        if (!responses.All(e => e)) {
-            //Undo any changes.  There can't be a partial success.
-            for (int i = 0; i < 3; i++) {
-                if (responses[i]) {
-                    int tuneIndex = i;
-                    var filter = Builders<Station>.Filter.And(Builders<Station>.Filter.Eq(x => x.StationId, stationId), 
-                        Builders<Station>.Filter.ElemMatch(x => x.Configuration!.HeaterConfig.HeaterConfigurations,
-                            f => f.HeaterId == tuningResults[tuneIndex].HeaterNumber));
-                    var update = Builders<Station>.Update.Set(station => 
-                            station.Configuration!.HeaterConfig.HeaterConfigurations[-1].PidConfig,
-                        pidConfigs[i]);
-                    await this._stationCollection.UpdateOneAsync(filter,update);
-                }
-            }
-            return false;
-        } else {
-            return true;
-        }
+        var update=Builders<Station>.Update.Set(e => e.Configuration!.HeaterControllerConfig, heaterControllerConfig);
+        var result=await this._stationCollection.UpdateOneAsync(e => e.StationId == stationId, update);
+        return result.IsAcknowledged;
     }
 
     public async Task SetRunningTest(string stationId,ObjectId logId) {
@@ -132,7 +103,7 @@ public class StationDataService {
         switch (config) {
             case HeaterControllerConfig heatControlConfig: {
                 var result=await this._stationCollection
-                    .UpdateOneAsync(filter, updateBuilder.Set(e => e.Configuration.HeaterConfig, heatControlConfig));
+                    .UpdateOneAsync(filter, updateBuilder.Set(e => e.Configuration.HeaterControllerConfig, heatControlConfig));
                 if (result.IsAcknowledged) {
                     return Result.Success;
                 } else {
@@ -141,7 +112,7 @@ public class StationDataService {
             }
             case ProbeControllerConfig probeControlConfig: {
                 var result=await this._stationCollection
-                    .UpdateOneAsync(filter, updateBuilder.Set(e => e.Configuration.ProbesConfiguration, probeControlConfig));
+                    .UpdateOneAsync(filter, updateBuilder.Set(e => e.Configuration.ProbeControllerConfig, probeControlConfig));
                 if (result.IsAcknowledged) {
                     return Result.Success;
                 } else {
@@ -150,7 +121,7 @@ public class StationDataService {
             }
             case StationConfiguration stationConfig: {
                 var result=await this._stationCollection
-                    .UpdateOneAsync(filter, updateBuilder.Set(e => e.Configuration.StationConfiguration, stationConfig));
+                    .UpdateOneAsync(filter, updateBuilder.Set(e => e.Configuration.ControllerConfig, stationConfig));
                 if (result.IsAcknowledged) {
                     return Result.Success;
                 } else {

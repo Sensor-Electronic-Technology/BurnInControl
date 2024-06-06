@@ -1,6 +1,9 @@
 ﻿using BurnInControl.Application.BurnInTest.Messages;
 using BurnInControl.Application.StationControl.Messages;
+using BurnInControl.Data.ComponentConfiguration;
 using BurnInControl.Data.ComponentConfiguration.HeaterController;
+using BurnInControl.Data.ComponentConfiguration.ProbeController;
+using BurnInControl.Data.ComponentConfiguration.StationController;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Station;
 using BurnInControl.HubDefinitions.Hubs;
@@ -49,9 +52,19 @@ public class StationHub:StationHubController {
         return this._mediator.Send(new TestSetupCommand() { TestSetupTransport = transport });
     }
 
-    public override Task SendConfiguration(HeaterControllerConfig configuration) {
-        Console.WriteLine("Received configuration from client."); 
-        return this._mediator.Send(new SendConfiguration() { Configuration = configuration });
+    public override Task SendHeaterControlConfig(HeaterControllerConfig heaterControlConfig) {
+        Console.WriteLine("Received heater configuration from client."); 
+        return this._mediator.Send(new SendConfiguration() { Configuration = heaterControlConfig });
+    }
+    
+    public override Task SendProbeControlConfig(ProbeControllerConfig probeControlConfig) {
+        Console.WriteLine("Received probe configuration from client."); 
+        return this._mediator.Send(new SendConfiguration() { Configuration = probeControlConfig });
+    }
+    
+    public override Task SendStationConfig(StationConfiguration stationConfig) {
+        Console.WriteLine("Received station configuration from client."); 
+        return this._mediator.Send(new SendConfiguration() { Configuration = stationConfig });
     }
     
     public override Task UpdateCurrentAndTemp(int current, int temp) {

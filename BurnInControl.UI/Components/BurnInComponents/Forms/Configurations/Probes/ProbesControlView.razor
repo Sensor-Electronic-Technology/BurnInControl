@@ -14,7 +14,7 @@
                             <RadzenStack Orientation="Orientation.Vertical">
                                 <RadzenFormField Text="Current Percent">
                                     <RadzenNumeric TValue="double"
-                                                   Value="@this.ProbeControllerConfig.CurrentPercent"
+                                                   Value="@(this.ProbeControllerConfig.CurrentPercent/100)"
                                                    ValueChanged="CurrentPercentChangedHandler"
                                                    Format="P"/>
                                 </RadzenFormField>
@@ -101,7 +101,7 @@
         if (this.ProbeControllerConfig == null) {
             return Task.CompletedTask;
         }
-        this.ProbeControllerConfig.CurrentPercent = currentPercent;
+        this.ProbeControllerConfig.CurrentPercent = currentPercent*100;
         return this.ProbeControllerConfigChanged.InvokeAsync(this.ProbeControllerConfig);
     }
 

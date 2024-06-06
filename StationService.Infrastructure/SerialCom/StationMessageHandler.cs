@@ -32,7 +32,7 @@ public class StationMessageHandler : IStationMessageHandler {
     public Task Handle(StationMessage message,CancellationToken cancellationToken) {
         try {
             if (!string.IsNullOrEmpty(message.Message)) {
-                Console.WriteLine(message.Message);
+                //Console.WriteLine(message.Message);
                 //this._logger.LogInformation(message.Message);
                 if (message.Message.Contains("Prefix")) {
                     

@@ -3,6 +3,7 @@
 @using System.Timers
 @using BurnInControl.HubDefinitions.Hubs
 @using BurnInControl.Shared.ComDefinitions
+@using BurnInControl.Shared.ComDefinitions.Packets
 @using BurnInControl.Shared.ComDefinitions.Station
 @using BurnInControl.UI.Data
 @using Microsoft.AspNetCore.SignalR.Client
@@ -18,7 +19,7 @@
                 <AutoTuneControl StartPressed="@this.StartHandler"
                                  ModeSwPressed="@this.ModeSwHandler"
                                  Mode="@this._mode"
-                                 TemperatureSetPoint="@(this._stationData.TemperatureSetPoint)"
+                                 TemperatureSetPoint="@(this._tempSetPoint)"
                                  TemperatureToggle="@this.ToggleTemperatureHandler"
                                  IsTuning="@this._data.IsTuning"
                                  Connect="@this.OnConnectClicked"
@@ -103,6 +104,7 @@
             .Build();
         this._hubConnection.On<TuningSerialData>(HubConstants.Events.OnTuningData,this.OnSerialTuningDataReceived);
         this._hubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,this.OnSerialDataReceived);
+        this._hubConnection.On<int,string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
         this._hubConnection.On<int>(HubConstants.Events.OnSwTuneNotify,this.OnNotifyHeaterMode);
         this._hubConnection.On<HeaterTuneResult>(HubConstants.Events.OnNotifyHeaterTuningStatus,this.OnHeaterTuningStatus);
         this._hubConnection.On<List<HeaterTuneResult>>(HubConstants.Events.OnNotifyHeaterTuneComplete,this.OnHeaterTuneComplete);
@@ -263,12 +265,14 @@
     
     private Task OnHeaterTuningStatus(HeaterTuneResult result) {
         this._results[result.HeaterNumber-1]=result;
+        this.Notify("Heater Tuning Status", $"Heater {result.HeaterNumber} Tuned Successfully",NotificationSeverity.Info);
         return InvokeAsync(StateHasChanged);
     }
 
     private Task OnHeaterTuneComplete(List<HeaterTuneResult> results) {
         this._results=results;
         this._tuningComplete = true;
+        this.Notify("Tuning Complete","All Heaters Tuned Successfully",NotificationSeverity.Success);
         return InvokeAsync(StateHasChanged);
     }
 
@@ -277,10 +281,35 @@
         this._mode=(StationHeaterMode)mode;
         return Task.CompletedTask;
     }
+    
+    private Task OnSerialComMessageReceived(int type,string message) {
+        StationMessageType messageType = (StationMessageType)type;
+        switch (messageType) {
+            case StationMessageType.GENERAL: {
+                this._eventConsole.Log(message,AlertStyle.Info);
+                break;
+            }
+            case StationMessageType.INIT: {
+                this._eventConsole.Log(message,AlertStyle.Secondary);
+                break;
+            }
+            case StationMessageType.NOTIFY: {
+                this.Notify("Station Notify",message,NotificationSeverity.Info);
+                break;
+            }
+            case StationMessageType.ERROR: {
+                this.Notify("Station Error",message,NotificationSeverity.Error);
+                break;
+            }
+        }
+       
+        return Task.CompletedTask;
+    }
 
     private Task OnSerialTuningDataReceived(TuningSerialData data) {
         this._data = data;
         this._heaterTemperatures = data.Temperatures;
+        this._tempSetPoint = (int)data.TemperatureSetPoint;
         this._heaterStates = data.HeaterStates;
         this._h1Data.Add(new TemperatureData { TimeSecs = data.ElapsedSeconds, TempC = data.Temperatures[0] });
         this._h2Data.Add(new TemperatureData { TimeSecs = data.ElapsedSeconds, TempC = data.Temperatures[1] });

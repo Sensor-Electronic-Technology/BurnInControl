@@ -1,4 +1,7 @@
+using BurnInControl.Data.ComponentConfiguration;
 using BurnInControl.Data.ComponentConfiguration.HeaterController;
+using BurnInControl.Data.ComponentConfiguration.ProbeController;
+using BurnInControl.Data.ComponentConfiguration.StationController;
 using BurnInControl.HubDefinitions.HubTransports;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Station;
@@ -16,7 +19,9 @@ public abstract class StationHubController:Hub<IStationHub>{
     public abstract Task DisconnectUsb();
     public abstract Task SendCommand(StationCommand command);
     public abstract Task SetupTest(TestSetupTransport transport);
-    public abstract Task SendConfiguration(HeaterControllerConfig configuration);
+    public abstract Task SendHeaterControlConfig(HeaterControllerConfig heaterControlConfig);
+    public abstract Task SendProbeControlConfig(ProbeControllerConfig probeControlConfig);
+    public abstract Task SendStationConfig(StationConfiguration stationConfig);
     public abstract Task UpdateCurrentAndTemp(int current, int temp);
     public abstract Task OnUsbConnectFailed(string message);
     public abstract Task OnUsbDisconnectFailed(string message);

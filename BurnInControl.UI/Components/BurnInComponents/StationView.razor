@@ -474,13 +474,13 @@
    #region NotifyMethods
     
     private void Notify(string summary,string message,NotificationSeverity severity=NotificationSeverity.Info,int duration=5000) {
-           var notification=new NotificationMessage { 
-               Severity = severity, 
-               Summary = summary, 
-               Detail = message, 
-               Duration = 10000 };
-           this.NotificationService.Notify(notification);
-       }
+       var notification=new NotificationMessage { 
+           Severity = severity, 
+           Summary = summary, 
+           Detail = message, 
+           Duration = 10000 };
+       this.NotificationService.Notify(notification);
+    }
     
     private void NotifyNotConnected() {
            var notification=new NotificationMessage {
@@ -489,7 +489,7 @@
                Detail = "Cannot Send Command", 
                Duration = 10000 };
            this.NotificationService.Notify(notification);
-       }
+    }
    
     #endregion
 

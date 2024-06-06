@@ -40,7 +40,9 @@ public static class HubConstants {
         public static string ConnectUsb => "ConnectUsb";
         public static string DisconnectUsb => "DisconnectUsb";
         public static string SetupTest=> "SetupTest";
-        public static string SendConfiguration => "SendConfiguration";
+        public static string SendHeaterControlConfig => "SendHeaterControlConfig";
+        public static string SendProbeControlConfig => "SendProbeControlConfig";
+        public static string SendStationConfig => "SendStationConfig";
         public static string SendCommand => "SendCommand";
         public static string RequestConfig=> "RequestConfig";
         public static string SaveTuningResults=> "SaveTuningResults";

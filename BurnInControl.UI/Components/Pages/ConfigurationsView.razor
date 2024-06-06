@@ -4,6 +4,7 @@
 @using BurnInControl.UI.Components.BurnInComponents.Forms.Configurations.Heaters
 @using BurnInControl.UI.Components.BurnInComponents.Forms.Configurations.Probes
 @using BurnInControl.Infrastructure.StationModel
+@using BurnInControl.Shared.ComDefinitions.Packets
 @using BurnInControl.Shared.ComDefinitions.Station
 @using BurnInControl.UI.Components.BurnInComponents.Forms.Configurations.Station
 @using Microsoft.AspNetCore.SignalR.Client
@@ -12,30 +13,33 @@
 @inject IConfiguration Configuration
 @inject DialogService DialogService
 
-
 <RadzenStack Orientation="Orientation.Vertical">
-    @if(this._burnInConfiguration == null) {
-    <RadzenStack AlignItems="AlignItems.Center" Class="rz-m-12" Gap="2rem">
-        <RadzenText TextStyle="TextStyle.DisplayH3" TagName="TagName.H3">Loading......</RadzenText>
-        <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large"/>
-    </RadzenStack>
+    
+    @if (this._burnInConfiguration == null) {
+        <RadzenStack AlignItems="AlignItems.Center" Class="rz-m-12" Gap="2rem">
+            <RadzenText TextStyle="TextStyle.DisplayH3" TagName="TagName.H3">Loading......</RadzenText>
+            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large"/>
+        </RadzenStack>
     } else {
         <RadzenTabs SelectedIndex="0" RenderMode="TabRenderMode.Client">
             <Tabs>
                 <RadzenTabsItem Text="Station Configuration">
-                    <StationConfigView StationConfig="@this._burnInConfiguration.StationConfiguration" 
-                                       CancelPressed="@this.Refresh" 
+                    <StationConfigView StationConfig="@this._burnInConfiguration.ControllerConfig"
+                                       CancelPressed="@this.Refresh"
+                                       StationConfigChanged="@this.StationConfigChangedHandler"
                                        SavePressed="@this.StationConfigSaveHandler"/>
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Heater Configuration">
-                    <HeaterControlConfigView HeaterControllerConfig="@this._burnInConfiguration.HeaterConfig"
+                    <HeaterControlConfigView HeaterControllerConfig="@this._burnInConfiguration.HeaterControllerConfig"
                                              Canceled="@this.Refresh"
-                                             Saved="HeaterControllerConfigSaveHandler"
+                                             Saved="@this.HeaterControllerConfigSaveHandler"
+                                             HeaterControllerConfigChanged="@this.HeaterControlConfigChangedHandler"
                                              GetConfig="@this.GetHeaterConfigHandler"/>
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Probes Configuration">
-                    <ProbesControlView ProbeControllerConfig="@this._burnInConfiguration.ProbesConfiguration"
+                    <ProbesControlView ProbeControllerConfig="@this._burnInConfiguration.ProbeControllerConfig"
                                        CancelPressed="@this.Refresh"
+                                       ProbeControllerConfigChanged="@this.ProbeControlConfigChangedHandler"
                                        SavePressed="@this.ProbeConfigSaveHandler"/>
                 </RadzenTabsItem>
             </Tabs>
@@ -43,14 +47,16 @@
     }
     <RadzenStack Orientation="Orientation.Horizontal">
         <RadzenButton Text="Refresh"
-                      Click="@this.Refresh" 
-                      ButtonStyle="ButtonStyle.Danger" Style="width: 125px;height: 50px;"/>
+                      Click="@this.Refresh"
+                      ButtonStyle="ButtonStyle.Danger"
+                      Style="width: 150px;height: 50px;"/>
     </RadzenStack>
     <EventConsole @ref="@this._eventConsole"/>
 </RadzenStack>
 
 
 @code {
+    [Inject] NotificationService _notificationService { get; set; }
     private EventConsole _eventConsole;
     private HubConnection? _hubConnection;
     private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;
@@ -77,7 +83,8 @@
                 TimeSpan.FromSeconds(60) })
             .Build();
         this._hubConnection.On<string,bool,string>(HubConstants.Events.OnConfigSaveStatus,this.ReceiveSaveStatus);
-        this._hubConnection.On<bool,int,string>(HubConstants.Events.OnRequestConfigHandler,this.ReceiveRequestedConfig);
+        this._hubConnection.On<bool,int,string>(HubConstants.Events.OnRequestConfigHandler,this.ReceiveRequestedConfig); 
+        this._hubConnection.On<int,string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
     }
     
     private async Task StartConnection() {
@@ -99,6 +106,98 @@
         }
     }
 
+    #region ButtonHandlers
+    private async Task Refresh() {
+        this._burnInConfiguration = null;
+        await InvokeAsync(StateHasChanged);
+        this._burnInConfiguration = await this.ConfigurationDataService.GetStationBurnInConfig(this._stationId);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HeaterControllerConfigSaveHandler(HeaterControllerConfig heaterControllerConfig) {
+        var result=await this.ConfigurationDataService.UpdateSubConfig(this._stationId, heaterControllerConfig);
+        if (result.IsError) {
+            this._eventConsole.Log(result.FirstError.Description,AlertStyle.Danger);
+        } else {
+            this._eventConsole.Log("Success: Saved HeaterControllerConfiguration",AlertStyle.Success);
+            if (this.Connected) {
+                this._eventConsole.Log("Sending hub request",AlertStyle.Info);
+                await this._hubConnection.SendAsync(HubConstants.Methods.SendHeaterControlConfig, heaterControllerConfig);
+            } else {
+                this._eventConsole.Log("Warning: Service not connected,firmware configuration will not be updated",AlertStyle.Danger);
+            }
+ 
+        }
+    }
+
+    private async Task ProbeConfigSaveHandler(ProbeControllerConfig probeControllerConfig) {
+        var result = await this.ConfigurationDataService.UpdateSubConfig(this._stationId, probeControllerConfig);
+        if (result.IsError) {
+            this._eventConsole.Log(result.FirstError.Description,AlertStyle.Danger);
+        } else {
+            this._eventConsole.Log("Success: Saved ProbeControllerConfig",AlertStyle.Success);
+            if (this.Connected) {
+                this._eventConsole.Log("Sending hub request",AlertStyle.Info);
+                await this._hubConnection.SendAsync(HubConstants.Methods.SendProbeControlConfig, probeControllerConfig);
+            } else {
+                this._eventConsole.Log("Warning: Service not connected,firmware configuration will not be updated",AlertStyle.Danger);
+            }
+        }
+    }
+
+    private async Task StationConfigSaveHandler(StationConfiguration stationConfig) {
+        var result = await this.ConfigurationDataService.UpdateSubConfig(this._stationId, stationConfig);
+        if (result.IsError) {
+            this._eventConsole.Log(result.FirstError.Description,AlertStyle.Danger);
+        } else {
+            this._eventConsole.Log("Success: Saved StationConfiguration",AlertStyle.Success);
+            if (this.Connected) {
+                this._eventConsole.Log("Sending hub request",AlertStyle.Info);
+                await this._hubConnection.SendAsync(HubConstants.Methods.SendStationConfig,stationConfig);
+            } else {
+                this._eventConsole.Log("Warning: Service not connected,firmware configuration will not be updated",AlertStyle.Danger);
+            }
+        }
+    }
+
+    private Task GetHeaterConfigHandler() {
+        if (this.Connected) {
+            this._eventConsole.Log("Send request for HeaterControllerConfig",AlertStyle.Info);
+            return this._hubConnection.SendAsync(HubConstants.Methods.RequestConfig, ConfigType.HeaterControlConfig);
+        }else {
+            this._eventConsole.Log("Warning: Service not connected,request will not be sent",AlertStyle.Danger);
+        }
+        return Task.CompletedTask;
+    }
+    
+
+    #endregion
+    
+    #region HubHandlers
+    
+    private Task OnSerialComMessageReceived(int type,string message) {
+        StationMessageType messageType = (StationMessageType)type;
+        switch (messageType) {
+            case StationMessageType.GENERAL: {
+                this._eventConsole.Log(message,AlertStyle.Info);
+                break;
+            }
+            case StationMessageType.INIT: {
+                this._eventConsole.Log(message,AlertStyle.Secondary);
+                break;
+            }
+            case StationMessageType.NOTIFY: {
+                this.Notify("Station Notify",message,NotificationSeverity.Info);
+                break;
+            }
+            case StationMessageType.ERROR: {
+                this.Notify("Station Error",message,NotificationSeverity.Error);
+                break;
+            }
+        }
+        return Task.CompletedTask;
+    }
+    
     private async Task ReceiveSaveStatus(string type, bool success, string message) {
         if (success) {
             this._eventConsole.Log($"Configuration saved successfully, Type: {type}", AlertStyle.Success);
@@ -116,7 +215,7 @@
                             if (heaterConfig != null) {
                                 var jsonOptions = new JsonSerializerOptions() { WriteIndented = true };
                                 var controlConfig = JsonSerializer.Serialize(heaterConfig,jsonOptions);
-                                var serverConfig=JsonSerializer.Serialize(this._burnInConfiguration?.HeaterConfig,jsonOptions);
+                                var serverConfig=JsonSerializer.Serialize(this._burnInConfiguration?.HeaterControllerConfig,jsonOptions);
                                 await this.DialogService.OpenAsync<ConfigDifViewer>("Heater Controller Config",
                                     new Dictionary<string, object> {
                                         {"ServerConfig",serverConfig},
@@ -141,70 +240,42 @@
         }
     }
     
-    private Task SaveHandler() {
-        return Task.CompletedTask;
+    #endregion
+    
+    #region NotifyMethods
+    
+    private void Notify(string summary,string message,NotificationSeverity severity=NotificationSeverity.Info,int duration=5000) {
+        var notification=new NotificationMessage { 
+            Severity = severity, 
+            Summary = summary, 
+            Detail = message, 
+            Duration = 10000 };
+        this._notificationService.Notify(notification);
     }
     
-    private async Task Refresh() {
-        this._burnInConfiguration = null;
-        await InvokeAsync(StateHasChanged);
-        this._burnInConfiguration = await this.ConfigurationDataService.GetStationBurnInConfig(this._stationId);
-        await InvokeAsync(StateHasChanged);
+    private void NotifyNotConnected() {
+        var notification=new NotificationMessage {
+            Severity = NotificationSeverity.Error, 
+            Summary = "Station Service Not Connected", 
+            Detail = "Cannot Send Command", 
+            Duration = 10000 };
+        this._notificationService.Notify(notification);
+    }
+   
+    #endregion
+
+    private Task StationConfigChangedHandler(StationConfiguration stationConfig) {
+        this._burnInConfiguration.ControllerConfig= stationConfig;
+        return Task.CompletedTask;
     }
 
-    private async Task HeaterControllerConfigSaveHandler(HeaterControllerConfig heaterControllerConfig) {
-        var result=await this.ConfigurationDataService.UpdateSubConfig(this._stationId, heaterControllerConfig);
-        if (result.IsError) {
-            this._eventConsole.Log("Error: Failed to save HeaterControllerConfiguration",AlertStyle.Danger);
-        } else {
-            this._eventConsole.Log("Success: Saved HeaterControllerConfiguration",AlertStyle.Success);
-            if (this.Connected) {
-                this._eventConsole.Log("Sending hub request",AlertStyle.Info);
-                await this._hubConnection.SendAsync(HubConstants.Methods.SendConfiguration, heaterControllerConfig);
-            } else {
-                this._eventConsole.Log("Warning: Service not connected,firmware configuration will not be updated",AlertStyle.Danger);
-            }
- 
-        }
+    private Task HeaterControlConfigChangedHandler(HeaterControllerConfig heaterControlConfig) {
+        this._burnInConfiguration.HeaterControllerConfig = heaterControlConfig;
+        return Task.CompletedTask;
     }
 
-    private async Task ProbeConfigSaveHandler(ProbeControllerConfig probeControllerConfig) {
-        var result = await this.ConfigurationDataService.UpdateSubConfig(this._stationId, probeControllerConfig);
-        if (result.IsError) {
-            this._eventConsole.Log("Error: Failed to save ProbeControllerConfig",AlertStyle.Danger);
-        } else {
-            this._eventConsole.Log("Success: Saved ProbeControllerConfig",AlertStyle.Success);
-            if (this.Connected) {
-                this._eventConsole.Log("Sending hub request",AlertStyle.Info);
-                await this._hubConnection.SendAsync(HubConstants.Methods.SendConfiguration, probeControllerConfig);
-            } else {
-                this._eventConsole.Log("Warning: Service not connected,firmware configuration will not be updated",AlertStyle.Danger);
-            }
-        }
-    }
-
-    private async Task StationConfigSaveHandler(StationConfiguration stationConfig) {
-        var result = await this.ConfigurationDataService.UpdateSubConfig(this._stationId, stationConfig);
-        if (result.IsError) {
-            this._eventConsole.Log("Error: Failed to save StationConfiguration",AlertStyle.Danger);
-        } else {
-            this._eventConsole.Log("Success: Saved StationConfiguration",AlertStyle.Success);
-            if (this.Connected) {
-                this._eventConsole.Log("Sending hub request",AlertStyle.Info);
-                await this._hubConnection.SendAsync(HubConstants.Methods.SendConfiguration,stationConfig);
-            } else {
-                this._eventConsole.Log("Warning: Service not connected,firmware configuration will not be updated",AlertStyle.Danger);
-            }
-        }
-    }
-
-    private Task GetHeaterConfigHandler() {
-        if (this.Connected) {
-            this._eventConsole.Log("Send request for HeaterControllerConfig",AlertStyle.Info);
-            return this._hubConnection.SendAsync(HubConstants.Methods.RequestConfig, ConfigType.HeaterControlConfig);
-        }else {
-            this._eventConsole.Log("Warning: Service not connected,request will not be sent",AlertStyle.Danger);
-        }
+    private Task ProbeControlConfigChangedHandler(ProbeControllerConfig probeControlConfig) {
+        this._burnInConfiguration.ProbeControllerConfig = probeControlConfig;
         return Task.CompletedTask;
     }
 

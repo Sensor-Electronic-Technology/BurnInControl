@@ -30,9 +30,9 @@ public class Station {
         this.RunningTest = null;
         this.SavedState= null;
         this.Configuration = new BurnStationConfiguration() {
-            HeaterConfig = new HeaterControllerConfig(),
-            ProbesConfiguration = new ProbeControllerConfig(),
-            StationConfiguration = new StationConfiguration()
+            HeaterControllerConfig = new HeaterControllerConfig(),
+            ProbeControllerConfig = new ProbeControllerConfig(),
+            ControllerConfig = new StationConfiguration()
         };
     }
 }

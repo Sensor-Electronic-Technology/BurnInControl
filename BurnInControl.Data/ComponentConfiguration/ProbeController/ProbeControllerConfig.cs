@@ -9,11 +9,13 @@ public class ProbeControllerConfig:IPacket,IBurnStationConfiguration {
     public ulong ReadInterval { get; set; }
     public double CurrentPercent { get; set; }
     public int ProbeTestCurrent { get; set; }
+    public ulong ProbeTestTime { get; set; }
     public ProbeControllerConfig() {
         this.CurrentSelectConfig = new CurrentSelectorConfig(2, 6, 7, StationCurrent._150mA.Value, true);
         this.CurrentPercent = 93.5;
         this.ProbeTestCurrent = StationCurrent._60mA.Value;
         this.ReadInterval = 100;
+        this.ProbeTestTime = 3000;
         this.ProbeConfigurations = new[] {
             new ProbeConfig(1,new VoltageSensorConfig(StationAnalogPin.A00.Value, 0.1), new CurrentSensorConfig(StationAnalogPin.A10.Value, 0.1)),
             new ProbeConfig(2,new VoltageSensorConfig(StationAnalogPin.A01.Value, 0.1), new CurrentSensorConfig(StationAnalogPin.A11.Value, 0.1)),

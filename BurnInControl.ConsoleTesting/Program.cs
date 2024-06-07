@@ -76,7 +76,7 @@ Console.WriteLine(StationState.Idle.ToString());*/
 //await CloneDatabase();
 //await TestUsbController();
 
-MessagePacket<StationCommand> modeTunePacket = new MessagePacket<StationCommand>() {
+/*MessagePacket<StationCommand> modeTunePacket = new MessagePacket<StationCommand>() {
     Prefix = StationMsgPrefix.CommandPrefix,
     Packet = StationCommand.ChangeModeATune
 };
@@ -97,7 +97,7 @@ MessagePacket<ConfigPacket<HeaterControllerConfig>> sendConfigPacket =
             ConfigType = ConfigType.HeaterControlConfig, Configuration = new HeaterControllerConfig()
         },
         Prefix = StationMsgPrefix.ReceiveConfigPrefix
-    };
+    };*/
 
 /*MessagePacket<IntValuePacket> windowSizePacket = new MessagePacket<IntValuePacket>() {
     Prefix=StationMsgPrefix.SendTuneWindowSizePrefix,
@@ -116,6 +116,7 @@ Console.WriteLine(JsonSerializer.Serialize(sendConfigPacket));*/
 
 
 await ConfigTestUsbController();
+//await CreateStationDatabase();
 
 async Task CloneDatabase() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");

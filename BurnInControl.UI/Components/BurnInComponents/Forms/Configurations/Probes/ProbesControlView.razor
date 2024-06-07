@@ -23,11 +23,19 @@
                                 <CurrentSelector Current="@this.ProbeControllerConfig.ProbeTestCurrent"
                                                  Title="Probe Test Current"
                                                  CurrentChanged="@this.ProbeTestCurrentChangedHandler"/>
-                                <RadzenFormField Text="Read Interval">
-                                    <RadzenNumeric TValue="ulong"
-                                                   Value="@this.ProbeControllerConfig.ReadInterval"
-                                                   ValueChanged="ReadIntervalChangedHandler"/>
-                                </RadzenFormField>
+                                <RadzenStack Orientation="Orientation.Horizontal">
+                                    <RadzenFormField Text="Read Interval">
+                                        <RadzenNumeric TValue="ulong"
+                                                       Value="@this.ProbeControllerConfig.ReadInterval"
+                                                       ValueChanged="ReadIntervalChangedHandler"/>
+                                    </RadzenFormField>
+                                    <RadzenFormField Text="Test Duration">
+                                        <RadzenNumeric TValue="ulong"
+                                                       Value="@this.ProbeControllerConfig.ProbeTestTime"
+                                                       ValueChanged="TestTimeChangedHandler"/>
+                                    </RadzenFormField>
+                                </RadzenStack>
+
                             </RadzenStack>
                         </RadzenFieldset>
                     </RadzenTabsItem>
@@ -139,6 +147,14 @@
             return Task.CompletedTask;
         }
         this.ProbeControllerConfig.CurrentSelectConfig = currentSelectorConfig;
+        return this.ProbeControllerConfigChanged.InvokeAsync(this.ProbeControllerConfig);
+    }
+
+    private Task TestTimeChangedHandler(ulong testTime) {
+        if (this.ProbeControllerConfig == null) {
+            return Task.CompletedTask;
+        }
+        this.ProbeControllerConfig.ProbeTestTime = testTime;
         return this.ProbeControllerConfigChanged.InvokeAsync(this.ProbeControllerConfig);
     }
 

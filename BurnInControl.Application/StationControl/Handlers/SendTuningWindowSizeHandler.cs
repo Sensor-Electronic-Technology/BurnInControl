@@ -12,7 +12,7 @@ public class SendTuningWindowSizeHandler:IRequestHandler<SendTuningWindowSizeCom
         this._stationController = stationController;
     }
     public Task Handle(SendTuningWindowSizeCommand request, CancellationToken cancellationToken) {
-        return this._stationController.Send(StationMsgPrefix.SendRunningTestPrefix,
+        return this._stationController.Send(StationMsgPrefix.SendTuneWindowSizePrefix,
             new IntValuePacket(){Value= request.WindowSize});
     }
 }

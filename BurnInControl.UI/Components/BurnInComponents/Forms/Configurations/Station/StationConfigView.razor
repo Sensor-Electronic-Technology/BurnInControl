@@ -43,8 +43,12 @@
                     </RadzenStack>
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="10">
-                    <RadzenButton Text="Save" Click="@this.SaveHandler"  ButtonStyle="ButtonStyle.Info" Style="width: 125px;height: 50px;"/>
-                    <RadzenButton Text="Cancel" Click="@this.CancelPressed" ButtonStyle="ButtonStyle.Danger" Style="width: 125px;height: 50px;"/>
+                    <RadzenButton Text="Save" Click="@this.SaveHandler"
+                                  Disabled="@(!this.StationConnected)"
+                                  ButtonStyle="ButtonStyle.Info" Style="width: 125px;height: 50px;"/>
+                    <RadzenButton Text="Cancel" Click="@this.CancelPressed" 
+                                  Disabled="@(!this.StationConnected)"
+                                  ButtonStyle="ButtonStyle.Danger" Style="width: 125px;height: 50px;"/>
                 </RadzenStack>
             </RadzenStack>
         </RadzenFieldset>
@@ -55,6 +59,7 @@
     [Parameter] public EventCallback<StationConfiguration> StationConfigChanged { get; set; }
     [Parameter] public EventCallback CancelPressed { get; set; }
     [Parameter] public EventCallback<StationConfiguration> SavePressed { get; set; }
+    [Parameter] public bool StationConnected { get; set; }
     
     private Task SaveHandler() {
         if(this.StationConfig == null) {

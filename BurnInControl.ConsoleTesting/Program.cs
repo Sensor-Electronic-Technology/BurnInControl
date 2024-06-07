@@ -91,6 +91,14 @@ MessagePacket<StationCommand> stopPacket = new MessagePacket<StationCommand>() {
     Packet = StationCommand.StopTune
 };
 
+MessagePacket<ConfigPacket<HeaterControllerConfig>> sendConfigPacket =
+    new MessagePacket<ConfigPacket<HeaterControllerConfig>>() {
+        Packet = new ConfigPacket<HeaterControllerConfig>() {
+            ConfigType = ConfigType.HeaterControlConfig, Configuration = new HeaterControllerConfig()
+        },
+        Prefix = StationMsgPrefix.ReceiveConfigPrefix
+    };
+
 /*MessagePacket<IntValuePacket> windowSizePacket = new MessagePacket<IntValuePacket>() {
     Prefix=StationMsgPrefix.SendTuneWindowSizePrefix,
     Packet = new IntValuePacket() {
@@ -98,13 +106,16 @@ MessagePacket<StationCommand> stopPacket = new MessagePacket<StationCommand>() {
     }
 };*/
 
-Console.WriteLine(JsonSerializer.Serialize(modeTunePacket));
+/*Console.WriteLine(JsonSerializer.Serialize(modeTunePacket));
 Console.WriteLine(JsonSerializer.Serialize(startPacket));
 Console.WriteLine(JsonSerializer.Serialize(stopPacket));
+Console.WriteLine(JsonSerializer.Serialize(sendConfigPacket));*/
 /*Console.WriteLine(JsonSerializer.Serialize(windowSizePacket));*/
 
 /*await CreateStationDatabase();*/
 
+
+await ConfigTestUsbController();
 
 async Task CloneDatabase() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");
@@ -201,65 +212,63 @@ void PrintMenu() {
 }
 
 async Task ConfigTestUsbController() {
-        UsbTesting usb = new UsbTesting();
-        IMongoClient client = new MongoClient("mongodb://172.20.3.41:27017");
-        var database = client.GetDatabase("burn_in_db");
-        var collection=database.GetCollection<Station>("stations");
-        var station=await collection.Find(e=>e.StationId=="S01").FirstOrDefaultAsync();
-        if(station!=null) {
-            Console.WriteLine("Station Found");
-        } else {
-            Console.WriteLine("Station Not Found");
-            Console.WriteLine("Exiting...");
-            return;
-        }
-        Console.Clear();
-        PrintMenu();
-        var key=Console.ReadKey();
-        while (key.Key != ConsoleKey.Escape) {
-            switch (key.Key) {
-                case ConsoleKey.D1:
-                    usb.Connect();
-                    break;
-                case ConsoleKey.D2:
-                    usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
-                        new ConfigPacket<HeaterControllerConfig>() { ConfigType = ConfigType.HeaterControlConfig, 
-                            Configuration = station.Configuration.HeaterControllerConfig
-                        });
-                    break;
-                case ConsoleKey.D3:
-                    usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
-                        new ConfigPacket<ProbeControllerConfig>() {
-                            ConfigType = ConfigType.ProbeControlConfig,
-                            Configuration = station.Configuration.ProbeControllerConfig
-                        });
-                    break;
-                case ConsoleKey.D4:
-                    usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
-                        new ConfigPacket<StationConfiguration>() {
-                            ConfigType = ConfigType.ControllerConfig,
-                            Configuration = station.Configuration.ControllerConfig
-                        });
-                    break;
-                case ConsoleKey.D5:
-                    usb.Send(StationMsgPrefix.GetConfigPrefix,ConfigType.HeaterControlConfig);
-                    break;
-                case ConsoleKey.D6:
-                    usb.Send(StationMsgPrefix.GetConfigPrefix,ConfigType.ProbeControlConfig);
-                    break;
-                case ConsoleKey.D7:
-                    usb.Send(StationMsgPrefix.GetConfigPrefix,ConfigType.ControllerConfig);
-                    break;
-                case ConsoleKey.D8:
-                    usb.Disconnect();
-                    break;
-                default:
-                    break;
-            }
-            PrintMenu();
-            key=Console.ReadKey();
-        }
+    UsbTesting usb = new UsbTesting();
+    IMongoClient client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("burn_in_db");
+    var collection=database.GetCollection<Station>("stations");
+    var station=await collection.Find(e=>e.StationId=="S01").FirstOrDefaultAsync();
+    if(station!=null) {
+        Console.WriteLine("Station Found");
+    } else {
+        Console.WriteLine("Station Not Found");
+        Console.WriteLine("Exiting...");
+        return;
     }
+    Console.Clear();
+    PrintMenu();
+    var key=Console.ReadKey();
+    while (key.Key != ConsoleKey.Escape) {
+        switch (key.Key) {
+            case ConsoleKey.D1:
+                usb.Connect();
+                break;
+            case ConsoleKey.D2:
+                usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
+                    new ConfigPacket<HeaterControllerConfig>() { ConfigType = ConfigType.HeaterControlConfig, 
+                        Configuration = station.Configuration.HeaterControllerConfig
+                    });
+                break;
+            case ConsoleKey.D3:
+                usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
+                    new ConfigPacket<ProbeControllerConfig>() {
+                        ConfigType = ConfigType.ProbeControlConfig,
+                        Configuration = station.Configuration.ProbeControllerConfig
+                    });
+                break;
+            case ConsoleKey.D4:
+                usb.Send(StationMsgPrefix.ReceiveConfigPrefix,
+                    new ConfigPacket<StationConfiguration>() {
+                        ConfigType = ConfigType.ControllerConfig,
+                        Configuration = station.Configuration.ControllerConfig
+                    });
+                break;
+            case ConsoleKey.D5:
+                usb.Send(StationMsgPrefix.CommandPrefix,StationCommand.Reset);
+                break;
+            case ConsoleKey.D6:
+                usb.Send(StationMsgPrefix.CommandPrefix,StationCommand.FormatSdCard);
+                break;
+            case ConsoleKey.D9:
+                usb.Disconnect();
+                break;
+            default:
+                break;
+        }
+        PrintMenuConfig();
+        key=Console.ReadKey();
+    }
+}
+
 
     void PrintMenuConfig() {
         Console.WriteLine();

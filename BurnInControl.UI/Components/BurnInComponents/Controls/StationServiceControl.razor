@@ -10,6 +10,7 @@
                             Text="@(this.UsbConnected ? "Disconnect Usb" : "Connect Usb")"
                             ButtonStyle="ButtonStyle.Primary"
                             Size="ButtonSize.Medium"
+                            Visible="@this.UsbVisible"
                             ToggleButtonStyle="ButtonStyle.Secondary"
                             Click="@this.UsbConnect" Style="width: 170px; height: 52px"/>
     </RadzenStack>
@@ -19,5 +20,6 @@
     [Parameter] public bool UsbConnected { get; set; }
     [Parameter] public EventCallback Connect { get; set; }
     [Parameter] public EventCallback UsbConnect { get; set; }
-    
+    [Parameter] public bool UsbVisible { get; set; } = true;
+
 }

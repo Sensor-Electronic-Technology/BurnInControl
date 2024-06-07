@@ -46,7 +46,7 @@ public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
     public static readonly StationMsgPrefix SaveConfigStatusPrefix= new(nameof(SaveConfigStatusPrefix), "SCONF");
     public static readonly StationMsgPrefix GetConfigPrefix=new(nameof(GetConfigPrefix), "GCONF");
     public static readonly StationMsgPrefix ReceiveConfigPrefix=new(nameof(ReceiveConfigPrefix), "RCONF");
-    public static readonly StationMsgPrefix FormatSdPrefix=new(nameof(FormatSdPrefix), "FSD");
+    /*public static readonly StationMsgPrefix FormatSdPrefix=new(nameof(FormatSdPrefix), "FSD");*/
     public static readonly StationMsgPrefix ProbeTestDonePrefix = new(nameof(ProbeTestDonePrefix), "PTD");
     public static readonly StationMsgPrefix SendRunningTestPrefix = new(nameof(SendRunningTestPrefix), "RTEST");
     public static readonly StationMsgPrefix NotifyHeaterModePrefix = new(nameof(NotifyHeaterModePrefix), "SWHEATER");

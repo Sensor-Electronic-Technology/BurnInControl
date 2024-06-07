@@ -14,11 +14,14 @@
                             <RadzenStack Orientation="Orientation.Vertical">
                                 <RadzenFormField Text="Current Percent">
                                     <RadzenNumeric TValue="double"
-                                                   Value="@(this.ProbeControllerConfig.CurrentPercent/100)"
+                                                   Value="@(this.ProbeControllerConfig.CurrentPercent)"
                                                    ValueChanged="CurrentPercentChangedHandler"
-                                                   Format="P"/>
+                                                   Min="80"
+                                                   Max="100"
+                                                   Format="F"/>
                                 </RadzenFormField>
                                 <CurrentSelector Current="@this.ProbeControllerConfig.ProbeTestCurrent"
+                                                 Title="Probe Test Current"
                                                  CurrentChanged="@this.ProbeTestCurrentChangedHandler"/>
                                 <RadzenFormField Text="Read Interval">
                                     <RadzenNumeric TValue="ulong"
@@ -69,8 +72,15 @@
             </RadzenTabs>
         </RadzenStack>
         <RadzenStack Orientation="Orientation.Horizontal">
-            <RadzenButton Text="Save" Click="@this.SaveHandler" ButtonStyle="ButtonStyle.Info" Style="width: 125px;height: 50px;"/>
-            <RadzenButton Text="Cancel" Click="@this.CancelPressed" ButtonStyle="ButtonStyle.Danger" Style="width: 125px;height: 50px;"/>
+            <RadzenButton Text="Save" 
+                          Click="@this.SaveHandler"
+                          ButtonStyle="ButtonStyle.Info" 
+                          Disabled="@(!this.StationConnected)"
+                          Style="width: 125px;height: 50px;"/>
+            <RadzenButton Text="Cancel"
+                          Click="@this.CancelPressed"
+                          Disabled="@(!this.StationConnected)"
+                          ButtonStyle="ButtonStyle.Danger" Style="width: 125px;height: 50px;"/>
         </RadzenStack>
     </RadzenStack>
 }
@@ -79,7 +89,9 @@
    [Parameter] public EventCallback<ProbeControllerConfig> ProbeControllerConfigChanged { get; set; }
    [Parameter] public EventCallback CancelPressed { get; set; }
    [Parameter] public EventCallback<ProbeControllerConfig> SavePressed { get; set; }
+   [Parameter] public bool StationConnected { get; set; }
    
+
    private Task ProbeConfigChanged(int index,ProbeConfig config) {
        if (this.ProbeControllerConfig == null) {
            return Task.CompletedTask;
@@ -101,7 +113,7 @@
         if (this.ProbeControllerConfig == null) {
             return Task.CompletedTask;
         }
-        this.ProbeControllerConfig.CurrentPercent = currentPercent*100;
+        this.ProbeControllerConfig.CurrentPercent = currentPercent;
         return this.ProbeControllerConfigChanged.InvokeAsync(this.ProbeControllerConfig);
     }
 

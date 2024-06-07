@@ -167,6 +167,7 @@
         this.NotifyNotConnected();
         return Task.CompletedTask;
     }
+    
     private Task SaveResultsHandler() {
         if (this.Connected) {
             this._eventConsole.Log("Saving Results..");

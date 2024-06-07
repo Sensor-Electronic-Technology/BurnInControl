@@ -48,11 +48,15 @@
         <RadzenStack Orientation="Orientation.Horizontal">
             <RadzenButton Text="Save" Click="@this.SaveHandler"
                           ButtonStyle="ButtonStyle.Info"
+                          Disabled="@(!this.StationConnected)"
                           Style="width: 125px;height: 50px;"/>
-            <RadzenButton Text="Cancel" Click="@this.Canceled"
+            <RadzenButton Text="Cancel" 
+                          Click="@this.Canceled"
                           ButtonStyle="ButtonStyle.Danger"
+                          Disabled="@(!this.StationConnected)"
                           Style="width: 125px;height: 50px;"/>
             <RadzenButton Text="Get Config" Click="@this.GetConfig"
+                          Disabled="@(!this.StationConnected)"
                           ButtonStyle="ButtonStyle.Secondary"
                           Style="width: 125px;height: 50px;"/>
         </RadzenStack>
@@ -64,6 +68,7 @@
     [Parameter] public EventCallback Canceled { get; set; }
     [Parameter] public EventCallback<HeaterControllerConfig> Saved { get; set; }
     [Parameter] public EventCallback GetConfig { get; set; }
+    [Parameter] public bool StationConnected { get; set; }
     
     private Task SaveHandler() {
         return this.Saved.InvokeAsync(this.HeaterControllerConfig);

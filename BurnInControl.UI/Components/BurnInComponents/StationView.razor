@@ -10,11 +10,7 @@
 @using Environment = System.Environment
 @using BurnInControl.UI.Components.BurnInComponents.Controls.ControlPane
 @using BurnInControl.UI.Data
-@inject ILogger<StationView> _logger
-@inject NotificationService NotificationService
-@inject DialogService DialogService
-@inject StationStatusService StationStatusService
-@inject NavigationManager Navigation
+
 @implements IAsyncDisposable
 @rendermode InteractiveServer
 
@@ -85,29 +81,34 @@
 </RadzenSplitter>
 
 @code {
-   private EventConsole _eventConsole=new EventConsole();
-   private StationSerialData _data=new();
+    [Inject] NotificationService NotificationService { get; set; }
+    [Inject] ILogger<StationView> _logger { get; set; }
+    [Inject] DialogService DialogService { get; set; }
+    [Inject] StationStatusService StationStatusService { get; set; } 
+    [Inject] NavigationManager Navigation { get; set; }
+    private EventConsole _eventConsole=new EventConsole();
+    private StationSerialData _data=new();
+
+    private HubConnection? _hubConnection;
+    private IDisposable? _navigationRegistration;
+    private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;
+    private bool _usbConnected=false;
+    private List<WaferSetup>? _waferSetups = new List<WaferSetup>();
+    private bool _eventPaneCollapsed = false;
+    private bool _controlPaneCollapsed = false;
+    private bool _runtimePaneCollapsed = false;
+    private bool _probeTestRunning = false;
+    private bool _testRunning = false;
+    private bool _testPaused = false;
+    private List<ProbeState> _probeStates = 
+    [new ProbeState() { RunTime = 0, RunTimeOkay = false }
+    ,new ProbeState() { RunTime = 0, RunTimeOkay = false }
+    ,new ProbeState() { RunTime = 0, RunTimeOkay = false }
+    ,new ProbeState() { RunTime = 0, RunTimeOkay = false }
+    ,new ProbeState() { RunTime = 0, RunTimeOkay = false }
+    ,new ProbeState() { RunTime = 0, RunTimeOkay = false }];
    
-   private HubConnection? _hubConnection;
-   private IDisposable? _navigationRegistration;
-   private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;
-   private bool _usbConnected=false;
-   private List<WaferSetup>? _waferSetups = new List<WaferSetup>();
-   private bool _eventPaneCollapsed = false;
-   private bool _controlPaneCollapsed = false;
-   private bool _runtimePaneCollapsed = false;
-   private bool _probeTestRunning = false;
-   private bool _testRunning = false;
-   private bool _testPaused = false;
-   private List<ProbeState> _probeStates = 
-   [new ProbeState() { RunTime = 0, RunTimeOkay = false }
-   ,new ProbeState() { RunTime = 0, RunTimeOkay = false }
-   ,new ProbeState() { RunTime = 0, RunTimeOkay = false }
-   ,new ProbeState() { RunTime = 0, RunTimeOkay = false }
-   ,new ProbeState() { RunTime = 0, RunTimeOkay = false }
-   ,new ProbeState() { RunTime = 0, RunTimeOkay = false }];
-   
-   #region UIMethods
+    #region UIMethods
     protected override async Task OnInitializedAsync() {
         var hubAddress=Environment.GetEnvironmentVariable("StationHub");
         //string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
@@ -175,10 +176,10 @@
             await this._hubConnection.DisposeAsync();
         }
     }
-   #endregion
-   
-   #region HubHandlers
-   
+    #endregion
+
+    #region HubHandlers
+
     private async Task StartConnection() {
        if (!this.Connected) {
            try {
@@ -202,18 +203,18 @@
            }
        }
     }
-    
+
     private void UsbConnectHandler(string message) {
        this.Notify("Usb Connected","Usb Connected",NotificationSeverity.Success);
        this._eventConsole.Log(message,AlertStyle.Info);
-   }
-  
+    }
+
     private Task UsbDisconnectedHandler(string message) {
        this.Notify("Usb Disconnected","Usb Disconnected",NotificationSeverity.Warning);
        this._eventConsole.Log(message, AlertStyle.Danger);
        return Task.CompletedTask;
-   }
-   
+    }
+
     private void UsbConnectFailedHandler(string message) {
        var notification=new NotificationMessage { 
            Severity = NotificationSeverity.Error, 
@@ -222,8 +223,8 @@
            Duration = 10000 };
        this.NotificationService.Notify(notification);
        this._eventConsole.Log(message,AlertStyle.Danger);
-   }
-    
+    }
+
     private Task OnSerialComReceived(StationSerialData data) {
        this._data = data;
        this._testRunning = data.Running;
@@ -257,12 +258,12 @@
        }
        
        return Task.CompletedTask;
-   }
-   
+    }
+
     private Task OnStationConnection(bool usbStatus) {
        this._usbConnected = usbStatus;
        return Task.CompletedTask;
-   }
+    }
 
     private Task OnTestSetupHandler(bool success, string message) {
        if (success) {
@@ -271,32 +272,32 @@
            this.Notify("Test Setup Failed",message,NotificationSeverity.Error);
        }
        return Task.CompletedTask;
-   }
-   
+    }
+
     private Task OnTestStartedHandler(string message) {
        this.StationStatusService.StationState = StationState.Running;
        this.Notify("Test Started",message,NotificationSeverity.Success);
        return Task.CompletedTask;
-   }
+    }
 
     private Task OnTestStartedFailedHandler(string message) {
        this.StationStatusService.StationState = StationState.Idle;
        this.Notify("Test Failed To Start",message,NotificationSeverity.Success);
        return Task.CompletedTask;
-   }
+    }
 
     private Task OnTestCompletedHandler(string message) {
        this.StationStatusService.StationState = StationState.Idle;
        this.Notify("Test Completed",message,NotificationSeverity.Success);
        return Task.CompletedTask;
-   }
+    }
 
     private Task OnProbeTestDoneHandler() {
        this._probeTestRunning = false;
        this.Notify("Probe Test","Probe Test Completed",NotificationSeverity.Info);
        return Task.CompletedTask;
-   }
-   
+    }
+
     private Task OnTestStartedFromUnknownHandler(LoadTestSetupTransport transport) {
        if (transport.Success) {
            this.StationStatusService.StationState = StationState.Running;
@@ -306,7 +307,7 @@
            this.Notify("Unknown Test Failed to Started ",transport.Message ?? "No Message",NotificationSeverity.Error);
        }
        return Task.CompletedTask;
-   }
+    }
 
     private Task OnRequestRunningTestHandler(LoadTestSetupTransport transport) {
        if (transport.Success) {
@@ -317,8 +318,8 @@
            this.Notify("Request Running Test Failed",transport.Message ?? "No Message",NotificationSeverity.Error);
        }
        return Task.CompletedTask;
-   }
-   
+    }
+
     private Task OnTestStartedFromHandler(LoadTestSetupTransport transport) {
        if (transport.Success) {
            this.StationStatusService.StationState = StationState.Running;
@@ -328,8 +329,8 @@
            this.Notify("Test Failed To Start ",transport.Message ?? "No Message",NotificationSeverity.Error);
        }
        return Task.CompletedTask;
-   }
-   
+    }
+
     private Task StationHubConnectionOnOnHubConnected(Boolean stat, String arg) {
        if (stat) {
            this.Notify("Station Service Connected",arg,NotificationSeverity.Success);
@@ -337,13 +338,13 @@
            this.Notify("Station Service Connection Failed",arg,NotificationSeverity.Error);
        }
        return Task.CompletedTask;
-   }
-   
-   #endregion
-   
-   #region UIHandlers
+    }
+
+    #endregion
+
+    #region UIHandlers
     #region ButtonHandlers
-   
+
     private Task ToggleTemperatureHandler() {
        if(this.Connected){
            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,StationCommand.ToggleHeat);
@@ -351,8 +352,8 @@
 
         this.NotifyNotConnected();
         return Task.CompletedTask;
-   }
-   
+    }
+
     private Task CycleCurrentHandler() {
         if(this.Connected){
            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,StationCommand.CycleCurrent);
@@ -375,8 +376,8 @@
        }
        this.NotifyNotConnected();
        return Task.CompletedTask;
-   }
-   
+    }
+
     private Task OnStartClicked() {
        if (this.Connected) {
            if (this._data.Running) {
@@ -391,8 +392,8 @@
        }
        this.NotifyNotConnected();
        return Task.CompletedTask;
-   }
-   
+    }
+
     private Task OnResetClicked() {
        if (this.Connected) {
            this._eventConsole.Log("Reset Clicked",AlertStyle.Warning);
@@ -403,7 +404,7 @@
        }
        this.NotifyNotConnected();
        return Task.CompletedTask;
-   }
+    }
 
     private Task ProbeTestClicked() {
        if (this.Connected) {
@@ -412,8 +413,8 @@
        }
        this.NotifyNotConnected();
        return Task.CompletedTask;
-   }
-   
+    }
+
     private Task OnConnectClicked() {
        if (this.Connected) {
            this._eventConsole.Log("Disconnect Clicked",AlertStyle.Warning);
@@ -424,7 +425,7 @@
            this._eventConsole.Log("Connect Clicked",AlertStyle.Success);
            return this.StartConnection();
        }
-   }
+    }
 
     private Task OnUsbConnectClicked() {
        if (this.Connected) {
@@ -438,8 +439,8 @@
        }
        this.NotifyNotConnected();
        return Task.CompletedTask;
-   }
-   
+    }
+
     #endregion
        
     private void SelectedTabChangedHandler(int tabIndex) {
@@ -459,20 +460,20 @@
            this._eventPaneCollapsed = false;
        }
        //this._eventConsole.Log($"Tab Changed {tabIndex}",AlertStyle.Info);
-   }
-   
+    }
+
     private async Task CurrentChangedHandler(StationCurrent stationCurrent) {
        this._eventConsole.Log($"Current Selection Changed.  Value {stationCurrent.Name}",AlertStyle.Danger);
-   }
+    }
 
     private async Task TempChangedHandler(double temp) {
        this._eventConsole.Log($"Temp Value Changed.  Value {temp}",AlertStyle.Base);
-   }
+    }
        
-   #endregion
+    #endregion
 
-   #region NotifyMethods
-    
+    #region NotifyMethods
+
     private void Notify(string summary,string message,NotificationSeverity severity=NotificationSeverity.Info,int duration=5000) {
        var notification=new NotificationMessage { 
            Severity = severity, 
@@ -481,7 +482,7 @@
            Duration = 10000 };
        this.NotificationService.Notify(notification);
     }
-    
+
     private void NotifyNotConnected() {
            var notification=new NotificationMessage {
                Severity = NotificationSeverity.Error, 
@@ -490,13 +491,13 @@
                Duration = 10000 };
            this.NotificationService.Notify(notification);
     }
-   
+
     #endregion
 
     bool CanToggleTemp() {
         return !this._testRunning & this.Connected;
     }
-   
+
 
 } 
 

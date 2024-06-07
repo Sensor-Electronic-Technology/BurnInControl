@@ -20,5 +20,6 @@ public class StationCommand : SmartEnum<StationCommand,int>,IPacket {
     public static readonly StationCommand CancelTuning = new StationCommand(nameof(CancelTuning), 11);
     public static readonly StationCommand Reset = new StationCommand(nameof(Reset), 12);
     public static readonly StationCommand RequestRunningTest=new StationCommand(nameof(RequestRunningTest), 13);
+    public static readonly StationCommand FormatSdCard=new StationCommand(nameof(StationCommand), 14);
     private StationCommand(string name, int value) : base(name, value) {  }
 }

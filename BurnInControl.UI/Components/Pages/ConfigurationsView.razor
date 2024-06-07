@@ -10,51 +10,78 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using Environment = System.Environment
 @inject StationConfigDataService ConfigurationDataService
+@inject StationStatusService StationStatusService
 @inject IConfiguration Configuration
 @inject DialogService DialogService
 
-<RadzenStack Orientation="Orientation.Vertical">
-    
-    @if (this._burnInConfiguration == null) {
-        <RadzenStack AlignItems="AlignItems.Center" Class="rz-m-12" Gap="2rem">
-            <RadzenText TextStyle="TextStyle.DisplayH3" TagName="TagName.H3">Loading......</RadzenText>
-            <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large"/>
-        </RadzenStack>
-    } else {
-        <RadzenTabs SelectedIndex="0" RenderMode="TabRenderMode.Client">
-            <Tabs>
-                <RadzenTabsItem Text="Station Configuration">
-                    <StationConfigView StationConfig="@this._burnInConfiguration.ControllerConfig"
-                                       CancelPressed="@this.Refresh"
-                                       StationConfigChanged="@this.StationConfigChangedHandler"
-                                       SavePressed="@this.StationConfigSaveHandler"/>
-                </RadzenTabsItem>
-                <RadzenTabsItem Text="Heater Configuration">
-                    <HeaterControlConfigView HeaterControllerConfig="@this._burnInConfiguration.HeaterControllerConfig"
-                                             Canceled="@this.Refresh"
-                                             Saved="@this.HeaterControllerConfigSaveHandler"
-                                             HeaterControllerConfigChanged="@this.HeaterControlConfigChangedHandler"
-                                             GetConfig="@this.GetHeaterConfigHandler"/>
-                </RadzenTabsItem>
-                <RadzenTabsItem Text="Probes Configuration">
-                    <ProbesControlView ProbeControllerConfig="@this._burnInConfiguration.ProbeControllerConfig"
-                                       CancelPressed="@this.Refresh"
-                                       ProbeControllerConfigChanged="@this.ProbeControlConfigChangedHandler"
-                                       SavePressed="@this.ProbeConfigSaveHandler"/>
-                </RadzenTabsItem>
-            </Tabs>
-        </RadzenTabs>
-    }
-    <RadzenStack Orientation="Orientation.Horizontal">
-        <RadzenButton Text="Refresh"
-                      Click="@this.Refresh"
-                      ButtonStyle="ButtonStyle.Danger"
-                      Style="width: 150px;height: 50px;"/>
-    </RadzenStack>
-    <EventConsole @ref="@this._eventConsole"/>
-</RadzenStack>
+<RadzenSplitter Orientation="Orientation.Vertical">
+    <RadzenSplitterPane Size="60%">
+        @if (this._burnInConfiguration == null) {
+            <RadzenStack AlignItems="AlignItems.Center" Class="rz-m-12" Gap="2rem">
+                <RadzenText TextStyle="TextStyle.DisplayH3" TagName="TagName.H3">Loading......</RadzenText>
+                <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large"/>
+            </RadzenStack>
+        } else {
+            <RadzenTabs SelectedIndex="0" RenderMode="TabRenderMode.Client">
+                <Tabs>
+                    <RadzenTabsItem Text="Station Configuration">
+                        <StationConfigView StationConfig="@this._burnInConfiguration.ControllerConfig"
+                                           CancelPressed="@this.Refresh"
+                                           StationConnected="@this.Connected"
+                                           StationConfigChanged="@this.StationConfigChangedHandler"
+                                           SavePressed="@this.StationConfigSaveHandler"/>
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="Heater Configuration">
+                        <HeaterControlConfigView HeaterControllerConfig="@this._burnInConfiguration.HeaterControllerConfig"
+                                                 Canceled="@this.Refresh"
+                                                 StationConnected="@this.Connected"
+                                                 Saved="@this.HeaterControllerConfigSaveHandler"
+                                                 HeaterControllerConfigChanged="@this.HeaterControlConfigChangedHandler"
+                                                 GetConfig="@this.GetHeaterConfigHandler"/>
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="Probes Configuration">
+                        <ProbesControlView ProbeControllerConfig="@this._burnInConfiguration.ProbeControllerConfig"
+                                           CancelPressed="@this.Refresh"
+                                           StationConnected="@this.Connected"
+                                           ProbeControllerConfigChanged="@this.ProbeControlConfigChangedHandler"
+                                           SavePressed="@this.ProbeConfigSaveHandler"/>
+                    </RadzenTabsItem>
+                </Tabs>
+            </RadzenTabs>
+        }
+    </RadzenSplitterPane>
+    <RadzenSplitterPane Size="40%" Collapsible="false">
+    <RadzenSplitter Orientation="Orientation.Horizontal" style=" border: 1px solid rgba(0,0,0,.08);">
+        <RadzenSplitterPane Size="20%" Collapsible="false">
+            <RadzenStack Orientation="Orientation.Vertical"
+                         AlignItems="AlignItems.Center"
+                         Style="margin: 0.5rem">
 
+                <RadzenFieldset Text="Config Control" Style="width: fit-content;">
+                    <RadzenStack Orientation="Orientation.Horizontal">
+                        <RadzenButton Text="Refresh"
+                                      Click="@this.Refresh"
+                                      ButtonStyle="ButtonStyle.Warning"
+                                      Style="width: 150px;height: 50px;"/>
+                        <RadzenButton Text="Format SD Card"
+                                      Click="@this.FormatSdHandler"
+                                      ButtonStyle="ButtonStyle.Danger"
+                                      Style="width: 150px;height: 50px;"/>
+                    </RadzenStack>
 
+                </RadzenFieldset>
+                <StationServiceControl Connect="@this.OnConnectClicked"
+                                       UsbVisible="false"
+                                       ServiceConnected="@this.Connected"/>
+            </RadzenStack>
+        </RadzenSplitterPane>
+        <RadzenSplitterPane Size="80%"
+                            Resizable="true">
+            <EventConsole @ref="@this._eventConsole"/>
+        </RadzenSplitterPane>
+    </RadzenSplitter>
+    </RadzenSplitterPane>
+</RadzenSplitter>
 @code {
     [Inject] NotificationService _notificationService { get; set; }
     private EventConsole _eventConsole;
@@ -69,7 +96,6 @@
         Console.WriteLine($"StationId: {this.Configuration["StationId"]}");
         this._stationId = this.Configuration["StationId"] ?? "S01";
         this._burnInConfiguration = await this.ConfigurationDataService.GetStationBurnInConfig(this._stationId);
-        await this.StartConnection();
     }
 
     private void SetupHub() {
@@ -107,11 +133,32 @@
     }
 
     #region ButtonHandlers
+    
     private async Task Refresh() {
         this._burnInConfiguration = null;
         await InvokeAsync(StateHasChanged);
         this._burnInConfiguration = await this.ConfigurationDataService.GetStationBurnInConfig(this._stationId);
         await InvokeAsync(StateHasChanged);
+    }
+    
+    private Task OnConnectClicked() {
+        if (this.Connected) {
+            this._eventConsole.Log("Disconnect Clicked",AlertStyle.Warning);
+            this.StationStatusService.StationState = StationState.Offline;
+            return this._hubConnection.StopAsync();
+        } else {
+            this.StationStatusService.StationState = StationState.Idle;
+            this._eventConsole.Log("Connect Clicked",AlertStyle.Success);
+            return this.StartConnection();
+        }
+    }
+    
+    private Task FormatSdHandler() {
+        if (this.Connected) {
+            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.FormatSdCard);
+        }
+        this.NotifyNotConnected();
+        return Task.CompletedTask;
     }
 
     private async Task HeaterControllerConfigSaveHandler(HeaterControllerConfig heaterControllerConfig) {
@@ -264,6 +311,8 @@
    
     #endregion
 
+    #region ChangeHandlers
+
     private Task StationConfigChangedHandler(StationConfiguration stationConfig) {
         this._burnInConfiguration.ControllerConfig= stationConfig;
         return Task.CompletedTask;
@@ -278,5 +327,10 @@
         this._burnInConfiguration.ProbeControllerConfig = probeControlConfig;
         return Task.CompletedTask;
     }
+
+    #endregion
+
+
+
 
 }

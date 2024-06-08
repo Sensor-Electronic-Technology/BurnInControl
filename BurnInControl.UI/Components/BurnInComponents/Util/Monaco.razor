@@ -1,0 +1,118 @@
+@inherits Radzen.RadzenComponent
+
+<div @ref="editor" style="height: 500px; width: 100%;"></div>
+@code {
+    IJSObjectReference monaco;
+    ElementReference editor;
+    DotNetObjectReference<Monaco> reference;
+
+    [Parameter]
+    public string Value { get; set; }
+    
+    [Parameter]
+    public string OtherValue { get; set; }
+
+    [Parameter]
+    public bool ReadOnly { get; set; }
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+    
+    [Parameter]
+    public EventCallback<string> OtherValueChanged { get; set; }
+
+    [Parameter]
+    public string Language { get; set; }
+
+    public string Id => GetId();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            reference = DotNetObjectReference.Create(this);
+
+            monaco = await JSRuntime.InvokeAsync<IJSObjectReference>("createEditor", editor, GetId(), reference, new {
+                language = Language,
+                theme = "vs",
+                codeLens = false,
+                readOnly = ReadOnly,
+                minimap = new {
+                    enabled = false
+                },
+                automaticLaout = true
+            });
+            
+            /*await JSRuntime.InvokeAsync<IJSObjectReference>("createModel", Value, Language);
+            await JSRuntime.InvokeAsync<IJSObjectReference>("createModel", OtherValue, Language);*/
+
+            originValue = Value;
+            otherValue= OtherValue;
+            await JSRuntime.InvokeAsync<IJSObjectReference>("setModel",monaco,GetId(),originValue,otherValue,Language);
+            //await monaco.InvokeVoidAsync("setModel", originValue);
+        }
+    }
+
+    private string originValue;
+    private string otherValue;
+    
+
+    [JSInvokable]
+    public async Task OnChangeAsync(string value)
+    {
+        if (Value != value)
+        {
+            originValue = value;
+            await ValueChanged.InvokeAsync(value);
+        }
+        
+        if(OtherValue != value)
+        {
+            otherValue = value;
+            await OtherValueChanged.InvokeAsync(value);
+        }
+    }
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        var valueChanged = parameters.DidParameterChange(nameof(Value), Value);
+        var readOnlyChanged = parameters.DidParameterChange(nameof(ReadOnly), ReadOnly);
+
+        await base.SetParametersAsync(parameters);
+
+        if (monaco != null && valueChanged && originValue != Value)
+        {
+            originValue = Value;
+
+            //await monaco.InvokeVoidAsync("setValue", originValue);
+            JSRuntime.InvokeAsync<IJSObjectReference>("setModel", originValue,otherValue, Language);
+        }
+        
+        if (monaco != null && valueChanged && otherValue != OtherValue)
+        {
+            otherValue = otherValue;
+
+            //await monaco.InvokeVoidAsync("setValue", originValue);
+            JSRuntime.InvokeAsync<IJSObjectReference>("setModel", originValue,otherValue, Language);
+        }
+
+        if (monaco != null && readOnlyChanged)
+        {
+            await monaco.InvokeVoidAsync("setOptions", new { readOnly = ReadOnly });
+        }
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+
+        if (JSRuntime != null && monaco != null)
+        {
+            monaco.InvokeVoidAsync("dispose");
+        }
+
+        monaco?.DisposeAsync();
+
+        reference?.Dispose();
+    }
+}

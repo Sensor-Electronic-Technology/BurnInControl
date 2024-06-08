@@ -100,8 +100,9 @@
 
     private void SetupHub() {
         var hubAddress=Environment.GetEnvironmentVariable("StationHub");
-        //string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
-        string addr = "http://localhost:5066/hubs/station";
+        string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
+        //string addr = "http://localhost:5066/hubs/station";
+        //string addr = "http://192.168.68.108:5066/hubs/station";
         this._hubConnection = new HubConnectionBuilder()
             .WithUrl(addr)
             .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.Zero, 

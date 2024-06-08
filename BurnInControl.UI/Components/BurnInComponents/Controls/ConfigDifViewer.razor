@@ -1,15 +1,16 @@
 ﻿@inject IJSRuntime jsRuntime
 
 <RadzenRow Style="margin: 1rem; height: 300px; width: 600px;">
-    <BlazorMergelyComponent @ref="BlazorMergelyComponentInstance" MergelyOptions="@MergelyOptions" />
+    @*<BlazorMergelyComponent @ref="BlazorMergelyComponentInstance" MergelyOptions="@MergelyOptions" />*@
+    <Monaco href="@_monaco" Value="@this.ServerConfig" OtherValue="@this.ControllerConfig" Language="json"/>
 </RadzenRow>
 
 
 
 @code {
-    private BlazorMergelyComponent? BlazorMergelyComponentInstance { get; set; } = new BlazorMergelyComponent();
-    private string MergelyOptions { get; set; } = "{\"cmsettings\":{\"mode\":\"text/json\",\"readOnly\":false,\"styleSelectedText\": true}}"; // This is optional
-
+    /*private BlazorMergelyComponent? BlazorMergelyComponentInstance { get; set; } = new BlazorMergelyComponent();*/
+    /*private string MergelyOptions { get; set; } = "{\"cmsettings\":{\"mode\":\"text/json\",\"readOnly\":false,\"styleSelectedText\": true}}"; // This is optional*/
+    Monaco _monaco;
 
     [Parameter] public string ServerConfig { get; set; } = "";
     [Parameter] public string ControllerConfig { get; set; } = "";
@@ -19,7 +20,7 @@
 		
         // Component reference is set after the first render
         if(firstRender) {
-            await BlazorMergelyComponentInstance!.SetValueAsync(this.ServerConfig, this.ControllerConfig);
+            /*await BlazorMergelyComponentInstance!.SetValueAsync(this.ServerConfig, this.ControllerConfig);*/
         }
     }
 

@@ -1,5 +1,4 @@
 ﻿@page "/tune-view"
-@using System.Text.Json
 @using System.Timers
 @using BurnInControl.HubDefinitions.Hubs
 @using BurnInControl.Shared.ComDefinitions
@@ -10,7 +9,6 @@
 @inject ILogger<TuningView> _logger
 @inject StationStatusService StationStatusService
 @inject NotificationService NotificationService
-@rendermode InteractiveServer
 
 <RadzenSplitter Orientation="Orientation.Horizontal">
     <RadzenSplitterPane Size="20%" Collapsed="@this._runtimePaneCollapsed">
@@ -94,13 +92,12 @@
     List<TemperatureData> _h3Data = new List<TemperatureData>();
     
     protected override async Task OnInitializedAsync() {
-        /*var hubAddress=Environment.GetEnvironmentVariable("StationHub");
+        var hubAddress=Environment.GetEnvironmentVariable("StationHub");
         string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
+        //string addr = "http://192.168.68.108:5066/hubs/station";
+        //string addr = "http://localhost:5066/hubs/station";
         this._hubConnection = new HubConnectionBuilder()
             .WithUrl(addr)
-            .Build();*/
-        this._hubConnection = new HubConnectionBuilder()
-            .WithUrl("http://localhost:5066/hubs/station")
             .Build();
         this._hubConnection.On<TuningSerialData>(HubConstants.Events.OnTuningData,this.OnSerialTuningDataReceived);
         this._hubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,this.OnSerialDataReceived);

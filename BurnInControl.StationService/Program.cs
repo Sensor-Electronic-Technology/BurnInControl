@@ -32,5 +32,6 @@ var app = builder.Build();
 app.Services.UseScheduler(scheduler => {
     //scheduler.Schedule<FirmwareUpdateJob>().EverySeconds(30).RunOnceAtStart();
 }).LogScheduledTaskProgress(app.Services.GetRequiredService<ILogger<IScheduler>>());
+
 app.MapHub<StationHub>("/hubs/station");
 app.Run();

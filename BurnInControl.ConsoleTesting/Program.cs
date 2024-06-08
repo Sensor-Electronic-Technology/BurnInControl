@@ -115,8 +115,9 @@ Console.WriteLine(JsonSerializer.Serialize(sendConfigPacket));*/
 /*await CreateStationDatabase();*/
 
 
-await ConfigTestUsbController();
+//await ConfigTestUsbController();
 //await CreateStationDatabase();
+await CloneDatabase();
 
 async Task CloneDatabase() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");

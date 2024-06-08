@@ -58,8 +58,8 @@ public class UsbController:IDisposable {
     
     public ErrorOr<Success> Connect() {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
-            //this._portName = "/dev/ttyACM0";
-            this._portName=this.FindPort();
+            this._portName = "/dev/ttyACM0";
+            //this._portName=this.FindPort();
             if (!string.IsNullOrEmpty(this._portName)) {
                 this._portNameFound = true;
             }

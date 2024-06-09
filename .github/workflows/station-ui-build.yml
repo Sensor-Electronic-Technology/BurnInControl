@@ -31,3 +31,11 @@ jobs:
         file: ./BurnInControl.UI/Dockerfile
         push: true
         tags: ${{secrets.Docker_Username}}/station-ui:latest
+  deploy:
+    runs-on:
+     group: burn-in-runners
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          cd /home/setitech/Documents/StationSoft/StationService/app/updates/
+          touch "ui_update.txt"

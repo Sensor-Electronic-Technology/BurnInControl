@@ -12,9 +12,6 @@
     <link href='https://fonts.googleapis.com/css?family=Orbitron' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="css/site.css" />
     <link rel="icon" href="favicon.ico" />
-    <link rel="stylesheet" media="all" href="_content/com.github.akovac35.BlazorMergely/codemirror/lib/codemirror.css" />
-    <link rel="stylesheet" media="all" href="_content/com.github.akovac35.BlazorMergely/mergely/mergely.css" />
-    
     <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/editor/editor.main.min.css">
     <HeadOutlet @rendermode="@InteractiveServer" />
 
@@ -24,13 +21,6 @@
     <Routes @rendermode="@InteractiveServer" />
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
-    <script src="_content/com.github.akovac35.BlazorMergely/jquery3.2.1.min.js"></script>
-    <script src="_content/com.github.akovac35.BlazorMergely/codemirror/lib/codemirror.js"></script>
-    <script src="_content/com.github.akovac35.BlazorMergely/codemirror/addon/mode/loadmode.js"></script>
-    <script src="_content/com.github.akovac35.BlazorMergely/codemirror/mode/meta.js"></script>
-    <script src="_content/com.github.akovac35.BlazorMergely/codemirror/addon/search/searchcursor.js"></script>
-    <script src="_content/com.github.akovac35.BlazorMergely/mergely/mergely.js"></script>
-    <script src="_content/com.github.akovac35.BlazorMergely/blazormergely.js"></script>
     <script>var require = { paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } }</script>
     <script async src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
     <script async src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/editor/editor.main.nls.js"></script>
@@ -72,9 +62,6 @@
             return monaco.editor.createModel(value, language);
         }
     </script>
-    
-    @*<BlazorMergelyJsReferences @rendermode="InteractiveAuto" />*@
-    <component type="typeof(BlazorMergelyJsReferences)" render-mode="Static"/>
 </body>
 
 </html>

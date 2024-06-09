@@ -4,7 +4,6 @@ using BurnInControl.Shared;
 using Radzen;
 using BurnInControl.UI.Components;
 using BurnInControl.UI.Services;
-using com.github.akovac35.BlazorMergely;
 using MongoDB.Driver;
 using QuickTest.Data.AppSettings;
 
@@ -24,8 +23,6 @@ if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
     connectionString ??= "mongodb://172.20.3.41:27017";
 }
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
-/*var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-connectionString ??= "mongodb://172.20.3.41:27017";*/
 builder.Services.AddControllers();
 builder.Services.AddRadzenComponents();
 builder.Services.AddHttpClient();

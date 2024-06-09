@@ -3,6 +3,7 @@ using System.Timers;
 using BurnInControl.Application.BurnInTest.Interfaces;
 using BurnInControl.Application.FirmwareUpdate.Interfaces;
 using BurnInControl.Application.FirmwareUpdate.Messages;
+using BurnInControl.Application.StationControl.Interfaces;
 using BurnInControl.HubDefinitions.Hubs;
 using BurnInControl.Shared.AppSettings;
 using BurnInControl.Shared.FirmwareData;
@@ -27,6 +28,7 @@ public class UpdateWatcher:IHostedService {
     private FileSystemWatcher _watcher;
     private readonly ITestService _testService;
     private readonly IFirmwareUpdateService _firmwareUpdateService;
+    private readonly IStationController _stationController;
     private readonly HttpClient _httpClient = new HttpClient();
     private Timer _serviceUpdateTimer;
     private Timer _firmwareUpdateTimer;
@@ -37,10 +39,12 @@ public class UpdateWatcher:IHostedService {
     
     public UpdateWatcher(IOptions<UpdateSettings> settings, ILogger<UpdateWatcher> logger,
         ITestService testService, IFirmwareUpdateService firmwareUpdateService,
+        IStationController stationController,
         IHubContext<StationHub,IStationHub> hubContext){
         this._hubContext = hubContext;
         this._logger = logger;
         this._firmwareUpdateService = firmwareUpdateService;
+        this._stationController = stationController;
         this._updateSettings = settings.Value;
         this._watcher = new FileSystemWatcher();
         this._watcher.Path = this._updateSettings.UpdateDirectory ?? "/updates/";
@@ -77,7 +81,7 @@ public class UpdateWatcher:IHostedService {
                         this._firmwareUpdateAvailable = true;
                         this._firmwareUpdateTimer.Start();
                     } else {
-                        this._firmwareUpdateService.UploadFirmwareStandAlone().Wait();
+                        this.UpdateFirmware();
                     }
                 }
 
@@ -123,6 +127,13 @@ public class UpdateWatcher:IHostedService {
         } else {
             this._logger.LogError("Service update request failed");
         }
+    }
+
+    private void UpdateFirmware() {
+        this._logger.LogInformation("Update available, disconnecting station and uploading firmware update");
+        this._stationController.Disconnect().Wait();
+        this._firmwareUpdateService.UploadFirmwareStandAlone().Wait();
+        this._stationController.ConnectUsb().Wait();
     }
     
     private void OnServiceUpdateTimer(object? source, ElapsedEventArgs e) {

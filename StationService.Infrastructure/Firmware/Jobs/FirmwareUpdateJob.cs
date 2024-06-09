@@ -5,7 +5,6 @@ using BurnInControl.Application.StationControl.Interfaces;
 using Coravel.Invocable;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-
 namespace StationService.Infrastructure.Firmware.Jobs;
 
 public class FirmwareUpdateJob:IFirmwareUpdateJob {

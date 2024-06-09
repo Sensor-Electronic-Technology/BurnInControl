@@ -94,11 +94,12 @@ public class FirmwareUpdateService:IFirmwareUpdateService {
             }
         }
     }
-    
-    public async Task UploadFirmwareStandAlone() {
+
+    private async Task<bool> UpdateArduinoCli() {
         using Process process = new Process();
+        var command = "core install arduino:avr";
         process.StartInfo.FileName = this._settings.AvrDudeFileName;
-        process.StartInfo.Arguments = this._settings.AvrDudeCmd;
+        process.StartInfo.Arguments = command;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.UseShellExecute = false;
         try {
@@ -106,11 +107,32 @@ public class FirmwareUpdateService:IFirmwareUpdateService {
             var result = await process.StandardOutput.ReadToEndAsync();
             await process.WaitForExitAsync();
             Console.WriteLine(result);
-            await this._hubContext.Clients.All.OnFirmwareUpdateCompleted("Firmware Update!!");
-            this._logger.LogInformation("Firmware update completed");
+            return true;
         } catch(Exception e) {
             this._logger.LogError("Error while updating firmware.  Exception: \n  {ErrorMessage}", e.ToErrorMessage());
             await this._hubContext.Clients.All.OnFirmwareUpdateFailed($"Exception thrown while updating firmware: /n {e.ToErrorMessage()}");
+            return false;
+        }
+    }
+    
+    public async Task UploadFirmwareStandAlone() {
+        if (await this.UpdateArduinoCli()) {
+            using Process process = new Process();
+            process.StartInfo.FileName = this._settings.AvrDudeFileName;
+            process.StartInfo.Arguments = this._settings.AvrDudeCmd;
+            process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.UseShellExecute = false;
+            try {
+                process.Start();
+                var result = await process.StandardOutput.ReadToEndAsync();
+                await process.WaitForExitAsync();
+                Console.WriteLine(result);
+                await this._hubContext.Clients.All.OnFirmwareUpdateCompleted("Firmware Update!!");
+                this._logger.LogInformation("Firmware update completed");
+            } catch(Exception e) {
+                this._logger.LogError("Error while updating firmware.  Exception: \n  {ErrorMessage}", e.ToErrorMessage());
+                await this._hubContext.Clients.All.OnFirmwareUpdateFailed($"Exception thrown while updating firmware: /n {e.ToErrorMessage()}");
+            }
         }
     }
     

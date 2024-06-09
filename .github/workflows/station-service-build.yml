@@ -1,5 +1,4 @@
 name: Station Service Workflow
-
 on:
   push:
     branches: [ "master" ]

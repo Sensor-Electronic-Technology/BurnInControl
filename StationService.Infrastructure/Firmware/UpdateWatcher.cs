@@ -58,6 +58,7 @@ public class UpdateWatcher:IHostedService {
         this._serviceUpdateTimer = new Timer();
         this._serviceUpdateTimer.AutoReset = false;
         this._serviceUpdateTimer.Elapsed += OnServiceUpdateTimer;
+        this._httpClient.BaseAddress = new Uri("http://10.5.0.12:8080");
     }
     public Task StartAsync(CancellationToken cancellationToken) {
         this._logger.LogInformation("UpdateWatcher started");
@@ -121,6 +122,7 @@ public class UpdateWatcher:IHostedService {
     private void UpdateService() {
         using var request = new HttpRequestMessage(new HttpMethod("GET"), $"{this._updateSettings.UpdateApiUrl}");
         request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {this._updateSettings.UpdateToken}"); 
+        this._httpClient.Timeout = TimeSpan.FromMinutes(3);
         var response = this._httpClient.Send(request);
         this.DeleteUpdateFile(this._updateSettings.ServiceUpdateFileName ?? "service_update.txt");
         this.DeleteUpdateFile(this._updateSettings.UiUpdateFileName ?? "ui_update.txt");

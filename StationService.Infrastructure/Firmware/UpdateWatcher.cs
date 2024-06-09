@@ -93,7 +93,8 @@ public class UpdateWatcher:IHostedService {
                     }
                 }
 
-                if (e.Name.Contains(this._updateSettings.ServiceUpdateFileName ?? "service_update.txt")) {
+                if (e.Name.Contains(this._updateSettings.ServiceUpdateFileName ?? "service_update.txt")
+                    || e.Name.Contains(this._updateSettings.UiUpdateFileName ?? "ui_update.txt")) {
                     if (this._testService.IsRunning) {
                         var deadline = this._testService.RemainingTimeSecs();
                         this._serviceUpdateTimer.Interval = (deadline * 1000) + this._timerOffset;
@@ -124,11 +125,22 @@ public class UpdateWatcher:IHostedService {
         using var request = new HttpRequestMessage(new HttpMethod("GET"), "http://localhost:8080/v1/update");
         request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {this._updateSettings.UpdateApiToken}"); 
         var response = this._httpClient.Send(request);
-        File.Delete(Path.Combine(this._updateSettings.UpdateDirectory ?? "/updates/",this._updateSettings.ServiceUpdateFileName ?? "service_update.txt"));
+        this.DeleteUpdateFile(this._updateSettings.ServiceUpdateFileName ?? "service_update.txt");
+        this.DeleteUpdateFile(this._updateSettings.UiUpdateFileName ?? "ui_update.txt");
+        
         if (response.StatusCode == HttpStatusCode.OK) {
             this._logger.LogInformation("Service update request sent");
         } else {
             this._logger.LogError("Service update request failed");
+        }
+    }
+
+    private void DeleteUpdateFile(string fileName) {
+        try {
+            File.Delete(Path.Combine(this._updateSettings.UpdateDirectory ?? "/updates/",
+                fileName));
+        } catch (Exception e) {
+            this._logger.LogError("Failed to delete update file {FileName}",fileName);
         }
     }
 
@@ -137,7 +149,7 @@ public class UpdateWatcher:IHostedService {
         this._stationController.Disconnect().Wait();
         this._firmwareUpdateService.UploadFirmwareStandAlone().Wait();
         this._stationController.ConnectUsb().Wait();
-        File.Delete(Path.Combine(this._updateSettings.UpdateDirectory ?? "/updates/",this._updateSettings.FirmwareUpdateFileName ?? "service_update.txt"));
+        this.DeleteUpdateFile(this._updateSettings.FirmwareUpdateFileName ?? "BurnInFirmwareV3.ino.hex");
     }
     
     private void OnServiceUpdateTimer(object? source, ElapsedEventArgs e) {

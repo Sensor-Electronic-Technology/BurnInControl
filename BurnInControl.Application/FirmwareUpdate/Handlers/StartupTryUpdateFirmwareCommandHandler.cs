@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace BurnInControl.Application.FirmwareUpdate.Handlers;
 
-public class StartupTryUpdateFirmwareCommandHandler:IRequestHandler<StartupTryUpdateFirmwareCommand,bool> {
+/*public class StartupTryUpdateFirmwareCommandHandler:IRequestHandler<StartupTryUpdateFirmwareCommand,bool> {
     private readonly ILogger<StartupTryUpdateFirmwareCommandHandler> _logger;
     private readonly IFirmwareUpdateService _firmwareUpdateService;
     
@@ -26,4 +26,4 @@ public class StartupTryUpdateFirmwareCommandHandler:IRequestHandler<StartupTryUp
         }
         return false;
     }
-}
+}*/

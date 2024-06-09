@@ -5,7 +5,7 @@ using MediatR;
 
 namespace BurnInControl.Application.FirmwareUpdate.Handlers;
 
-public class CheckForUpdateCommandHandler:IRequestHandler<CheckForUpdateCommand> {
+/*public class CheckForUpdateCommandHandler:IRequestHandler<CheckForUpdateCommand> {
     private IFirmwareUpdateService _updateService;
     
     public CheckForUpdateCommandHandler(IFirmwareUpdateService updateService) {
@@ -16,4 +16,4 @@ public class CheckForUpdateCommandHandler:IRequestHandler<CheckForUpdateCommand>
         //return this._updateService.GetLatestVersion();
         return Task.CompletedTask;
     }
-}
+}*/

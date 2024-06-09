@@ -1,5 +1,4 @@
-﻿using BurnInControl.Application.FirmwareUpdate.Handlers;
-using BurnInControl.Application.FirmwareUpdate.Interfaces;
+﻿using BurnInControl.Application.FirmwareUpdate.Interfaces;
 using BurnInControl.Application.ProcessSerial.Handlers;
 using BurnInControl.Application.ProcessSerial.Interfaces;
 using BurnInControl.Application.StationControl.Handlers;
@@ -25,21 +24,20 @@ public static class DependencyInjection {
         services.AddSingleton(channel.Reader);
         services.AddSingleton(channel.Writer);
         services.AddSingleton<ITestService,TestService>();
-        services.AddSingleton<IFirmwareUpdateService,FirmwareUpdateService>();
+        //services.AddSingleton<IFirmwareUpdateService,FirmwareUpdateService>();
+        services.AddTransient<IFirmwareUpdateService, FirmwareUpdateService>();
         services.AddSingleton<IStationController,StationController>();
         services.AddSingleton<UsbController>();
-        services.AddTransient<IFirmwareUpdateJob,FirmwareUpdateJob>();
+        /*services.AddTransient<IFirmwareUpdateJob,FirmwareUpdateJob>();*/
         services.AddSingleton<IStationMessageHandler,StationMessageHandler>();
         services.AddHostedService<StationWorkerService>();
-        //services.AddHostedService<UpdateWatcher>();
+        services.AddHostedService<UpdateWatcher>();
         
         services.AddMediatR(config => {
             config.RegisterServicesFromAssemblies(
                 typeof(StationSerialMessageHandler).Assembly,
                 typeof(ConnectionActionHandler).Assembly, 
                 typeof(SendStationCommandHandler).Assembly,
-                typeof(StartupTryUpdateFirmwareCommandHandler).Assembly,
-                typeof(TryUpdateFirmwareCommandHandler).Assembly,
                 typeof(StartTestCommandHandler).Assembly,
                 typeof(LogCommandHandler).Assembly,
                 typeof(TestCompletedHandler).Assembly,
@@ -58,7 +56,7 @@ public static class DependencyInjection {
                 typeof(SaveTuningResultsHandler).Assembly,
                 typeof(SendTuningWindowSizeHandler).Assembly);
         });
-        services.AddScheduler();
+        /*services.AddScheduler();*/
         return services;
     }
 }

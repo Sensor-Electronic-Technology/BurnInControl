@@ -21,9 +21,6 @@ namespace BurnInControl.Shared.ComDefinitions.Station;
 
 [JsonConverter(typeof(StationMsgPrefixJsonConverter))]
 public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
-    public static readonly StationMsgPrefix HeaterConfigPrefix= new(nameof(HeaterConfigPrefix), "CH"); 
-    public static readonly StationMsgPrefix ProbeConfigPrefix = new(nameof(ProbeConfigPrefix),"CP");
-    public static readonly StationMsgPrefix StationConfigPrefix = new(nameof(StationConfigPrefix), "CS");
     public static readonly StationMsgPrefix SaveState = new(nameof(SaveState), "ST");
     public static readonly StationMsgPrefix MessagePrefix = new(nameof(MessagePrefix), "M");
     public static readonly StationMsgPrefix DataPrefix = new(nameof(DataPrefix), "D");
@@ -46,7 +43,6 @@ public class StationMsgPrefix : SmartEnum<StationMsgPrefix,string>,IPacket {
     public static readonly StationMsgPrefix SaveConfigStatusPrefix= new(nameof(SaveConfigStatusPrefix), "SCONF");
     public static readonly StationMsgPrefix GetConfigPrefix=new(nameof(GetConfigPrefix), "GCONF");
     public static readonly StationMsgPrefix ReceiveConfigPrefix=new(nameof(ReceiveConfigPrefix), "RCONF");
-    /*public static readonly StationMsgPrefix FormatSdPrefix=new(nameof(FormatSdPrefix), "FSD");*/
     public static readonly StationMsgPrefix ProbeTestDonePrefix = new(nameof(ProbeTestDonePrefix), "PTD");
     public static readonly StationMsgPrefix SendRunningTestPrefix = new(nameof(SendRunningTestPrefix), "RTEST");
     public static readonly StationMsgPrefix NotifyHeaterModePrefix = new(nameof(NotifyHeaterModePrefix), "SWHEATER");

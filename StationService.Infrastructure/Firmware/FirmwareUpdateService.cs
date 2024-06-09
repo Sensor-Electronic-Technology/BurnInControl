@@ -26,7 +26,6 @@ public class FirmwareUpdateService:IFirmwareUpdateService {
     private UpdateCheckStatus _updateCheckStatus=new UpdateCheckStatus();
     private readonly IConfiguration _configuration;
     private readonly FirmwareUpdateSettings _settings;
-    
     private string _firmwareFullPath = "";
     private readonly string _stationId = "";
     public bool UpdateAvailable => this._updateCheckStatus?.UpdateAvailable ?? false;
@@ -71,7 +70,6 @@ public class FirmwareUpdateService:IFirmwareUpdateService {
         }
         return this._updateCheckStatus;
     }
-
     public async Task UploadFirmwareUpdate() {
         if (await this.DownloadFirmwareUpdate()) {
             using Process process = new Process();
@@ -94,6 +92,25 @@ public class FirmwareUpdateService:IFirmwareUpdateService {
                 this._updateCheckStatus.SetError($"Exception thrown while updating firmware: /n {e.ToErrorMessage()}");
                 await this._hubContext.Clients.All.OnFirmwareUpdateFailed($"Exception thrown while updating firmware: /n {e.ToErrorMessage()}");
             }
+        }
+    }
+    
+    public async Task UploadFirmwareStandAlone() {
+        using Process process = new Process();
+        process.StartInfo.FileName = this._settings.AvrDudeFileName;
+        process.StartInfo.Arguments = this._settings.AvrDudeCmd;
+        process.StartInfo.RedirectStandardOutput = true;
+        process.StartInfo.UseShellExecute = false;
+        try {
+            process.Start();
+            var result = await process.StandardOutput.ReadToEndAsync();
+            await process.WaitForExitAsync();
+            Console.WriteLine(result);
+            await this._hubContext.Clients.All.OnFirmwareUpdateCompleted("Firmware Update!!");
+            this._logger.LogInformation("Firmware update completed");
+        } catch(Exception e) {
+            this._logger.LogError("Error while updating firmware.  Exception: \n  {ErrorMessage}", e.ToErrorMessage());
+            await this._hubContext.Clients.All.OnFirmwareUpdateFailed($"Exception thrown while updating firmware: /n {e.ToErrorMessage()}");
         }
     }
     

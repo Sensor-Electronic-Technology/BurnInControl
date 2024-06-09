@@ -19,7 +19,7 @@ public class StationWorkerService:IHostedService,IDisposable {
     }
     
     public async Task StartAsync(CancellationToken cancellationToken) {
-        var succes=await this._mediator.Send(new StartupTryUpdateFirmwareCommand(), cancellationToken);
+        //var succes=await this._mediator.Send(new StartupTryUpdateFirmwareCommand(), cancellationToken);
         await this._stationController.Start();
     }
     

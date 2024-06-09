@@ -286,6 +286,7 @@ async Task ConfigTestUsbController() {
         Console.WriteLine();
     }
 
+ /*
  void StartSerialPort() {
      var serialPort= new SerialPortInput();
      serialPort.SetPort("COM3",38400);
@@ -295,7 +296,7 @@ async Task ConfigTestUsbController() {
          Console.WriteLine("Connection Status: {0}", args.Connected);
      };
      serialPort.MessageReceived += delegate(object sender, MessageReceivedEventArgs args) {
-         /*Console.WriteLine("Received message: {0}", BitConverter.ToString(args.Data));*/
+         /*Console.WriteLine("Received message: {0}", BitConverter.ToString(args.Data));#1#
          var str=System.Text.Encoding.ASCII.GetString(args.Data);
          builder.Append(str);
          if (str.Contains('\n')) {
@@ -349,6 +350,7 @@ async Task ConfigTestUsbController() {
 
 
  }
+ */
 
 void PrintPackets() {
     MessagePacket<ConfigPacket<HeaterControllerConfig>> heaterConfigPacket = new MessagePacket<ConfigPacket<HeaterControllerConfig>>() {

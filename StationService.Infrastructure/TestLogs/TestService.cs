@@ -34,10 +34,9 @@ public class TestService:ITestService {
     private bool _loggingEnabled = false;
     private bool _testSetupComplete = false;
     private bool _first = false;
-    private int _value=0;
     private bool _testRequested = false;
     public bool IsRunning => this._running;
-    
+
     public TestService(TestLogDataService testLogDataService,
         IHubContext<StationHub, IStationHub> hubContext,
         IMediator mediator,SavedStateDataService savedStateDataService,
@@ -92,6 +91,14 @@ public class TestService:ITestService {
                                                                  "test to complete before starting new test");
         }
     }
+
+    public long RemainingTimeSecs() {
+        if(!this._running) {
+            return 0;
+        }
+        return this._runningTest.RemainingTimeSecs();
+    }
+
     public async Task Start(bool success, string? message) {
         if (success) {
             this._running = true;

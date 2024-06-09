@@ -41,6 +41,10 @@ public class BurnInTestLog {
             Data=data
         });*/
     }
+    
+    public long RemainingTimeSecs() {
+        return this.RunTime - this.ElapsedTime;
+    }
 
     public void SetCompleted(DateTime stop) {
         this.StopTime = stop;

@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace BurnInControl.Application.FirmwareUpdate.Handlers;
 
-public class TryUpdateFirmwareCommandHandler:IRequestHandler<TryUpdateFirmwareCommand,bool>  {
+/*public class TryUpdateFirmwareCommandHandler:IRequestHandler<TryUpdateFirmwareCommand,bool>  {
     private readonly ILogger<TryUpdateFirmwareCommandHandler> _logger;
     private readonly IFirmwareUpdateService _firmwareUpdateService;
     private readonly ITestService _testService;
@@ -43,4 +43,4 @@ public class TryUpdateFirmwareCommandHandler:IRequestHandler<TryUpdateFirmwareCo
             return false;
         }
     }
-}
+}*/

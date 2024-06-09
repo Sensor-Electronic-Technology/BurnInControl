@@ -14,7 +14,7 @@ namespace StationService.Infrastructure.SerialCom;
 
 
 public class UsbController:IDisposable {
-    public event EventHandler<ConnectionStatusChangedEventArgs> OnUsbStateChangedHandler;
+    public event EventHandler<ConnectionStatusChangedEventArgs>? OnUsbStateChangedHandler;
     
     private readonly ILogger<UsbController> _logger;
     private bool _loggingEnabled=false;
@@ -22,7 +22,7 @@ public class UsbController:IDisposable {
     private readonly ChannelWriter<string> _channelWriter;
     private bool _portNameFound = false;
     private string _portName = string.Empty;
-    private int _baudRate = 38400;
+    private readonly int _baudRate = 38400;
     public bool Connected => this._serialPort.IsConnected;
     
     public UsbController(ChannelWriter<string> channelWriter,ILogger<UsbController> logger) {
@@ -71,7 +71,7 @@ public class UsbController:IDisposable {
         /*this._portName = "/dev/ttyACM0";
         this._portNameFound = true;*/
         if (this._portNameFound) {
-            this._serialPort.SetPort(this._portName, 38400);
+            this._serialPort.SetPort(this._portName, this._baudRate);
             if (this._serialPort.Connect()) {
                 this.Log("Usb Connected",false);
             } else {

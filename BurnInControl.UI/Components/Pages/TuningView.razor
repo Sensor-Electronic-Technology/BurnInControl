@@ -10,6 +10,7 @@
 @inject ILogger<TuningView> _logger
 @inject StationStatusService StationStatusService
 @inject NotificationService NotificationService
+@inject NavigationManager Navigation
 
 <RadzenSplitter Orientation="Orientation.Horizontal">
     <RadzenSplitterPane Size="20%" Collapsed="@this._runtimePaneCollapsed">
@@ -26,7 +27,7 @@
                                  UsbConnected="@this._usbConnected"
                                  Reset="@this.OnResetClicked"
                                  UpdateWindowSize="@this.UpdateWindowSizeHandler"
-                                 TestRunning="@this._testRunning"/>
+                                 TestRunning="@this.TestRunning()"/>
             </RadzenStack>
         </RadzenRow>
     </RadzenSplitterPane>
@@ -102,6 +103,23 @@
         this.HubClient.HubConnection.On<bool,string>(HubConstants.Events.OnTuningResultsSavedDatabase,this.OnTuningResultsSavedHandler);
     }
     
+    private async ValueTask OnLocationChanging(LocationChangingContext context) {
+        if(this._mode==StationHeaterMode.TuningMode) {
+            if (this._data.IsTuning) {
+                this.Notify("Station Tuning","Station is tuning, please cancel tuning before navigating away",NotificationSeverity.Error);
+                context.PreventNavigation();
+                return;
+            }
+            await this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand,
+                StationCommand.ChangeModeNormal);
+        }
+    }
+
+    private bool TestRunning() {
+        return this.StationStatusService.StationState==StationState.Running || 
+               this.StationStatusService.StationState==StationState.Paused;
+    }
+    
     #region ButtonHandlers
     private Task StartHandler(StationCommand command) {
         if (this.Connected) {
@@ -142,6 +160,7 @@
     
     private Task ToggleTemperatureHandler() {
         if(this.Connected){
+            this.StationStatusService.StationState=this._tempSetPoint==0 ? StationState.Heating : StationState.Idle;
             return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand,StationCommand.ToggleHeat);
         }
 
@@ -160,6 +179,7 @@
     
     private Task ModeSwHandler(StationCommand command) {
         if (this.Connected) {
+            this.StationStatusService.StationState=command==StationCommand.ChangeModeATune ? StationState.TuningMode : StationState.Idle;
             return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, command);
         }
         this.NotifyNotConnected();
@@ -181,23 +201,8 @@
     private Task OnResetClicked() {
         if (this.Connected) {
             this._eventConsole.Log("Reset Clicked",AlertStyle.Warning);
-            this.StationStatusService.StationState = StationState.Idle;
             this._testRunning = false;
             return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.Reset);
-        }
-        this.NotifyNotConnected();
-        return Task.CompletedTask;
-    }
-    
-    private Task OnUsbConnectClicked() {
-        if (this.Connected) {
-            if (this._usbConnected) {
-                this._eventConsole.Log("Usb Disconnect Clicked",AlertStyle.Warning);
-                return this.HubClient.HubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
-            } else {
-                this._eventConsole.Log("Usb Connect Clicked",AlertStyle.Info);
-                return this.HubClient.HubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
-            }
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;

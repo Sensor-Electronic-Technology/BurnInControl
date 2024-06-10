@@ -48,7 +48,19 @@
                 break;
             }
             case StationState.Offline: {
+                this._alertStyle = AlertStyle.Dark;
+                break;
+            }
+            case StationState.Heating: {
                 this._alertStyle = AlertStyle.Danger;
+                break;
+            }    
+            case StationState.Tuning: {
+                this._alertStyle = AlertStyle.Secondary;
+                break;
+            }
+            case StationState.TuningMode: {
+                this._alertStyle = AlertStyle.Base;
                 break;
             }
         }

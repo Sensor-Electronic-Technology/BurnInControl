@@ -7,7 +7,7 @@ using MongoDB.Bson;
 namespace BurnInControl.Data.StationModel;
 
 public enum StationState {
-    Running,Paused,Idle,Offline
+    Running,Paused,TuningMode,Tuning,Heating,Idle,Offline
 }
 
 public class Station {

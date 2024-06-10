@@ -7,8 +7,9 @@
         <RadzenStack JustifyContent="Radzen.JustifyContent.Center" Orientation="Radzen.Orientation.Horizontal" Gap="40">
             @for (int i = 0; i < 6; i++) {
                 var label = $"{LabelPrefix} {i + 1}";
+                var value=(int)Values[i];
                 <GenericDisplay DisplayLabel=@label 
-                                DisplayValue="@this.Values[i].ToString(CultureInfo.InvariantCulture)"
+                                DisplayValue="@value.ToString(CultureInfo.InvariantCulture)"
                                 Width="130px"/>
             }
         </RadzenStack>

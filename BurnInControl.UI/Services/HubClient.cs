@@ -1,8 +1,5 @@
 using BurnInControl.HubDefinitions.Hubs;
-
 namespace BurnInControl.UI.Services;
-using System.Net;
-using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 public class HubClient:IAsyncDisposable {
     public HubConnection HubConnection { get;}
@@ -11,23 +8,11 @@ public class HubClient:IAsyncDisposable {
 
     public HubClient(IConfiguration configuration) {
         string hubAddress = configuration["HubAddress"] ?? HubConstants.HubAddress;
+        //string hubAddress = "http://localhost:5066/hubs/station";
         this.HubConnection = new HubConnectionBuilder()
             .WithUrl(hubAddress)
             .WithAutomaticReconnect()
             .Build();
-        
-        /*this.HubConnection.On<ReceiveRequestedConfigEventArgs>(HubConstants.Events.OnRequestConfigHandler, args => {
-            ReceiveRequestedConfig?.Invoke(this, args);
-        });
-        
-        this.HubConnection.On<ReceiveSaveStatusEventArgs>(HubConstants.Events.OnConfigSaveStatus, args => {
-            ReceiveSaveStatus?.Invoke(this, args);
-        });
-        
-        this.HubConnection.On<SerialComMessageEventArgs>(HubConstants.Events.OnSerialComMessage, args => {
-            SerialComMessage?.Invoke(this, args);
-        });*/
-        
     }
     
     public async Task StartAsync(CancellationToken cancellation = default) {
@@ -47,7 +32,7 @@ public class HubClient:IAsyncDisposable {
     
     
     public ValueTask DisposeAsync() {
-        throw new NotImplementedException();
+        return this.HubConnection.DisposeAsync();
     }
 }
 

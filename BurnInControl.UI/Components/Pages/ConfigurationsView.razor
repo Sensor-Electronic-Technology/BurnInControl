@@ -88,8 +88,6 @@
 @code {
     [Inject] HubClient HubClient { get; set; }
     private EventConsole _eventConsole;
-    /*private HubConnection? _hubConnection;*/
-    /*private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;*/
     private bool Connected => this.HubClient.IsConnected;
 
     private BurnStationConfiguration? _burnInConfiguration;
@@ -103,22 +101,9 @@
     }
 
     private void SetupHub() {
-        /*var hubAddress=Environment.GetEnvironmentVariable("StationHub");
-        string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;*/
-        //string addr = "http://localhost:5066/hubs/station";
-        //string addr = "http://192.168.68.108:5066/hubs/station";
-        /*this._hubConnection = new HubConnectionBuilder()
-            .WithUrl(addr)
-            .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.Zero, 
-                TimeSpan.FromSeconds(10),TimeSpan.FromSeconds(30),
-                TimeSpan.FromSeconds(60) })
-            .Build();*/
         this.HubClient.HubConnection.On<string,bool,string>(HubConstants.Events.OnConfigSaveStatus,this.ReceiveSaveStatus);
         this.HubClient.HubConnection.On<bool,int,string>(HubConstants.Events.OnRequestConfigHandler,this.ReceiveRequestedConfig); 
         this.HubClient.HubConnection.On<int,string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
-        /*this._hubConnection.On<string,bool,string>(HubConstants.Events.OnConfigSaveStatus,this.ReceiveSaveStatus);
-        this._hubConnection.On<bool,int,string>(HubConstants.Events.OnRequestConfigHandler,this.ReceiveRequestedConfig); 
-        this._hubConnection.On<int,string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);*/
     }
     
     private async Task StartConnection() {

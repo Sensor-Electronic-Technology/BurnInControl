@@ -62,14 +62,14 @@
 </RadzenSplitter>
 
 @code {
+    [Inject] HubClient HubClient { get; set; }
     private EventConsole _eventConsole=new EventConsole();
-    private HubConnection? _hubConnection;
     bool _runtimePaneCollapsed=false;
     bool _controlPaneCollapsed=false;
     bool _eventPaneCollapsed=false;
     TuningSerialData _data=new TuningSerialData();
     StationSerialData _stationData=new StationSerialData();
-    private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;
+    private bool Connected => this.HubClient.IsConnected;
     private Timer? _timer;
     private int count = 0;
     private StationHeaterMode _mode = StationHeaterMode.HeatingMode;
@@ -93,48 +93,13 @@
     List<TemperatureData> _h3Data = [];
     
     protected override async Task OnInitializedAsync() {
-        var hubAddress=Environment.GetEnvironmentVariable("StationHub");
-        string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
-        //string addr = "http://192.168.68.108:5066/hubs/station";
-        //string addr = "http://localhost:5066/hubs/station";
-        this._hubConnection = new HubConnectionBuilder()
-            .WithUrl(addr)
-            .Build();
-        this._hubConnection.On<TuningSerialData>(HubConstants.Events.OnTuningData,this.OnSerialTuningDataReceived);
-        this._hubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,this.OnSerialDataReceived);
-        this._hubConnection.On<int,string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
-        this._hubConnection.On<int>(HubConstants.Events.OnSwTuneNotify,this.OnNotifyHeaterMode);
-        this._hubConnection.On<HeaterTuneResult>(HubConstants.Events.OnNotifyHeaterTuningStatus,this.OnHeaterTuningStatus);
-        this._hubConnection.On<List<HeaterTuneResult>>(HubConstants.Events.OnNotifyHeaterTuneComplete,this.OnHeaterTuneComplete);
-        this._hubConnection.On<bool,string>(HubConstants.Events.OnTuningResultsSavedDatabase,this.OnTuningResultsSavedHandler);
-    }
-    
-    private async Task StartConnection() {
-        if (!this.Connected) {
-            try {
-                if (this._hubConnection == null) {
-                    this._eventConsole.Log("Error: HubConnection is null",AlertStyle.Danger);
-                    return;
-                }
-                await this._hubConnection?.StartAsync();
-                if (this.Connected) {
-                    this._eventConsole.Log("Hub Connection Established",AlertStyle.Success);
-                    this.Notify("Connected Established","Connected to Station Service",NotificationSeverity.Success);
-                } else {
-                    this._eventConsole.Log("Hub Connection Failed",AlertStyle.Danger);
-                    this.Notify("Connected Failed","Failed to connect to Station Service",NotificationSeverity.Error,30000);
-                }
-            }  catch(Exception e) {
-                string error = e.Message;
-                if (e.InnerException != null) {
-                    error+="\n"+e.InnerException.Message;
-                }
-                this._logger.LogError("Hub Connection Failed, Exception: \n {Error}", error);
-                this._eventConsole.Log("Hub Connection Failed",AlertStyle.Danger);
-                this.Notify("Connected Failed",$"Failed to connect to Station Service. Exception thrown:\n{error}",
-                    NotificationSeverity.Error,30000);
-            }
-        }
+        this.HubClient.HubConnection.On<TuningSerialData>(HubConstants.Events.OnTuningData,this.OnSerialTuningDataReceived);
+        this.HubClient.HubConnection.On<StationSerialData>(HubConstants.Events.OnStationData,this.OnSerialDataReceived);
+        this.HubClient.HubConnection.On<int,string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
+        this.HubClient.HubConnection.On<int>(HubConstants.Events.OnSwTuneNotify,this.OnNotifyHeaterMode);
+        this.HubClient.HubConnection.On<HeaterTuneResult>(HubConstants.Events.OnNotifyHeaterTuningStatus,this.OnHeaterTuningStatus);
+        this.HubClient.HubConnection.On<List<HeaterTuneResult>>(HubConstants.Events.OnNotifyHeaterTuneComplete,this.OnHeaterTuneComplete);
+        this.HubClient.HubConnection.On<bool,string>(HubConstants.Events.OnTuningResultsSavedDatabase,this.OnTuningResultsSavedHandler);
     }
     
     #region ButtonHandlers
@@ -151,7 +116,7 @@
                 this._h3Data.Clear();
             }
             this._eventConsole.Log("Sending start tuning command..");
-            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,command);
+            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand,command);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
@@ -160,7 +125,7 @@
     private Task UpdateWindowSizeHandler(ulong windowSize) {
         if (this.Connected) {
             this._eventConsole.Log("Sending tuning window size..");
-            return this._hubConnection.SendAsync(HubConstants.Methods.SendTuningWindowSize,windowSize);
+            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendTuningWindowSize,windowSize);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
@@ -169,7 +134,7 @@
     private Task SaveResultsHandler() {
         if (this.Connected) {
             this._eventConsole.Log("Saving Results..");
-            return this._hubConnection.SendAsync(HubConstants.Methods.SaveTuningResults, this._results);
+            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SaveTuningResults, this._results);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
@@ -177,7 +142,7 @@
     
     private Task ToggleTemperatureHandler() {
         if(this.Connected){
-            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,StationCommand.ToggleHeat);
+            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand,StationCommand.ToggleHeat);
         }
 
         this.NotifyNotConnected();
@@ -187,7 +152,7 @@
     private Task CancelHandler() {
         if (this.Connected) {
             this._eventConsole.Log("Sending start tuning command..");
-            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,StationCommand.CancelTuning);
+            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand,StationCommand.CancelTuning);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
@@ -195,7 +160,7 @@
     
     private Task ModeSwHandler(StationCommand command) {
         if (this.Connected) {
-            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand, command);
+            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, command);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
@@ -205,11 +170,11 @@
         if (this.Connected) {
             this._eventConsole.Log("Disconnect Clicked",AlertStyle.Warning);
             this.StationStatusService.StationState = StationState.Offline;
-            return this._hubConnection.StopAsync();
+            return this.HubClient.StopAsync();
         } else {
             this.StationStatusService.StationState = StationState.Idle;
             this._eventConsole.Log("Connect Clicked",AlertStyle.Success);
-            return this.StartConnection();
+            return this.HubClient.StartAsync();
         }
     }
     
@@ -218,7 +183,7 @@
             this._eventConsole.Log("Reset Clicked",AlertStyle.Warning);
             this.StationStatusService.StationState = StationState.Idle;
             this._testRunning = false;
-            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.Reset);
+            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.Reset);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
@@ -228,10 +193,10 @@
         if (this.Connected) {
             if (this._usbConnected) {
                 this._eventConsole.Log("Usb Disconnect Clicked",AlertStyle.Warning);
-                return this._hubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
+                return this.HubClient.HubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
             } else {
                 this._eventConsole.Log("Usb Connect Clicked",AlertStyle.Info);
-                return this._hubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
+                return this.HubClient.HubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
             }
         }
         this.NotifyNotConnected();

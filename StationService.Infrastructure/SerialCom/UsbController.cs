@@ -143,9 +143,16 @@ public class UsbController:IDisposable {
         Process process = new Process();
         //string fileName =@"/home/setiburnin/Documents/test.sh";
         //Console.WriteLine();
-        ProcessStartInfo startInfo = new ProcessStartInfo { 
+        /*ProcessStartInfo startInfo = new ProcessStartInfo { 
             FileName = "/bin/bash",
             Arguments = Environment.CurrentDirectory+"\\ListUsbPorts.sh",
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };*/
+        ProcessStartInfo startInfo = new ProcessStartInfo { 
+            FileName = "./ListUsbPorts.sh",
+            /*Arguments = Environment.CurrentDirectory+"\\ListUsbPorts.sh",*/
             RedirectStandardOutput = true,
             UseShellExecute = false,
             CreateNoWindow = true,

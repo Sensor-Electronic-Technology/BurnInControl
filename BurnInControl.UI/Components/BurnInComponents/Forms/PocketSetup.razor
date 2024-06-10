@@ -1,16 +1,17 @@
 @using BurnInControl.Data.BurnInTests.Wafers
 @using BurnInControl.Infrastructure.QuickTest
+@using BurnInControl.Shared
 @using QuickTest.Data.DataTransfer
 @using BurnInControl.UI.Components.BurnInComponents.Controls.ProbePads
 @using BurnInControl.UI.Components.BurnInComponents.Controls.WaferMap
 @using EpiData.Data.Models.Epi.Enums
-@using QuickTest.Data.Models.Wafers.Enums
 @inject QuickTestDataService QuickTestDataService
 @inject NotificationService NotificationService
 @inject TestSetupService _testSetupService
 @inject DialogService DialogService
+@inject ILogger<TestSetup> _logger
 
-<RadzenStack Orientation="Orientation.Vertical" 
+ <RadzenStack Orientation="Orientation.Vertical" 
              AlignItems="AlignItems.Center" 
              JustifyContent="JustifyContent.Center" Gap="1">
     <RadzenText Text="@this.PocketCaption"/>
@@ -102,7 +103,7 @@
                 this._exists = result.Value;
             }
         } else {
-            this.NotificationService.Notify(NotificationSeverity.Warning, "Wafer ID is empty", "Please enter a wafer ID");
+            this.Notify("Wafer ID is empty", "Please enter a wafer ID", NotificationSeverity.Warning);
         }
     }
     
@@ -156,6 +157,32 @@
     private Task BurnInValueChanged(int burnNumber) {
         this.WaferSetup.BurnNumber=burnNumber;
         return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
+    }
+    
+    private void Notify(string summary,string message,NotificationSeverity severity=NotificationSeverity.Info,int duration=5000) {
+        try {
+            var notification=new NotificationMessage { 
+                Severity = severity, 
+                Summary = summary, 
+                Detail = message, 
+                Duration = 10000 };
+            this.NotificationService.Notify(notification);
+        }catch(Exception e) {
+            this._logger.LogError("Notification Error: {Message}",e.ToErrorMessage());
+        }
+    }
+
+    private void NotifyNotConnected() {
+        try {
+            var notification=new NotificationMessage {
+                Severity = NotificationSeverity.Error, 
+                Summary = "Station Service Not Connected", 
+                Detail = "Cannot Send Command", 
+                Duration = 10000 };
+            this.NotificationService.Notify(notification);
+        }catch(Exception e) {
+            this._logger.LogError("Notification Error: {Message}",e.ToErrorMessage());
+        }
     }
 
 }

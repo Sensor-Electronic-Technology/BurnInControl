@@ -29,6 +29,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddInfrastructure();
 builder.Services.AddUiSettings(builder);
 builder.Services.AddLogging();
+builder.Services.AddScoped<HubClient>();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(connectionString));
 builder.Services.AddSingleton<ConsoleWriter>();
 builder.Services.AddSingleton<NotifyPlotOptions>();

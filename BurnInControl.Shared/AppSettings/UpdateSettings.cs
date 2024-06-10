@@ -5,7 +5,6 @@ public class UpdateSettings {
     public string ServiceUpdateFileName { get; set; }
     public string FirmwareUpdateFileName { get; set; }
     public string UiUpdateFileName { get; set; }
-    public string UpdateApiUrl { get; set; }
-    public string UpdateApiPath { get; set; }
-    public string UpdateToken { get; set; }
+    public string UpdateCommand { get; set; }
+    public string UpdateProcess { get; set; }
 }

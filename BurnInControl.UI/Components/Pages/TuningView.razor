@@ -1,6 +1,7 @@
 ﻿@page "/tune-view"
 @using System.Timers
 @using BurnInControl.HubDefinitions.Hubs
+@using BurnInControl.Shared
 @using BurnInControl.Shared.ComDefinitions
 @using BurnInControl.Shared.ComDefinitions.Packets
 @using BurnInControl.Shared.ComDefinitions.Station
@@ -83,13 +84,13 @@
     private bool _tuningComplete = false;
     
     List<HeaterTuneResult> _results = [
-        new HeaterTuneResult(){HeaterNumber = 1,kp=1,ki=1,kd=1,WindowSize=1000},
-        new HeaterTuneResult(){HeaterNumber = 2,kp=1,ki=1,kd=1,WindowSize=1000},
-        new HeaterTuneResult(){HeaterNumber = 3,kp=1,ki=1,kd=1,WindowSize=1000}];
-        
-    List<TemperatureData> _h1Data = new List<TemperatureData>();
-    List<TemperatureData> _h2Data = new List<TemperatureData>();
-    List<TemperatureData> _h3Data = new List<TemperatureData>();
+        new HeaterTuneResult(){HeaterNumber = 1,kp=0,ki=0,kd=0,WindowSize=1000},
+        new HeaterTuneResult(){HeaterNumber = 2,kp=0,ki=0,kd=0,WindowSize=1000},
+        new HeaterTuneResult(){HeaterNumber = 3,kp=0,ki=0,kd=0,WindowSize=1000}];
+
+    List<TemperatureData> _h1Data = [];
+    List<TemperatureData> _h2Data = [];
+    List<TemperatureData> _h3Data = [];
     
     protected override async Task OnInitializedAsync() {
         var hubAddress=Environment.GetEnvironmentVariable("StationHub");
@@ -241,21 +242,29 @@
     
     #region UiNootification
     private void Notify(string summary,string message,NotificationSeverity severity=NotificationSeverity.Info,int duration=5000) {
-        var notification=new NotificationMessage { 
-            Severity = severity, 
-            Summary = summary, 
-            Detail = message, 
-            Duration = 10000 };
-        this.NotificationService.Notify(notification);
+        try {
+            var notification=new NotificationMessage { 
+                Severity = severity, 
+                Summary = summary, 
+                Detail = message, 
+                Duration = 10000 };
+            this.NotificationService.Notify(notification);
+        }catch(Exception e) {
+            this._logger.LogError("Notification Error: {Message}",e.ToErrorMessage());
+        }
     }
-    
+
     private void NotifyNotConnected() {
-        var notification=new NotificationMessage {
-            Severity = NotificationSeverity.Error, 
-            Summary = "Station Service Not Connected", 
-            Detail = "Cannot Send Command", 
-            Duration = 10000 };
-        this.NotificationService.Notify(notification);
+        try {
+            var notification=new NotificationMessage {
+                Severity = NotificationSeverity.Error, 
+                Summary = "Station Service Not Connected", 
+                Detail = "Cannot Send Command", 
+                Duration = 10000 };
+            this.NotificationService.Notify(notification);
+        }catch(Exception e) {
+            this._logger.LogError("Notification Error: {Message}",e.ToErrorMessage());
+        }
     }
     #endregion
 

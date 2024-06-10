@@ -115,20 +115,26 @@ public class UpdateWatcher:IHostedService {
     }
 
     private void UpdateService() {
+        this._logger.LogInformation("Preparing to update StationService");
+        this._hubContext.Clients.All.OnUpdateStart("Preparing to update StationService.  " +
+                                                   "One the update is finished please refresh the page.")
+            .SafeFireAndForget();
         using Process process = new Process();
-        var command = "core install arduino:avr";
-        process.StartInfo.FileName = "curl";
-        process.StartInfo.Arguments = "-H \"Authorization: Bearer station-soft-token\" http://10.5.0.12:8080/v1/update";
+        process.StartInfo.FileName = this._updateSettings.UpdateProcess ?? "curl";
+        process.StartInfo.Arguments = this._updateSettings.UpdateCommand ?? "-H \"Authorization: Bearer station-soft-token\" http://10.5.0.12:8080/v1/update";
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.UseShellExecute = false;
         try {
+            this._logger.LogInformation("Requesting update");
             process.Start();
             var result = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
-            Console.WriteLine(result);
+            this._logger.LogInformation("Output: {Result}",result);
         } catch(Exception e) {
-            this._logger.LogError("Error while updating StationService Exception: \n  {ErrorMessage}", e.ToErrorMessage());
-            this._hubContext.Clients.All.OnFirmwareUpdateFailed($"Exception thrown while updating StationService: /n {e.ToErrorMessage()}").SafeFireAndForget();
+            this._logger.LogError("Error while updating StationService Exception: \n  {ErrorMessage}", 
+                e.ToErrorMessage());
+            this._hubContext.Clients.All.OnUpdateComplete(false,$"Exception thrown while updating StationService: /n {e.ToErrorMessage()}")
+                .SafeFireAndForget();
         }
         this.DeleteUpdateFile(this._updateSettings.ServiceUpdateFileName ?? "service_update.txt");
         this.DeleteUpdateFile(this._updateSettings.UiUpdateFileName ?? "ui_update.txt");
@@ -144,7 +150,10 @@ public class UpdateWatcher:IHostedService {
     }
 
     private void UpdateFirmware() {
-        this._logger.LogInformation("Update available, disconnecting station and uploading firmware update");
+        this._logger.LogInformation("Preparing to update the firmware");
+        this._hubContext.Clients.All.OnUpdateStart("Preparing to update the firmware. \n" +
+                                                   "The usb will disconnect then reconnect once finished")
+            .SafeFireAndForget();
         this._stationController.Disconnect().Wait();
         this._firmwareUpdateService.UploadFirmwareStandAlone().Wait();
         this._stationController.ConnectUsb().Wait();

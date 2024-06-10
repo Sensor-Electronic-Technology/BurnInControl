@@ -4,6 +4,7 @@
 @using BurnInControl.UI.Components.BurnInComponents.Forms.Configurations.Heaters
 @using BurnInControl.UI.Components.BurnInComponents.Forms.Configurations.Probes
 @using BurnInControl.Infrastructure.StationModel
+@using BurnInControl.Shared
 @using BurnInControl.Shared.ComDefinitions.Packets
 @using BurnInControl.Shared.ComDefinitions.Station
 @using BurnInControl.UI.Components.BurnInComponents.Forms.Configurations.Station
@@ -13,6 +14,8 @@
 @inject StationStatusService StationStatusService
 @inject IConfiguration Configuration
 @inject DialogService DialogService
+@inject NotificationService NotificationService 
+@inject ILogger<ConfigurationsView> _logger
 
 <RadzenSplitter Orientation="Orientation.Vertical">
     <RadzenSplitterPane Size="60%">
@@ -83,10 +86,11 @@
     </RadzenSplitterPane>
 </RadzenSplitter>
 @code {
-    [Inject] NotificationService _notificationService { get; set; }
+    [Inject] HubClient HubClient { get; set; }
     private EventConsole _eventConsole;
-    private HubConnection? _hubConnection;
-    private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;
+    /*private HubConnection? _hubConnection;*/
+    /*private bool Connected=>this._hubConnection?.State==HubConnectionState.Connected;*/
+    private bool Connected => this.HubClient.IsConnected;
 
     private BurnStationConfiguration? _burnInConfiguration;
     private string _stationId = "S01";
@@ -99,25 +103,28 @@
     }
 
     private void SetupHub() {
-        var hubAddress=Environment.GetEnvironmentVariable("StationHub");
-        string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;
+        /*var hubAddress=Environment.GetEnvironmentVariable("StationHub");
+        string addr=string.IsNullOrEmpty(hubAddress) ? HubConstants.HubAddress:hubAddress;*/
         //string addr = "http://localhost:5066/hubs/station";
         //string addr = "http://192.168.68.108:5066/hubs/station";
-        this._hubConnection = new HubConnectionBuilder()
+        /*this._hubConnection = new HubConnectionBuilder()
             .WithUrl(addr)
             .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.Zero, 
                 TimeSpan.FromSeconds(10),TimeSpan.FromSeconds(30),
                 TimeSpan.FromSeconds(60) })
-            .Build();
-        this._hubConnection.On<string,bool,string>(HubConstants.Events.OnConfigSaveStatus,this.ReceiveSaveStatus);
+            .Build();*/
+        this.HubClient.HubConnection.On<string,bool,string>(HubConstants.Events.OnConfigSaveStatus,this.ReceiveSaveStatus);
+        this.HubClient.HubConnection.On<bool,int,string>(HubConstants.Events.OnRequestConfigHandler,this.ReceiveRequestedConfig); 
+        this.HubClient.HubConnection.On<int,string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
+        /*this._hubConnection.On<string,bool,string>(HubConstants.Events.OnConfigSaveStatus,this.ReceiveSaveStatus);
         this._hubConnection.On<bool,int,string>(HubConstants.Events.OnRequestConfigHandler,this.ReceiveRequestedConfig); 
-        this._hubConnection.On<int,string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
+        this._hubConnection.On<int,string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);*/
     }
     
     private async Task StartConnection() {
         if (!this.Connected) {
             try {
-                await this._hubConnection?.StartAsync();
+                await this.HubClient.StartAsync();
                 if (this.Connected) {
                     this._eventConsole.Log("Hub Connection Established",AlertStyle.Success);
                 } else {
@@ -146,17 +153,18 @@
         if (this.Connected) {
             this._eventConsole.Log("Disconnect Clicked",AlertStyle.Warning);
             this.StationStatusService.StationState = StationState.Offline;
-            return this._hubConnection.StopAsync();
+            return this.HubClient.StopAsync();
         } else {
             this.StationStatusService.StationState = StationState.Idle;
             this._eventConsole.Log("Connect Clicked",AlertStyle.Success);
-            return this.StartConnection();
+            //return this.StartConnection();
+            return this.HubClient.StartAsync();
         }
     }
     
     private Task FormatSdHandler() {
         if (this.Connected) {
-            return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.FormatSdCard);
+            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.FormatSdCard);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
@@ -170,7 +178,7 @@
             this._eventConsole.Log("Success: Saved HeaterControllerConfiguration",AlertStyle.Success);
             if (this.Connected) {
                 this._eventConsole.Log("Sending hub request",AlertStyle.Info);
-                await this._hubConnection.SendAsync(HubConstants.Methods.SendHeaterControlConfig, heaterControllerConfig);
+                await this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendHeaterControlConfig, heaterControllerConfig);
             } else {
                 this._eventConsole.Log("Warning: Service not connected,firmware configuration will not be updated",AlertStyle.Danger);
             }
@@ -186,7 +194,7 @@
             this._eventConsole.Log("Success: Saved ProbeControllerConfig",AlertStyle.Success);
             if (this.Connected) {
                 this._eventConsole.Log("Sending hub request",AlertStyle.Info);
-                await this._hubConnection.SendAsync(HubConstants.Methods.SendProbeControlConfig, probeControllerConfig);
+                await this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendProbeControlConfig, probeControllerConfig);
             } else {
                 this._eventConsole.Log("Warning: Service not connected,firmware configuration will not be updated",AlertStyle.Danger);
             }
@@ -201,7 +209,7 @@
             this._eventConsole.Log("Success: Saved StationConfiguration",AlertStyle.Success);
             if (this.Connected) {
                 this._eventConsole.Log("Sending hub request",AlertStyle.Info);
-                await this._hubConnection.SendAsync(HubConstants.Methods.SendStationConfig,stationConfig);
+                await this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendStationConfig,stationConfig);
             } else {
                 this._eventConsole.Log("Warning: Service not connected,firmware configuration will not be updated",AlertStyle.Danger);
             }
@@ -211,7 +219,7 @@
     private Task GetHeaterConfigHandler() {
         if (this.Connected) {
             this._eventConsole.Log("Send request for HeaterControllerConfig",AlertStyle.Info);
-            return this._hubConnection.SendAsync(HubConstants.Methods.RequestConfig, ConfigType.HeaterControlConfig);
+            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.RequestConfig, ConfigType.HeaterControlConfig);
         }else {
             this._eventConsole.Log("Warning: Service not connected,request will not be sent",AlertStyle.Danger);
         }
@@ -293,21 +301,29 @@
     #region NotifyMethods
     
     private void Notify(string summary,string message,NotificationSeverity severity=NotificationSeverity.Info,int duration=5000) {
-        var notification=new NotificationMessage { 
-            Severity = severity, 
-            Summary = summary, 
-            Detail = message, 
-            Duration = 10000 };
-        this._notificationService.Notify(notification);
+        try {
+            var notification=new NotificationMessage { 
+                Severity = severity, 
+                Summary = summary, 
+                Detail = message, 
+                Duration = 10000 };
+            this.NotificationService.Notify(notification);
+        }catch(Exception e) {
+            this._logger.LogError("Notification Error: {Message}",e.ToErrorMessage());
+        }
     }
-    
+
     private void NotifyNotConnected() {
-        var notification=new NotificationMessage {
-            Severity = NotificationSeverity.Error, 
-            Summary = "Station Service Not Connected", 
-            Detail = "Cannot Send Command", 
-            Duration = 10000 };
-        this._notificationService.Notify(notification);
+        try {
+            var notification=new NotificationMessage {
+                Severity = NotificationSeverity.Error, 
+                Summary = "Station Service Not Connected", 
+                Detail = "Cannot Send Command", 
+                Duration = 10000 };
+            this.NotificationService.Notify(notification);
+        }catch(Exception e) {
+            this._logger.LogError("Notification Error: {Message}",e.ToErrorMessage());
+        }
     }
    
     #endregion
@@ -315,16 +331,28 @@
     #region ChangeHandlers
 
     private Task StationConfigChangedHandler(StationConfiguration stationConfig) {
+        if (this._burnInConfiguration == null) {
+            this._logger.LogError("Error: While updating StationConfig, BurnInConfiguration is null");
+            return Task.CompletedTask;
+        }
         this._burnInConfiguration.ControllerConfig= stationConfig;
         return Task.CompletedTask;
     }
 
     private Task HeaterControlConfigChangedHandler(HeaterControllerConfig heaterControlConfig) {
+        if (this._burnInConfiguration == null) {
+            this._logger.LogError("Error: While updating HeaterControllerConfig, BurnInConfiguration is null");
+            return Task.CompletedTask;
+        }
         this._burnInConfiguration.HeaterControllerConfig = heaterControlConfig;
         return Task.CompletedTask;
     }
 
     private Task ProbeControlConfigChangedHandler(ProbeControllerConfig probeControlConfig) {
+        if (this._burnInConfiguration == null) {
+            this._logger.LogError("Error: While updating ProbeControllerConfig, BurnInConfiguration is null");
+            return Task.CompletedTask;
+        }
         this._burnInConfiguration.ProbeControllerConfig = probeControlConfig;
         return Task.CompletedTask;
     }

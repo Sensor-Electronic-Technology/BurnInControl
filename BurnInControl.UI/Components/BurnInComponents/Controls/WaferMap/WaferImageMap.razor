@@ -1,8 +1,10 @@
 ﻿@using BurnInControl.Infrastructure.QuickTest
+@using BurnInControl.Shared
 @using BurnInControl.UI.Data
 @using QuickTest.Data.DataTransfer
 @inject NotificationService NotificationService
 @inject QuickTestDataService QuickTestDataService
+@inject ILogger<WaferImageMap> _logger
 @rendermode InteractiveServer
 <style>
     circle:hover{
@@ -330,12 +332,17 @@
         this._dimensions = $"{this._height},{this._width}";
     }
 
-    private Task Notify(NotificationSeverity severity, string summary, string detail) {
-        this.NotificationService.Notify(new NotificationMessage() {
-            Severity = severity,
-            Summary=summary,
-            Detail=detail
-        });
+    private Task Notify(NotificationSeverity severity, string summary, string message) {
+        try {
+            var notification=new NotificationMessage { 
+                Severity = severity, 
+                Summary = summary, 
+                Detail = message, 
+                Duration = 10000 };
+            this.NotificationService.Notify(notification);
+        }catch(Exception e) {
+            this._logger.LogError("Notification Error: {Message}",e.ToErrorMessage());
+        }
         return Task.CompletedTask;
     }
 }

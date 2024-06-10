@@ -24,8 +24,6 @@ public static class HubConstants {
         public static string OnTestStartedFailed => "OnTestStartedFailed";
         public static string OnTestCompleted => "OnTestCompleted";
         public static string OnTestSetup => "OnTestSetup";
-        public static string OnUpdateChecked => "OnUpdateChecked";
-        public static string OnFirmwareUpdated => "OnFirmwareUpdated";
         public static string OnStationConnection => "OnStationConnection";
         public static string OnRequestConfigHandler => "OnRequestConfigHandler";
         public static string OnProbeTestDone => "OnProbeTestDone";
@@ -34,6 +32,8 @@ public static class HubConstants {
         public static string OnSwTuneNotify => "OnSwTuneNotify";
         public static string OnNotifyHeaterTuningStatus => "OnNotifyHeaterTuningStatus";
         public static string OnNotifyHeaterTuneComplete => "OnNotifyHeaterTuneComplete";
+        public static string OnUpdateStart => "OnUpdateStart";
+        public static string OnUpdateComplete=> "OnUpdateComplete";
     }
 
     public static class Methods {

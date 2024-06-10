@@ -58,12 +58,12 @@ public class FirmwareUpdateService:IFirmwareUpdateService {
             if (release != null && !string.IsNullOrEmpty(release.TagName)) {
                 if (release.TagName==this._updateCheckStatus.AvailableVersion) {
                     this._logger.LogInformation("Update available!");
-                    await this._hubContext.Clients.All.OnFirmwareUpdateCheck(this._updateCheckStatus);
+                   
                 } 
             } else {
                 this._updateCheckStatus.SetError("Error checking for update.  Release version does not match tracker version");
                 this._logger.LogError("Error checking for update.  Release version does not match tracker version");
-                await this._hubContext.Clients.All.OnFirmwareUpdateCheck(this._updateCheckStatus);
+               
             }
         }
         return this._updateCheckStatus;
@@ -84,11 +84,11 @@ public class FirmwareUpdateService:IFirmwareUpdateService {
                 var updateStatus = new UpdateStatus();
                 updateStatus.SetUpdateStatus(this._updateCheckStatus.CurrentVersion ?? "Unknown",result);
                 await this._firmwareDataService.MarkUpdated(this._stationId);
-                await this._hubContext.Clients.All.OnFirmwareUpdateCompleted(this._updateCheckStatus.CurrentVersion ?? "Unknown");
+                await this._hubContext.Clients.All.OnUpdateComplete(true,this._updateCheckStatus.CurrentVersion ?? "Unknown");
             } catch(Exception e) {
                 this._logger.LogError("Error while updating firmware.  Exception: \n  {ErrorMessage}", e.ToErrorMessage());
                 this._updateCheckStatus.SetError($"Exception thrown while updating firmware: /n {e.ToErrorMessage()}");
-                await this._hubContext.Clients.All.OnFirmwareUpdateFailed($"Exception thrown while updating firmware: /n {e.ToErrorMessage()}");
+                await this._hubContext.Clients.All.OnUpdateComplete(false,$"Exception thrown while updating firmware: /n {e.ToErrorMessage()}");
             }
         }
     }
@@ -107,8 +107,9 @@ public class FirmwareUpdateService:IFirmwareUpdateService {
             Console.WriteLine(result);
             return true;
         } catch(Exception e) {
-            this._logger.LogError("Error while updating firmware.  Exception: \n  {ErrorMessage}", e.ToErrorMessage());
-            await this._hubContext.Clients.All.OnFirmwareUpdateFailed($"Exception thrown while updating firmware: /n {e.ToErrorMessage()}");
+            this._logger.LogError("Error while updating firmware. Exception: " +
+                                  "\n  {ErrorMessage}", e.ToErrorMessage());
+            await this._hubContext.Clients.All.OnUpdateComplete(false,$"Exception thrown while updating firmware: /n {e.ToErrorMessage()}");
             return false;
         }
     }
@@ -125,18 +126,19 @@ public class FirmwareUpdateService:IFirmwareUpdateService {
                 var result = await process.StandardOutput.ReadToEndAsync();
                 await process.WaitForExitAsync();
                 Console.WriteLine(result);
-                await this._hubContext.Clients.All.OnFirmwareUpdateCompleted("Firmware Update!!");
+                await this._hubContext.Clients.All.OnUpdateComplete(true,"Firmware Update!!");
                 this._logger.LogInformation("Firmware update completed");
             } catch(Exception e) {
                 this._logger.LogError("Error while updating firmware.  Exception: \n  {ErrorMessage}", e.ToErrorMessage());
-                await this._hubContext.Clients.All.OnFirmwareUpdateFailed($"Exception thrown while updating firmware: /n {e.ToErrorMessage()}");
+                await this._hubContext.Clients.All.OnUpdateComplete(false,$"Exception thrown while updating firmware: " +
+                                                                          $"/n {e.ToErrorMessage()}");
             }
         }
     }
     
     private async Task<bool> DownloadFirmwareUpdate() {
         if (!this.UpdateAvailable) {
-            await this._hubContext.Clients.All.OnFirmwareDownloaded(false, "No update available");
+            
             return false;
         }
         var release = await this._github.Repository.Release.Get(this._settings.GithubOrg, this._settings.GithubRepo,
@@ -155,22 +157,18 @@ public class FirmwareUpdateService:IFirmwareUpdateService {
                     await using var fs = new FileStream(this._firmwareFullPath, FileMode.Create);
                     await stream.CopyToAsync(fs);
                     this._logger.LogInformation("Firmware downloaded");
-                    await this._hubContext.Clients.All.OnFirmwareDownloaded(true, "Firmware downloaded");
+                    
                     return true;
                 } catch (Exception exception) { ;
                     this._logger.LogError("Failed to download firmware: {ErrorMessage}", exception.ToErrorMessage());
-                    await this._hubContext.Clients.All.OnFirmwareDownloaded(false, $"Failed to download firmware: {exception.ToErrorMessage()}");
                     return false;
                 }
             } else {
                 this._logger.LogError("Failed to download, file BurnInFirmwareV3.ino.hex not found");
-                await this._hubContext.Clients.All.OnFirmwareDownloaded(false, "Failed to download, " +
-                                                                               "release asset collection was empty");
                 return false;
             }
         } else {
             this._logger.LogError("Failed to download latest firmware");
-            await this._hubContext.Clients.All.OnFirmwareDownloaded(false,"Failed to download latest firmware");
             return false;
         }
     }

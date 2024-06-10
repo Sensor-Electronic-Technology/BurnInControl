@@ -1,4 +1,6 @@
-﻿@inject NotificationService NotificationService
+﻿@using BurnInControl.Shared
+@inject NotificationService NotificationService
+@inject ILogger<PadSelectors> _logger
 
 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center">
     <RadzenFieldset Text="Probe 1">
@@ -61,7 +63,7 @@
     private async Task Probe1SelectionChanged(object obj) {
         var selected=obj as string;
         if (selected == this.Probe2Pad) {
-            this.NotificationService.Notify(NotificationSeverity.Warning, "Duplicate Pad Selected","Probe 1 cannot be the same pad as probe 2");
+            this.Notify("Duplicate Pad Selected","Probe 1 cannot be the same pad as probe 2",NotificationSeverity.Warning);
             this.Probe1Pad = string.Empty;
             await this.Probe1PadChanged.InvokeAsync(this.Probe1Pad);
             await InvokeAsync(StateHasChanged);
@@ -75,7 +77,7 @@
     private async Task Probe2SelectionChanged(object obj) {
         var selected=obj as string;
         if (selected == this.Probe1Pad) {
-            this.NotificationService.Notify(NotificationSeverity.Warning, "Duplicate Pad Selected","Probe 2 cannot be the same pad as probe 1");
+            this.Notify("Duplicate Pad Selected","Probe 2 cannot be the same pad as probe 1",NotificationSeverity.Warning);
             this.Probe2Pad = string.Empty;
             await this.Probe2PadChanged.InvokeAsync(this.Probe2Pad);
             await InvokeAsync(StateHasChanged);
@@ -98,6 +100,32 @@
         this.Probe1Active = false;
         this.Probe1ActiveChanged.InvokeAsync(this.Probe1Active);
         this.Probe2ActiveChanged.InvokeAsync(this.Probe2Active);
+    }
+    
+    private void Notify(string summary,string message,NotificationSeverity severity=NotificationSeverity.Info,int duration=5000) {
+        try {
+            var notification=new NotificationMessage { 
+                Severity = severity, 
+                Summary = summary, 
+                Detail = message, 
+                Duration = 10000 };
+            this.NotificationService.Notify(notification);
+        }catch(Exception e) {
+            this._logger.LogError("Notification Error: {Message}",e.ToErrorMessage());
+        }
+    }
+
+    private void NotifyNotConnected() {
+        try {
+            var notification=new NotificationMessage {
+                Severity = NotificationSeverity.Error, 
+                Summary = "Station Service Not Connected", 
+                Detail = "Cannot Send Command", 
+                Duration = 10000 };
+            this.NotificationService.Notify(notification);
+        }catch(Exception e) {
+            this._logger.LogError("Notification Error: {Message}",e.ToErrorMessage());
+        }
     }
     
 }

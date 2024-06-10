@@ -1,5 +1,4 @@
 @using BurnInControl.Data.StationModel.Components
-@inject NotificationService NotificationService
 @inject DialogService DialogService
 @implements IAsyncDisposable
 <RadzenStack Gap="10" Style="margin: .6rem" 
@@ -44,22 +43,6 @@
                            UsbConnected="@this.UsbConnected"
                            Connect="@this.Connect"
                            UsbConnect="@this.UsbConnect"/>
-    @*<RadzenFieldset Text="Station Service">
-        <RadzenStack>
-            <RadzenToggleButton Value="@this.ServiceConnected"
-                                Text="@(this.ServiceConnected ? "Disconnect Service" : "Connect Service")"
-                                ButtonStyle="ButtonStyle.Secondary"
-                                Size="ButtonSize.Medium"
-                                ToggleButtonStyle="ButtonStyle.Secondary"
-                                Click="@this.Connect" Style="width: 170px; height: 52px"/>
-            <RadzenToggleButton Value="@this.UsbConnected"
-                                Text="@(this.UsbConnected ? "Disconnect Usb" : "Connect Usb")"
-                                ButtonStyle="ButtonStyle.Primary"
-                                Size="ButtonSize.Medium"
-                                ToggleButtonStyle="ButtonStyle.Secondary"
-                                Click="@this.UsbConnect" Style="width: 170px; height: 52px"/>
-        </RadzenStack>
-    </RadzenFieldset>*@
 </RadzenStack>
 @code{
     [Parameter] public EventCallback Connect { get; set; }

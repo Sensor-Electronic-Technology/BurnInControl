@@ -3,12 +3,8 @@ using BurnInControl.Infrastructure;
 using MongoDB.Driver;
 using Serilog;
 using BurnInControl.Shared;
-using Coravel;
 using StationService.Infrastructure;
 using StationService.Infrastructure.Hub;
-using Coravel.Scheduling;
-using Coravel.Scheduling.Schedule.Interfaces;
-using StationService.Infrastructure.Firmware.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
 string? connectionString;

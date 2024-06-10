@@ -1,21 +1,16 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
 using System.Timers;
+using AsyncAwaitBestPractices;
 using BurnInControl.Application.BurnInTest.Interfaces;
 using BurnInControl.Application.FirmwareUpdate.Interfaces;
-using BurnInControl.Application.FirmwareUpdate.Messages;
 using BurnInControl.Application.StationControl.Interfaces;
 using BurnInControl.HubDefinitions.Hubs;
+using BurnInControl.Shared;
 using BurnInControl.Shared.AppSettings;
-using BurnInControl.Shared.FirmwareData;
-using Coravel.Scheduling.Schedule.Interfaces;
-using MediatR;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MongoDB.Driver;
-using StationService.Infrastructure.Firmware.Jobs;
 using StationService.Infrastructure.Hub;
 using Timer = System.Timers.Timer;
 
@@ -29,7 +24,6 @@ public class UpdateWatcher:IHostedService {
     private readonly ITestService _testService;
     private readonly IFirmwareUpdateService _firmwareUpdateService;
     private readonly IStationController _stationController;
-    private readonly HttpClient _httpClient = new HttpClient();
     private Timer _serviceUpdateTimer;
     private Timer _firmwareUpdateTimer;
 
@@ -47,10 +41,12 @@ public class UpdateWatcher:IHostedService {
         this._stationController = stationController;
         this._updateSettings = settings.Value;
         this._watcher = new FileSystemWatcher();
+        
         this._watcher.Path = this._updateSettings.UpdateDirectory ?? "/updates/";
         this._testService = testService;
         this._watcher.NotifyFilter = NotifyFilters.FileName;
         this._watcher.Created += this.OnCreated;
+        
         this._firmwareUpdateTimer = new Timer();
         this._firmwareUpdateTimer.AutoReset = false;
         this._firmwareUpdateTimer.Elapsed += OnFirmwareUpdateTimer;
@@ -58,7 +54,6 @@ public class UpdateWatcher:IHostedService {
         this._serviceUpdateTimer = new Timer();
         this._serviceUpdateTimer.AutoReset = false;
         this._serviceUpdateTimer.Elapsed += OnServiceUpdateTimer;
-        this._httpClient.BaseAddress = new Uri("http://10.5.0.12:8080");
     }
     public Task StartAsync(CancellationToken cancellationToken) {
         this._logger.LogInformation("UpdateWatcher started");
@@ -120,20 +115,23 @@ public class UpdateWatcher:IHostedService {
     }
 
     private void UpdateService() {
-        /*using var request = new HttpRequestMessage(new HttpMethod("GET"), $"{this._updateSettings.UpdateApiUrl}");
-        request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {this._updateSettings.UpdateToken}"); 
-        this._httpClient.Timeout = TimeSpan.FromMinutes(3);
-        var response = this._httpClient.Send(request);*/
-        using var request = new HttpRequestMessage(new HttpMethod("GET"), "http://10.5.0.12:8080/v1/update");
-        request.Headers.TryAddWithoutValidation("Authorization", "Bearer station-soft-token"); 
-        var response = this._httpClient.Send(request);
+        using Process process = new Process();
+        var command = "core install arduino:avr";
+        process.StartInfo.FileName = "curl";
+        process.StartInfo.Arguments = "-H \"Authorization: Bearer station-soft-token\" http://10.5.0.12:8080/v1/update";
+        process.StartInfo.RedirectStandardOutput = true;
+        process.StartInfo.UseShellExecute = false;
+        try {
+            process.Start();
+            var result = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+            Console.WriteLine(result);
+        } catch(Exception e) {
+            this._logger.LogError("Error while updating StationService Exception: \n  {ErrorMessage}", e.ToErrorMessage());
+            this._hubContext.Clients.All.OnFirmwareUpdateFailed($"Exception thrown while updating StationService: /n {e.ToErrorMessage()}").SafeFireAndForget();
+        }
         this.DeleteUpdateFile(this._updateSettings.ServiceUpdateFileName ?? "service_update.txt");
         this.DeleteUpdateFile(this._updateSettings.UiUpdateFileName ?? "ui_update.txt");
-        if (response.StatusCode == HttpStatusCode.OK) {
-            this._logger.LogInformation("Service update request sent");
-        } else {
-            this._logger.LogError("Service update request failed");
-        }
     }
 
     private void DeleteUpdateFile(string fileName) {

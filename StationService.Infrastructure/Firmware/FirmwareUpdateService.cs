@@ -14,9 +14,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using StationService.Infrastructure.Hub;
 using FileMode=System.IO.FileMode;
-
 namespace StationService.Infrastructure.Firmware;
-
 public class FirmwareUpdateService:IFirmwareUpdateService {
     private readonly Regex _regex = new Regex("^V\\d\\.\\d\\.\\d$", RegexOptions.IgnoreCase);
     private readonly ILogger<FirmwareUpdateService> _logger;

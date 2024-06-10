@@ -120,13 +120,15 @@ public class UpdateWatcher:IHostedService {
     }
 
     private void UpdateService() {
-        using var request = new HttpRequestMessage(new HttpMethod("GET"), $"{this._updateSettings.UpdateApiUrl}");
+        /*using var request = new HttpRequestMessage(new HttpMethod("GET"), $"{this._updateSettings.UpdateApiUrl}");
         request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {this._updateSettings.UpdateToken}"); 
         this._httpClient.Timeout = TimeSpan.FromMinutes(3);
+        var response = this._httpClient.Send(request);*/
+        using var request = new HttpRequestMessage(new HttpMethod("GET"), "http://10.5.0.12:8080/v1/update");
+        request.Headers.TryAddWithoutValidation("Authorization", "Bearer station-soft-token"); 
         var response = this._httpClient.Send(request);
         this.DeleteUpdateFile(this._updateSettings.ServiceUpdateFileName ?? "service_update.txt");
         this.DeleteUpdateFile(this._updateSettings.UiUpdateFileName ?? "ui_update.txt");
-        
         if (response.StatusCode == HttpStatusCode.OK) {
             this._logger.LogInformation("Service update request sent");
         } else {

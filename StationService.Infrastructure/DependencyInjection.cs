@@ -31,7 +31,7 @@ public static class DependencyInjection {
         /*services.AddTransient<IFirmwareUpdateJob,FirmwareUpdateJob>();*/
         services.AddSingleton<IStationMessageHandler,StationMessageHandler>();
         services.AddHostedService<StationWorkerService>();
-        //services.AddHostedService<UpdateWatcher>();
+        services.AddHostedService<UpdateWatcher>();
         
         services.AddMediatR(config => {
             config.RegisterServicesFromAssemblies(

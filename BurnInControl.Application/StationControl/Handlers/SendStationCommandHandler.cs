@@ -18,14 +18,13 @@ public class SendStationCommandHandler:IRequestHandler<SendStationCommand> {
         this._logger = logger;
     }
     
-    public Task Handle(SendStationCommand command, CancellationToken cancellationToken) {
+    public async Task Handle(SendStationCommand command, CancellationToken cancellationToken) {
         if (command.Command == StationCommand.Reset) {
-            var hardStopTask=this._mediator.Send(new HardStopCommand(), cancellationToken);
-            var commandTask=this._controller.Send(StationMsgPrefix.CommandPrefix, command.Command);
-            this._logger.LogInformation("Received reset, sent command");
-            return Task.WhenAll(hardStopTask,commandTask);
+            await this._mediator.Send(new HardStopCommand(), cancellationToken);
+            await this._controller.Send(StationMsgPrefix.CommandPrefix, command.Command);
+            this._logger.LogInformation("Received reset, sent command and deleted running test");
         }
         this._logger.LogInformation("Sending {Command}",command.Command.Name);
-        return this._controller.Send(StationMsgPrefix.CommandPrefix, command.Command);
+        await this._controller.Send(StationMsgPrefix.CommandPrefix, command.Command);
     }
 }

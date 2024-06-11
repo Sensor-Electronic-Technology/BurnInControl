@@ -7,8 +7,8 @@ public class HubClient:IAsyncDisposable {
     private bool _started;
 
     public HubClient(IConfiguration configuration) {
-        string hubAddress = configuration["HubAddress"] ?? HubConstants.HubAddress;
-        //string hubAddress = "http://localhost:5066/hubs/station";
+        //string hubAddress = configuration["HubAddress"] ?? HubConstants.HubAddress;
+        string hubAddress = "http://localhost:5066/hubs/station";
         this.HubConnection = new HubConnectionBuilder()
             .WithUrl(hubAddress)
             .WithAutomaticReconnect()

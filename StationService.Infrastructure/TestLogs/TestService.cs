@@ -341,8 +341,6 @@ public class TestService:ITestService {
                 await this.StartLog(data);
             } else {
                 if ((DateTime.Now - this._lastLog) >= this._interval) {
-                    /*Console.WriteLine($"Value: {_value++}");
-                    Console.WriteLine($"Running:{this._running}");*/
                     this._lastLog = DateTime.Now;
                     await this.UpdateLogs(data);
                 } else {
@@ -357,6 +355,7 @@ public class TestService:ITestService {
     public async Task Stop() {
         if(this.IsRunning) {
             await this._savedStateDataService.ClearSavedState(id:this._savedStateLog._id);
+            await this._testLogDataService.DeleteTestLog(this._runningTest._id);
             this.Reset();
         }
     }

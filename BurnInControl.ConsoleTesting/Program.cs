@@ -13,6 +13,7 @@ using BurnInControl.Data.ComponentConfiguration.ProbeController;
 using BurnInControl.Data.ComponentConfiguration.StationController;
 using BurnInControl.Data.StationModel.Components;
 using BurnInControl.Shared.ComDefinitions.MessagePacket;
+using BurnInControl.Shared.ComDefinitions.Packets;
 using BurnInControl.Shared.ComDefinitions.Station;
 using BurnInControl.Shared.FirmwareData;
 using MongoDB.Bson;
@@ -117,8 +118,12 @@ Console.WriteLine(JsonSerializer.Serialize(sendConfigPacket));*/
 
 //await ConfigTestUsbController();
 //await CreateStationDatabase();
-await CloneDatabase();
+//await CloneDatabase();
+MessagePacket<TestIdPacket> testIdPacket = new MessagePacket<TestIdPacket>() {
+    Prefix = StationMsgPrefix.SendTestIdPrefix, Packet = new TestIdPacket() { TestId = "1234" }
+};
 
+Console.WriteLine(JsonSerializer.Serialize(testIdPacket));
 async Task CloneDatabase() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");
     var piClient = new MongoClient("mongodb://192.168.68.111:27017");

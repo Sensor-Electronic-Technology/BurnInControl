@@ -132,7 +132,7 @@
 </RadzenSplitter>
 @code {
     [Parameter] public EventCallback<List<WaferSetup>> Save { get; set; }
-
+    [Parameter] public EventCallback CancelCallback { get; set; }
     [Parameter] public bool TestRunning { get; set; } = false;
     //[Parameter] public IEnumerable<Pad>? Map { get; set; } = Enumerable.Empty<Pad>();
     private RadzenDataGrid<WaferSetup> _waferSetupGrid;
@@ -174,12 +174,6 @@
             await this.DialogAlert("At least one pocket must be loaded before starting a test", "Not Loaded");
             return;
         }
-        if (this.TestSetupService.SetupError) {
-            await this.DialogAlert("Please clear this errors listed before continuing", "Setup Error(s)");
-            return;
-        }
-        
-        
         await InvokeAsync(StateHasChanged);
     }
 
@@ -193,6 +187,7 @@
         this._selectedTab = 0;
         await this._waferSetupGrid.Reload();
         await InvokeAsync(StateHasChanged);
+        await this.CancelCallback.InvokeAsync();
     }
     
     private string GetPocketLabel(int index) {

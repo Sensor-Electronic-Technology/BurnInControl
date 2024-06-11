@@ -7,7 +7,10 @@
     <RadzenStack Gap="5" Reverse="false" Style="border: 1px solid #f6f7fa; padding: .5rem">
         @for (int i = 0; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
             var text = $"P{i + 1}";
-            <RuntimeDisplay DisplayText="@text" RuntimeSecs="@this.ProbeStates[i].RunTime" State="ProbeStates[i].RunTimeOkay" />
+            <RuntimeDisplay DisplayText="@text" 
+                            RuntimeSecs="@this.ProbeStates[i].RunTime"
+                            LedOffColor="led-red"
+                            State="ProbeStates[i].RunTimeOkay" />
         }
     </RadzenStack>
 </RadzenStack>

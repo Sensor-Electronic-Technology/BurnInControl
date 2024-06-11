@@ -42,7 +42,7 @@
 }
 
 .led-red {
-    background-color: #F00;
+    background-color: #c45656;
     box-shadow: #000 0 -1px 6px 1px, inset #600 0 -1px 8px, #F00 0 3px 11px;
 }
 

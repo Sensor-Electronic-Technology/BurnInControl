@@ -5,7 +5,8 @@
                         DisplayTextStyle="@this.TextStyle" 
                         LabelFontSize="@this.LabelFontSize"/>
         <LedIndicator LedSize="24px" 
-                      LedOnColor="led-green" 
+                      LedOnColor="led-green"
+                      LedOffColor="@this.LedOffColor"
                       State="@this.State"/>
     </RadzenStack>
 </RadzenRow>
@@ -30,6 +31,9 @@
 
     [Parameter]
     public string LabelFontSize{get;set;}="14";
+    
+    [Parameter]
+    public string LedOffColor {get; set;}="led-grey";
 
     protected override Task OnParametersSetAsync() {
         ulong hours=this.RuntimeSecs/3600;

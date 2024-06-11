@@ -7,7 +7,7 @@ namespace BurnInControl.Application.BurnInTest.Handlers;
 public class HardStopCommandHandler:IRequestHandler<HardStopCommand> {
     private readonly ITestService _testService;
     public HardStopCommandHandler(ITestService testService) {
-        _testService = testService;
+        this._testService = testService;
     }
     public Task Handle(HardStopCommand request, CancellationToken cancellationToken) {
         return this._testService.Stop();

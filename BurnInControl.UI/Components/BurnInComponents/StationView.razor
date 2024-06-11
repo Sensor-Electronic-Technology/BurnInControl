@@ -45,7 +45,9 @@
                                                  TempStates="@this._data.HeaterStates"/>
                             </RadzenTabsItem>
                             <RadzenTabsItem Text="Test Setup">
-                                <TestSetup Save="SaveClickedHandler" TestRunning="@this._testRunning"/>
+                                <TestSetup Save="@this.SaveTestSetupHandler" 
+                                           CancelCallback="@this.CancelTestSetupHandler"
+                                           TestRunning="@this._testRunning"/>
                             </RadzenTabsItem>
                             <RadzenTabsItem Text="Plots">
                                 <h5>Coming Soon...</h5>
@@ -340,7 +342,7 @@
         return Task.CompletedTask;
     }
 
-    private Task SaveClickedHandler(List<WaferSetup> waferSetups) {
+    private Task SaveTestSetupHandler(List<WaferSetup> waferSetups) {
         if (this.Connected) {
             if (waferSetups.Any()) {
                 return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SetupTest, new TestSetupTransport() { WaferSetups = waferSetups, SetCurrent = StationCurrent._60mA, SetTemperature = 85, });
@@ -381,6 +383,18 @@
             return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.Reset);
         }
 
+        this.NotifyNotConnected();
+        return Task.CompletedTask;
+    }
+
+    private Task CancelTestSetupHandler() {
+        if (this.Connected) {
+            this._eventConsole.Log("Canceling Test Setup and Resetting Controller", AlertStyle.Warning);
+            this.StationStatusService.StationState = StationState.Idle;
+            this._testRunning = false;
+            this._testPaused = false;
+            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.Reset);
+        }
         this.NotifyNotConnected();
         return Task.CompletedTask;
     }

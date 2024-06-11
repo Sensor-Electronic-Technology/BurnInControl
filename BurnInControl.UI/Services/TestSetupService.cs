@@ -167,7 +167,7 @@ public class TestSetupService {
                 this.SetupAlerts[i].Okay = true;
             }
         }
-        this.SetupError= this.SetupAlerts.Any(e => !e.Okay);
+        this.SetupError= this.SetupAlerts.Any(e => !e.Okay) && this.SetupCount>0;
     }
     private WaferSetup GenerateWaferSetup(int index) {
         switch (index) {

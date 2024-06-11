@@ -90,7 +90,7 @@
                               ButtonStyle="ButtonStyle.Info" 
                               Style="width: 170px"/>
                 <RadzenButton Text="Save" Size="ButtonSize.Medium"
-                              Disabled="@(this.TestSetupService.SetupError || this.TestRunning)"
+                              Disabled="@(!this.CanSave())"
                               Click="@this.SaveHandler"
                               ButtonStyle="ButtonStyle.Secondary"
                               Icon="save" Style="width: 170px"/>
@@ -103,7 +103,7 @@
                               Disabled="@this.TestRunning"/>
             </RadzenStack>
             <TestSetupStatusView SetupAlerts="@this.TestSetupService.SetupAlerts" 
-                                 SetupStatusVisible="@this._setupStatusVisible"/>
+                                 SetupStatusVisible="@this._verified"/>
         </RadzenStack>
     </RadzenSplitterPane>
     <RadzenSplitterPane Size="60%" Collapsible="true">
@@ -138,7 +138,7 @@
     private List<WaferSetup> _selectedItems = new List<WaferSetup>();
     
     private int _selectedTab = 0;
-    private bool _setupStatusVisible = false;
+    private bool _verified = false;
     
     protected override async Task OnInitializedAsync() {
         this.StationStatusService.OnTestSetupLoaded += this.OnTestLoadedHandler;
@@ -169,28 +169,21 @@
             await this.DialogAlert("At least one pocket must be loaded before starting a test", "Not Loaded");
             return;
         }
+        if (this.TestSetupService.SetupError) {
+            await this.DialogAlert("Please clear this errors listed before continuing", "Setup Error(s)");
+            return;
+        }
         
-        this._setupStatusVisible = true;
+        this._verified = true;
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task SaveHandler() {
-        await this.TestSetupService.VerifyHandler();
-        this._setupStatusVisible = true;
-        await InvokeAsync(StateHasChanged);
-        if (this.TestSetupService.SetupError) {
-            if (this.TestSetupService.LoadedCount == 0) {
-                await this.DialogAlert("At least one pocket must be loaded before starting a test.  See setup errors below.", "Not Loaded");
-                return;
-            }
-            await this.DialogAlert("Please clear this errors listed before continuing", "Setup Error(s)");
-            return;
-        }
         await this.Save.InvokeAsync(this.TestSetupService.WaferSetups);
     }
     
     private async Task Cancel() {
-        this._setupStatusVisible = false;
+        this._verified = false;
         this.TestSetupService.Reset();
         this._selectedTab = 0;
         await this._waferSetupGrid.Reload();
@@ -227,6 +220,10 @@
                 CloseDialogOnEsc = true, CloseDialogOnOverlayClick = true,
                 ShowTitle = false
             }, parameters: new Dictionary<string, object>() { { "Title", title }, { "Message", message } });
+    }
+
+    private bool CanSave() {
+        return this._verified && !this.TestSetupService.SetupError && !this.TestRunning;
     }
 
     public ValueTask DisposeAsync() {

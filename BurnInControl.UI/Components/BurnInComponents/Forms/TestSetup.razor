@@ -165,6 +165,7 @@
 
     private async Task VerifyHandler() {
         await this.TestSetupService.VerifyHandler();
+        this._verified = true;
         if (this.TestSetupService.LoadedCount == 0) {
             await this.DialogAlert("At least one pocket must be loaded before starting a test", "Not Loaded");
             return;
@@ -174,7 +175,7 @@
             return;
         }
         
-        this._verified = true;
+        
         await InvokeAsync(StateHasChanged);
     }
 

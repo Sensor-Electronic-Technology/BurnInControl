@@ -20,11 +20,21 @@
                                    ValueChanged="Time120mAChangedHandler"/>
                 </RadzenFormField>
             </RadzenStack>
-            <RadzenFormField Text="Time 150mA(secs)">
-                <RadzenNumeric TValue="ulong"
-                               Value="@this.TimerConfig.Time150mASec"
-                               ValueChanged="Time150mAChangedHandler"/>
-            </RadzenFormField>
+            <RadzenStack>
+                <RadzenFormField Text="Time 150mA(secs)">
+                    <RadzenNumeric TValue="ulong"
+                                   Value="@this.TimerConfig.Time150mASec"
+                                   ValueChanged="Time150mAChangedHandler"/>
+                </RadzenFormField>
+                <RadzenFormField Text="Current Percent">
+                    <RadzenNumeric TValue="double"
+                                   Value="@(this.TimerConfig.TimeOffPercent)"
+                                   ValueChanged="@this.TimeOffPercentChangedHandler"
+                                   Min="80"
+                                   Max="100"
+                                   Format="F"/>
+                </RadzenFormField>
+            </RadzenStack>
         </RadzenStack>
     </RadzenFieldset>
 </RadzenTemplateForm>
@@ -44,6 +54,11 @@
     }
     private Task Time150mAChangedHandler(ulong newValue) {
         this.TimerConfig.Time150mASec = newValue;
+        return this.TimerConfigChanged.InvokeAsync(this.TimerConfig);
+    }
+
+    private Task TimeOffPercentChangedHandler(double timeOffPercent) {
+        this.TimerConfig.TimeOffPercent = timeOffPercent;
         return this.TimerConfigChanged.InvokeAsync(this.TimerConfig);
     }
 

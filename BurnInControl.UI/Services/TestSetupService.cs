@@ -14,6 +14,8 @@ public class TestSetupService {
     public int AlertCount => this.SetupAlerts.Count;
     public bool Verified { get; set; }
     public bool SetupError { get; set; }
+    
+    public int LoadedCount=>this.WaferSetups.Count(e=>e.Loaded==true);
 
     public TestSetupService(QuickTestDataService qtDataService) {
         this._qtDataService = qtDataService;

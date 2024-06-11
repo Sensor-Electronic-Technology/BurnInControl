@@ -164,16 +164,28 @@
     }
 
     private async Task VerifyHandler() {
-        if (this.TestSetupService.PocketsLoaded()) {
+        await this.TestSetupService.VerifyHandler();
+        if (this.TestSetupService.LoadedCount == 0) {
             await this.DialogAlert("At least one pocket must be loaded before starting a test", "Not Loaded");
             return;
         }
-        await this.TestSetupService.VerifyHandler();
+        
         this._setupStatusVisible = true;
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task SaveHandler() {
+        await this.TestSetupService.VerifyHandler();
+        this._setupStatusVisible = true;
+        await InvokeAsync(StateHasChanged);
+        if (this.TestSetupService.SetupError) {
+            if (this.TestSetupService.LoadedCount == 0) {
+                await this.DialogAlert("At least one pocket must be loaded before starting a test.  See setup errors below.", "Not Loaded");
+                return;
+            }
+            await this.DialogAlert("Please clear this errors listed before continuing", "Setup Error(s)");
+            return;
+        }
         await this.Save.InvokeAsync(this.TestSetupService.WaferSetups);
     }
     

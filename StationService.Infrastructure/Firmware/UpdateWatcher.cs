@@ -92,6 +92,7 @@ public class UpdateWatcher:IHostedService {
                         var deadline = this._testService.RemainingTimeSecs();
                         this._serviceUpdateTimer.Interval = (deadline * 1000) + this._timerOffset;
                         this._serviceUpdateAvailable = true;
+                        this._logger.LogInformation("Update available,waiting for test to finish before updating service");
                         if (!this._firmwareUpdateAvailable) {
                             this._serviceUpdateTimer.Start();
                         }

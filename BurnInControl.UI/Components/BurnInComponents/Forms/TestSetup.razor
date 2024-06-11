@@ -3,6 +3,7 @@
 @inject NotificationService NotificationService
 @inject TestSetupService TestSetupService
 @inject StationStatusService StationStatusService
+@inject TooltipService ToolTipService
 @implements IAsyncDisposable
 @rendermode InteractiveServer
 
@@ -87,12 +88,14 @@
                 <RadzenButton Text="Verify" Size="ButtonSize.Medium"
                               Click="@this.VerifyHandler"
                               Disabled="@this.TestRunning"
-                              ButtonStyle="ButtonStyle.Info" 
+                              ButtonStyle="ButtonStyle.Info"
+                              MouseEnter="@((args) => { this.ShowTooltip(args, "Verify the setup before starting a test"); })"
                               Style="width: 170px"/>
                 <RadzenButton Text="Save" Size="ButtonSize.Medium"
                               Disabled="@(!this.CanSave())"
                               Click="@this.SaveHandler"
                               ButtonStyle="ButtonStyle.Secondary"
+                              MouseEnter="@((args) => { this.ShowSaveTooltip(args); })"
                               Icon="save" Style="width: 170px"/>
                 <RadzenButton Text="Cancel/Clear"
                               ButtonStyle="ButtonStyle.Danger"
@@ -100,6 +103,7 @@
                               Click="@this.Cancel"
                               IsBusy="false"
                               Shade="Shade.Default"
+                              MouseEnter="@((args) => { this.ShowTooltip(args, "Clear test setup"); })"
                               Disabled="@this.TestRunning"/>
             </RadzenStack>
             <TestSetupStatusView SetupAlerts="@this.TestSetupService.SetupAlerts" 
@@ -225,6 +229,37 @@
 
     private bool CanSave() {
         return this._verified && !this.TestSetupService.SetupError && !this.TestRunning;
+    }
+    
+    private void ShowTooltip(ElementReference elementReference, string message,TooltipOptions? options = null) {
+        this.ToolTipService.Open(elementReference, message, options);
+    }
+    
+    private void ShowSaveTooltip(ElementReference elementReference,TooltipOptions? options = null) {
+        
+        if (this.TestRunning) {
+            string message = "Test currently running";
+            this.ToolTipService.Open(elementReference, message,options);
+            return;
+        }
+
+        if (!this._verified) {
+            string message = "Verify the setup before saving";
+            this.ToolTipService.Open(elementReference, message,options);
+            return;
+        }
+        
+        if (this.TestSetupService.LoadedCount == 0) {
+            string message = "Must have 1 loaded pocket to save the setup";
+            this.ToolTipService.Open(elementReference, message,options);
+            return;
+        }
+        
+        if (this.TestSetupService.SetupError) {
+            string message = "Clear the errors to save the setup";
+            this.ToolTipService.Open(elementReference, message,options);
+        }
+        
     }
 
     public ValueTask DisposeAsync() {

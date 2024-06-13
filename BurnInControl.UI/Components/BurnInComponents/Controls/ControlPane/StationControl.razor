@@ -42,7 +42,8 @@
     <StationServiceControl ServiceConnected="@this.ServiceConnected"
                            UsbConnected="@this.UsbConnected"
                            Connect="@this.Connect"
-                           UsbConnect="@this.UsbConnect"/>
+                           UsbConnect="@this.UsbConnect"
+                           UsbVisible="false"/>
 </RadzenStack>
 @code{
     [Parameter] public EventCallback Connect { get; set; }

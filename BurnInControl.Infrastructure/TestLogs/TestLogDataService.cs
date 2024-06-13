@@ -50,7 +50,10 @@ public class TestLogDataService {
             .ToListAsync();
     }
     
-    public async Task<ErrorOr<BurnInTestLog>> GetTestLogNoReadings(ObjectId id) {
+    public async Task<ErrorOr<BurnInTestLog>> GetTestLogNoReadings(ObjectId? id) {
+        if (id == null) {
+            return Error.NotFound(description: "BurnInTestLog Not Found, Id is null");
+        }
         var log=await this._testLogCollection.Find(e => e._id == id)
             .Project(e=>new BurnInTestLog() {
             _id=e._id,
@@ -104,7 +107,10 @@ public class TestLogDataService {
         await this._testLogCollection.InsertOneAsync(log);
         return log;
     }
-    public async Task<ErrorOr<Deleted>> DeleteTestLog(ObjectId id) {
+    public async Task<ErrorOr<Deleted>> DeleteTestLog(ObjectId? id) {
+        if (id == null) {
+            return Error.Unexpected(description:"Failed to delete log. Id is null");
+        }
         var deleteResult = await this._testLogCollection.DeleteOneAsync(e => e._id == id);
         if (deleteResult.IsAcknowledged) {
             if(deleteResult.DeletedCount>0){

@@ -1,7 +1,4 @@
 ﻿using BurnInControl.Data.BurnInTests;
-using BurnInControl.Data.BurnInTests.Wafers;
-using BurnInControl.Data.StationModel;
-using BurnInControl.Data.StationModel.Components;
 using BurnInControl.HubDefinitions.HubTransports;
 using BurnInControl.Shared.ComDefinitions;
 using MongoDB.Bson;

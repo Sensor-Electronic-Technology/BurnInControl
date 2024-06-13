@@ -6,12 +6,12 @@ using MongoDB.Bson;
 namespace BurnInControl.Data.BurnInTests;
 
 public class TimerData {
-    public bool Running { get; set; }
-    public bool Paused { get; set; }
-    public ulong ElapsedSecs { get; set; }
-    public ulong[] ProbeRunTimes { get; set; }
-    public ulong LastCheck { get; set; }
-    public ulong DurationSecs { get; set; }
+    public bool Running { get; set; } = false;
+    public bool Paused { get; set; } = false;
+    public ulong ElapsedSecs { get; set; } = 0;
+    public ulong[] ProbeRunTimes { get; set; } = [];
+    public ulong LastCheck { get; set; }= 0;
+    public ulong DurationSecs { get; set; }= 0;
 }
 
 public class ControllerSavedState:IPacket {
@@ -39,10 +39,17 @@ public class ControllerSavedState:IPacket {
 }
 
 public class SavedStateLog {
-    public ObjectId _id { get; set; }
+    public ObjectId? _id { get; set; } = default;
     public DateTime TimeStamp { get; set; }
-    public string StationId { get; set; }
-    public ObjectId LogId { get; set; }
-    public ControllerSavedState SavedState { get; set; }
+    public string StationId { get; set; }= "S00";
+    public ObjectId? LogId { get; set; } = default;
+    public ControllerSavedState SavedState { get; set; } = new();
     
+    public void Reset() {
+        this._id = default;
+        this.StationId= "S00";
+        this.LogId = default;
+        this.SavedState = default;
+        SavedState = new();
+    }
 }

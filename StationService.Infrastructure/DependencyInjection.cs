@@ -24,11 +24,9 @@ public static class DependencyInjection {
         services.AddSingleton(channel.Reader);
         services.AddSingleton(channel.Writer);
         services.AddSingleton<ITestService,TestService>();
-        //services.AddSingleton<IFirmwareUpdateService,FirmwareUpdateService>();
         services.AddTransient<IFirmwareUpdateService, FirmwareUpdateService>();
         services.AddSingleton<IStationController,StationController>();
         services.AddSingleton<UsbController>();
-        /*services.AddTransient<IFirmwareUpdateJob,FirmwareUpdateJob>();*/
         services.AddSingleton<IStationMessageHandler,StationMessageHandler>();
         services.AddHostedService<StationWorkerService>();
         services.AddHostedService<UpdateWatcher>();
@@ -56,7 +54,6 @@ public static class DependencyInjection {
                 typeof(SaveTuningResultsHandler).Assembly,
                 typeof(SendTuningWindowSizeHandler).Assembly);
         });
-        /*services.AddScheduler();*/
         return services;
     }
 }

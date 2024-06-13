@@ -57,6 +57,7 @@ public class TestService:ITestService {
         this._paused = false;
         this._running = false;
         this._runningTest.Reset();
+        this._savedStateLog.Reset();
         this._testSetupComplete = false;
     }
     public async Task SetupTest(TestSetupTransport testSetup) {
@@ -354,9 +355,24 @@ public class TestService:ITestService {
     }
     public async Task Stop() {
         if(this.IsRunning) {
-            await this._savedStateDataService.ClearSavedState(id:this._savedStateLog._id);
-            await this._testLogDataService.DeleteTestLog(this._runningTest._id);
+            this._logger.LogInformation("Deleting test log and saved state");
+            ObjectId? savedStateId = this._savedStateLog._id;
+            ObjectId? logId = this._runningTest._id;
+            ObjectId? logId2 = this._savedStateLog.LogId;
             this.Reset();
+            var savedStateResult=await this._savedStateDataService.ClearSavedState(id:savedStateId);
+            if(savedStateResult.IsError) {
+                this._logger.LogWarning("Failed to clear saved state, Id: {Id}. Trying by log id",savedStateId.ToString());
+                savedStateResult=await this._savedStateDataService.ClearSavedState(logId: logId);
+                if(savedStateResult.IsError) {
+                    this._logger.LogWarning("Failed to clear saved state by log id, LogId: {Id}",logId.ToString());
+                }
+            }
+            var response=await this._testLogDataService.DeleteTestLog(logId);
+            if (response.IsError) {
+                await this._testLogDataService.DeleteTestLog(logId2);
+            }
+            
         }
     }
 }

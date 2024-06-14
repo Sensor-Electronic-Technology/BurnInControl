@@ -7,6 +7,5 @@ jobs:
     runs-on:
      group: burn-in-runners
     steps:
-      - run: |
-          cd /home/setitech/Documents/StationSoft/StationService/app/updates/
-          touch "service_update.txt"
+      - run: cd /home/setitech/Documents/StationSoft/StationService/app/updates/
+      - run: touch "update.txt"

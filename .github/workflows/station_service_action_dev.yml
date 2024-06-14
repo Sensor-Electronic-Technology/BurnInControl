@@ -1,21 +1,18 @@
-﻿name: Station UI Workflow
+name: Station Service Workflow
 on:
   push:
     branches: [ "master" ]
     paths:
     - 'BurnInControl.Data/**'
     - 'BurnInControl.Infrastructure/**'
-    - 'BurnInControl.Application/**'
-    - 'BurnInControl.Shared/**'
-    - 'BurnInControl.UI.Shared/**'
-    - 'BurnInControl.UI/**'
-    - '.github/workflows/station-ui-build.yml'
+    - 'StationService.Infrastructure/**'
+    - 'BurnInControl.StationService/**'
+    - '.github/workflows/station-service-build.yml'
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
     - name: Adjust NuGet Config Credentials
       run: |
         cp ./nuget.bak ./NuGet.config
@@ -29,9 +26,9 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./BurnInControl.UI/Dockerfile
+        file: ./BurnInControl.StationService/Dockerfile
         push: true
-        tags: ${{secrets.Docker_Username}}/station-ui:latest
+        tags: ${{secrets.Docker_Username}}/station-service:dev
   deploy:
     needs: build
     runs-on:
@@ -40,4 +37,4 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           cd /home/setitech/Documents/StationSoft/StationService/app/updates/
-          touch "ui_update.txt"
+          touch "service_update.txt"

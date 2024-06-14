@@ -31,7 +31,7 @@ jobs:
         context: .
         file: ./BurnInControl.UI/Dockerfile
         push: true
-        tags: ${{secrets.Docker_Username}}/station-ui:latest
+        tags: ${{secrets.Docker_Username}}/station-ui:dev
   deploy:
     needs: build
     runs-on:

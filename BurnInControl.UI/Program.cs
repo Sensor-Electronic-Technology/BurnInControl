@@ -13,15 +13,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
       .AddInteractiveServerComponents()
       .AddHubOptions(options => options.MaximumReceiveMessageSize = 10 * 1024 * 1024);
-string connectionString=builder.Configuration.GetConnectionString("DefaultConnection") ?? "mongodb://172.20.3.41:27017";
-/*string? connectionString="";
+//string connectionString=builder.Configuration.GetConnectionString("DefaultConnection") ?? "mongodb://172.20.3.41:27017";
+string? connectionString="";
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
     connectionString=builder.Configuration.GetConnectionString("LocalConnection");
     connectionString ??= "mongodb://192.168.68.111:27017";
 } else {
     connectionString=builder.Configuration.GetConnectionString("DefaultConnection");
     connectionString ??= "mongodb://172.20.3.41:27017";
-}*/
+}
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
 builder.Services.AddControllers();
 builder.Services.AddRadzenComponents();

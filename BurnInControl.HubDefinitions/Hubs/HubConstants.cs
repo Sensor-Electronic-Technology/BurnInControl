@@ -6,7 +6,8 @@ public static class HubConstants {
     //public static string HubAddress => "http://localhost:5000/hubs/station";
     /*public static string HubAddress=> "http://station.service:5000/hubs/station";*/
     
-    public static string HubAddress => "http://172.20.1.48:5000/hubs/station";
+    //public static string HubAddress => "http://172.20.1.48:5000/hubs/station";
+    public static string HubAddress=>"http://localhost:5000/hubs/station";
 
     public static class Events {
         public static string OnStationData => "OnStationData";

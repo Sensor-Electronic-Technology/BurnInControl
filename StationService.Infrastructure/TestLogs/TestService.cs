@@ -141,6 +141,7 @@ public class TestService:ITestService {
                     this._paused = false;
                     this._loggingEnabled = true;
                     this._first = false;
+                    
                     this._logger.LogInformation("Loaded saved state.  TestId: {TestId}",this._savedStateLog.SavedState.TestId ?? " NULL");
                     await this._hubContext.Clients.All.OnTestStartedFrom(new LoadTestSetupTransport() {
                         Success = true,

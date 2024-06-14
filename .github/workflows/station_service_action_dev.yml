@@ -7,7 +7,7 @@ on:
     - 'BurnInControl.Infrastructure/**'
     - 'StationService.Infrastructure/**'
     - 'BurnInControl.StationService/**'
-    - '.github/workflows/station-service-build.yml'
+    - '.github/workflows/station_service_action_dev.yml'
 jobs:
   build:
     runs-on: ubuntu-latest

@@ -1,0 +1,13 @@
+name: Station Service Workflow
+on:
+  push:
+    branches: [ "master" ]
+jobs:
+  deploy:
+    runs-on:
+     group: burn-in-runners
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          cd /home/setitech/Documents/StationSoft/StationService/app/updates/
+          touch "test_update.txt"

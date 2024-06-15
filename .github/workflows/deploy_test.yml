@@ -4,8 +4,7 @@ on:
     branches: [ "master" ]
 jobs:
   deploy:
-    runs-on:
-     group: burn-in-runners
+    runs-on: setiburnin-dev
     steps:
       - uses: actions/checkout@v4
       - run: |

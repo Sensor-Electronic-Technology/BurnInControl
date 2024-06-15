@@ -8,4 +8,5 @@ public class DatabaseSettings {
     public string VersionCollectionName { get; set; }
     public string TrackerCollectionName { get; set; }
     public string QuickTestEndpoint { get; set; }
+    public string QuickTestEndpointLocal { get; set; }
 }

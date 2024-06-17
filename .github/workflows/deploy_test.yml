@@ -4,61 +4,7 @@ on:
     branches: [ "master" ]
 jobs:
   deploy-s01:
-    runs-on: setiburnin-S01
-    steps:
-      - run: |
-          cd /home/setitech/Documents/StationSoft/StationService/app/updates/
-          touch "test_update.txt"
-  deploy-s02:
-    runs-on: setiburnin-S02
-    steps:
-      - run: |
-          cd /home/setitech/Documents/StationSoft/StationService/app/updates/
-          touch "test_update.txt"
-  deploy-s03:
-    runs-on: setiburnin-S03
-    steps:
-      - run: |
-          cd /home/setitech/Documents/StationSoft/StationService/app/updates/
-          touch "test_update.txt"
-  deploy-s04:
-    runs-on: setiburnin-S04
-    steps:
-      - run: |
-          cd /home/setitech/Documents/StationSoft/StationService/app/updates/
-          touch "test_update.txt"
-  deploy-s05:
-    runs-on: setiburnin-S05
-    steps:
-      - run: |
-          cd /home/setitech/Documents/StationSoft/StationService/app/updates/
-          touch "test_update.txt"
-  deploy-s06:
-    runs-on: setiburnin-S06
-    steps:
-      - run: |
-          cd /home/setitech/Documents/StationSoft/StationService/app/updates/
-          touch "test_update.txt"
-  deploy-s07:
-    runs-on: setiburnin-S07
-    steps:
-      - run: |
-          cd /home/setitech/Documents/StationSoft/StationService/app/updates/
-          touch "test_update.txt"
-  deploy-s08:
-    runs-on: setiburnin-S08
-    steps:
-      - run: |
-          cd /home/setitech/Documents/StationSoft/StationService/app/updates/
-          touch "test_update.txt"
-  deploy-s09:
-    runs-on: setiburnin-S09
-    steps:
-      - run: |
-          cd /home/setitech/Documents/StationSoft/StationService/app/updates/
-          touch "test_update.txt"
-  deploy-s10:
-    runs-on: setiburnin-S10
+    runs-on: [S01,S08]
     steps:
       - run: |
           cd /home/setitech/Documents/StationSoft/StationService/app/updates/

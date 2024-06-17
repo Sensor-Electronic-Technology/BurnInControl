@@ -4,7 +4,7 @@ on:
     branches: [ "master" ]
 jobs:
   deploy:
-    runs-on: [burn-in]
+    runs-on: [S08]
     steps:
       - run: |
           cd /home/setitech/Documents/StationSoft/StationService/app/updates/

@@ -119,11 +119,37 @@ Console.WriteLine(JsonSerializer.Serialize(sendConfigPacket));*/
 //await ConfigTestUsbController();
 //await CreateStationDatabase();
 //await CloneDatabase();
-MessagePacket<TestIdPacket> testIdPacket = new MessagePacket<TestIdPacket>() {
+/*MessagePacket<TestIdPacket> testIdPacket = new MessagePacket<TestIdPacket>() {
     Prefix = StationMsgPrefix.SendTestIdPrefix, Packet = new TestIdPacket() { TestId = "1234" }
 };
 
-Console.WriteLine(JsonSerializer.Serialize(testIdPacket));
+Console.WriteLine(JsonSerializer.Serialize(testIdPacket));*/
+//await CloneDatabase();
+await CreateStationDatabase();
+
+async Task CreateStationDatabase() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database=client.GetDatabase("burn_in_db");
+    for (int i = 1; i < 10; i++) {
+        Station station = new Station();
+        station.StationId=$"S0{i+1}";
+        station.StationPosition=$"POS{i+1}";
+        station.FirmwareVersion="V0.0.1";
+        station.UpdateAvailable=false;
+        station.State=StationState.Idle;
+        station.RunningTest=null;
+        station.SavedState=null;
+        station.Configuration = new BurnStationConfiguration() {
+            HeaterControllerConfig = new HeaterControllerConfig(),
+            ProbeControllerConfig = new ProbeControllerConfig(),
+            ControllerConfig = new StationConfiguration()
+        };
+        var collection=database.GetCollection<Station>("stations");
+        await collection.InsertOneAsync(station);
+    }
+    Console.WriteLine("Check database");
+}
+
 async Task CloneDatabase() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");
     var piClient = new MongoClient("mongodb://192.168.68.111:27017");
@@ -617,26 +643,7 @@ try {
 /*Console.WriteLine("Input: ");
 Console.WriteLine(jsonString);*/
 
-async Task CreateStationDatabase() {
-    var client = new MongoClient("mongodb://172.20.3.41:27017");
-    var database=client.GetDatabase("burn_in_db");
-    Station station = new Station();
-    station.StationId="S01";
-    station.StationPosition="POS1";
-    station.FirmwareVersion="V0.0.1";
-    station.UpdateAvailable=false;
-    station.State=StationState.Idle;
-    station.RunningTest=null;
-    station.SavedState=null;
-    station.Configuration = new BurnStationConfiguration() {
-        HeaterControllerConfig = new HeaterControllerConfig(),
-        ProbeControllerConfig = new ProbeControllerConfig(),
-        ControllerConfig = new StationConfiguration()
-    };
-    var collection=database.GetCollection<Station>("stations");
-    await collection.InsertOneAsync(station);
-    Console.WriteLine("Check database");
-}
+
 
 
 

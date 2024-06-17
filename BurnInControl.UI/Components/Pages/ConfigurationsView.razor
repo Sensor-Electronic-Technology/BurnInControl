@@ -91,12 +91,13 @@
     private bool Connected => this.HubClient.IsConnected;
 
     private BurnStationConfiguration? _burnInConfiguration;
-    private string _stationId = "S01";
+    private string _stationId = "S00";
     
     protected override async Task OnInitializedAsync() {
         this.SetupHub();
-        Console.WriteLine($"StationId: {this.Configuration["StationId"]}");
-        this._stationId = this.Configuration["StationId"] ?? "S01";
+        
+        this._stationId = this.StationStatusService.StationId;
+        this._logger.LogInformation("Config View, StationId: {StationId}",this._stationId);
         this._burnInConfiguration = await this.ConfigurationDataService.GetStationBurnInConfig(this._stationId);
     }
 

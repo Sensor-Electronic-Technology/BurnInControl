@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using BurnInControl.Data.StationModel;
 using BurnInControl.Infrastructure;
 using BurnInControl.Shared;
 using Radzen;
@@ -34,7 +35,8 @@ builder.Services.AddScoped<HubClient>();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(connectionString));
 builder.Services.AddSingleton<ConsoleWriter>();
 builder.Services.AddSingleton<NotifyPlotOptions>();
-builder.Services.AddSingleton<StationStatusService>();
+var stationId=builder.Configuration.GetValue<string>("StationId") ?? "S00";
+builder.Services.AddSingleton<StationStatusService>(new StationStatusService(stationId,StationState.Offline));
 builder.Services.AddScoped<TestSetupService>();
 
 var app = builder.Build();

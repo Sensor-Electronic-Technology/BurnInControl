@@ -12,6 +12,11 @@ public class StationStatusService {
     private string _stationId = "S00";
     private List<WaferSetup> _testSetup = [];
 
+    public StationStatusService(string stationId, StationState state) {
+        this._stationId = stationId;
+        this._stationState = state;
+    }
+
     public StationState StationState {
         get => this._stationState;
         set {

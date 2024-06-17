@@ -26,6 +26,8 @@
     private AlertStyle _alertStyle=AlertStyle.Danger;
 
     protected override Task OnInitializedAsync() {
+        this._stationId= this.StationStatusService.StationId;
+        this._stationText = $"StationId: {this._stationId}";
         this.StationStatusService.OnStationStateChanged += this.StationStateChangedHandler;
         this.StationStatusService.OnStationIdChanged += this.StationIdChangedHandler;
         return base.OnInitializedAsync();

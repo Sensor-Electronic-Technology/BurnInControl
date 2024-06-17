@@ -29,12 +29,17 @@ jobs:
         file: ./BurnInControl.StationService/Dockerfile
         push: true
         tags: ${{secrets.Docker_Username}}/station-service:latest
-  deploy:
+  deploy-s01:
     needs: build
-    runs-on:
-     group: burn-in-runners
+    runs-on: [burn-in,S01]
     steps:
-      - uses: actions/checkout@v4
+      - run: |
+          cd /home/setitech/Documents/StationSoft/StationService/app/updates/
+          touch "service_update.txt"
+  deploy-s08:
+    needs: build
+    runs-on: [burn-in,S08]
+    steps:
       - run: |
           cd /home/setitech/Documents/StationSoft/StationService/app/updates/
           touch "service_update.txt"

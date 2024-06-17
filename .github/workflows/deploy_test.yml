@@ -3,11 +3,15 @@ on:
   push:
     branches: [ "master" ]
 jobs:
-  deploy:
-    runs-on:
-     group: burn-in-runners
+  deploy-s01:
+    runs-on: [burn-in,S01]
     steps:
-      - uses: actions/checkout@v4
+      - run: |
+          cd /home/setitech/Documents/StationSoft/StationService/app/updates/
+          touch "test_update.txt"
+  deploy-s08:
+    runs-on: [burn-in,S08]
+    steps:
       - run: |
           cd /home/setitech/Documents/StationSoft/StationService/app/updates/
           touch "test_update.txt"

@@ -38,11 +38,11 @@ jobs:
     steps:
       - run: |
           cd /home/setitech/Documents/StationSoft/StationService/app/updates/
-          touch "test_update.txt"
+          touch "ui_update.txt"
   deploy-s08:
     needs: build
     runs-on: [burn-in,S08]
     steps:
       - run: |
           cd /home/setitech/Documents/StationSoft/StationService/app/updates/
-          touch "test_update.txt"
+          touch "ui_update.txt"

@@ -10,6 +10,11 @@ public enum StationState {
     Running,Paused,TuningMode,Tuning,Heating,Idle,Offline
 }
 
+public class NetworkConfig {
+    public string WifiIp { get; set; }
+    public string EthernetIp { get; set; }
+}
+
 public class Station {
     public ObjectId _id { get; set; }
     public string StationId { get; set; }
@@ -19,6 +24,7 @@ public class Station {
     public StationState State { get; set; }
     public ControllerSavedState? SavedState { get; set; }
     public ObjectId? RunningTest { get; set; }
+    public NetworkConfig NetworkConfig { get; set; }
     public BurnStationConfiguration? Configuration { get; set; }
     
     public Station() {

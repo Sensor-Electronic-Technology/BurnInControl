@@ -130,7 +130,18 @@ await CreateStationDatabase();
 async Task CreateStationDatabase() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");
     var database=client.GetDatabase("burn_in_db");
-    for (int i = 1; i < 10; i++) {
+    List<NetworkConfig> networkConfigs = [
+        new NetworkConfig() { WifiIp = "172.20.5.150", EthernetIp = "172.20.5.160" },
+        new NetworkConfig() { WifiIp = "172.20.5.151", EthernetIp = "172.20.5.161" },
+        new NetworkConfig() { WifiIp = "172.20.5.152", EthernetIp = "172.20.5.162" },
+        new NetworkConfig() { WifiIp = "172.20.5.153", EthernetIp = "172.20.5.163" },
+        new NetworkConfig() { WifiIp = "172.20.5.154", EthernetIp = "172.20.5.164" },
+        new NetworkConfig() { WifiIp = "172.20.5.155", EthernetIp = "172.20.5.165" },
+        new NetworkConfig() { WifiIp = "172.20.5.156", EthernetIp = "172.20.5.166" },
+        new NetworkConfig() { WifiIp = "172.20.5.157", EthernetIp = "172.20.5.167" },
+        new NetworkConfig() { WifiIp = "172.20.5.158", EthernetIp = "172.20.5.168" },
+        new NetworkConfig() { WifiIp = "172.20.5.159", EthernetIp = "172.20.5.169" }];
+    for (int i = 0; i < 10; i++) {
         Station station = new Station();
         station.StationId=$"S0{i+1}";
         station.StationPosition=$"POS{i+1}";
@@ -144,6 +155,7 @@ async Task CreateStationDatabase() {
             ProbeControllerConfig = new ProbeControllerConfig(),
             ControllerConfig = new StationConfiguration()
         };
+        station.NetworkConfig = networkConfigs[i];
         var collection=database.GetCollection<Station>("stations");
         await collection.InsertOneAsync(station);
     }

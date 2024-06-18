@@ -1,4 +1,4 @@
-﻿name: Station UI Workflow
+﻿name: UI Dev Deploy
 on:
   push:
     branches: [ "master" ]

@@ -1,4 +1,4 @@
-name: Station Service Workflow
+name: Service Dev Deploy
 on:
   push:
     branches: [ "master" ]

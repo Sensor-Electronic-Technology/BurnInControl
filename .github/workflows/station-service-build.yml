@@ -1,4 +1,4 @@
-name: Station Service Workflow
+name: Burn-In Deploy
 on:
   push:
     branches: [ "master" ]
@@ -9,10 +9,30 @@ on:
     - 'BurnInControl.StationService/**'
     - '.github/workflows/station-service-build.yml'
 jobs:
-  build:
+  service-build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+    - name: Adjust NuGet Config Credentials
+      run: |
+        cp ./nuget.bak ./NuGet.config
+        echo $(sed -e "s@\${PAT}@${{ secrets.NUGET_TOKEN }}@" NuGet.config) > NuGet.config
+    - name: Login to Docker Hub
+      uses: docker/login-action@v4
+      with:
+        username: ${{secrets.Docker_Username}}
+        password: ${{secrets.Docker_Password}}
+    - name: Build and push
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./BurnInControl.StationService/Dockerfile
+        push: true
+        tags: ${{secrets.Docker_Username}}/station-service:latest
+  ui-build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
     - name: Adjust NuGet Config Credentials
       run: |
         cp ./nuget.bak ./NuGet.config
@@ -26,11 +46,11 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./BurnInControl.StationService/Dockerfile
+        file: ./BurnInControl.UI/Dockerfile
         push: true
-        tags: ${{secrets.Docker_Username}}/station-service:latest
+        tags: ${{secrets.Docker_Username}}/station-ui:latest
   deploy-s01:
-    needs: build
+    needs: [ui-build,service-build]
     runs-on: [burn-in,S01]
     steps:
       - run: |
@@ -44,56 +64,56 @@ jobs:
   #         cd /home/setitech/Documents/StationSoft/StationService/app/updates/
   #         touch "service_update.txt"
   deploy-s03:
-    needs: build
+    needs: [ui-build,service-build]
     runs-on: [burn-in,S03]
     steps:
       - run: |
           cd /home/setitech/Documents/StationSoft/StationService/app/updates/
           touch "service_update.txt"
   deploy-s04:
-    needs: build
+    needs: [ui-build,service-build]
     runs-on: [burn-in,S04]
     steps:
       - run: |
           cd /home/setitech/Documents/StationSoft/StationService/app/updates/
           touch "service_update.txt"
   deploy-s05:
-    needs: build
+    needs: [ui-build,service-build]
     runs-on: [burn-in,S05]
     steps:
       - run: |
           cd /home/setitech/Documents/StationSoft/StationService/app/updates/
           touch "service_update.txt"
   deploy-s06:
-    needs: build
+    needs: [ui-build,service-build]
     runs-on: [burn-in,S06]
     steps:
       - run: |
           cd /home/setitech/Documents/StationSoft/StationService/app/updates/
           touch "service_update.txt"
   deploy-s07:
-    needs: build
+    needs: [ui-build,service-build]
     runs-on: [burn-in,S07]
     steps:
       - run: |
           cd /home/setitech/Documents/StationSoft/StationService/app/updates/
           touch "service_update.txt"
   deploy-s08:
-    needs: build
+    needs: [ui-build,service-build]
     runs-on: [burn-in,S08]
     steps:
       - run: |
           cd /home/setitech/Documents/StationSoft/StationService/app/updates/
           touch "service_update.txt"
   deploy-s09:
-    needs: build
+    needs: [ui-build,service-build]
     runs-on: [burn-in,S09]
     steps:
       - run: |
           cd /home/setitech/Documents/StationSoft/StationService/app/updates/
           touch "service_update.txt"
   deploy-s10:
-    needs: build
+    needs: [ui-build,service-build]
     runs-on: [burn-in,S10]
     steps:
       - run: |

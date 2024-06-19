@@ -187,7 +187,7 @@ public class TestLogDataService {
                 & Builders<BurnInTestLogEntry>.Filter.Gte(e => e.Reading.ElapsedSeconds, 5)
                 & Builders<BurnInTestLogEntry>.Filter.Lte(e => e.Reading.ElapsedSeconds, 10);
             var finalFilter = Builders<BurnInTestLogEntry>.Filter.Eq(e => e.TestLogId, testLogId)
-                              & Builders<BurnInTestLogEntry>.Filter.Gte(e => e.Reading.ElapsedSeconds, finalTime);
+                              & Builders<BurnInTestLogEntry>.Filter.Gte(e => e.Reading.ElapsedSeconds, 20);
             
             var initTestLog = await this._readingsCollection.Find(initFilter)
                     .Project(e => e.Reading)

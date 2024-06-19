@@ -127,7 +127,8 @@ Console.WriteLine(JsonSerializer.Serialize(testIdPacket));*/
 //await CloneDatabase();
 //await CreateStationDatabase();
 
-await TestMongoDict();
+//await TestMongoDict();
+await TestGetReadings();
 
 async Task TestMongoDict() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");
@@ -143,6 +144,30 @@ async Task TestMongoDict() {
     };
     await collection.InsertOneAsync(test);
     Console.WriteLine("Check Database");
+}
+
+async Task TestGetReadings() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database=client.GetDatabase("burn_in_db");
+    var collection=database.GetCollection<BurnInTestLogEntry>("test_log_entries");
+    ObjectId id=ObjectId.Parse("6673380d0120cba9568813fc");
+    var initFilter=Builders<BurnInTestLogEntry>.Filter.Eq(e => e.TestLogId, id) 
+                   & Builders<BurnInTestLogEntry>.Filter.Gte(e => e.Reading.ElapsedSeconds, 5)
+                   & Builders<BurnInTestLogEntry>.Filter.Lte(e => e.Reading.ElapsedSeconds, 10);
+    var finalFilter = Builders<BurnInTestLogEntry>.Filter.Eq(e => e.TestLogId, id)
+                      & Builders<BurnInTestLogEntry>.Filter.Gte(e => e.Reading.ElapsedSeconds, 20);
+            
+    var initTestLog = await collection.Find(initFilter)
+        .Project(e => e.Reading)
+        .FirstOrDefaultAsync();
+    var finalTestLog = await collection.Find(finalFilter)
+        .Project(e => e.Reading)
+        .FirstOrDefaultAsync();
+    if(initTestLog==null || finalTestLog==null) {
+        Console.WriteLine("Logs Null");
+        return;
+    }
+    Console.WriteLine($"Init: {initTestLog.ElapsedSeconds} Final: {finalTestLog.ElapsedSeconds}");
 }
 
 async Task CreateStationDatabase() {

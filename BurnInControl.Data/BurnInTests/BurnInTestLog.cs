@@ -11,11 +11,11 @@ public class BurnInTestLogEntry {
     public ObjectId TestLogId { get; set; }
     public DateTime TimeStamp { get; set; }
     public StationSerialData? Reading { get; set; }
-    public Dictionary<string,PocketLogEntry> PocketData { get; set; }
+    public Dictionary<string, PocketLogEntry> PocketData { get; set; }
     
     public void SetReading(StationSerialData data) {
         this.Reading = data;
-
+        this.PocketData = new Dictionary<string, PocketLogEntry>();
         foreach (var pocket in StationPocket.List) {
             PocketData.Add(pocket.Name,new PocketLogEntry() {
                 Probe1Data = new ProbeLogData() {

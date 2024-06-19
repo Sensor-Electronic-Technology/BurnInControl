@@ -17,6 +17,7 @@ public class StationDataService {
     private readonly IMongoCollection<Station> _stationCollection;
     private readonly IMongoCollection<TestConfiguration> _testConfigurationCollection;
 
+
     public StationDataService(IMongoClient client,IOptions<DatabaseSettings> settings) {
         var database = client.GetDatabase(settings.Value.DatabaseName?? "burn_in_db");
         this._stationCollection = database.GetCollection<Station>(settings.Value.StationCollectionName ?? "stations");

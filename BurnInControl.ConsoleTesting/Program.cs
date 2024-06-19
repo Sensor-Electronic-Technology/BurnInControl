@@ -127,11 +127,22 @@ Console.WriteLine(JsonSerializer.Serialize(testIdPacket));*/
 //await CloneDatabase();
 //await CreateStationDatabase();
 
-CheckAny();
+await TestMongoDict();
 
-void CheckAny() {
-    List<bool> check = [true, true, false];
-    Console.WriteLine($"Okay: {check.Any(e => e==false)}");
+async Task TestMongoDict() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database=client.GetDatabase("burn_in_db");
+    var collection=database.GetCollection<TestMongo>("test_dict");
+    TestMongo test = new TestMongo();
+    test._id=ObjectId.GenerateNewId();
+    test.Value="Test";
+    test.TestSetups = new Dictionary<string, TestMongoSetup>() {
+        { StationPocket.LeftPocket.Name, new TestMongoSetup() { WaferId = "Wafer1", Data = 1 } },
+        { StationPocket.MiddlePocket.Name, new TestMongoSetup() { WaferId = "Wafer2", Data = 2 } },
+        { StationPocket.RightPocket.Name, new TestMongoSetup() { WaferId = "Wafer3", Data = 3 } }
+    };
+    await collection.InsertOneAsync(test);
+    Console.WriteLine("Check Database");
 }
 
 async Task CreateStationDatabase() {
@@ -615,6 +626,17 @@ async Task GetVersionFromString() {
     foreach(var str in split) {
         Console.WriteLine(str);
     }
+}
+
+public class TestMongo {
+    public ObjectId _id { get; set; }
+    public string Value { get; set; }
+    public Dictionary<string,TestMongoSetup> TestSetups { get; set; }
+}
+
+public class TestMongoSetup {
+    public string WaferId { get; set; }
+    public int Data { get; set; }
 }
 
 /*HttpClient client = new HttpClient();

@@ -17,7 +17,7 @@ if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
 }*/
 var connectionString= builder.Configuration.GetConnectionString("DefaultConnection") ?? "mongodb://172.20.3.41:27017";
 builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration));
-builder.Services.AddInfrastructure();
+builder.Services.AddServiceDataInfrastructure();
 builder.Services.AddSettings(builder);
 builder.Services.AddStationService();
 builder.Services.AddSignalR(options => { 

@@ -116,6 +116,7 @@
         this._pads = this._waferMap?.MapPads.Select(e => e.Identifier!).ToList();
         this.WaferSetup.Probe1Pad = string.Empty;
         this.WaferSetup.Probe2Pad = string.Empty;
+        this.WaferSetup.WaferSize = size.Value;
         this._probe1Active = false;
         this._probe2Active = false;
         await this.WaferSetupChanged.InvokeAsync(this.WaferSetup);

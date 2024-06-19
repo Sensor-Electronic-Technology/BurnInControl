@@ -2,7 +2,8 @@ using BurnInControl.Data.StationModel.Components;
 namespace BurnInControl.Data.BurnInTests.Wafers;
 
 public class WaferSetup {
-    public string? WaferId { get; set; } = "";
+    public string WaferId { get; set; } = "Not Loaded";
+    public int WaferSize { get; set; } = 2;
     public int BurnNumber { get; set; } = 0;
     public StationPocket? StationPocket { get; set; } = StationPocket.LeftPocket;
     public StationProbe? Probe1 { get; set; }=StationProbe.Probe1;

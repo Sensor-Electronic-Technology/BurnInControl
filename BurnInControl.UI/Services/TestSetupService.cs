@@ -105,7 +105,7 @@ public class TestSetupService {
                     this.SetupAlerts[i].Okay = false;
                     continue;
                 }
-                var result=await this._qtDataService.QuickTestExists(setup?.WaferId);
+                var result=await this._qtDataService.QuickTestExists(setup.WaferId);
                 if (!result.IsError) {
                     this.SetupAlerts[i].Okay = result.Value;
                     bool p1Set = !string.IsNullOrEmpty(setup.Probe1Pad);
@@ -173,8 +173,9 @@ public class TestSetupService {
         switch (index) {
             case 0: {
                 return new WaferSetup() {
-                    WaferId = string.Empty,
+                    WaferId = "Not Loaded",
                     BurnNumber = 1,
+                    WaferSize = 2,
                     StationPocket = StationPocket.LeftPocket,
                     Probe1 = StationProbe.Probe1,
                     Probe2 = StationProbe.Probe2,
@@ -183,8 +184,9 @@ public class TestSetupService {
             }
             case 1: {
                 return new WaferSetup() {
-                    WaferId = string.Empty,
+                    WaferId = "Not Loaded",
                     BurnNumber = 1,
+                    WaferSize = 2,
                     StationPocket = StationPocket.MiddlePocket,
                     Probe1 = StationProbe.Probe3,
                     Probe2 = StationProbe.Probe4,
@@ -193,8 +195,9 @@ public class TestSetupService {
             }
             case 2: {
                 return new WaferSetup() {
-                    WaferId = string.Empty,
+                    WaferId = "Not Loaded",
                     BurnNumber = 1,
+                    WaferSize = 2,
                     StationPocket = StationPocket.RightPocket,
                     Probe1 = StationProbe.Probe5,
                     Probe2 = StationProbe.Probe6,

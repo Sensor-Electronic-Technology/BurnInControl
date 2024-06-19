@@ -182,10 +182,10 @@ public class TestLogDataService {
             .FirstOrDefaultAsync();
         if(testLog != null && testLog.TestSetup?.Count>0) {
             var testSetups = testLog.TestSetup;
-            ulong finalTime = (ulong)(testLog.RunTime - 120);
+            ulong finalTime = (ulong)(testLog.RunTime-10);
             var initFilter=Builders<BurnInTestLogEntry>.Filter.Eq(e => e.TestLogId, testLogId) 
-                & Builders<BurnInTestLogEntry>.Filter.Gte(e => e.Reading.ElapsedSeconds, 60)
-                & Builders<BurnInTestLogEntry>.Filter.Lte(e => e.Reading.ElapsedSeconds, 120);
+                & Builders<BurnInTestLogEntry>.Filter.Gte(e => e.Reading.ElapsedSeconds, 5)
+                & Builders<BurnInTestLogEntry>.Filter.Lte(e => e.Reading.ElapsedSeconds, 10);
             var finalFilter = Builders<BurnInTestLogEntry>.Filter.Eq(e => e.TestLogId, testLogId)
                               & Builders<BurnInTestLogEntry>.Filter.Gte(e => e.Reading.ElapsedSeconds, finalTime);
             

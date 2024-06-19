@@ -28,7 +28,7 @@ public class TestService:ITestService {
     private readonly IMediator _mediator;
     private string? _stationId;
     private DateTime _lastLog;
-    private readonly TimeSpan _interval=TimeSpan.FromSeconds(10);
+    private readonly TimeSpan _interval=TimeSpan.FromSeconds(2);
     private readonly ILogger<TestService> _logger;
 
     private bool _running=false, _paused=false;
@@ -354,7 +354,6 @@ public class TestService:ITestService {
     }
     
     private void GeneratePath() {
-        var wafers=this._runningTest.TestSetup.Select(e=>e.Value.WaferId).ToList();
         this._path = "/test-logs/";
         bool firstWafer = true;
         foreach(var setup in this._runningTest.TestSetup) {
@@ -448,17 +447,17 @@ public class TestService:ITestService {
                 this._first = false;
                 this._lastLog = DateTime.Now;
                 await this.StartLog(data);
-                //await this.LogFile(data, true);
+                await this.LogFile(data, true);
             } else {
                 if ((DateTime.Now - this._lastLog) >= this._interval) {
                     this._lastLog = DateTime.Now;
                     await this.UpdateLogs(data);
-                    //await this.LogFile(data, false);
+                    await this.LogFile(data, false);
                 } else {
                     if(this._paused!=data.Paused) {
                         this._paused = data.Paused;
                         await this.UpdateLogs(data);
-                        //await this.LogFile(data, false);
+                        await this.LogFile(data, false);
                     }
                 }
             }

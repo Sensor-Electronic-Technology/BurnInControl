@@ -416,7 +416,6 @@ public class TestService:ITestService {
     }
 
     public async Task LogFile(StationSerialData data,bool first) {
-        StringBuilder builder = new StringBuilder();
         if (first) {
             GeneratePath();
             var header= "Date,System Time,RunTime,Elapsed(secs)," +
@@ -449,17 +448,17 @@ public class TestService:ITestService {
                 this._first = false;
                 this._lastLog = DateTime.Now;
                 await this.StartLog(data);
-                await this.LogFile(data, true);
+                //await this.LogFile(data, true);
             } else {
                 if ((DateTime.Now - this._lastLog) >= this._interval) {
                     this._lastLog = DateTime.Now;
                     await this.UpdateLogs(data);
-                    await this.LogFile(data, false);
+                    //await this.LogFile(data, false);
                 } else {
                     if(this._paused!=data.Paused) {
                         this._paused = data.Paused;
                         await this.UpdateLogs(data);
-                        await this.LogFile(data, false);
+                        //await this.LogFile(data, false);
                     }
                 }
             }

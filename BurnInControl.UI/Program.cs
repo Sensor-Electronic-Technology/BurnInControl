@@ -28,7 +28,7 @@ builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(na
 builder.Services.AddControllers();
 builder.Services.AddRadzenComponents();
 builder.Services.AddHttpClient();
-builder.Services.AddUiDataInfrastructure();
+builder.Services.AddInfrastructure();
 builder.Services.AddUiSettings(builder);
 builder.Services.AddLogging();
 builder.Services.AddScoped<HubClient>();

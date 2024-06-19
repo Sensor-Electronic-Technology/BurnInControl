@@ -125,7 +125,14 @@ Console.WriteLine(JsonSerializer.Serialize(sendConfigPacket));*/
 
 Console.WriteLine(JsonSerializer.Serialize(testIdPacket));*/
 //await CloneDatabase();
-await CreateStationDatabase();
+//await CreateStationDatabase();
+
+CheckAny();
+
+void CheckAny() {
+    List<bool> check = [true, true, false];
+    Console.WriteLine($"Okay: {check.Any(e => e==false)}");
+}
 
 async Task CreateStationDatabase() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");

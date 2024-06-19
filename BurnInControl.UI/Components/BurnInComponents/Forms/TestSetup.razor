@@ -178,6 +178,11 @@
     }
 
     private async Task SaveHandler() {
+        await this.VerifyHandler();
+        if (this.TestSetupService.SetupError) {
+            await this.Notify(NotificationSeverity.Error, "Error", "Setup has errors,plesae correct before saving");
+            return;
+        }
         await this.Save.InvokeAsync(this.TestSetupService.WaferSetups);
     }
     

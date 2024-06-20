@@ -176,7 +176,7 @@ public class TestSetupService {
         switch (index) {
             case 0: {
                 return new WaferSetup() {
-                    WaferId = "Not Loaded",
+                    WaferId = string.Empty,
                     BurnNumber = 1,
                     WaferSize = 2,
                     StationPocket = StationPocket.LeftPocket,
@@ -187,7 +187,7 @@ public class TestSetupService {
             }
             case 1: {
                 return new WaferSetup() {
-                    WaferId = "Not Loaded",
+                    WaferId = string.Empty,
                     BurnNumber = 1,
                     WaferSize = 2,
                     StationPocket = StationPocket.MiddlePocket,
@@ -198,7 +198,7 @@ public class TestSetupService {
             }
             case 2: {
                 return new WaferSetup() {
-                    WaferId = "Not Loaded",
+                    WaferId = string.Empty,
                     BurnNumber = 1,
                     WaferSize = 2,
                     StationPocket = StationPocket.RightPocket,

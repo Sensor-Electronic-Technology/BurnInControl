@@ -177,12 +177,14 @@ public class TestLogDataService {
         }
         return Error.Failure(description: "Station Running flag not cleared and Log was not finalized");
     }
-    public async Task LogWaferTest(ObjectId testLogId) {
+
+    private async Task LogWaferTest(ObjectId testLogId) {
         var testLog=await this._testLogCollection.Find(e=>e._id==testLogId)
             .FirstOrDefaultAsync();
         if(testLog != null && testLog.TestSetup?.Count>0) {
             var testSetups = testLog.TestSetup;
             ulong finalTime = (ulong)(testLog.RunTime-10);
+            Console.WriteLine($"Final Time: {finalTime}");
             var initFilter=Builders<BurnInTestLogEntry>.Filter.Eq(e => e.TestLogId, testLogId) 
                 & Builders<BurnInTestLogEntry>.Filter.Gte(e => e.Reading.ElapsedSeconds, 5)
                 & Builders<BurnInTestLogEntry>.Filter.Lte(e => e.Reading.ElapsedSeconds, 10);
@@ -211,8 +213,12 @@ public class TestLogDataService {
                     waferTest.StopTime = testLog.StopTime;
                     waferTest.BurnNumber = testSetup.BurnNumber;
                     foreach (var padLocation in PadLocation.List) {
+                        Console.WriteLine($"In GenerateWaferLog: PadLocation {padLocation.Name}");
+                        Console.WriteLine($"In GenerateWaferLog: Probe1 {testSetup.Probe1Pad ?? "Empty"}");
+                        Console.WriteLine($"In GenerateWaferLog: Probe2 {testSetup.Probe2Pad ?? "Empty"}");
                         if (!string.IsNullOrWhiteSpace(testSetup.Probe1Pad)) {
                             if (testSetup.Probe1Pad.Contains(padLocation.Name)) {
+                                Console.WriteLine($"Probe 1 found in {padLocation.Name}. Creating WaferPadData");
                                 waferTest.WaferPadInitialData.Add(padLocation.Name, new WaferPadData() {
                                     Voltage =initTestLog.Voltages[(pocket.Value*2)],
                                     Current =initTestLog.Currents[(pocket.Value*2)]
@@ -223,6 +229,7 @@ public class TestLogDataService {
                                 });
                             }
                         }else if (!string.IsNullOrWhiteSpace(testSetup.Probe2Pad)) {
+                            Console.WriteLine($"Probe 2 found in {padLocation.Name}. Creating WaferPadData");
                             waferTest.WaferPadInitialData.Add(padLocation.Name, new WaferPadData() {
                                 Voltage =initTestLog.Voltages[((pocket.Value-1)*2)+1],
                                 Current =initTestLog.Currents[((pocket.Value-1)*2)+1]
@@ -232,6 +239,7 @@ public class TestLogDataService {
                                 Current =finalTestLog.Currents[((pocket.Value-1)*2)+1]
                             });
                         }else {
+                            Console.WriteLine($"None Found {padLocation.Name}. Creating Empty WaferPadData");
                             waferTest.WaferPadInitialData.Add(padLocation.Name, new WaferPadData() {
                                 Voltage =0.0,
                                 Current =0.0

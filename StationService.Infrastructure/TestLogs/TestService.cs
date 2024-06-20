@@ -28,7 +28,7 @@ public class TestService:ITestService {
     private readonly IMediator _mediator;
     private string? _stationId;
     private DateTime _lastLog;
-    private readonly TimeSpan _interval=TimeSpan.FromSeconds(2);
+    private readonly TimeSpan _interval=TimeSpan.FromSeconds(1);
     private readonly ILogger<TestService> _logger;
 
     private bool _running=false, _paused=false;
@@ -49,7 +49,6 @@ public class TestService:ITestService {
         this._testLogDataService = testLogDataService;
         this._hubContext = hubContext;
         this._savedStateDataService = savedStateDataService;
-        //this._interval = TimeSpan.FromSeconds(60);
         this._stationId=configuration["StationId"] ?? "S01";
     }
 
@@ -325,7 +324,6 @@ public class TestService:ITestService {
             this._stationId ?? "S01",DateTime.Now,data);
     }
     private async Task UpdateLogs(StationSerialData data) {
-        Console.WriteLine($"In UpdateLogs {this._runningTest._id.ToString()}");
         await this._testLogDataService.InsertReading(this._runningTest._id,data);
         await this.UpdateSavedState(data);
     }
@@ -355,15 +353,13 @@ public class TestService:ITestService {
     
     private void GeneratePath() {
         this._path = "/test-logs/";
-        bool firstWafer = true;
         foreach(var setup in this._runningTest.TestSetup) {
-            if (firstWafer) {
-                this._path += $"{setup.Value.WaferId}{setup.Value.Probe1Pad ?? "N"}{setup.Value.Probe2Pad ?? "N"}";
-                firstWafer = false;
+            string waferId = string.IsNullOrWhiteSpace(setup.Value.WaferId) ? "Empty" : setup.Value.WaferId;
+            if (setup.Key == StationPocket.LeftPocket.Name) {
+                this._path += $"{waferId}{setup.Value.Probe1Pad ?? "N"}{setup.Value.Probe2Pad ?? "N"}";
             } else {
-                this._path += $"_{setup.Value.WaferId}{setup.Value.Probe1Pad ?? "N"}{setup.Value.Probe2Pad ?? "N"}";
+                this._path += $"_{waferId}{setup.Value.Probe1Pad ?? "N"}{setup.Value.Probe2Pad ?? "N"}";
             }
-                
         }
         this._path+=".csv";
     }
@@ -410,17 +406,16 @@ public class TestService:ITestService {
         foreach(var temp in data.Temperatures) {
             logLine+=$"{temp},";
         }
-
         return logLine;
     }
 
-    public async Task LogFile(StationSerialData data,bool first) {
+    private async Task LogFile(StationSerialData data,bool first) {
         if (first) {
             GeneratePath();
             var header= "Date,System Time,RunTime,Elapsed(secs)," +
                         "V11,V12,V21,V22,V31,V32," +
                         "i11,i12,i21,i22,i31,i32," +
-                        "p1,p2,p3,p4,p5,p6" +
+                        "p1,p2,p3,p4,p5,p6," +
                         "Temp1,Temp2,Temp3,CurrentSetPoint(mA)";
             await using StreamWriter stream = File.AppendText(this._path);
             await stream.WriteLineAsync(header);

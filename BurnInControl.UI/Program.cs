@@ -53,34 +53,4 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
-using Process processKill = new Process();
-processKill.StartInfo.FileName = "pkill";
-processKill.StartInfo.Arguments = "-f chromium-browser";
-processKill.StartInfo.RedirectStandardOutput = true;
-processKill.StartInfo.UseShellExecute = false;
-try {
-    processKill.Start();
-    var result = processKill.StandardOutput.ReadToEnd();
-    processKill.WaitForExit();
-    Console.WriteLine(result);
-} catch(Exception e) {
-    app.Logger.LogError("Error while closing chromium browser. Exception: \n  {ErrorMessage}", 
-        e.ToErrorMessage());
-}
-
-using Process processStart = new Process();
-processStart.StartInfo.FileName = "chromium-browser";
-processStart.StartInfo.Arguments = "--start-fullscreen http://localhost";
-processStart.StartInfo.RedirectStandardOutput = true;
-processStart.StartInfo.UseShellExecute = false;
-try {
-    processStart.Start();
-    var result = processStart.StandardOutput.ReadToEnd();
-    processStart.WaitForExit();
-    Console.WriteLine(result); 
-} catch(Exception e) {
-    app.Logger.LogError("Error while opening chromium-browser Exception: \n  {ErrorMessage}", 
-        e.ToErrorMessage());
-}
 app.Run();

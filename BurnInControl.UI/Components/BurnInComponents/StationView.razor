@@ -322,11 +322,10 @@
 
     private Task ToggleTemperatureHandler() {
         if (this.Connected) {
-            //return this._hubConnection.SendAsync(HubConstants.Methods.SendCommand,StationCommand.ToggleHeat);
             if (!this._data.Running) {
                 this.StationStatusService.StationState=this._data.TemperatureSetPoint==0 ? StationState.Heating : StationState.Idle;
+                return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.ToggleHeat);
             }
-            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.ToggleHeat);
         }
 
         this.NotifyNotConnected();
@@ -344,11 +343,23 @@
 
     private Task SaveTestSetupHandler(List<WaferSetup> waferSetups) {
         if (this.Connected) {
-            if (waferSetups.Any()) {
-                return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SetupTest, new TestSetupTransport() { WaferSetups = waferSetups, SetCurrent = StationCurrent._60mA, SetTemperature = 85, });
+            if (!waferSetups.Any()) {
+                this.Notify("Setup Error",
+                    "No wafer setups. There must be at least one wafer loaded to start a test",
+                    NotificationSeverity.Error);
+                return Task.CompletedTask;
             }
-
-            this.Notify("", "");
+            if (StationCurrent.TryFromValue(this._data.CurrentSetPoint, out var current)) {
+                return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SetupTest, 
+                    new TestSetupTransport() {
+                        WaferSetups = waferSetups, 
+                        SetCurrent = current, 
+                        SetTemperature = 85,
+                });
+            }
+            this.Notify("Invalid Current",
+                "Failed to retrieve set current, please cycle current and try again",
+                NotificationSeverity.Error);
             return Task.CompletedTask;
         }
 

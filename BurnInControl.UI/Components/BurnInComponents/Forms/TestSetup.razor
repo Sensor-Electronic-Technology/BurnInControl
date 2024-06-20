@@ -67,7 +67,8 @@
                                           @onclick:stopPropagation="true"/>
                         </Template>
                         <EditTemplate Context="waferSetup">
-                            <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success"
+                            <RadzenButton Icon="check" 
+                                          ButtonStyle="ButtonStyle.Success"
                                           Variant="Variant.Flat"
                                           Size="ButtonSize.Medium"
                                           Click="@((args) => SaveRow(waferSetup))"
@@ -228,7 +229,7 @@
     }
 
     private bool CanSave() {
-        return this._verified && !this.TestSetupService.SetupError && !this.TestRunning;
+        return this._verified && !this.TestSetupService.SetupError && !this.TestRunning && !this.TestSetupService.Saved;
     }
     
     private void ShowTooltip(ElementReference elementReference, string message,TooltipOptions? options = null) {
@@ -240,6 +241,11 @@
         if (this.TestRunning) {
             string message = "Test currently running";
             this.ToolTipService.Open(elementReference, message,options);
+            return;
+        }
+
+        if (this.TestSetupService.Saved) {
+            this.ToolTipService.Open(elementReference, "Setup already saved",options);
             return;
         }
 

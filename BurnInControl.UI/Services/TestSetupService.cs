@@ -14,8 +14,9 @@ public class TestSetupService {
     public int AlertCount => this.SetupAlerts.Count;
     public bool Verified { get; set; }
     public bool SetupError { get; set; }
+    public bool Saved { get; set; }
     
-    public int LoadedCount=>this.WaferSetups.Count(e=>e.Loaded==true);
+    public int LoadedCount=>this.WaferSetups.Count(e=>e.Loaded);
 
     public TestSetupService(QuickTestDataService qtDataService) {
         this._qtDataService = qtDataService;
@@ -33,6 +34,7 @@ public class TestSetupService {
     public async Task Load() {
         this.SetupError = false;
         this.Verified = false;
+        this.Saved = false;
         this.WaferSetups.Clear();
         this.SetupAlerts.Clear();
         for (int i = 0; i < 3; i++) {
@@ -57,6 +59,7 @@ public class TestSetupService {
     public void Reset() {
         this.SetupError = false;
         this.Verified = false;
+        this.Saved = false;
         this.WaferSetups.Clear();
         this.SetupAlerts.Clear();
         for (int i = 0; i < 3; i++) {
@@ -167,7 +170,7 @@ public class TestSetupService {
                 this.SetupAlerts[i].Okay = true;
             }
         }
-        this.SetupError=this.SetupAlerts.Any(e => !e.Okay) || this.SetupCount==0;
+        this.SetupError=this.SetupAlerts.Any(e => !e.Okay) || this.LoadedCount==0;
     }
     private WaferSetup GenerateWaferSetup(int index) {
         switch (index) {

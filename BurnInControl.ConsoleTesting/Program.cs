@@ -21,114 +21,12 @@ using Octokit;
 using Octokit.Internal;
 using SerialPortLib;
 
-//await TestWorkFlow();
 
-//TestStateMachine();
-
-//await CheckLatest();
-//await CreateRelease();
-//await GetVersionFromString();
-
-/*await TestRunProcess();
-
-async Task TestRunProcess() {
-    using Process process = new Process();
-    ProcessStartInfo startInfo = new ProcessStartInfo(" C:\\Program Files\\Arduino CLI\\arduino-cli.exe");
-    startInfo.Arguments="upload -p COM3 -i \"C:\\Users\\aelmendo\\Documents\\Arduino\\burn-build\\BurnInFirmwareV3.ino.hex\" -b arduino:avr:mega -v --log";
-    startInfo.RedirectStandardOutput = true;
-    startInfo.UseShellExecute = false;
-    process.StartInfo = startInfo;
-    process.Start();
-    var output=await process.StandardOutput.ReadToEndAsync();
-    process.StandardOutput.
-    Console.WriteLine(output);
-}*/
-/*await CreateStationDatabase();
-await CreateTrackerDatabase();*/
-
-/*var objectId=ObjectId.GenerateNewId().ToString();
-Console.WriteLine(objectId);*/
-
-
-/*MessagePacket<ConfigType> msgPacket = new MessagePacket<ConfigType>() {
-    Prefix = StationMsgPrefix.GetConfigPrefix,
-    Packet = ConfigType.HeaterControlConfig
-};
-var output = JsonSerializer.Serialize(msgPacket,
-    new JsonSerializerOptions() {
-        PropertyNamingPolicy =null,
-        WriteIndented = false
-    });
-
-Console.WriteLine(output);*/
-/*string? str = string.Empty;
-Console.WriteLine($"NullorWhitespace: {string.IsNullOrWhiteSpace(str)}");*/
-
-
-
-/*Console.WriteLine(nameof(StationState.Idle));
-Console.WriteLine(StationState.Idle.ToString());*/
-//await CloneDatabase();
-//await CopyTestLogs();
-//await TestLogsSepCollection();
-//await BenchmarkLogFetching();
-//PrintPackets();
-//StartSerialPort();
-//await CloneDatabase();
-//await TestUsbController();
-
-/*MessagePacket<StationCommand> modeTunePacket = new MessagePacket<StationCommand>() {
-    Prefix = StationMsgPrefix.CommandPrefix,
-    Packet = StationCommand.ChangeModeATune
-};
-
-MessagePacket<StationCommand> startPacket = new MessagePacket<StationCommand>() {
-    Prefix = StationMsgPrefix.CommandPrefix,
-    Packet = StationCommand.StartTune
-};
-
-MessagePacket<StationCommand> stopPacket = new MessagePacket<StationCommand>() {
-    Prefix = StationMsgPrefix.CommandPrefix,
-    Packet = StationCommand.StopTune
-};
-
-MessagePacket<ConfigPacket<HeaterControllerConfig>> sendConfigPacket =
-    new MessagePacket<ConfigPacket<HeaterControllerConfig>>() {
-        Packet = new ConfigPacket<HeaterControllerConfig>() {
-            ConfigType = ConfigType.HeaterControlConfig, Configuration = new HeaterControllerConfig()
-        },
-        Prefix = StationMsgPrefix.ReceiveConfigPrefix
-    };*/
-
-/*MessagePacket<IntValuePacket> windowSizePacket = new MessagePacket<IntValuePacket>() {
-    Prefix=StationMsgPrefix.SendTuneWindowSizePrefix,
-    Packet = new IntValuePacket() {
-        Value = 10
-    }
-};*/
-
-/*Console.WriteLine(JsonSerializer.Serialize(modeTunePacket));
-Console.WriteLine(JsonSerializer.Serialize(startPacket));
-Console.WriteLine(JsonSerializer.Serialize(stopPacket));
-Console.WriteLine(JsonSerializer.Serialize(sendConfigPacket));*/
-/*Console.WriteLine(JsonSerializer.Serialize(windowSizePacket));*/
-
-/*await CreateStationDatabase();*/
-
-
-//await ConfigTestUsbController();
-//await CreateStationDatabase();
-//await CloneDatabase();
-/*MessagePacket<TestIdPacket> testIdPacket = new MessagePacket<TestIdPacket>() {
-    Prefix = StationMsgPrefix.SendTestIdPrefix, Packet = new TestIdPacket() { TestId = "1234" }
-};
-
-Console.WriteLine(JsonSerializer.Serialize(testIdPacket));*/
-//await CloneDatabase();
-//await CreateStationDatabase();
-
-//await TestMongoDict();
-await TestGetReadings();
+//await TestGetReadings();
+List<bool> checks = [true, true, true];
+int count = 0;
+var error=checks.Any(e=>!e) || count==0;
+Console.WriteLine($"Error: {error}");
 
 async Task TestMongoDict() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");

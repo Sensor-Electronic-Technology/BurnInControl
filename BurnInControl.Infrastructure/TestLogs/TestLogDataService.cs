@@ -212,41 +212,56 @@ public class TestLogDataService {
                     waferTest.StartTime = testLog.StartTime;
                     waferTest.StopTime = testLog.StopTime;
                     waferTest.BurnNumber = testSetup.BurnNumber;
-                    foreach (var padLocation in PadLocation.List) {
-                        Console.WriteLine($"In GenerateWaferLog: PadLocation {padLocation.Name}");
-                        Console.WriteLine($"In GenerateWaferLog: Probe1 {testSetup.Probe1Pad ?? "Empty"}");
-                        Console.WriteLine($"In GenerateWaferLog: Probe2 {testSetup.Probe2Pad ?? "Empty"}");
-                        if (!string.IsNullOrWhiteSpace(testSetup.Probe1Pad)) {
-                            if (testSetup.Probe1Pad.Contains(padLocation.Name)) {
-                                Console.WriteLine($"Probe 1 found in {padLocation.Name}. Creating WaferPadData");
-                                waferTest.WaferPadInitialData.Add(padLocation.Name, new WaferPadData() {
-                                    Voltage =initTestLog.Voltages[(pocket.Value*2)],
-                                    Current =initTestLog.Currents[(pocket.Value*2)]
-                                });
-                                waferTest.WaferPadFinalData.Add(padLocation.Name, new WaferPadData() {
-                                    Voltage =finalTestLog.Voltages[(pocket.Value*2)],
-                                    Current =finalTestLog.Currents[(pocket.Value*2)]
-                                });
-                            }
-                        }else if (!string.IsNullOrWhiteSpace(testSetup.Probe2Pad)) {
-                            Console.WriteLine($"Probe 2 found in {padLocation.Name}. Creating WaferPadData");
-                            waferTest.WaferPadInitialData.Add(padLocation.Name, new WaferPadData() {
+                    
+                    if (!string.IsNullOrWhiteSpace(testSetup.Probe1Pad)) {
+                        var p1Pad = PadLocation.List.FirstOrDefault(e => testSetup.Probe1Pad.Contains(e.Value));
+                        if(p1Pad!=null) {
+                            waferTest.WaferPadInitialData.Add(p1Pad.Value, new WaferPadData() {
+                                Voltage =initTestLog.Voltages[(pocket.Value*2)],
+                                Current =initTestLog.Currents[(pocket.Value*2)]
+                            });
+                            waferTest.WaferPadFinalData.Add(p1Pad.Value, new WaferPadData() {
+                                Voltage =finalTestLog.Voltages[(pocket.Value*2)],
+                                Current =finalTestLog.Currents[(pocket.Value*2)]
+                            });
+                        }
+                    }
+                    
+                    if (!string.IsNullOrWhiteSpace(testSetup.Probe2Pad)) {
+                        var p2Pad = PadLocation.List.FirstOrDefault(e => testSetup.Probe2Pad.Contains(e.Value));
+                        if(p2Pad!=null) {
+                            Console.WriteLine($"Probe 2 found in {p2Pad.Name}. Creating WaferPadData");
+                            waferTest.WaferPadInitialData.Add(p2Pad.Value, new WaferPadData() {
                                 Voltage =initTestLog.Voltages[((pocket.Value-1)*2)+1],
                                 Current =initTestLog.Currents[((pocket.Value-1)*2)+1]
                             });
-                            waferTest.WaferPadFinalData.Add(padLocation.Name, new WaferPadData() {
+                            waferTest.WaferPadFinalData.Add(p2Pad.Value, new WaferPadData() {
                                 Voltage =finalTestLog.Voltages[((pocket.Value-1)*2)+1],
                                 Current =finalTestLog.Currents[((pocket.Value-1)*2)+1]
                             });
-                        }else {
-                            Console.WriteLine($"None Found {padLocation.Name}. Creating Empty WaferPadData");
-                            waferTest.WaferPadInitialData.Add(padLocation.Name, new WaferPadData() {
-                                Voltage =0.0,
-                                Current =0.0
+                        }
+                    }
+                    var foundPadList=waferTest.WaferPadInitialData.Keys.ToList();
+                    if (foundPadList.Any()) {
+                        foreach(var pad in PadLocation.List.Where(e=>!foundPadList.Contains(e.Value))) {
+                            waferTest.WaferPadInitialData.Add(pad.Value, new WaferPadData() {
+                                Voltage = 0,
+                                Current = 0
                             });
-                            waferTest.WaferPadFinalData.Add(padLocation.Name, new WaferPadData() {
-                                Voltage =0.0,
-                                Current =0.0
+                            waferTest.WaferPadFinalData.Add(pad.Value, new WaferPadData() {
+                                Voltage = 0,
+                                Current = 0
+                            });
+                        }
+                    } else {
+                        foreach(var pad in PadLocation.List) {
+                            waferTest.WaferPadInitialData.Add(pad.Value, new WaferPadData() {
+                                Voltage = 0,
+                                Current = 0
+                            });
+                            waferTest.WaferPadFinalData.Add(pad.Value, new WaferPadData() {
+                                Voltage = 0,
+                                Current = 0
                             });
                         }
                     }

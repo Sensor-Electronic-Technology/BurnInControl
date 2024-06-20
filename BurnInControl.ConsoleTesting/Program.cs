@@ -19,14 +19,28 @@ using BurnInControl.Shared.FirmwareData;
 using MongoDB.Bson;
 using Octokit;
 using Octokit.Internal;
+using QuickTest.Data.Models.Wafers.Enums;
 using SerialPortLib;
 
 
 //await TestGetReadings();
-List<bool> checks = [true, true, true];
+/*List<bool> checks = [true, true, true];
 int count = 0;
 var error=checks.Any(e=>!e) || count==0;
-Console.WriteLine($"Error: {error}");
+Console.WriteLine($"Error: {error}");*/
+string probe = "L1-E";
+
+var pad=PadLocation.List.FirstOrDefault(e => probe.Contains(e.Value));
+if (pad != null) {
+    Console.WriteLine($"Pad: {pad.Value}");
+} else {
+    Console.WriteLine("Pad Not Found");
+}
+
+var otherPads=PadLocation.List.Where(e=>e!=pad);
+foreach(var other in otherPads) {
+    Console.WriteLine($"Other: {other.Value}");
+}
 
 async Task TestMongoDict() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");

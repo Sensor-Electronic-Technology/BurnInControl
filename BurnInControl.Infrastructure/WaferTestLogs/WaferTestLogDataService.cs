@@ -27,6 +27,26 @@ public class WaferTestLogDataService {
         return this._waferTestLogCollection.UpdateOneAsync(filter, update);
     }
     
+    public Task<bool> CheckTested(string waferId,string waferPad) {
+        return this._waferTestLogCollection.Find(e=>e.WaferId==waferId && e.WaferTests.Any(e=>e.Probe1Pad==waferPad || e.Probe2Pad==waferPad)).AnyAsync();
+    }
+
+    public async Task<List<string>> GetTestedPads(string waferId) {
+        var p1Pads = await this._waferTestLogCollection.Find(e => e.WaferId == waferId)
+            .Project(e => e.WaferTests.Select(e => e.Probe1Pad!).ToList())
+            .FirstOrDefaultAsync();
+        var p2Pads = await this._waferTestLogCollection.Find(e => e.WaferId == waferId)
+            .Project(e => e.WaferTests.Select(e => e.Probe2Pad!).ToList())
+            .FirstOrDefaultAsync();
+        if(p1Pads is null || p2Pads is null) {
+            if(p1Pads is null) {
+                return p2Pads ?? [];
+            }
+            return p1Pads;
+        }
+        return p1Pads.Concat(p2Pads).ToList();
+    }
+    
     public Task InsertWaferTestLog(WaferTestLog waferTestLog) {
         return this._waferTestLogCollection.InsertOneAsync(waferTestLog);
     }

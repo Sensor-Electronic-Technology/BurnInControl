@@ -17,7 +17,7 @@
                             Density="Density.Compact"
                             GridLines="DataGridGridLines.Both"
                             Responsive="true"
-                            ValueChanged="SelectedItemChangedHandler"
+                            @*ValueChanged="@this.SelectedItemChangedHandler"*@
                             AllowAlternatingRows="false"
                             AllowColumnResize="true"
                             SelectionMode="DataGridSelectionMode.Single"
@@ -208,7 +208,6 @@
     private async Task SelectedItemChangedHandler(IList<WaferSetup> obj) {
         var selected=obj[0];
         this._selectedTab=this.TestSetupService.WaferSetups.IndexOf(selected);
-        Console.WriteLine($"SelectedTab: {this._selectedTab}");
     }
     
     private Task Notify(NotificationSeverity severity, string summary, string detail) {
@@ -267,10 +266,8 @@
         }
         
     }
-
     public ValueTask DisposeAsync() {
         this.StationStatusService.OnTestSetupLoaded -= this.OnTestLoadedHandler;
         return ValueTask.CompletedTask;
     }
-
 }

@@ -1,0 +1,40 @@
+@using BurnInControl.UI.Data
+@if (this.TempData == null) {
+    <p>Loading...</p>
+} else {
+    <RadzenChart Style="height: 400px;">
+        @foreach (var tempData in this.TempData) {
+            <RadzenLineSeries Smooth="false"
+                              Data="@tempData.Value"
+                              CategoryProperty="TimeHrs"
+                              Title="@tempData.Key"
+                              LineType="LineType.Solid"
+                              ValueProperty="TempC">
+                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                <RadzenSeriesDataLabels Visible="false"/>
+            </RadzenLineSeries>
+        }
+    
+        <RadzenCategoryAxis Min="@this.PlotAxisOptions.XAxisMin"
+                            Max="@this.PlotAxisOptions.XAxisMax"
+                            Step="@this.PlotAxisOptions.XAxisStep"
+                            LineType="LineType.Solid">
+            <RadzenAxisTitle Text="@XAxisName"/>
+            <RadzenGridLines Visible="true" StrokeWidth="3"/>
+        </RadzenCategoryAxis>
+        <RadzenValueAxis Min="@this.PlotAxisOptions.YAxisMin"
+                         Max="@this.PlotAxisOptions.YAxisMax"
+                         Step="@this.PlotAxisOptions.YAxisStep">
+            <RadzenGridLines Visible="true" StrokeWidth="3"/>
+            <RadzenAxisTitle Text="@YAxisName"/>
+        </RadzenValueAxis>
+    </RadzenChart>
+}
+
+@code {
+    [Parameter] public Dictionary<string,List<TemperatureLiveData>>? TempData { get; set; }
+    [Parameter] public PlotAxisOptions PlotAxisOptions { get; set; } = new();
+    [Parameter] public string? YAxisName { get; set; }="Temperature(C)";
+    [Parameter] public string? XAxisName { get; set; }="Time(hrs)";
+    
+}

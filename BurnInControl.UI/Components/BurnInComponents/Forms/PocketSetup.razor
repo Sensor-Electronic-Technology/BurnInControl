@@ -1,5 +1,6 @@
 @using BurnInControl.Data.BurnInTests.Wafers
 @using BurnInControl.Infrastructure.QuickTest
+@using BurnInControl.Infrastructure.WaferTestLogs
 @using BurnInControl.Shared
 @using QuickTest.Data.DataTransfer
 @using BurnInControl.UI.Components.BurnInComponents.Controls.ProbePads
@@ -9,6 +10,8 @@
 @inject NotificationService NotificationService
 @inject TestSetupService _testSetupService
 @inject DialogService DialogService
+@inject WaferTestLogDataService WaferTestLogDataService
+@inject NotifyWaferIdChanged NotifyWaferIdChanged
 @inject ILogger<TestSetup> _logger
 
  <RadzenStack Orientation="Orientation.Vertical" 
@@ -25,7 +28,8 @@
             </RadzenFieldset>
             <WaferIdInput WaferId="@this.WaferSetup.WaferId"
                           WaferList="@this.WaferList"
-                          WaferIdChanged="@this.WaferIdChangedHandler"/>
+                          WaferIdChanged="@this.WaferIdChangedHandler"
+                          ExistsChanged="ExistsChangedHandler"/>
             <RadzenStack Orientation="Orientation.Horizontal" Gap="10">
                 <RadzenFieldset Text="Pocket Loaded?">
                     <RadzenStack Orientation="Orientation.Vertical"
@@ -42,6 +46,7 @@
                 </RadzenFieldset>
             </RadzenStack>
             <PadSelectors Pads="@this._pads"
+                          Enabled="@(this._exists && this.WaferSetup.Loaded)"
                           Probe1Active="@this._probe1Active"
                           Probe1ActiveChanged="@((bool value) => this._probe1Active = value)"
                           Probe2Active="@this._probe2Active"
@@ -60,6 +65,7 @@
                            SelectedPad1Changed="@this.MapPad1ChangedHandler"
                            SelectedPad2Changed="@this.MapPad2ChangedHandler"
                            WaferMap="@this._waferMap"
+                           AvailablePads="@this._pads"
                            Probe1Active="@this._probe1Active"
                            Probe2Active="@this._probe2Active"/>
         }
@@ -77,6 +83,7 @@
     private bool _probe1Active=false;
     private bool _probe2Active=false;
     private List<string>? _pads;
+    
     private bool _exists = false;
     
     private string? _selectedWaferSize;
@@ -90,7 +97,6 @@
         this._waferSizes = new[] { WaferSize.TwoInch.Name, WaferSize.FourInch.Name };
         this._selectedWaferSize = WaferSize.TwoInch.Name;
         this._waferMap = await this.QuickTestDataService.GetWaferMap(WaferSize.TwoInch.Value);
-        this._pads = this._waferMap?.MapPads.Select(e => e.Identifier!).ToList();
     }
 
     private async Task CheckWaferExists() {
@@ -113,7 +119,7 @@
         this._waferMap = null;
         await InvokeAsync(StateHasChanged);
         this._waferMap=await this.QuickTestDataService.GetWaferMap(size.Value);
-        this._pads = this._waferMap?.MapPads.Select(e => e.Identifier!).ToList();
+        this._pads = null;
         this.WaferSetup.Probe1Pad = string.Empty;
         this.WaferSetup.Probe2Pad = string.Empty;
         this.WaferSetup.WaferSize = size.Value;
@@ -128,10 +134,10 @@
         this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
     }
 
-    private Task Probe1PadChangedHandler(object obj) {
+    private async Task Probe1PadChangedHandler(object obj) {
         var selected=obj as string;
-        this.WaferSetup.Probe1Pad = selected;
-        return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
+        this.WaferSetup.Probe1Pad = selected; 
+        await this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
     }
     
     private Task Probe2PadChangedHandler(object obj) {
@@ -183,6 +189,36 @@
             this.NotificationService.Notify(notification);
         }catch(Exception e) {
             this._logger.LogError("Notification Error: {Message}",e.ToErrorMessage());
+        }
+    }
+
+    private async Task ExistsChangedHandler(bool waferExists) {
+        if (this._exists == true && waferExists == false) {
+            this.WaferSetup.Probe1Pad = string.Empty;
+            this.WaferSetup.Probe2Pad= string.Empty;
+            this._probe1Active = false;
+            this._probe2Active = false;
+            this._waferMap = null;
+            this._pads = null;
+            await InvokeAsync(StateHasChanged);
+            this._waferMap=await this.QuickTestDataService.GetWaferMap(WaferSize.TwoInch.Value);
+            await InvokeAsync(StateHasChanged);
+        }
+        this._exists= waferExists;
+        if (waferExists) {
+            /*this._waferMap = null;*/
+            /*this._pads = null;*/
+            /*await InvokeAsync(StateHasChanged);*/
+            this._waferMap=await this.QuickTestDataService.GetWaferMap(WaferSize.TwoInch.Value);
+            var pads= await this.QuickTestDataService.GetAvailablePads(this.WaferSetup.WaferId);
+            this._pads = pads.Distinct().ToList();
+            var testPads=await this.WaferTestLogDataService.GetTestedPads(this.WaferSetup.WaferId);
+            if (testPads.Any()) {
+                this._pads.RemoveAll(e => testPads.Contains(e));
+            }
+            //await this.NotifyWaferIdChanged.Notify();
+            //await InvokeAsync(StateHasChanged);
+            
         }
     }
 

@@ -31,13 +31,16 @@
     [Parameter] public string? WaferId { get; set; }
     [Parameter] public EventCallback<string> WaferIdChanged { get; set; }
     [Parameter] public IEnumerable<string> WaferList { get; set; }=Enumerable.Empty<string>();
-    private bool _exists = false;
+    [Parameter] public bool Exists { get; set; }
+    [Parameter] public EventCallback<bool> ExistsChanged { get; set; }
     
+    private bool _exists = false;
     public async Task CheckWaferExists() {
         if (!string.IsNullOrEmpty(this.WaferId)) {
             var result=await this.QuickTestDataService.QuickTestExists(this.WaferId);
             if (!result.IsError) {
                 this._exists = result.Value;
+                await this.ExistsChanged.InvokeAsync(this._exists);
                 await InvokeAsync(StateHasChanged);
             } else {
                 try {
@@ -68,6 +71,8 @@
     
     private async Task WaferIdChangeHandler(string waferId) {
         this.WaferId = waferId;
+        this._exists=false;
         await this.WaferIdChanged.InvokeAsync(this.WaferId);
+        await this.ExistsChanged.InvokeAsync(this._exists);
     }
 }

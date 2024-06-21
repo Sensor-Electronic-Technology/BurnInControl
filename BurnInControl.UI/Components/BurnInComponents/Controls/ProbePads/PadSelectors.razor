@@ -10,12 +10,14 @@
                                 Size="ButtonSize.Small"
                                 Value="@this.Probe1Active"
                                 Click="@this.ActivateProbe1"
+                                Disabled="@(!this.Enabled)"
                                 Style="width:110px; height: 40px;"/>
             <RadzenDropDown TValue="string"
                             Value="@Probe1Pad"
                             Data="@this.Pads"
                             ValueChanged="@this.Probe1SelectionChanged"
                             ReadOnly="@(!this.Probe1Active)"
+                            Disabled="@(!this.Enabled)"
                             Style="width:100px; height: 40px;"/>
         </RadzenStack>
     </RadzenFieldset>
@@ -26,6 +28,7 @@
                                 ButtonStyle="ButtonStyle.Info"
                                 Size="ButtonSize.Small"
                                 Click="@this.ActivateProbe2"
+                                Disabled="@(!this.Enabled)"
                                 Style="width:110px; height: 40px;"/>
             <RadzenDropDown TValue="string"
                             Value="@Probe2Pad"
@@ -33,6 +36,7 @@
                             ReadOnly="@(!this.Probe2Active)"
                             ValueChanged="@this.Probe2SelectionChanged"
                             Data=@this.Pads
+                            Disabled="@(!this.Enabled)"
                             Style="width:100px; height: 40px;"/>
         </RadzenStack>
     </RadzenFieldset>
@@ -52,6 +56,8 @@
     
     [Parameter] public EventCallback<bool> Probe1ActiveChanged { get; set; }
     [Parameter] public EventCallback<bool> Probe2ActiveChanged { get; set; }
+    
+    [Parameter] public bool Enabled { get; set; }
 
     protected override Task OnInitializedAsync() {
         this.Probe1Active = false;
@@ -101,6 +107,13 @@
         this.Probe1ActiveChanged.InvokeAsync(this.Probe1Active);
         this.Probe2ActiveChanged.InvokeAsync(this.Probe2Active);
     }
+
+    private void WaferIdChangedHandler() {
+        this.Probe1Active = false;
+        this.Probe2Active = false;
+        this.Probe1Pad = string.Empty;
+        this.Probe2Pad = string.Empty;
+    }
     
     private void Notify(string summary,string message,NotificationSeverity severity=NotificationSeverity.Info,int duration=5000) {
         try {
@@ -127,5 +140,4 @@
             this._logger.LogError("Notification Error: {Message}",e.ToErrorMessage());
         }
     }
-    
 }

@@ -216,6 +216,7 @@ public class TestLogDataService {
                     if (!string.IsNullOrWhiteSpace(testSetup.Probe1Pad)) {
                         var p1Pad = PadLocation.List.FirstOrDefault(e => testSetup.Probe1Pad.Contains(e.Value));
                         if(p1Pad!=null) {
+                            waferTest.Probe1Pad = testSetup.Probe1Pad;
                             waferTest.WaferPadInitialData.Add(p1Pad.Value, new WaferPadData() {
                                 Voltage =initTestLog.Voltages[(pocket.Value*2)],
                                 Current =initTestLog.Currents[(pocket.Value*2)]
@@ -230,6 +231,7 @@ public class TestLogDataService {
                     if (!string.IsNullOrWhiteSpace(testSetup.Probe2Pad)) {
                         var p2Pad = PadLocation.List.FirstOrDefault(e => testSetup.Probe2Pad.Contains(e.Value));
                         if(p2Pad!=null) {
+                            waferTest.Probe2Pad = testSetup.Probe2Pad;
                             Console.WriteLine($"Probe 2 found in {p2Pad.Name}. Creating WaferPadData");
                             waferTest.WaferPadInitialData.Add(p2Pad.Value, new WaferPadData() {
                                 Voltage =initTestLog.Voltages[((pocket.Value-1)*2)+1],

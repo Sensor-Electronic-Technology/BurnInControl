@@ -37,8 +37,9 @@ builder.Services.AddSingleton<IMongoClient>(new MongoClient(connectionString));
 builder.Services.AddSingleton<ConsoleWriter>();
 builder.Services.AddSingleton<NotifyPlotOptions>();
 var stationId=Environment.GetEnvironmentVariable("StationId") ?? "S99";
-builder.Services.AddSingleton<StationStatusService>(new StationStatusService(stationId,StationState.Offline));
+builder.Services.AddSingleton(new StationStatusService(stationId,StationState.Offline));
 builder.Services.AddScoped<TestSetupService>();
+builder.Services.AddSingleton<NotifyWaferIdChanged>();
 
 var app = builder.Build();
 

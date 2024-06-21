@@ -18,6 +18,8 @@ public class WaferTest {
     public DateTime StartTime { get; set; }
     public DateTime StopTime { get; set; }
     public int BurnNumber { get; set; }
+    public string? Probe1Pad { get; set; }
+    public string? Probe2Pad { get; set; }
     public Dictionary<string, WaferPadData> WaferPadInitialData { get; set; } = new();
     public Dictionary<string, WaferPadData> WaferPadFinalData { get; set; } = new();
 }

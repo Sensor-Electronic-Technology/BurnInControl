@@ -48,7 +48,7 @@ public class QuickTestDataService {
         }
     }
 
-    public async Task<IEnumerable<Pad>> GetAvailablePads(string waferId) {
+    public async Task<List<string>> GetAvailablePads(string waferId) {
         try {
             var result = await this._client.GetFromJsonAsync<GetAvailableBurnInPadsResponse>(
                 $"{QtApiPaths.GetAvailableBurnInPadsPath}{waferId}");
@@ -56,11 +56,11 @@ public class QuickTestDataService {
                 this._logger.LogError("GetAvailableBurnInPads request failed, returned null");
                 return [];
             }
-            return result.Pads;
+            return result.Pads.Select(e=>e.Identifier!).ToList();
         } catch(Exception ex) {
             string msg = ex.ToErrorMessage();
             this._logger.LogError("GetAvailablePads failed, ErrorMessage: {Message}",msg);
-            return [];;
+            return [];
         }
     }
 

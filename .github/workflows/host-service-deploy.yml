@@ -22,11 +22,8 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ./BurnInControl.HostRunner/BurnInControl.HostRunner.csproj
 
-    - name: Build project
-      run: dotnet build --no-restore --configuration Release ./BurnInControl.HostRunner/BurnInControl.HostRunner.csproj
-
     - name: Publish project
-      run: dotnet publish ./BurnInControl.HostRunner/BurnInControl.HostRunner.csproj --no-build --configuration Release --output ./publish -r linux-arm64 /p:AssemblyName=host_runner
+      run: dotnet publish ./BurnInControl.HostRunner/BurnInControl.HostRunner.csproj --output ./publish -r linux-arm64
 
     - name: Archive publish directory
       run: tar -czvf publish.tar.gz -C ./publish .

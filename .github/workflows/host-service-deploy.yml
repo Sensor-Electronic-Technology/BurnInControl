@@ -50,6 +50,12 @@ jobs:
       run: | 
         tar -xzvf publish.tar.gz -C /home/setitech/host-runner
         sudo chmod a+x /home/setitech/host-runner/host_runner
-    - name: Clean up
-      run: rm publish.tar.gz
+        rm publish.tar.gz
+    - name: Install/update Service
+      run: |
+        cd /host/setitech/host-runner/
+        sudo yes | cp -rf /host/setitech/host-runner/host-runner.service /etc/systemd/system/host-runner.service
+        sudo systemctl daemon-reload
+        sudo systemctl start host-runner
+        sudo systemctl enable host-runner
 

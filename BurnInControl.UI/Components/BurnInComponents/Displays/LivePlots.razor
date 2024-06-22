@@ -27,7 +27,7 @@
     private bool _running = false;
 
     protected override Task OnInitializedAsync() {
-        this.HubClient.HubConnection.On<StationSerialData>(HubConstants.Events.OnStationData, this.OnSerialComReceived);
+        this.HubClient.HubConnection.On<StationSerialData>(StationHubConstants.Events.OnStationData, this.OnSerialComReceived);
         return base.OnInitializedAsync();
     }
     

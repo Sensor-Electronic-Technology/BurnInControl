@@ -102,9 +102,9 @@
     }
 
     private void SetupHub() {
-        this.HubClient.HubConnection.On<string,bool,string>(HubConstants.Events.OnConfigSaveStatus,this.ReceiveSaveStatus);
-        this.HubClient.HubConnection.On<bool,int,string>(HubConstants.Events.OnRequestConfigHandler,this.ReceiveRequestedConfig); 
-        this.HubClient.HubConnection.On<int,string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
+        this.HubClient.HubConnection.On<string,bool,string>(StationHubConstants.Events.OnConfigSaveStatus,this.ReceiveSaveStatus);
+        this.HubClient.HubConnection.On<bool,int,string>(StationHubConstants.Events.OnRequestConfigHandler,this.ReceiveRequestedConfig); 
+        this.HubClient.HubConnection.On<int,string>(StationHubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
     }
     
     private async Task StartConnection() {
@@ -150,7 +150,7 @@
     
     private Task FormatSdHandler() {
         if (this.Connected) {
-            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.FormatSdCard);
+            return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendCommand, StationCommand.FormatSdCard);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
@@ -164,7 +164,7 @@
             this._eventConsole.Log("Success: Saved HeaterControllerConfiguration",AlertStyle.Success);
             if (this.Connected) {
                 this._eventConsole.Log("Sending hub request",AlertStyle.Info);
-                await this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendHeaterControlConfig, heaterControllerConfig);
+                await this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendHeaterControlConfig, heaterControllerConfig);
             } else {
                 this._eventConsole.Log("Warning: Service not connected,firmware configuration will not be updated",AlertStyle.Danger);
             }
@@ -180,7 +180,7 @@
             this._eventConsole.Log("Success: Saved ProbeControllerConfig",AlertStyle.Success);
             if (this.Connected) {
                 this._eventConsole.Log("Sending hub request",AlertStyle.Info);
-                await this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendProbeControlConfig, probeControllerConfig);
+                await this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendProbeControlConfig, probeControllerConfig);
             } else {
                 this._eventConsole.Log("Warning: Service not connected,firmware configuration will not be updated",AlertStyle.Danger);
             }
@@ -195,7 +195,7 @@
             this._eventConsole.Log("Success: Saved StationConfiguration",AlertStyle.Success);
             if (this.Connected) {
                 this._eventConsole.Log("Sending hub request",AlertStyle.Info);
-                await this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendStationConfig,stationConfig);
+                await this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendStationConfig,stationConfig);
             } else {
                 this._eventConsole.Log("Warning: Service not connected,firmware configuration will not be updated",AlertStyle.Danger);
             }
@@ -205,7 +205,7 @@
     private Task GetHeaterConfigHandler() {
         if (this.Connected) {
             this._eventConsole.Log("Send request for HeaterControllerConfig",AlertStyle.Info);
-            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.RequestConfig, ConfigType.HeaterControlConfig);
+            return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.RequestConfig, ConfigType.HeaterControlConfig);
         }else {
             this._eventConsole.Log("Warning: Service not connected,request will not be sent",AlertStyle.Danger);
         }

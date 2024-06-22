@@ -117,24 +117,24 @@
     #region UIMethods
 
     protected override async Task OnInitializedAsync() {
-        this.HubClient.HubConnection.On<StationSerialData>(HubConstants.Events.OnStationData, this.OnSerialComReceived);
-        this.HubClient.HubConnection.On<int, string>(HubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
-        this.HubClient.HubConnection.On<string>(HubConstants.Events.OnUsbDisconnect, this.UsbDisconnectedHandler);
-        this.HubClient.HubConnection.On<string>(HubConstants.Events.OnUsbConnectFailed, this.UsbConnectFailedHandler);
-        this.HubClient.HubConnection.On<string>(HubConstants.Events.OnUsbConnect, this.UsbConnectHandler);
-        this.HubClient.HubConnection.On<bool>(HubConstants.Events.OnStationConnection, this.OnStationConnection);
-        this.HubClient.HubConnection.On<string>(HubConstants.Events.OnTestStarted, this.OnTestStartedHandler);
-        this.HubClient.HubConnection.On<string>(HubConstants.Events.OnTestStartedFailed, this.OnTestStartedFailedHandler);
-        this.HubClient.HubConnection.On<LoadTestSetupTransport>(HubConstants.Events.OnTestStartedFrom, this.OnTestStartedFromHandler);
-        this.HubClient.HubConnection.On<LoadTestSetupTransport>(HubConstants.Events.OnTestStartedFromUnknown, this.OnTestStartedFromHandler);
-        this.HubClient.HubConnection.On<bool, string>(HubConstants.Events.OnTestSetup, this.OnTestSetupHandler);
-        this.HubClient.HubConnection.On<string>(HubConstants.Events.OnTestCompleted, this.OnTestCompletedHandler);
-        this.HubClient.HubConnection.On(HubConstants.Events.OnProbeTestDone, this.OnProbeTestDoneHandler);
-        this.HubClient.HubConnection.On<LoadTestSetupTransport>(HubConstants.Events.OnRequestRunningTest, this.OnRequestRunningTestHandler);
-        this.HubClient.HubConnection.On<string>(HubConstants.Events.OnUpdateStart, (message) => {
+        this.HubClient.HubConnection.On<StationSerialData>(StationHubConstants.Events.OnStationData, this.OnSerialComReceived);
+        this.HubClient.HubConnection.On<int, string>(StationHubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
+        this.HubClient.HubConnection.On<string>(StationHubConstants.Events.OnUsbDisconnect, this.UsbDisconnectedHandler);
+        this.HubClient.HubConnection.On<string>(StationHubConstants.Events.OnUsbConnectFailed, this.UsbConnectFailedHandler);
+        this.HubClient.HubConnection.On<string>(StationHubConstants.Events.OnUsbConnect, this.UsbConnectHandler);
+        this.HubClient.HubConnection.On<bool>(StationHubConstants.Events.OnStationConnection, this.OnStationConnection);
+        this.HubClient.HubConnection.On<string>(StationHubConstants.Events.OnTestStarted, this.OnTestStartedHandler);
+        this.HubClient.HubConnection.On<string>(StationHubConstants.Events.OnTestStartedFailed, this.OnTestStartedFailedHandler);
+        this.HubClient.HubConnection.On<LoadTestSetupTransport>(StationHubConstants.Events.OnTestStartedFrom, this.OnTestStartedFromHandler);
+        this.HubClient.HubConnection.On<LoadTestSetupTransport>(StationHubConstants.Events.OnTestStartedFromUnknown, this.OnTestStartedFromHandler);
+        this.HubClient.HubConnection.On<bool, string>(StationHubConstants.Events.OnTestSetup, this.OnTestSetupHandler);
+        this.HubClient.HubConnection.On<string>(StationHubConstants.Events.OnTestCompleted, this.OnTestCompletedHandler);
+        this.HubClient.HubConnection.On(StationHubConstants.Events.OnProbeTestDone, this.OnProbeTestDoneHandler);
+        this.HubClient.HubConnection.On<LoadTestSetupTransport>(StationHubConstants.Events.OnRequestRunningTest, this.OnRequestRunningTestHandler);
+        this.HubClient.HubConnection.On<string>(StationHubConstants.Events.OnUpdateStart, (message) => {
             this.Notify("Update Started", message, NotificationSeverity.Info);
         });
-        this.HubClient.HubConnection.On<bool, string>(HubConstants.Events.OnUpdateComplete, (success, message) => {
+        this.HubClient.HubConnection.On<bool, string>(StationHubConstants.Events.OnUpdateComplete, (success, message) => {
             if (success) {
                 this.Notify("Update Complete", message, NotificationSeverity.Success);
             } else {
@@ -324,7 +324,7 @@
         if (this.Connected) {
             if (!this._data.Running) {
                 this.StationStatusService.StationState=this._data.TemperatureSetPoint==0 ? StationState.Heating : StationState.Idle;
-                return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.ToggleHeat);
+                return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendCommand, StationCommand.ToggleHeat);
             }
         }
 
@@ -334,7 +334,7 @@
 
     private Task CycleCurrentHandler() {
         if (this.Connected) {
-            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.CycleCurrent);
+            return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendCommand, StationCommand.CycleCurrent);
         }
 
         this.NotifyNotConnected();
@@ -350,7 +350,7 @@
                 return Task.CompletedTask;
             }
             if (StationCurrent.TryFromValue(this._data.CurrentSetPoint, out var current)) {
-                return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SetupTest, 
+                return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SetupTest, 
                     new TestSetupTransport() {
                         WaferSetups = waferSetups, 
                         SetCurrent = current, 
@@ -373,11 +373,11 @@
                 var command = this._data.Paused ? StationCommand.Continue : StationCommand.Pause;
                 this._testPaused = !this._data.Paused;
                 this.StationStatusService.StationState= this._testPaused ? StationState.Paused : StationState.Running;
-                return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, command);
+                return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendCommand, command);
             } else {
                 var command = StationCommand.Start;
                 this._testRunning = true;
-                return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, command);
+                return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendCommand, command);
             }
         }
 
@@ -391,7 +391,7 @@
             this.StationStatusService.StationState = StationState.Idle;
             this._testRunning = false;
             this._testPaused = false;
-            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.Reset);
+            return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendCommand, StationCommand.Reset);
         }
 
         this.NotifyNotConnected();
@@ -404,7 +404,7 @@
             this.StationStatusService.StationState = StationState.Idle;
             this._testRunning = false;
             this._testPaused = false;
-            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.Reset);
+            return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendCommand, StationCommand.Reset);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
@@ -413,7 +413,7 @@
     private Task ProbeTestClicked() {
         if (this.Connected) {
             this._probeTestRunning = true;
-            return this.HubClient.HubConnection.SendAsync(HubConstants.Methods.SendCommand, StationCommand.ProbeTest);
+            return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendCommand, StationCommand.ProbeTest);
         }
 
         this.NotifyNotConnected();
@@ -437,10 +437,10 @@
         if (this.Connected) {
             if (this._usbConnected) {
                 this._eventConsole.Log("Usb Disconnect Clicked", AlertStyle.Warning);
-                return this.HubClient.HubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
+                return this.HubClient.HubConnection.InvokeAsync(StationHubConstants.Methods.ConnectUsb);
             } else {
                 this._eventConsole.Log("Usb Connect Clicked", AlertStyle.Info);
-                return this.HubClient.HubConnection.InvokeAsync(HubConstants.Methods.ConnectUsb);
+                return this.HubClient.HubConnection.InvokeAsync(StationHubConstants.Methods.ConnectUsb);
             }
         }
 

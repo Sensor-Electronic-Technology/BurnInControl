@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>dotnet-BurnInControl.HostRunner-2652D503-688D-47AE-BB54-F9A2E1E5EDA9</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0" />
+        <PackageReference Include="Docker.DotNet" Version="3.125.15" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\BurnInControl.HubDefinitions\BurnInControl.HubDefinitions.csproj" />
+    </ItemGroup>
+</Project>

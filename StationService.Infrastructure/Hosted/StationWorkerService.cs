@@ -29,7 +29,7 @@ public class StationWorkerService:IHostedService,IDisposable {
         if (!result.IsError) {
             this._logger.LogInformation("Service Stopped");
         } else {
-            this._logger.LogCritical($"Internal Error \n {result.FirstError.Description}");
+            this._logger.LogCritical("Internal Error \\n {FirstErrorDescription}", result.FirstError.Description);
         }
     }
     public void Dispose() {

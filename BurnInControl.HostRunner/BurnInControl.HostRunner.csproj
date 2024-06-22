@@ -25,9 +25,12 @@
     <ItemGroup>
       <ProjectReference Include="..\BurnInControl.HubDefinitions\BurnInControl.HubDefinitions.csproj" />
     </ItemGroup>
+
     <ItemGroup>
-        <Content Include="BurnInControl.HostRunner/appsettings.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
+      <None Update="host-runner.service">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
+
+
 </Project>

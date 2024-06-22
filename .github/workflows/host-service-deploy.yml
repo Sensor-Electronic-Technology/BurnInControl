@@ -23,7 +23,7 @@ jobs:
       run: dotnet restore ./BurnInControl.HostRunner/BurnInControl.HostRunner.csproj
 
     - name: Publish project
-      run: dotnet publish ./BurnInControl.HostRunner/BurnInControl.HostRunner.csproj --output ./publish -r linux-arm64
+      run: dotnet publish ./BurnInControl.HostRunner/BurnInControl.HostRunner.csproj --output ./publish -r linux-arm64 --self-contained
 
     - name: Archive publish directory
       run: tar -czvf publish.tar.gz -C ./publish .

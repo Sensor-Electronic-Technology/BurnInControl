@@ -35,7 +35,10 @@ jobs:
         path: publish.tar.gz
 
   deploy:
-    runs-on: [burn-in,S01,S03,S04,S05,S06,S07,S08,S09,S10]
+    runs-on: [burn-in]
+    strategy:
+      matrix:
+        runner: [ S01, S03, S04, S05, S06, S07, S08, S09, S10 ] # Replace with your runner names
     needs: build
     steps:
     - name: Checkout code

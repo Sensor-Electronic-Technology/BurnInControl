@@ -61,4 +61,6 @@ jobs:
         sudo systemctl daemon-reload
         sudo systemctl start host-runner
         sudo systemctl enable host-runner
-
+    - name: Restart Service
+      continue-on-error: true
+      run: sudo systemctl restart host-runner

@@ -1,19 +1,23 @@
 namespace BurnInControl.HostRunner;
 
-public class Worker : BackgroundService {
+public class Worker : IHostedService,IDisposable {
     private readonly ILogger<Worker> _logger;
 
     public Worker(ILogger<Worker> logger) {
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-        while (!stoppingToken.IsCancellationRequested) {
-            if (_logger.IsEnabled(LogLevel.Information)) {
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-            }
+    public Task StartAsync(CancellationToken cancellationToken) {
+        this._logger.LogInformation("host-runner started");
+        return Task.CompletedTask;
+    }
 
-            await Task.Delay(1000, stoppingToken);
-        }
+    public Task StopAsync(CancellationToken cancellationToken) {
+        this._logger.LogInformation("host-runner stopping");
+        return Task.CompletedTask;
+    }
+
+    public void Dispose() {
+        this._logger.LogInformation("host-runner disposed");
     }
 }

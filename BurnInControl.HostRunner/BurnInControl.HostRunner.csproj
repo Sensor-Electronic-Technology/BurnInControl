@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>dotnet-BurnInControl.HostRunner-2652D503-688D-47AE-BB54-F9A2E1E5EDA9</UserSecretsId>
+        <AssemblyName>host_runner</AssemblyName>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -23,5 +24,10 @@
 
     <ItemGroup>
       <ProjectReference Include="..\BurnInControl.HubDefinitions\BurnInControl.HubDefinitions.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="BurnInControl.HostRunner/appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 </Project>

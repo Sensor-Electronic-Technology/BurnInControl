@@ -9,12 +9,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Set up .NET
+    - uses: actions/checkout@v4
+    - name: Adjust NuGet Config Credentials
+      run: |
+        cp ./nuget.bak ./NuGet.config
+        echo $(sed -e "s@\${PAT}@${{ secrets.NUGET_TOKEN }}@" NuGet.config) > NuGet.config
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.0' # Specify your .NET version here
+        dotnet-version: 8.0.x
     
     - name: Restore dependencies
       run: dotnet restore ./BurnInControl.HostRunner/BurnInControl.HostRunner.csproj

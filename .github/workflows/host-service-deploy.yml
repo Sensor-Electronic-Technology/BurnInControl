@@ -1,0 +1,55 @@
+name: Host Runner Deploy
+on:
+  push:
+    branches: ["master"]
+    paths:
+    - 'BurnInControl.HostRunner/**'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Set up .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.0' # Specify your .NET version here
+    
+    - name: Restore dependencies
+      run: dotnet restore ./BurnInControl.HostRunner/BurnInControl.HostRunner.csproj
+
+    - name: Build project
+      run: dotnet build --no-restore --configuration Release ./BurnInControl.HostRunner/BurnInControl.HostRunner.csproj
+
+    - name: Publish project
+      run: dotnet publish ./BurnInControl.HostRunner/BurnInControl.HostRunner.csproj --no-build --configuration Release --output ./publish -r linux-arm64 /p:AssemblyName=host_runner
+
+    - name: Archive publish directory
+      run: tar -czvf publish.tar.gz -C ./publish .
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: publish
+        path: publish.tar.gz
+
+  deploy:
+    runs-on: [burn-in,S08]
+    needs: build
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Download build artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: publish
+    - name: Make Dir
+      run: mkdir -p /home/setitech/host-runner
+    - name: Extract artifact
+      run: | 
+        tar -xzvf publish.tar.gz -C /home/setitech/host-runner
+        sudo chmod a+x /home/setitech/host-runner/host_runner
+    - name: Clean up
+      run: rm publish.tar.gz
+

@@ -3,7 +3,7 @@ Description=burn-in control host runner
 
 [Service]
 Type=notify
-ExecStart=/home/setitech//home/setitech/host-runner/host_runner
+ExecStart=/home/setitech/host-runner/host_runner
 
 [Install]
 WantedBy=multi-user.target

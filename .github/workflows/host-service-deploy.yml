@@ -54,7 +54,7 @@ jobs:
     - name: Install/update Service
       run: |
         cd /home/setitech/host-runner/
-        sudo yes | cp -rf /home/setitech/host-runner/host-runner.service /etc/systemd/system/host-runner.service
+        yes | sudo cp -rf /home/setitech/host-runner/host-runner.service /etc/systemd/system/host-runner.service
         sudo systemctl daemon-reload
         sudo systemctl start host-runner
         sudo systemctl enable host-runner

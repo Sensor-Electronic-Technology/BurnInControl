@@ -1,4 +1,4 @@
-name: Build and Deploy .NET Project
+name: Host Runner Deploy
 on:
   push:
     branches: ["master"]

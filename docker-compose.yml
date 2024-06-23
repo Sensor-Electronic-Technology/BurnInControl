@@ -1,84 +1,68 @@
-﻿
-version : '3.8'
-services:
-  station.ui:
+﻿services:
+  station-ui:
     image: aelmendorf234/station-ui:latest
-    container_name: station.ui
+    container_name: station-ui
     pull_policy: always
     expose:
-      - 80
-      - 5581
+      - 8080
     ports:
       - "80:8080"
-      - "4000:5581"
     restart: unless-stopped
     environment:
+      - StationId=S08
       - StationHub=http://station-service:8080/hubs/station
-      - MsgEndpoint=10.5.0.11
-      # - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
+      - HostHub=http://10.5.0.1:4000/hubs/host
+      - MONGO_CONNECTION=mongodb://172.20.3.41:27017
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     depends_on:
       - station-service
-      # - mongodb
     links:
       - "station-service"
-      # - "mongodb"
+    extra_hosts:
+      - host.docker.internal:host-gateway
     networks:
       station_net:
         ipv4_address: 10.5.0.10
-
   station-service:
+    privileged: true
     image: aelmendorf234/station-service:latest
     container_name: station-service
     pull_policy: always
-    privileged: true
     restart: unless-stopped
     user: "root"
     entrypoint: ["ash", "-c", "/scripts/entry-point.sh"]
     environment:
-      - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
-    expose:
-      - 8080
-      - 5580
-    ports:
-      - "5000:8080"
-      - "5580:5580"
-    volumes:
-      - /home/setiburnin/StationSoft/StationService/app:/scripts
-      - /dev:/dev
+      - StationId=S08
+      - MONGO_CONNECTION=mongodb://172.20.3.41:27017
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
-    #links:
-    #  - "mongodb"
-    #depends_on:
-      #- mongodb
+    expose:
+      - 8080
+    ports:
+      - "5000:8080"
+    volumes:
+      - /home/setitech/Documents/StationSoft/StationService/app:/scripts
+      - /home/setitech/Documents/StationSoft/StationService/app/updates:/updates
+      - /home/setitech/Documents/StationLogs:/test-logs
+      - /dev:/dev
     networks:
       station_net:
         ipv4_address: 10.5.0.11
-
-  # mongodb:
-  #   image: mongodb-raspberrypi4-unofficial-r7.0.4
-  #   container_name: mongodb
-  #   pull_policy: never
-  #   restart: unless-stopped
-  #   labels:
-  #     - "com.centurylinklabs.watchtower.enable=false"
-  #   ports:
-  #     - "27017:27017"
-  #   volumes:
-  #     - /home/setiburnin/StationSoft/mongo/db:/data/db
-  #   networks:
-  #     station_net:
-  #       ipv4_address: 10.5.0.12
-
   watchtower:
     image: containrrr/watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 10
+    command: --cleanup --http-api-update
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    environment:
+      - WATCHTOWER_HTTP_API_TOKEN=station-soft-token
+    ports:
+      - 8080:8080
     networks:
       station_net:
-        ipv4_address: 10.5.0.13
-
+        ipv4_address: 10.5.0.12
 networks:
   station_net:
     driver: bridge

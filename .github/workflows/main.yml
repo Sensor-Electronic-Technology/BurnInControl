@@ -1,0 +1,36 @@
+name: Docker Config Deploy
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: ["master"]
+  #   paths:
+  #   - 'BurnInControl.HostRunner/**'
+jobs:
+  mod_docker:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Create S08 Docker File
+      run: |
+        cp ./docker-compose.yml ./docker-compose-S08.yml
+        echo $(sed -e "s@\${SYS}@S08@" docker-compose-S08.yml) > docker-compose-S08.yml
+    - name: Upload S08 artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: docker_compose_S08
+        path: docker-compose-S08.yml
+  deploy-s03:
+    needs: mod_docker
+    runs-on: [burn-in,S08]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Download build artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: docker_compose_S08
+    - name: Make Dir
+      run: mkdir -p /home/setitech/test_mod_docker
+    - name: Extract artifact
+      run: cp docker-compose-S08.yml /home/setitech/test_mod_docker/docker-dompose-S08.yml
+      

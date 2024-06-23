@@ -13,6 +13,6 @@ builder.Services.AddSingleton<IDockerClient>(new DockerClientConfiguration(
     .CreateClient());
 var host = builder.Build();
 
-host.Urls.Add("http://localhost:4000");
+host.Urls.Add("http://*:4000");
 host.MapHub<HostHub>("/hubs/host");
 host.Run();

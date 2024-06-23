@@ -1,0 +1,396 @@
+name: Docker Config Deploy
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: ["master"]
+  #   paths:
+  #   - 'BurnInControl.HostRunner/**'
+jobs:
+  mod-docker-S01:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Create Docker File
+      run: |
+        cp ./docker-compose.yml ./docker-compose-S01.yml
+    - name: Replace single file
+      uses: richardrigutins/replace-in-files@v2
+      with:
+        files: 'docker-compose-S01.yml'
+        search-text: '{SYS}'
+        replacement-text: 'S01'
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: docker_compose_S01
+        path: docker-compose-S01.yml
+  mod-docker-S03:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Create Docker File
+      run: |
+        cp ./docker-compose.yml ./docker-compose-S03.yml
+    - name: Replace single file
+      uses: richardrigutins/replace-in-files@v2
+      with:
+        files: 'docker-compose-S03.yml'
+        search-text: '{SYS}'
+        replacement-text: 'S03'
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: docker_compose_S03
+        path: docker-compose-S03.yml
+  mod-docker-S04:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Docker File
+        run: |
+          cp ./docker-compose.yml ./docker-compose-S04.yml
+      - name: Replace single file
+        uses: richardrigutins/replace-in-files@v2
+        with:
+          files: 'docker-compose-S04.yml'
+          search-text: '{SYS}'
+          replacement-text: 'S04'
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker_compose_S04
+          path: docker-compose-S04.yml
+  mod-docker-S05:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Docker File
+        run: |
+          cp ./docker-compose.yml ./docker-compose-S05.yml
+      - name: Replace single file
+        uses: richardrigutins/replace-in-files@v2
+        with:
+          files: 'docker-compose-S05.yml'
+          search-text: '{SYS}'
+          replacement-text: 'S05'
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker_compose_S05
+          path: docker-compose-S05.yml
+  mod-docker-S06:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Docker File
+        run: |
+          cp ./docker-compose.yml ./docker-compose-S06.yml
+      - name: Replace single file
+        uses: richardrigutins/replace-in-files@v2
+        with:
+          files: 'docker-compose-S06.yml'
+          search-text: '{SYS}'
+          replacement-text: 'S06'
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker_compose_S06
+          path: docker-compose-S06.yml
+  mod-docker-S07:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Docker File
+        run: |
+          cp ./docker-compose.yml ./docker-compose-S07.yml
+      - name: Replace single file
+        uses: richardrigutins/replace-in-files@v2
+        with:
+          files: 'docker-compose-S07.yml'
+          search-text: '{SYS}'
+          replacement-text: 'S07'
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker_compose_S07
+          path: docker-compose-S07.yml
+  mod-docker-S08:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Docker File
+        run: |
+          cp ./docker-compose.yml ./docker-compose-S08.yml
+      - name: Replace single file
+        uses: richardrigutins/replace-in-files@v2
+        with:
+          files: 'docker-compose-S08.yml'
+          search-text: '{SYS}'
+          replacement-text: 'S08'
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker_compose_S08
+          path: docker-compose-S08.yml
+  mod-docker-S09:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Docker File
+        run: |
+          cp ./docker-compose.yml ./docker-compose-S09.yml
+      - name: Replace single file
+        uses: richardrigutins/replace-in-files@v2
+        with:
+          files: 'docker-compose-S09.yml'
+          search-text: '{SYS}'
+          replacement-text: 'S09'
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker_compose_S09
+          path: docker-compose-S09.yml
+  mod-docker-S10:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Docker File
+        run: |
+          cp ./docker-compose.yml ./docker-compose-S10.yml
+      - name: Replace single file
+        uses: richardrigutins/replace-in-files@v2
+        with:
+          files: 'docker-compose-S10.yml'
+          search-text: '{SYS}'
+          replacement-text: 'S10'
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker_compose_S10
+          path: docker-compose-S10.yml
+  deploy-S01:
+    needs: mod-docker-S01
+    runs-on: [burn-in,S01]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Download build artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: docker_compose_S01
+    - name: Stop Docker
+      run: |
+        cd /home/setitech/Documents/StationSoft/app
+        docker compose down
+    - name: Extract artifact
+      run: cp docker-compose-S01.yml /home/setitech/test_mod_docker/docker-compose.yml
+    - name: Extract artifact
+      run: |
+        cd /home/setitech/Documents/StationSoft/app
+        yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+        yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+    - name: Start Docker
+      run: |
+        cd /home/setitech/Documents/StationSoft/app
+        docker compose up -d
+  deploy-S03:
+    needs: mod-docker-S03
+    runs-on: [burn-in,S03]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker_compose_S03
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
+      - name: Extract artifact
+        run: cp docker-compose-S03.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
+  deploy-S04:
+    needs: mod-docker-S04
+    runs-on: [burn-in,S04]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker_compose_S04
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
+      - name: Extract artifact
+        run: cp docker-compose-S04.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
+  deploy-S05:
+    needs: mod-docker-S05
+    runs-on: [burn-in,S05]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker_compose_S05
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
+      - name: Extract artifact
+        run: cp docker-compose-S05.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
+  deploy-S06:
+    needs: mod-docker-S06
+    runs-on: [burn-in,S06]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker_compose_S06
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
+      - name: Extract artifact
+        run: cp docker-compose-S06.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
+  deploy-S07:
+    needs: mod-docker-S07
+    runs-on: [burn-in,S07]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker_compose_S07
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
+      - name: Extract artifact
+        run: cp docker-compose-S07.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
+  deploy-S08:
+    needs: mod-docker-S08
+    runs-on: [burn-in,S08]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker_compose_S08
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
+      - name: Extract artifact
+        run: cp docker-compose-S08.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
+  deploy-S09:
+    needs: mod-docker-S09
+    runs-on: [burn-in,S09]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker_compose_S09
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
+      - name: Extract artifact
+        run: cp docker-compose-S09.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
+  deploy-S10:
+    needs: mod-docker-S10
+    runs-on: [burn-in,S10]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker_compose_S10
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
+      - name: Extract artifact
+        run: cp docker-compose-S10.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
+      

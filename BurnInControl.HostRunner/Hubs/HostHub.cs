@@ -35,6 +35,9 @@ public class HostHub:Hub {
 
     private async Task<string> FindContainer() {
         var containers = await this._dockerClient.Containers.ListContainersAsync(new ContainersListParameters());
+        foreach (var container in containers) {
+            this._logger.LogInformation("Container: {ContainerId} {ContainerName}", container.ID, container.Names);
+        }
         var stationServiceContainer=containers.FirstOrDefault(e=>e.Names.Contains("station-service"));
         return stationServiceContainer?.ID ?? string.Empty;
     }

@@ -43,11 +43,13 @@
                            UsbConnected="@this.UsbConnected"
                            Connect="@this.Connect"
                            UsbConnect="@this.UsbConnect"
-                           UsbVisible="false"/>
+                            RestartService="@this.RestartService"
+                           UsbVisible="true"/>
 </RadzenStack>
 @code{
     [Parameter] public EventCallback Connect { get; set; }
     [Parameter] public EventCallback UsbConnect { get; set; }
+    [Parameter] public EventCallback RestartService { get; set; }
     
     [Parameter] public EventCallback StartPause { get; set; }
     [Parameter] public EventCallback Reset { get; set; }

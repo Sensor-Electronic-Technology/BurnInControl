@@ -3,6 +3,7 @@ using BurnInControl.HubDefinitions.Hubs;
 using BurnInControl.Shared;
 using Microsoft.AspNetCore.SignalR;
 using Docker.DotNet;
+using Docker.DotNet.Models;
 
 namespace BurnInControl.HostRunner.Hubs;
 public class HostHub:Hub {
@@ -15,12 +16,27 @@ public class HostHub:Hub {
     }
     
     public Task RestartService() {
-        return Task.CompletedTask;
+        return this.RestartStationService();
     }
 
     public async Task RestartBrowser() {
         await this.CloseBrowser();
         await this.OpenBrowser();
+    }
+    
+    private async Task RestartStationService() {
+        var containerId = await this.FindContainer();
+        if (string.IsNullOrEmpty(containerId)) {
+            this._logger.LogError("Could not find container");
+            return;
+        }
+        await this._dockerClient.Containers.RestartContainerAsync(containerId, new ContainerRestartParameters());
+    }
+
+    private async Task<string> FindContainer() {
+        var containers = await this._dockerClient.Containers.ListContainersAsync(new ContainersListParameters());
+        var stationServiceContainer=containers.FirstOrDefault(e=>e.Names.Contains("station-service"));
+        return stationServiceContainer?.ID ?? string.Empty;
     }
     
     private async Task CloseBrowser() {

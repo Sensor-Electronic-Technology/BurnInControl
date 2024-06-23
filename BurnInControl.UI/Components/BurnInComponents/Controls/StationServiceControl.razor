@@ -13,6 +13,14 @@
                             Visible="@this.UsbVisible"
                             ToggleButtonStyle="ButtonStyle.Secondary"
                             Click="@this.UsbConnect" Style="width: 170px; height: 52px"/>
+        <RadzenToggleButton Text="Restart Service"
+                            ButtonStyle="ButtonStyle.Warning"
+                            Size="ButtonSize.Medium"
+                            ToggleButtonStyle="ButtonStyle.Warning"
+                            ToggleShade="Shade.Dark"
+                            Click="@this.RestartService" 
+                            Style="width: 170px; height: 52px"/>
+        
     </RadzenStack>
 </RadzenFieldset>
 @code {
@@ -21,5 +29,6 @@
     [Parameter] public EventCallback Connect { get; set; }
     [Parameter] public EventCallback UsbConnect { get; set; }
     [Parameter] public bool UsbVisible { get; set; } = true;
+    [Parameter] public EventCallback RestartService { get; set; }
 
 }

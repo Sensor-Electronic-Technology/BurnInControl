@@ -70,7 +70,7 @@
     bool _eventPaneCollapsed=false;
     TuningSerialData _data=new TuningSerialData();
     StationSerialData _stationData=new StationSerialData();
-    private bool Connected => this.HubClient.IsConnected;
+    private bool Connected => this.HubClient.StationHubIsConnected;
     private Timer? _timer;
     private int count = 0;
     private StationHeaterMode _mode = StationHeaterMode.HeatingMode;
@@ -94,13 +94,13 @@
     List<TemperatureData> _h3Data = [];
     
     protected override async Task OnInitializedAsync() {
-        this.HubClient.HubConnection.On<TuningSerialData>(StationHubConstants.Events.OnTuningData,this.OnSerialTuningDataReceived);
-        this.HubClient.HubConnection.On<StationSerialData>(StationHubConstants.Events.OnStationData,this.OnSerialDataReceived);
-        this.HubClient.HubConnection.On<int,string>(StationHubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
-        this.HubClient.HubConnection.On<int>(StationHubConstants.Events.OnSwTuneNotify,this.OnNotifyHeaterMode);
-        this.HubClient.HubConnection.On<HeaterTuneResult>(StationHubConstants.Events.OnNotifyHeaterTuningStatus,this.OnHeaterTuningStatus);
-        this.HubClient.HubConnection.On<List<HeaterTuneResult>>(StationHubConstants.Events.OnNotifyHeaterTuneComplete,this.OnHeaterTuneComplete);
-        this.HubClient.HubConnection.On<bool,string>(StationHubConstants.Events.OnTuningResultsSavedDatabase,this.OnTuningResultsSavedHandler);
+        this.HubClient.StationHubConnection.On<TuningSerialData>(StationHubConstants.Events.OnTuningData,this.OnSerialTuningDataReceived);
+        this.HubClient.StationHubConnection.On<StationSerialData>(StationHubConstants.Events.OnStationData,this.OnSerialDataReceived);
+        this.HubClient.StationHubConnection.On<int,string>(StationHubConstants.Events.OnSerialComMessage, this.OnSerialComMessageReceived);
+        this.HubClient.StationHubConnection.On<int>(StationHubConstants.Events.OnSwTuneNotify,this.OnNotifyHeaterMode);
+        this.HubClient.StationHubConnection.On<HeaterTuneResult>(StationHubConstants.Events.OnNotifyHeaterTuningStatus,this.OnHeaterTuningStatus);
+        this.HubClient.StationHubConnection.On<List<HeaterTuneResult>>(StationHubConstants.Events.OnNotifyHeaterTuneComplete,this.OnHeaterTuneComplete);
+        this.HubClient.StationHubConnection.On<bool,string>(StationHubConstants.Events.OnTuningResultsSavedDatabase,this.OnTuningResultsSavedHandler);
     }
     
     private async ValueTask OnLocationChanging(LocationChangingContext context) {
@@ -110,7 +110,7 @@
                 context.PreventNavigation();
                 return;
             }
-            await this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendCommand,
+            await this.HubClient.StationHubConnection.SendAsync(StationHubConstants.Methods.SendCommand,
                 StationCommand.ChangeModeNormal);
         }
     }
@@ -134,7 +134,7 @@
                 this._h3Data.Clear();
             }
             this._eventConsole.Log("Sending start tuning command..");
-            return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendCommand,command);
+            return this.HubClient.StationHubConnection.SendAsync(StationHubConstants.Methods.SendCommand,command);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
@@ -143,7 +143,7 @@
     private Task UpdateWindowSizeHandler(ulong windowSize) {
         if (this.Connected) {
             this._eventConsole.Log("Sending tuning window size..");
-            return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendTuningWindowSize,windowSize);
+            return this.HubClient.StationHubConnection.SendAsync(StationHubConstants.Methods.SendTuningWindowSize,windowSize);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
@@ -152,7 +152,7 @@
     private Task SaveResultsHandler() {
         if (this.Connected) {
             this._eventConsole.Log("Saving Results..");
-            return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SaveTuningResults, this._results);
+            return this.HubClient.StationHubConnection.SendAsync(StationHubConstants.Methods.SaveTuningResults, this._results);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
@@ -161,7 +161,7 @@
     private Task ToggleTemperatureHandler() {
         if(this.Connected){
             this.StationStatusService.StationState=this._tempSetPoint==0 ? StationState.Heating : StationState.Idle;
-            return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendCommand,StationCommand.ToggleHeat);
+            return this.HubClient.StationHubConnection.SendAsync(StationHubConstants.Methods.SendCommand,StationCommand.ToggleHeat);
         }
 
         this.NotifyNotConnected();
@@ -171,7 +171,7 @@
     private Task CancelHandler() {
         if (this.Connected) {
             this._eventConsole.Log("Sending start tuning command..");
-            return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendCommand,StationCommand.CancelTuning);
+            return this.HubClient.StationHubConnection.SendAsync(StationHubConstants.Methods.SendCommand,StationCommand.CancelTuning);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
@@ -180,7 +180,7 @@
     private Task ModeSwHandler(StationCommand command) {
         if (this.Connected) {
             this.StationStatusService.StationState=command==StationCommand.ChangeModeATune ? StationState.TuningMode : StationState.Idle;
-            return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendCommand, command);
+            return this.HubClient.StationHubConnection.SendAsync(StationHubConstants.Methods.SendCommand, command);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;
@@ -202,7 +202,7 @@
         if (this.Connected) {
             this._eventConsole.Log("Reset Clicked",AlertStyle.Warning);
             this._testRunning = false;
-            return this.HubClient.HubConnection.SendAsync(StationHubConstants.Methods.SendCommand, StationCommand.Reset);
+            return this.HubClient.StationHubConnection.SendAsync(StationHubConstants.Methods.SendCommand, StationCommand.Reset);
         }
         this.NotifyNotConnected();
         return Task.CompletedTask;

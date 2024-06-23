@@ -63,8 +63,8 @@ public class HostHub:Hub {
     private async Task OpenBrowser() {
         this._logger.LogInformation("Opening browser...");
         using Process process = new Process();
-        process.StartInfo.FileName = "chromium-browser";
-        process.StartInfo.Arguments = "--start-fullscreen http://localhost";
+        process.StartInfo.FileName = "runuser -l setitech -c";
+        process.StartInfo.Arguments = "'chromium-browser --start-fullscreen http://localhost'";
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.UseShellExecute = false;
         try {

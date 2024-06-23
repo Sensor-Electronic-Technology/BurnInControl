@@ -183,9 +183,12 @@ jobs:
         cd /home/setitech/Documents/StationSoft/app
         docker compose down
     - name: Extract artifact
+      run: cp docker-compose-S01.yml /home/setitech/test_mod_docker/docker-compose.yml
+    - name: Extract artifact
       run: |
         cd /home/setitech/Documents/StationSoft/app
-        yes | sudo cp -rf docker-compose-S01.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+        yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+        yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
     - name: Start Docker
       run: |
         cd /home/setitech/Documents/StationSoft/app
@@ -200,10 +203,21 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker_compose_S03
-      - name: Make Dir
-        run: mkdir -p /home/setitech/test_mod_docker
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
       - name: Extract artifact
         run: cp docker-compose-S03.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
   deploy-S04:
     needs: mod-docker-S04
     runs-on: [burn-in,S04]
@@ -214,10 +228,21 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker_compose_S04
-      - name: Make Dir
-        run: mkdir -p /home/setitech/test_mod_docker
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
       - name: Extract artifact
         run: cp docker-compose-S04.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
   deploy-S05:
     needs: mod-docker-S05
     runs-on: [burn-in,S05]
@@ -228,10 +253,21 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker_compose_S05
-      - name: Make Dir
-        run: mkdir -p /home/setitech/test_mod_docker
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
       - name: Extract artifact
         run: cp docker-compose-S05.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
   deploy-S06:
     needs: mod-docker-S06
     runs-on: [burn-in,S06]
@@ -242,10 +278,21 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker_compose_S06
-      - name: Make Dir
-        run: mkdir -p /home/setitech/test_mod_docker
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
       - name: Extract artifact
         run: cp docker-compose-S06.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
   deploy-S07:
     needs: mod-docker-S07
     runs-on: [burn-in,S07]
@@ -256,10 +303,21 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker_compose_S07
-      - name: Make Dir
-        run: mkdir -p /home/setitech/test_mod_docker
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
       - name: Extract artifact
         run: cp docker-compose-S07.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
   deploy-S08:
     needs: mod-docker-S08
     runs-on: [burn-in,S08]
@@ -270,10 +328,21 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker_compose_S08
-      - name: Make Dir
-        run: mkdir -p /home/setitech/test_mod_docker
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
       - name: Extract artifact
         run: cp docker-compose-S08.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
   deploy-S09:
     needs: mod-docker-S09
     runs-on: [burn-in,S09]
@@ -284,10 +353,21 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker_compose_S09
-      - name: Make Dir
-        run: mkdir -p /home/setitech/test_mod_docker
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
       - name: Extract artifact
         run: cp docker-compose-S09.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
   deploy-S10:
     needs: mod-docker-S10
     runs-on: [burn-in,S10]
@@ -298,8 +378,19 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker_compose_S10
-      - name: Make Dir
-        run: mkdir -p /home/setitech/test_mod_docker
+      - name: Stop Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose down
       - name: Extract artifact
         run: cp docker-compose-S10.yml /home/setitech/test_mod_docker/docker-compose.yml
+      - name: Extract artifact
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          yes | sudo cp -rf docker-compose.yml docker-compose.yml.bk
+          yes | sudo cp -rf /home/setitech/test_mod_docker/docker-compose.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+      - name: Start Docker
+        run: |
+          cd /home/setitech/Documents/StationSoft/app
+          docker compose up -d
       

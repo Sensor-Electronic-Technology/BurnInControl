@@ -9,7 +9,7 @@
       - "80:8080"
     restart: unless-stopped
     environment:
-      - StationId=${SYS}
+      - StationId={SYS}
       - StationHub=http://station-service:8080/hubs/station
       - HostHub=http://10.5.0.1:4000/hubs/host
       - MONGO_CONNECTION=mongodb://172.20.3.41:27017
@@ -33,7 +33,7 @@
     user: "root"
     entrypoint: ["ash", "-c", "/scripts/entry-point.sh"]
     environment:
-      - StationId=${SYS}
+      - StationId={SYS}
       - MONGO_CONNECTION=mongodb://172.20.3.41:27017
     labels:
       - "com.centurylinklabs.watchtower.enable=true"

@@ -1,9 +1,9 @@
 name: Host Runner Deploy
 on:
-  push:
-    branches: ["master"]
-    paths:
-    - 'BurnInControl.HostRunner/**'
+  # push:
+  #   branches: ["master"]
+  #   paths:
+  #   - 'BurnInControl.HostRunner/**'
   workflow_dispatch:
 jobs:
   build:

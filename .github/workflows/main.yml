@@ -6,26 +6,28 @@ on:
   #   paths:
   #   - 'BurnInControl.HostRunner/**'
 jobs:
-  mod_docker:
+  mod-docker-S01:
     runs-on: ubuntu-latest
+    env: 
+      system: S01
     steps:
     - uses: actions/checkout@v4
-    - name: Create S08 Docker File
+    - name: Create Docker File
       run: |
-        cp ./docker-compose.yml ./docker-compose-S08.yml
+        cp ./docker-compose.yml ./docker-compose-${{system}}.yml
     - name: Replace single file
       uses: richardrigutins/replace-in-files@v2
       with:
-        files: 'docker-compose-S08.yml'
+        files: 'docker-compose-${{system}}.yml'
         search-text: '{SYS}'
-        replacement-text: 'S08'
-    - name: Upload S08 artifact
+        replacement-text: '${{system}}'
+    - name: Upload ${{system}} artifact
       uses: actions/upload-artifact@v4
       with:
-        name: docker_compose_S08
-        path: docker-compose-S08.yml
-  deploy-s03:
-    needs: mod_docker
+        name: docker_compose_${{system}}
+        path: docker-compose-${{system}}.yml
+  deploy-S01:
+    needs: mod-docker-S01
     runs-on: [burn-in,S08]
     steps:
     - name: Checkout code
@@ -37,5 +39,5 @@ jobs:
     - name: Make Dir
       run: mkdir -p /home/setitech/test_mod_docker
     - name: Extract artifact
-      run: cp docker-compose-S08.yml /home/setitech/test_mod_docker/docker-dompose-S08.yml
+      run: cp docker-compose-S08.yml /home/setitech/test_mod_docker/docker-dompose.yml
       

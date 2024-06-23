@@ -13,7 +13,12 @@ jobs:
     - name: Create S08 Docker File
       run: |
         cp ./docker-compose.yml ./docker-compose-S08.yml
-        echo $(sed -e "s@\${SYS}@S08@" docker-compose-S08.yml) > docker-compose-S08.yml
+    - name: Replace single file
+      uses: richardrigutins/replace-in-files@v2
+      with:
+        files: 'docker-compose-S08.yml'
+        search-text: '{SYS}'
+        replacement-text: 'S08'
     - name: Upload S08 artifact
       uses: actions/upload-artifact@v4
       with:

@@ -178,10 +178,18 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: docker_compose_S01
-    - name: Make Dir
-      run: mkdir -p /home/setitech/test_mod_docker
+    - name: Stop Docker
+      run: |
+        cd /home/setitech/Documents/StationSoft/app
+        docker compose down
     - name: Extract artifact
-      run: cp docker-compose-S01.yml /home/setitech/test_mod_docker/docker-compose.yml
+      run: |
+        cd /home/setitech/Documents/StationSoft/app
+        yes | sudo cp -rf docker-compose-S01.yml /home/setitech/Documents/StationSoft/app/docker-compose.yml
+    - name: Start Docker
+      run: |
+        cd /home/setitech/Documents/StationSoft/app
+        docker compose up -d
   deploy-S03:
     needs: mod-docker-S03
     runs-on: [burn-in,S03]

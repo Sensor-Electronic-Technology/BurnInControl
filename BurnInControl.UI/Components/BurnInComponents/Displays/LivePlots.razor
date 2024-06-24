@@ -20,9 +20,9 @@
 
 @code {
     private StationSerialData? _data;
-    private Dictionary<string, List<TemperatureLiveData>>? _tempPlotData;
-    private Dictionary<string, List<VoltageData>>? _voltagePlotData;
-    private Dictionary<string, List<CurrentData>>? _currentPlotData;
+    private Dictionary<string, List<TemperatureLiveData>> _tempPlotData=new();
+    private Dictionary<string, List<VoltageData>> _voltagePlotData=new();
+    private Dictionary<string, List<CurrentData>> _currentPlotData=new();
 
     private PlotAxisOptions _currentPlotOptions=new();
     private PlotAxisOptions _tempPlotOptions=new();
@@ -40,9 +40,9 @@
         if (data.Running) {
             if(this._running==false) {
                 this._running = true;
-                this._tempPlotData = new();
-                this._voltagePlotData = new();
-                this._currentPlotData = new();
+                this._tempPlotData?.Clear();
+                this._voltagePlotData?.Clear();
+                this._currentPlotData?.Clear();
                 InitPlotOptions(data);
             }
             for (int i = 0; i < ControllerHardwareConstants.HEATER_COUNT; i++) {

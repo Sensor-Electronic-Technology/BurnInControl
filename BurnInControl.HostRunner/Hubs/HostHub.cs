@@ -30,7 +30,6 @@ public class HostHub:Hub {
             return;
         }
         await this._dockerClient.Containers.RestartContainerAsync(containerId, new ContainerRestartParameters());
-        await this.RestartBrowser();
     }
 
     private async Task<string> FindContainer() {

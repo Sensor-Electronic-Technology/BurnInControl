@@ -69,6 +69,7 @@ public class HostHub:Hub {
         process.StartInfo.Arguments = " launch /home/setitech/Desktop/burninapp.desktop &";
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.UseShellExecute = false;
+        /*process.StartInfo.UserName = "setitech";*/
         try {
             process.Start();
             var result = await process.StandardOutput.ReadToEndAsync();

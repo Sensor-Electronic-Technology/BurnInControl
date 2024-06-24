@@ -65,16 +65,17 @@ public class HostHub:Hub {
         using Process process = new Process();
         /*process.StartInfo.FileName = "runuser";
         process.StartInfo.Arguments = "-l setitech -c 'chromium-browser --start-fullscreen http://localhost'";*/
-        process.StartInfo.FileName = "gio";
-        process.StartInfo.Arguments = " launch /home/setitech/Desktop/burninapp.desktop &";
+        /*process.StartInfo.FileName = "gio";
+        process.StartInfo.Arguments = " launch /home/setitech/Desktop/burninapp.desktop &";*/
+        process.StartInfo.FileName = "/home/setitech/start-chrome.sh";
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.UseShellExecute = false;
         /*process.StartInfo.UserName = "setitech";*/
         try {
             process.Start();
-            var result = await process.StandardOutput.ReadToEndAsync();
+            /*var result = await process.StandardOutput.ReadToEndAsync();
             await process.WaitForExitAsync();
-            Console.WriteLine(result);
+            Console.WriteLine(result);*/
         } catch(Exception e) {
             this._logger.LogError("Error while opening browser" +
                                   "\n  {ErrorMessage}", e.ToErrorMessage());

@@ -444,13 +444,11 @@ public class TestService:ITestService {
                 await this.StartLog(data);
                 await this.LogFile(data, true);
             } else {
+                this._running = data.Running;
+                this._paused = data.Paused;
                 if ((DateTime.Now - this._lastLog) >= this._interval) {
                     this._lastLog = DateTime.Now;
-                    await this.UpdateLogs(data);
-                    await this.LogFile(data, false);
-                } else {
-                    if(this._paused!=data.Paused) {
-                        this._paused = data.Paused;
+                    if (!this._paused) {
                         await this.UpdateLogs(data);
                         await this.LogFile(data, false);
                     }

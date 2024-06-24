@@ -133,6 +133,8 @@
         this.HubClient.StationHubConnection.On(StationHubConstants.Events.OnProbeTestDone, this.OnProbeTestDoneHandler);
         this.HubClient.StationHubConnection.On<LoadTestSetupTransport>(StationHubConstants.Events.OnRequestRunningTest, this.OnRequestRunningTestHandler);
         this.HubClient.StationHubConnection.On<string>(StationHubConstants.Events.OnUpdateStart,this.UpdateStarting);
+        this.HubClient.StationHubConnection.On(StationHubConstants.Events.OnFirmwareUpdateStart,this.FirmwareUpdateStarting);
+        this.HubClient.StationHubConnection.On<bool, string>(StationHubConstants.Events.OnUpdateComplete,this.FirmwareUpdateComplete);
     }
     
     protected override Task OnAfterRenderAsync(bool firstRender) {
@@ -171,7 +173,36 @@
     #region HubHandlers
     
     private async Task UpdateStarting(string message) {
-        await this.DialogService.Alert("Update Starting. Browser will close shortly, please reopen once it does", "Update Starting");
+        InvokeAsync(async () => {
+            await Task.Delay(10000);
+            this.DialogService.Close();
+            await this.HubClient.HostHubConnection.SendAsync(HostHubConstants.Methods.RestartBrowser);
+        });
+        await UpdateDialog("Updating... Window will close, please reopen once completed");
+    }
+
+    private async Task FirmwareUpdateStarting() {
+        await UpdateDialog("Firmware update starting. This will take a moment, please wait...");
+    }
+    
+    private Task FirmwareUpdateComplete(bool success, string message) {
+        DialogService.Close();
+       if (success) {
+            this.Notify("Firmware Update Complete", message, NotificationSeverity.Success);
+        } else {
+            this.Notify("Firmware Update Failed", message, NotificationSeverity.Error);
+        }
+        return Task.CompletedTask;
+    }
+    
+    private async Task UpdateDialog(string message) {
+        await DialogService.OpenAsync("", ds =>
+            @<RadzenStack AlignItems="AlignItems.Center" Gap="2rem" Class="rz-p-12">
+                <RadzenImage Path="images/community.svg" Style="width: 200px;" AlternateText="community" />
+                <RadzenText TextStyle="TextStyle.H4">message</RadzenText>
+            </RadzenStack>, new DialogOptions() {
+            ShowTitle = false, Style = "min-height:auto;min-width:auto;width:auto", CloseDialogOnEsc = true 
+        });
     }
 
     private void UsbConnectHandler(string message) {

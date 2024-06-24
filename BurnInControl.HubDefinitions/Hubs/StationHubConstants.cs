@@ -35,6 +35,7 @@ public static class StationHubConstants {
         public static string OnNotifyHeaterTuneComplete => "OnNotifyHeaterTuneComplete";
         public static string OnUpdateStart => "OnUpdateStart";
         public static string OnUpdateComplete=> "OnUpdateComplete";
+        public static string OnFirmwareUpdateStart => "OnFirmwareUpdateStart";
     }
 
     public static class Methods {

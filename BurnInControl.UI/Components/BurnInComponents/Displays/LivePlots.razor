@@ -5,6 +5,7 @@
 @using BurnInControl.UI.Data
 @using BurnInControl.UI.Components.BurnInComponents.Displays.Plots
 @using Microsoft.AspNetCore.SignalR.Client
+@inject ILogger<LivePlots> Logger
 @inject HubClient HubClient
 
 @if (!this._running) {
@@ -44,9 +45,11 @@
     
     private Task OnSerialComReceived(StationSerialData data) {
         this._data = data;
+        this.Logger.LogInformation("In OnSerialComReceived");
         if (data.Running) {
             if(this._running==false) {
                 this._running = true;
+                this.Logger.LogInformation("In OnSerialComReceived, Registered Running");
                 this.ClearPlotData();
                 this.InitPlotOptions(data);
             }

@@ -126,7 +126,7 @@ public class FirmwareUpdateService:IFirmwareUpdateService {
                 var result = await process.StandardOutput.ReadToEndAsync();
                 await process.WaitForExitAsync();
                 Console.WriteLine(result);
-                await this._hubContext.Clients.All.OnUpdateComplete(true,"Firmware Update!!");
+                await this._hubContext.Clients.All.OnUpdateComplete(true,"Firmware Update Completed");
                 this._logger.LogInformation("Firmware update completed");
             } catch(Exception e) {
                 this._logger.LogError("Error while updating firmware.  Exception: \n  {ErrorMessage}", e.ToErrorMessage());

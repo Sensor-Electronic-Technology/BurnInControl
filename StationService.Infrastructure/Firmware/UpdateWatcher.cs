@@ -57,6 +57,10 @@ public class UpdateWatcher:IHostedService {
     }
     public Task StartAsync(CancellationToken cancellationToken) {
         this._logger.LogInformation("UpdateWatcher started");
+        if (File.Exists(Path.Combine(this._updateSettings.UpdateDirectory ?? "/updates/",
+                this._updateSettings.ServiceUpdateFileName ?? "service_update.txt"))) {
+            this.DeleteUpdateFile(this._updateSettings.ServiceUpdateFileName ?? "service_update.txt");
+        }
         this._watcher.IncludeSubdirectories = true;
         this._watcher.EnableRaisingEvents = true;
         return Task.CompletedTask;
@@ -67,9 +71,12 @@ public class UpdateWatcher:IHostedService {
         this._watcher.EnableRaisingEvents = false;
         this._firmwareUpdateTimer.Stop();
         this._serviceUpdateTimer.Stop();
+        if (File.Exists(Path.Combine(this._updateSettings.UpdateDirectory ?? "/updates/",
+                this._updateSettings.ServiceUpdateFileName ?? "service_update.txt"))) {
+            this.DeleteUpdateFile(this._updateSettings.ServiceUpdateFileName ?? "service_update.txt");
+        }
         return Task.CompletedTask;
     }
-    
     private void OnCreated(object source,FileSystemEventArgs e) {
         this._logger.LogInformation("File: {0} {1}",e.FullPath,e.ChangeType);
         if (e.ChangeType == WatcherChangeTypes.Created) {
@@ -121,7 +128,6 @@ public class UpdateWatcher:IHostedService {
                                                    "One the update is finished please refresh the page.")
             .SafeFireAndForget();
         this.DeleteUpdateFile(this._updateSettings.ServiceUpdateFileName ?? "service_update.txt");
-        this.DeleteUpdateFile(this._updateSettings.UiUpdateFileName ?? "ui_update.txt");
         using Process process = new Process();
         process.StartInfo.FileName = this._updateSettings.UpdateProcess ?? "curl";
         process.StartInfo.Arguments = this._updateSettings.UpdateCommand ?? "-H \"Authorization: Bearer station-soft-token\" http://10.5.0.12:8080/v1/update";
@@ -153,9 +159,8 @@ public class UpdateWatcher:IHostedService {
 
     private void UpdateFirmware() {
         this._logger.LogInformation("Preparing to update the firmware");
-        this._hubContext.Clients.All.OnUpdateStart("Preparing to update the firmware. \n" +
-                                                   "The usb will disconnect then reconnect once finished")
-            .SafeFireAndForget();
+        this._hubContext.Clients.All.OnFirmwareUpdateStart().SafeFireAndForget(e=>
+            this._logger.LogError(e,"Error sending firmware update start message"));
         this._stationController.Disconnect().Wait();
         this._firmwareUpdateService.UploadFirmwareStandAlone().Wait();
         this._stationController.ConnectUsb().Wait();

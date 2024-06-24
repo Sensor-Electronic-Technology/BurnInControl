@@ -41,6 +41,7 @@ public interface IStationHub {
 
 #region UpdateNotifications
     Task OnUpdateStart(string message);
+    Task OnFirmwareUpdateStart();
     Task OnUpdateComplete(bool success,string message);
 #endregion
 

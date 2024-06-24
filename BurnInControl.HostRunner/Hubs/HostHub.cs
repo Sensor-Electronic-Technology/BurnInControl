@@ -66,7 +66,7 @@ public class HostHub:Hub {
         /*process.StartInfo.FileName = "runuser";
         process.StartInfo.Arguments = "-l setitech -c 'chromium-browser --start-fullscreen http://localhost'";*/
         process.StartInfo.FileName = "gio";
-        process.StartInfo.Arguments = "/home/setitech/Deskctop/burninapp.desktop &";
+        process.StartInfo.Arguments = " launch /home/setitech/Deskctop/burninapp.desktop &";
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.UserName = "setitech";

@@ -199,7 +199,7 @@
         await DialogService.OpenAsync("", ds =>
             @<RadzenStack AlignItems="AlignItems.Center" Gap="2rem" Class="rz-p-12">
                 <RadzenImage Path="images/community.svg" Style="width: 200px;" AlternateText="community" />
-                <RadzenText TextStyle="TextStyle.H4">message</RadzenText>
+                <RadzenText TextStyle="TextStyle.H4" Text="@message"/>
             </RadzenStack>, new DialogOptions() {
             ShowTitle = false, Style = "min-height:auto;min-width:auto;width:auto", CloseDialogOnEsc = true 
         });

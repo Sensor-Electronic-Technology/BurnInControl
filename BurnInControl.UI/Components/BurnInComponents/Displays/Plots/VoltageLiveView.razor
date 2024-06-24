@@ -1,5 +1,5 @@
 @using BurnInControl.UI.Data
-@if (this.VoltageData == null) {
+@if (this.VoltageData == null || this.VoltageData.Count == 0) {
 <p>Loading...</p>
 } else {
 <RadzenChart Style="height: 400px;">

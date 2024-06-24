@@ -21,9 +21,9 @@
 
 @code {
     private StationSerialData? _data;
-    private Dictionary<string, List<TemperatureLiveData>>? _tempPlotData=new();
-    private Dictionary<string, List<VoltageData>>? _voltagePlotData=new();
-    private Dictionary<string, List<CurrentData>>? _currentPlotData=new();
+    private Dictionary<string, List<TemperatureLiveData>>? _tempPlotData;
+    private Dictionary<string, List<VoltageData>>? _voltagePlotData;
+    private Dictionary<string, List<CurrentData>>? _currentPlotData;
 
     private PlotAxisOptions _currentPlotOptions=new();
     private PlotAxisOptions _tempPlotOptions=new();

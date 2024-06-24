@@ -45,14 +45,14 @@
     
     private Task OnSerialComReceived(StationSerialData data) {
         this._data = data;
-        this.Logger.LogInformation("In OnSerialComReceived");
-        if (data.Running) {
-            if(this._running==false) {
-                this._running = true;
-                this.Logger.LogInformation("In OnSerialComReceived, Registered Running");
-                this.ClearPlotData();
-                this.InitPlotOptions(data);
-            }
+        if(this._running!=data.Running) {
+            this.Logger.LogInformation("In OnSerialComReceived, Running Changed");
+            this.ClearPlotData();
+            this.InitPlotOptions(data);
+            this._running=data.Running;
+        }
+        if (this._running) {
+            this.Logger.LogInformation("In OnSerialComReceived, Plotting...");
             for (int i = 0; i < ControllerHardwareConstants.HEATER_COUNT; i++) {
                 this._tempPlotData?[ControllerHardwareConstants.HeaterNames[i]].Add(new TemperatureLiveData() {
                     TempC = data.Temperatures[i],

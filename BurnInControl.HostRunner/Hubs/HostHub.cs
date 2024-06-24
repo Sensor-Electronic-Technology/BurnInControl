@@ -68,6 +68,7 @@ public class HostHub:Hub {
         /*process.StartInfo.FileName = "gio";
         process.StartInfo.Arguments = " launch /home/setitech/Desktop/burninapp.desktop &";*/
         process.StartInfo.FileName = "/home/setitech/start-chrome.sh";
+        process.StartInfo.WorkingDirectory = "/home/setitech";
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.UserName = "setitech";

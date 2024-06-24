@@ -1,3 +1,4 @@
+@using Amazon.Runtime.Internal.Transform
 @using BurnInControl.HubDefinitions.Hubs
 @using BurnInControl.Shared
 @using BurnInControl.Shared.ComDefinitions
@@ -20,9 +21,9 @@
 
 @code {
     private StationSerialData? _data;
-    private Dictionary<string, List<TemperatureLiveData>> _tempPlotData=new();
-    private Dictionary<string, List<VoltageData>> _voltagePlotData=new();
-    private Dictionary<string, List<CurrentData>> _currentPlotData=new();
+    private Dictionary<string, List<TemperatureLiveData>>? _tempPlotData=new();
+    private Dictionary<string, List<VoltageData>>? _voltagePlotData=new();
+    private Dictionary<string, List<CurrentData>>? _currentPlotData=new();
 
     private PlotAxisOptions _currentPlotOptions=new();
     private PlotAxisOptions _tempPlotOptions=new();
@@ -32,6 +33,7 @@
 
     protected override Task OnInitializedAsync() {
         this.HubClient.StationHubConnection.On<StationSerialData>(StationHubConstants.Events.OnStationData, this.OnSerialComReceived);
+        this.InitPlotData();
         return base.OnInitializedAsync();
     }
     
@@ -40,10 +42,8 @@
         if (data.Running) {
             if(this._running==false) {
                 this._running = true;
-                this._tempPlotData?.Clear();
-                this._voltagePlotData?.Clear();
-                this._currentPlotData?.Clear();
-                InitPlotOptions(data);
+                this.ClearPlotData();
+                this.InitPlotOptions(data);
             }
             for (int i = 0; i < ControllerHardwareConstants.HEATER_COUNT; i++) {
                 this._tempPlotData?[ControllerHardwareConstants.HeaterNames[i]].Add(new TemperatureLiveData() {
@@ -65,11 +65,37 @@
         } else {
             if (this._running) {
                 this._running = false;
-                this._tempPlotData?.Clear();
-                this._currentPlotData?.Clear();
-                this._voltagePlotData?.Clear();
+                this.ClearPlotData();
             }
             return InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void InitPlotData() {
+        this._tempPlotData = new Dictionary<string, List<TemperatureLiveData>>();
+        this._voltagePlotData = new Dictionary<string, List<VoltageData>>();
+        this._currentPlotData = new Dictionary<string, List<CurrentData>>();
+        
+        for (int i = 0; i < ControllerHardwareConstants.HEATER_COUNT; i++) {
+            this._tempPlotData.Add(ControllerHardwareConstants.HeaterNames[i], new List<TemperatureLiveData>());
+        }
+        for (int i = 0; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
+            this._currentPlotData.Add(ControllerHardwareConstants.ProbeNames[i], new List<CurrentData>());
+            this._voltagePlotData.Add(ControllerHardwareConstants.ProbeNames[i], new List<VoltageData>());
+        }
+    }
+
+    private void ClearPlotData() {
+        this._tempPlotData = new Dictionary<string, List<TemperatureLiveData>>();
+        this._voltagePlotData = new Dictionary<string, List<VoltageData>>();
+        this._currentPlotData = new Dictionary<string, List<CurrentData>>();
+        
+        for (int i = 0; i < ControllerHardwareConstants.HEATER_COUNT; i++) {
+            this._tempPlotData[ControllerHardwareConstants.HeaterNames[i]].Clear();
+        }
+        for (int i = 0; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
+            this._currentPlotData[ControllerHardwareConstants.ProbeNames[i]].Clear();
+            this._voltagePlotData[ControllerHardwareConstants.ProbeNames[i]].Clear();
         }
     }
 

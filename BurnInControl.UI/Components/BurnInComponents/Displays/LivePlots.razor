@@ -7,17 +7,22 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @inject HubClient HubClient
 
-<RadzenStack>
-    <TemperaturePlot TempData="_tempPlotData" 
-                     XAxisName="Time(hrs)" 
-                     YAxisName="Temperature(C)" />
-    <VoltageLiveView VoltageData="_voltagePlotData"
-                     XAxisName="Time(hrs)"
-                     YAxisName="Voltage(V)"/>
-    <CurrentLivePlot CurrentData="_currentPlotData"
-                     XAxisName="Time(hrs)"
-                     YAxisName="Current(mA)"/>
-</RadzenStack>
+@if (!this._running) {
+    <p>Waiting for data...</p>
+} else {
+    <RadzenStack>
+        <TemperaturePlot TempData="_tempPlotData"
+                         XAxisName="Time(hrs)"
+                         YAxisName="Temperature(C)"/>
+        <VoltageLiveView VoltageData="_voltagePlotData"
+                         XAxisName="Time(hrs)"
+                         YAxisName="Voltage(V)"/>
+        <CurrentLivePlot CurrentData="_currentPlotData"
+                         XAxisName="Time(hrs)"
+                         YAxisName="Current(mA)"/>
+    </RadzenStack>
+}
+
 
 @code {
     private StationSerialData? _data;

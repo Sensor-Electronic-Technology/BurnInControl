@@ -67,10 +67,11 @@ public class HostHub:Hub {
         process.StartInfo.Arguments = "-l setitech -c 'chromium-browser --start-fullscreen http://localhost'";*/
         /*process.StartInfo.FileName = "gio";
         process.StartInfo.Arguments = " launch /home/setitech/Desktop/burninapp.desktop &";*/
-        process.StartInfo.FileName = "/home/setitech/start-chrome.sh";
+        process.StartInfo.FileName = "start-chrome.sh";
+        process.StartInfo.WorkingDirectory = "/home/setitech";
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.UseShellExecute = false;
-        /*process.StartInfo.UserName = "setitech";*/
+        //process.StartInfo.UserName = "setitech";
         try {
             process.Start();
             /*var result = await process.StandardOutput.ReadToEndAsync();

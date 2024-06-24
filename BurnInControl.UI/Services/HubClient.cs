@@ -2,16 +2,19 @@ using BurnInControl.HubDefinitions.Hubs;
 namespace BurnInControl.UI.Services;
 using Microsoft.AspNetCore.SignalR.Client;
 public class HubClient:IAsyncDisposable {
+    private readonly ILogger<HubClient> _logger;
     public HubConnection StationHubConnection { get;}
     public HubConnection HostHubConnection { get;}
     public bool StationHubIsConnected=>StationHubConnection.State==HubConnectionState.Connected;
     public bool HostHubIsConnected=>HostHubConnection.State==HubConnectionState.Connected;
     private bool _started;
+    
 
-    public HubClient(IConfiguration configuration) {
+    public HubClient(IConfiguration configuration,ILogger<HubClient> logger) {
         string hubAddress = configuration["StationHub"] ?? StationHubConstants.HubAddress;
         string hostHubAddress = configuration["HostHub"] ?? HostHubConstants.HostHubAddress;
         //string hubAddress = "http://localhost:5066/hubs/station";
+        this._logger = logger;
         this.StationHubConnection = new HubConnectionBuilder()
             .WithUrl(hubAddress)
             .WithAutomaticReconnect()
@@ -25,8 +28,17 @@ public class HubClient:IAsyncDisposable {
     public async Task StartAsync(CancellationToken cancellation = default) {
         if (this._started) return;
         this._started = true;
-        await this.StationHubConnection.StartAsync(cancellation);
-        await this.HostHubConnection.StartAsync(cancellation);
+        try {
+            await this.StationHubConnection.StartAsync(cancellation);
+        } catch (Exception e) {
+            this._logger.LogError(e, "Failed to start StationHubConnection");
+        }
+        
+        try {
+            await this.HostHubConnection.StartAsync(cancellation);
+        } catch (Exception e) {
+            this._logger.LogError(e, "Failed to start HostHubConnection");
+        }
     }
     
     public async Task StopAsync(CancellationToken cancellation = default) {

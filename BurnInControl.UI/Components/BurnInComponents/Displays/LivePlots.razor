@@ -10,8 +10,12 @@
     <TemperaturePlot TempData="_tempPlotData" 
                      XAxisName="Time(hrs)" 
                      YAxisName="Temperature(C)" />
-    <VoltageLiveView VoltageData="_voltagePlotData"/>
-    <CurrentLivePlot CurrentData="_currentPlotData"/>
+    <VoltageLiveView VoltageData="_voltagePlotData"
+                     XAxisName="Time(hrs)"
+                     YAxisName="Voltage(V)"/>
+    <CurrentLivePlot CurrentData="_currentPlotData"
+                     XAxisName="Time(hrs)"
+                     YAxisName="Current(mA)"/>
 </RadzenStack>
 
 @code {
@@ -67,7 +71,6 @@
             }
             return InvokeAsync(StateHasChanged);
         }
-        return Task.CompletedTask;
     }
 
     private void InitPlotOptions(StationSerialData data) {

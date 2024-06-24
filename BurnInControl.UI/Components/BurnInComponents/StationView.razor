@@ -50,7 +50,7 @@
                                            TestRunning="@this._testRunning"/>
                             </RadzenTabsItem>
                             <RadzenTabsItem Text="Plots">
-                                <h5>Coming Soon...</h5>
+                                <LivePlots/>
                             </RadzenTabsItem>
                         </Tabs>
                     </RadzenTabs>
@@ -81,7 +81,7 @@
                             Paused="@this._data.Paused"
                             Running="@this._data.Running"
                             ProbeTestRunning="@this._probeTestRunning"
-                            RestartService="@(()=>this.HubClient.HostHubConnection.SendAsync(HostHubConstants.Methods.RestartService))"
+                            RestartService="@this.RestartServiceHandler"
                             ProbeTest="@this.ProbeTestClicked"/>
         </RadzenRow>
     </RadzenSplitterPane>
@@ -132,18 +132,9 @@
         this.HubClient.StationHubConnection.On<string>(StationHubConstants.Events.OnTestCompleted, this.OnTestCompletedHandler);
         this.HubClient.StationHubConnection.On(StationHubConstants.Events.OnProbeTestDone, this.OnProbeTestDoneHandler);
         this.HubClient.StationHubConnection.On<LoadTestSetupTransport>(StationHubConstants.Events.OnRequestRunningTest, this.OnRequestRunningTestHandler);
-        this.HubClient.StationHubConnection.On<string>(StationHubConstants.Events.OnUpdateStart, (message) => {
-            this.Notify("Update Started", message, NotificationSeverity.Info);
-        });
-        this.HubClient.StationHubConnection.On<bool, string>(StationHubConstants.Events.OnUpdateComplete, (success, message) => {
-            if (success) {
-                this.Notify("Update Complete", message, NotificationSeverity.Success);
-            } else {
-                this.Notify("Update Failed", message, NotificationSeverity.Error);
-            }
-        });
+        this.HubClient.StationHubConnection.On<string>(StationHubConstants.Events.OnUpdateStart,this.UpdateStarting);
     }
-
+    
     protected override Task OnAfterRenderAsync(bool firstRender) {
         if (firstRender) {
             this._navigationRegistration = this.Navigation.RegisterLocationChangingHandler(this.OnLocationChanging);
@@ -178,6 +169,10 @@
     #endregion
 
     #region HubHandlers
+    
+    private async Task UpdateStarting(string message) {
+        await this.DialogService.Alert("Update Starting. Browser will close shortly, please reopen once it does", "Update Starting");
+    }
 
     private void UsbConnectHandler(string message) {
         this.Notify("Usb Connected", "Usb Connected", NotificationSeverity.Success);
@@ -320,6 +315,14 @@
     #region UIHandlers
 
     #region ButtonHandlers
+    
+    private async Task RestartServiceHandler() {
+        if (this.HubClient.HostHubIsConnected) {
+             await this.HubClient.StationHubConnection.SendAsync(HostHubConstants.Methods.RestartService);
+             await this.DialogService.Alert("Restarting service. The browser will close shortly, please reopen once it does", "Service Restart"); 
+        }
+        this.NotifyNotConnected();
+    }
 
     private Task ToggleTemperatureHandler() {
         if (this.Connected) {

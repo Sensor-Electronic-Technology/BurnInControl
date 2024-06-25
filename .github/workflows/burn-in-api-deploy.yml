@@ -1,0 +1,39 @@
+name: Api Deploy
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+    - 'BurnInControl.Data/**'
+    - 'BurnInControl.Infrastructure/**'
+    - 'BurnInControl.Shared/**'
+    - 'BurnInControl.Api/**'
+    - 'BurnInControl.Api.Data/**'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Adjust NuGet Config Credentials
+      run: |
+        cp ./nuget.bak ./NuGet.config
+        echo $(sed -e "s@\${PAT}@${{ secrets.NUGET_TOKEN }}@" NuGet.config) > NuGet.config
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{secrets.Docker_Username}}
+        password: ${{secrets.Docker_Password}}
+    - name: Build and push
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./BurnInControl.Api/Dockerfile
+        push: true
+        tags: ${{secrets.Docker_Username}}/burn-in-api:dev
+  # deploy:
+  #   needs: build
+  #   runs-on:
+  #    group: setihost-group
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - run: microk8s.kubectl rollout restart deployment burn-in-api.yaml

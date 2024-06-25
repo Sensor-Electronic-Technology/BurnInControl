@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using BurnInControl.ConsoleTesting;
@@ -28,18 +29,85 @@ using SerialPortLib;
 int count = 0;
 var error=checks.Any(e=>!e) || count==0;
 Console.WriteLine($"Error: {error}");*/
-string probe = "L1-E";
+//await CreateDevStationDatabase();
+//await TestParseWaferDataInitFinal();
+await TestGetWaferData();
+async Task TestGetWaferData() {
+    List<string> _pads = [PadLocation.PadLocationA.Value,PadLocation.PadLocationB.Value,
+        PadLocation.PadLocationC.Value, PadLocation.PadLocationR.Value,
+        PadLocation.PadLocationL.Value,PadLocation.PadLocationT.Value,
+        PadLocation.PadLocationG.Value];
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database=client.GetDatabase("burn_in_db");
+    var collection=database.GetCollection<WaferTestLog>("wafer_test_logs");
+    var waferTestLog = await collection.Find(e => e.WaferId == "B04-1606-01").FirstOrDefaultAsync();
+    if(waferTestLog is null) {
+        Console.WriteLine("Not Found");
+        return;
+    }
+    List<string> result=new List<string>();
+    List<string> finalResult=new List<string>();
+    List<string> pocketResult=new List<string>();
+    foreach(var pad in _pads) {
+        if (waferTestLog.WaferPadInitialData.ContainsKey(pad)) {
+            result.Add(waferTestLog.WaferPadInitialData[pad].Voltage.ToString("F", CultureInfo.InvariantCulture));
+            result.Add(waferTestLog.WaferPadInitialData[pad].Current.ToString("F", CultureInfo.InvariantCulture));
+        } else {
+            result.Add("0.00");
+            result.Add("0.00");
+        }
+        if (waferTestLog.WaferPadFinalData.ContainsKey(pad)) {
+            finalResult.Add(waferTestLog.WaferPadFinalData[pad].Voltage.ToString("F", CultureInfo.InvariantCulture));
+            finalResult.Add(waferTestLog.WaferPadFinalData[pad].Current.ToString("F", CultureInfo.InvariantCulture));
+        } else {
+            finalResult.Add("0.00");
+            finalResult.Add("0.00");
+        }
+            
+        if (waferTestLog.PocketData.ContainsKey(pad)) {
+            pocketResult.Add(waferTestLog.PocketData[pad].Pocket.ToString("D", CultureInfo.InvariantCulture));
+            pocketResult.Add(waferTestLog.PocketData[pad].SetCurrent.ToString("D", CultureInfo.InvariantCulture));
+            pocketResult.Add(waferTestLog.PocketData[pad].SetTemperature.ToString("D", CultureInfo.InvariantCulture));
+        } else {
+            pocketResult.Add("0");
+            pocketResult.Add("0");
+            pocketResult.Add("0");
+        }
+    }
 
-var pad=PadLocation.List.FirstOrDefault(e => probe.Contains(e.Value));
-if (pad != null) {
-    Console.WriteLine($"Pad: {pad.Value}");
-} else {
-    Console.WriteLine("Pad Not Found");
+    foreach (var data in result) {
+        Console.WriteLine(data);
+    }
+    Console.WriteLine();
+    Console.WriteLine();
+    foreach (var data in finalResult) {
+        Console.WriteLine(data);
+    }
+    Console.WriteLine();
+    Console.WriteLine();
+    foreach (var data in pocketResult) {
+        Console.WriteLine(data);
+    }
+    Console.WriteLine();
+    Console.WriteLine();
+
+    Console.WriteLine("All Data:");
+    result.AddRange(finalResult);
+    result.AddRange(pocketResult);
+    foreach (var data in result) {
+        Console.WriteLine(data);
+    }
+    
 }
 
-var otherPads=PadLocation.List.Where(e=>e!=pad);
-foreach(var other in otherPads) {
-    Console.WriteLine($"Other: {other.Value}");
+async Task TestParseWaferDataInitFinal() {
+    string logId = "667b06328853c7d2081ddd28";
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database=client.GetDatabase("burn_in_db");
+    var collection=database.GetCollection<BurnInTestLogEntry>("test_log_entries");
+    var init=await collection.Find(e=>e.TestLogId==ObjectId.Parse(logId) && e.Reading.ElapsedSeconds>=10).FirstAsync();
+    var final=await collection.Find(e=>e.TestLogId==ObjectId.Parse(logId) && e.Reading.ElapsedSeconds>=110).FirstAsync();
+    Console.WriteLine($"Init: {init.Reading.ElapsedSeconds} Final: {final.Reading.ElapsedSeconds}");
 }
 
 async Task TestMongoDict() {
@@ -115,6 +183,27 @@ async Task CreateStationDatabase() {
         await collection.InsertOneAsync(station);
     }
     Console.WriteLine("Check database");
+}
+
+async Task CreateDevStationDatabase() {
+    Station station = new Station();
+    station.StationId=$"S99";
+    station.StationPosition=$"POS99";
+    station.FirmwareVersion="V0.0.1";
+    station.UpdateAvailable=false;
+    station.State=StationState.Idle;
+    station.RunningTest=null;
+    station.SavedState=null;
+    station.Configuration = new BurnStationConfiguration() {
+        HeaterControllerConfig = new HeaterControllerConfig(),
+        ProbeControllerConfig = new ProbeControllerConfig(),
+        ControllerConfig = new StationConfiguration()
+    };
+    station.NetworkConfig= new NetworkConfig() { WifiIp = "0.0.0.0", EthernetIp = "0.0.0.0" };
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database=client.GetDatabase("burn_in_db");
+    var collection=database.GetCollection<Station>("stations");
+    await collection.InsertOneAsync(station);
 }
 
 async Task CloneDatabase() {

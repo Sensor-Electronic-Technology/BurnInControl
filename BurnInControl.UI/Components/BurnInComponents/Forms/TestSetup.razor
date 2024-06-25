@@ -12,7 +12,7 @@
         <RadzenStack Orientation="Orientation.Vertical" 
                      Style="border: 1px solid #0a53be; margin: 0.3rem;" readonly="@this.TestRunning">
             <RadzenDataGrid @ref="@this._waferSetupGrid"
-                            TItem="WaferSetup"
+                            TItem="PocketWaferSetup"
                             Data="@this.TestSetupService.WaferSetups"
                             Density="Density.Compact"
                             GridLines="DataGridGridLines.Both"
@@ -122,7 +122,7 @@
                         int index = i;
                         <RadzenTabsItem Text="@GetPocketLabel(index)">
                             <PocketSetup PocketCaption="@GetPocketLabel(index)"
-                                         WaferSetup="@waferSetup"
+                                         PocketWaferSetup="@waferSetup"
                                          WaferSetupChanged="@(async Task (setup) => { waferSetup = setup; await InvokeAsync(StateHasChanged); })"
                                          WaferList="@this._waferList"/>
                         </RadzenTabsItem>
@@ -132,15 +132,15 @@
     </RadzenSplitterPane>
 </RadzenSplitter>
 @code {
-    [Parameter] public EventCallback<List<WaferSetup>> Save { get; set; }
+    [Parameter] public EventCallback<List<PocketWaferSetup>> Save { get; set; }
     [Parameter] public EventCallback CancelCallback { get; set; }
     [Parameter] public bool TestRunning { get; set; } = false;
     //[Parameter] public IEnumerable<Pad>? Map { get; set; } = Enumerable.Empty<Pad>();
-    private RadzenDataGrid<WaferSetup> _waferSetupGrid;
+    private RadzenDataGrid<PocketWaferSetup> _waferSetupGrid;
     private IEnumerable<string>? _waferList=Enumerable.Empty<string>();
     private RadzenTabs _tabs;
     
-    private List<WaferSetup> _selectedItems = new List<WaferSetup>();
+    private List<PocketWaferSetup> _selectedItems = new List<PocketWaferSetup>();
     
     private int _selectedTab = 0;
     private bool _verified = false;
@@ -150,22 +150,22 @@
         this._waferList = await this.TestSetupService.GetQtList(TimeSpan.FromDays(147));
     }
 
-    private void OnTestLoadedHandler(List<WaferSetup> testSetup) {
+    private void OnTestLoadedHandler(List<PocketWaferSetup> testSetup) {
         this.TestSetupService.WaferSetups.Clear();
         this.TestSetupService.SetTestSetup(testSetup);
         InvokeAsync(StateHasChanged);
     }
     
-    async Task EditRow(WaferSetup order) {
+    async Task EditRow(PocketWaferSetup order) {
         await _waferSetupGrid.EditRow(order);
     }
     
-    async Task SaveRow(WaferSetup waferSetup) {
-        await this._waferSetupGrid.UpdateRow(waferSetup);
+    async Task SaveRow(PocketWaferSetup pocketWaferSetup) {
+        await this._waferSetupGrid.UpdateRow(pocketWaferSetup);
     }
 
-    void CancelEdit(WaferSetup waferSetup) {
-        this._waferSetupGrid.CancelEditRow(waferSetup);
+    void CancelEdit(PocketWaferSetup pocketWaferSetup) {
+        this._waferSetupGrid.CancelEditRow(pocketWaferSetup);
     }
 
     private async Task VerifyHandler() {
@@ -205,7 +205,7 @@
         };
     }
     
-    private async Task SelectedItemChangedHandler(IList<WaferSetup> obj) {
+    private async Task SelectedItemChangedHandler(IList<PocketWaferSetup> obj) {
         var selected=obj[0];
         this._selectedTab=this.TestSetupService.WaferSetups.IndexOf(selected);
     }

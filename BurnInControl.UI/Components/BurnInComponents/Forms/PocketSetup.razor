@@ -26,7 +26,7 @@
                                 Value="@this._selectedWaferSize"
                                 ValueChanged="@this.SelectedWaferSizeChanged"/>
             </RadzenFieldset>
-            <WaferIdInput WaferId="@this.WaferSetup.WaferId"
+            <WaferIdInput WaferId="@this.PocketWaferSetup.WaferId"
                           WaferList="@this.WaferList"
                           WaferIdChanged="@this.WaferIdChangedHandler"
                           ExistsChanged="ExistsChangedHandler"/>
@@ -34,34 +34,34 @@
                 <RadzenFieldset Text="Pocket Loaded?">
                     <RadzenStack Orientation="Orientation.Vertical"
                                  AlignItems="AlignItems.Center" Gap="0.5rem">
-                        <RadzenLabel Text="@(this.WaferSetup.Loaded ? "Loaded" : "Not Loaded")" Component="Loaded"/>
-                        <RadzenSwitch Value="@this.WaferSetup.Loaded" ValueChanged="@this.LoadedChangedHandler" Name="Loaded"/>
+                        <RadzenLabel Text="@(this.PocketWaferSetup.Loaded ? "Loaded" : "Not Loaded")" Component="Loaded"/>
+                        <RadzenSwitch Value="@this.PocketWaferSetup.Loaded" ValueChanged="@this.LoadedChangedHandler" Name="Loaded"/>
                     </RadzenStack>
                 </RadzenFieldset>
                 <RadzenFieldset Text="Burn-in Number">
                     <RadzenNumeric TValue="int"
-                                   Value="@this.WaferSetup.BurnNumber"
+                                   Value="@this.PocketWaferSetup.BurnNumber"
                                    ValueChanged="@this.BurnInValueChanged"
                                    Style="width: 5rem"/>
                 </RadzenFieldset>
             </RadzenStack>
             <PadSelectors Pads="@this._pads"
-                          Enabled="@(this._exists && this.WaferSetup.Loaded)"
+                          Enabled="@(this._exists && this.PocketWaferSetup.Loaded)"
                           Probe1Active="@this._probe1Active"
                           Probe1ActiveChanged="@((bool value) => this._probe1Active = value)"
                           Probe2Active="@this._probe2Active"
                           Probe2ActiveChanged="@((bool value) => this._probe2Active = value)"
-                          Probe1Pad="@this.WaferSetup.Probe1Pad"
+                          Probe1Pad="@this.PocketWaferSetup.Probe1Pad"
                           Probe1PadChanged="@this.Probe1PadChangedHandler"
-                          Probe2Pad="@this.WaferSetup.Probe2Pad"
+                          Probe2Pad="@this.PocketWaferSetup.Probe2Pad"
                           Probe2PadChanged="@this.Probe2PadChangedHandler"/>
         </RadzenStack>
 
         @if (this._waferMap == null) {
             <p><string>Please select a wafer size</string></p>
         } else {
-            <WaferImageMap SelectedPad1="@this.WaferSetup.Probe1Pad"
-                           SelectedPad2="@this.WaferSetup.Probe2Pad"
+            <WaferImageMap SelectedPad1="@this.PocketWaferSetup.Probe1Pad"
+                           SelectedPad2="@this.PocketWaferSetup.Probe2Pad"
                            SelectedPad1Changed="@this.MapPad1ChangedHandler"
                            SelectedPad2Changed="@this.MapPad2ChangedHandler"
                            WaferMap="@this._waferMap"
@@ -76,8 +76,8 @@
 
 @code {
     [Parameter] public string PocketCaption { get; set; } = "Pocket X";
-    [Parameter] public WaferSetup WaferSetup { get; set; }=new WaferSetup();
-    [Parameter] public EventCallback<WaferSetup> WaferSetupChanged { get; set; }
+    [Parameter] public PocketWaferSetup PocketWaferSetup { get; set; }=new PocketWaferSetup();
+    [Parameter] public EventCallback<PocketWaferSetup> WaferSetupChanged { get; set; }
     [Parameter] public IEnumerable<string> WaferList { get; set; } = [];
     
     private bool _probe1Active=false;
@@ -100,8 +100,8 @@
     }
 
     private async Task CheckWaferExists() {
-        if (!string.IsNullOrEmpty(this.WaferSetup.WaferId)) {
-            var result=await this.QuickTestDataService.QuickTestExists(this.WaferSetup.WaferId);
+        if (!string.IsNullOrEmpty(this.PocketWaferSetup.WaferId)) {
+            var result=await this.QuickTestDataService.QuickTestExists(this.PocketWaferSetup.WaferId);
             if (result.IsError) {
                 await this.DialogService.Alert($"Error while checking wafer: {result.FirstError.Description}", "Error");
                 this._exists = false;
@@ -120,50 +120,50 @@
         await InvokeAsync(StateHasChanged);
         this._waferMap=await this.QuickTestDataService.GetWaferMap(size.Value);
         this._pads = null;
-        this.WaferSetup.Probe1Pad = string.Empty;
-        this.WaferSetup.Probe2Pad = string.Empty;
-        this.WaferSetup.WaferSize = size.Value;
+        this.PocketWaferSetup.Probe1Pad = string.Empty;
+        this.PocketWaferSetup.Probe2Pad = string.Empty;
+        this.PocketWaferSetup.WaferSize = size.Value;
         this._probe1Active = false;
         this._probe2Active = false;
-        await this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
+        await this.WaferSetupChanged.InvokeAsync(this.PocketWaferSetup);
         await InvokeAsync(StateHasChanged);
     }
     
     private void WaferIdChangedHandler(string waferId) {
-        this.WaferSetup.WaferId = waferId;
-        this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
+        this.PocketWaferSetup.WaferId = waferId;
+        this.WaferSetupChanged.InvokeAsync(this.PocketWaferSetup);
     }
 
     private async Task Probe1PadChangedHandler(object obj) {
         var selected=obj as string;
-        this.WaferSetup.Probe1Pad = selected; 
-        await this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
+        this.PocketWaferSetup.Probe1Pad = selected; 
+        await this.WaferSetupChanged.InvokeAsync(this.PocketWaferSetup);
     }
     
     private Task Probe2PadChangedHandler(object obj) {
         var selected=obj as string;
-        this.WaferSetup.Probe2Pad = selected;
-        return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
+        this.PocketWaferSetup.Probe2Pad = selected;
+        return this.WaferSetupChanged.InvokeAsync(this.PocketWaferSetup);
     }
 
     private Task MapPad1ChangedHandler(string pad) {
-        this.WaferSetup.Probe1Pad = pad;
-        return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
+        this.PocketWaferSetup.Probe1Pad = pad;
+        return this.WaferSetupChanged.InvokeAsync(this.PocketWaferSetup);
     }
     
     private Task MapPad2ChangedHandler(string pad) {
-        this.WaferSetup.Probe2Pad = pad;
-        return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
+        this.PocketWaferSetup.Probe2Pad = pad;
+        return this.WaferSetupChanged.InvokeAsync(this.PocketWaferSetup);
     }
 
     private Task LoadedChangedHandler(bool value) {
-       this.WaferSetup.Loaded= value;
-       return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
+       this.PocketWaferSetup.Loaded= value;
+       return this.WaferSetupChanged.InvokeAsync(this.PocketWaferSetup);
     }
 
     private Task BurnInValueChanged(int burnNumber) {
-        this.WaferSetup.BurnNumber=burnNumber;
-        return this.WaferSetupChanged.InvokeAsync(this.WaferSetup);
+        this.PocketWaferSetup.BurnNumber=burnNumber;
+        return this.WaferSetupChanged.InvokeAsync(this.PocketWaferSetup);
     }
     
     private void Notify(string summary,string message,NotificationSeverity severity=NotificationSeverity.Info,int duration=5000) {
@@ -194,8 +194,8 @@
 
     private async Task ExistsChangedHandler(bool waferExists) {
         if (this._exists == true && waferExists == false) {
-            this.WaferSetup.Probe1Pad = string.Empty;
-            this.WaferSetup.Probe2Pad= string.Empty;
+            this.PocketWaferSetup.Probe1Pad = string.Empty;
+            this.PocketWaferSetup.Probe2Pad= string.Empty;
             this._probe1Active = false;
             this._probe2Active = false;
             this._waferMap = null;
@@ -210,9 +210,9 @@
             /*this._pads = null;*/
             /*await InvokeAsync(StateHasChanged);*/
             this._waferMap=await this.QuickTestDataService.GetWaferMap(WaferSize.TwoInch.Value);
-            var pads= await this.QuickTestDataService.GetAvailablePads(this.WaferSetup.WaferId);
+            var pads= await this.QuickTestDataService.GetAvailablePads(this.PocketWaferSetup.WaferId);
             this._pads = pads.Distinct().ToList();
-            var testPads=await this.WaferTestLogDataService.GetTestedPads(this.WaferSetup.WaferId);
+            var testPads=await this.WaferTestLogDataService.GetTestedPads(this.PocketWaferSetup.WaferId);
             if (testPads.Any()) {
                 this._pads.RemoveAll(e => testPads.Contains(e));
             }

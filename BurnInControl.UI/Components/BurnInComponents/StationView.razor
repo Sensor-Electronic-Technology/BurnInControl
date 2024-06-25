@@ -50,7 +50,10 @@
                                            TestRunning="@this._testRunning"/>
                             </RadzenTabsItem>
                             <RadzenTabsItem Text="Plots">
-                                <LivePlots/>
+                                @*<LivePlots/>*@
+                                <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+                                    <RadzenText TextStyle="TextStyle.H4" Text="Coming Soon...."/>
+                                </RadzenRow>
                             </RadzenTabsItem>
                         </Tabs>
                     </RadzenTabs>
@@ -95,7 +98,7 @@
     private IDisposable? _navigationRegistration;
     private bool Connected => this.HubClient.StationHubIsConnected;
     private bool _usbConnected = false;
-    private List<WaferSetup>? _waferSetups = new List<WaferSetup>();
+    private List<PocketWaferSetup>? _waferSetups = new List<PocketWaferSetup>();
     private bool _eventPaneCollapsed = false;
     private bool _controlPaneCollapsed = false;
     private bool _runtimePaneCollapsed = false;
@@ -300,7 +303,7 @@
     private Task OnTestStartedFromUnknownHandler(LoadTestSetupTransport transport) {
         if (transport.Success) {
             this.StationStatusService.StationState = StationState.Running;
-            this.StationStatusService.TestSetup = transport.WaferSetups ?? [];
+            this.StationStatusService.TestSetup = transport.PocketWaferSetups ?? [];
             this.Notify("Unknown Test Started From Memory", transport.Message ?? "No Message", NotificationSeverity.Success);
         } else {
             this.Notify("Unknown Test Failed to Started ", transport.Message ?? "No Message", NotificationSeverity.Error);
@@ -312,7 +315,7 @@
     private Task OnRequestRunningTestHandler(LoadTestSetupTransport transport) {
         if (transport.Success) {
             this.StationStatusService.StationState = StationState.Running;
-            this.StationStatusService.TestSetup = transport.WaferSetups ?? [];
+            this.StationStatusService.TestSetup = transport.PocketWaferSetups ?? [];
             this.Notify("Test Running", transport.Message ?? "No Message", NotificationSeverity.Success);
         } else {
             this.Notify("Request Running Test Failed", transport.Message ?? "No Message", NotificationSeverity.Error);
@@ -324,7 +327,7 @@
     private Task OnTestStartedFromHandler(LoadTestSetupTransport transport) {
         if (transport.Success) {
             this.StationStatusService.StationState = StationState.Running;
-            this.StationStatusService.TestSetup = transport.WaferSetups ?? [];
+            this.StationStatusService.TestSetup = transport.PocketWaferSetups ?? [];
             this.Notify("Test Started", transport.Message ?? "No Message", NotificationSeverity.Success);
         } else {
             this.Notify("Test Failed To Start ", transport.Message ?? "No Message", NotificationSeverity.Error);
@@ -378,7 +381,7 @@
         return Task.CompletedTask;
     }
 
-    private Task SaveTestSetupHandler(List<WaferSetup> waferSetups) {
+    private Task SaveTestSetupHandler(List<PocketWaferSetup> waferSetups) {
         if (this.Connected) {
             if (!waferSetups.Any()) {
                 this.Notify("Setup Error",

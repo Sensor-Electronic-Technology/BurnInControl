@@ -1,20 +1,33 @@
 @using BurnInControl.UI.Data
-@if (this.TempData == null || this.TempData.Count == 0) {
-    <p>Loading...</p>
-} else {
+
     <RadzenChart Style="height: 400px;">
-        @foreach (var tempData in this.TempData) {
-            <RadzenLineSeries Smooth="false"
-                              Data="@tempData.Value"
-                              CategoryProperty="TimeHrs"
-                              Title="@tempData.Key"
-                              LineType="LineType.Solid"
-                              ValueProperty="TempC">
-                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
-                <RadzenSeriesDataLabels Visible="false"/>
-            </RadzenLineSeries>
-        }
-    
+        <RadzenLineSeries Smooth="false"
+                          Data="@this.H1Data"
+                          CategoryProperty="TimeHrs"
+                          Title="H1(L)"
+                          LineType="LineType.Solid"
+                          ValueProperty="TempC">
+            <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+            <RadzenSeriesDataLabels Visible="false"/>
+        </RadzenLineSeries>
+        <RadzenLineSeries Smooth="false"
+                          Data="@this.H2Data"
+                          CategoryProperty="TimeHrs"
+                          Title="H2(L)"
+                          LineType="LineType.Solid"
+                          ValueProperty="TempC">
+            <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+            <RadzenSeriesDataLabels Visible="false"/>
+        </RadzenLineSeries>
+        <RadzenLineSeries Smooth="false"
+                          Data="@this.H3Data"
+                          CategoryProperty="TimeHrs"
+                          Title="H3(L)"
+                          LineType="LineType.Solid"
+                          ValueProperty="TempC">
+            <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+            <RadzenSeriesDataLabels Visible="false"/>
+        </RadzenLineSeries>
         <RadzenCategoryAxis Min="@this.PlotAxisOptions.XAxisMin"
                             Max="@this.PlotAxisOptions.XAxisMax"
                             Step="@this.PlotAxisOptions.XAxisStep"
@@ -29,12 +42,24 @@
             <RadzenAxisTitle Text="@YAxisName"/>
         </RadzenValueAxis>
     </RadzenChart>
-}
+
+@*<RadzenLineSeries Smooth="false"
+                  Data="@this.H1Data"
+                  CategoryProperty="TimeHrs"
+                  Title="H1(L)"
+                  LineType="LineType.Solid"
+                  ValueProperty="TempC">
+    <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+    <RadzenSeriesDataLabels Visible="false"/>
+</RadzenLineSeries>*@
 
 @code {
-    [Parameter] public Dictionary<string,List<TemperatureLiveData>>? TempData { get; set; }
+    [Parameter] public List<TemperatureLiveData>? H1Data { get; set; } = new();
+    [Parameter] public List<TemperatureLiveData>? H2Data { get; set; }= new();
+    [Parameter] public List<TemperatureLiveData>? H3Data { get; set; }= new();
     [Parameter] public PlotAxisOptions PlotAxisOptions { get; set; } = new();
     [Parameter] public string? YAxisName { get; set; }="Temperature(C)";
     [Parameter] public string? XAxisName { get; set; }="Time(hrs)";
+    [Parameter] public bool Running { get; set; } = false;
     
 }

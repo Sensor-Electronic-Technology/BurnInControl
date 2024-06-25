@@ -8,7 +8,7 @@ namespace BurnInControl.UI.Services;
 
 public class TestSetupService {
     private QuickTestDataService _qtDataService;
-    public List<WaferSetup> WaferSetups { get; set; }=new List<WaferSetup>();
+    public List<PocketWaferSetup> WaferSetups { get; set; }=new List<PocketWaferSetup>();
     public List<SetupAlert> SetupAlerts { get; set; }=new List<SetupAlert>();
     public int SetupCount => this.WaferSetups.Count;
     public int AlertCount => this.SetupAlerts.Count;
@@ -27,7 +27,7 @@ public class TestSetupService {
         }
     }
 
-    public void SetTestSetup(List<WaferSetup> testSetup) {
+    public void SetTestSetup(List<PocketWaferSetup> testSetup) {
         this.WaferSetups = testSetup;
     }
 
@@ -46,7 +46,7 @@ public class TestSetupService {
     public bool PocketsLoaded() {
         return this.WaferSetups.All(e=>!e.Loaded);
     }
-    public WaferSetup GetWaferSetup(int index) {
+    public PocketWaferSetup GetWaferSetup(int index) {
         return this.WaferSetups[index];
     }
     
@@ -172,10 +172,10 @@ public class TestSetupService {
         }
         this.SetupError=this.SetupAlerts.Any(e => !e.Okay) || this.LoadedCount==0;
     }
-    private WaferSetup GenerateWaferSetup(int index) {
+    private PocketWaferSetup GenerateWaferSetup(int index) {
         switch (index) {
             case 0: {
-                return new WaferSetup() {
+                return new PocketWaferSetup() {
                     WaferId = string.Empty,
                     BurnNumber = 1,
                     WaferSize = 2,
@@ -186,7 +186,7 @@ public class TestSetupService {
                 };
             }
             case 1: {
-                return new WaferSetup() {
+                return new PocketWaferSetup() {
                     WaferId = string.Empty,
                     BurnNumber = 1,
                     WaferSize = 2,
@@ -197,7 +197,7 @@ public class TestSetupService {
                 };
             }
             case 2: {
-                return new WaferSetup() {
+                return new PocketWaferSetup() {
                     WaferId = string.Empty,
                     BurnNumber = 1,
                     WaferSize = 2,
@@ -208,7 +208,7 @@ public class TestSetupService {
                 };
             }
             default: {
-                return new WaferSetup();
+                return new PocketWaferSetup();
             }
         }
     }

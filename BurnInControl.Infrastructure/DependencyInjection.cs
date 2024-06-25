@@ -25,4 +25,12 @@ public static class DependencyInjection {
         return services;
     }
     
+    public static IServiceCollection AddApiPersistence(this IServiceCollection services) {
+        services.AddTransient<StationDataService>();
+        services.AddTransient<TestLogDataService>();
+        services.AddTransient<QuickTestDataService>();
+        services.AddTransient<WaferTestLogDataService>(); 
+        return services;
+    }
+    
 }

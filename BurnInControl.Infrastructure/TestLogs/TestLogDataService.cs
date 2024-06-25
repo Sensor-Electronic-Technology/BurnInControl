@@ -165,7 +165,7 @@ public class TestLogDataService {
             .Set(e=>e.Completed,true);
         var clearResult =await this._stationDataService.ClearRunningTest(stationId);
         var logResult = await this._testLogCollection.UpdateOneAsync(filter, update);
-        await this.LogWaferTest(id);
+        await this.LogWaferTest(id,30,110);
         if (!clearResult.IsError && logResult.IsAcknowledged) {
             return Result.Success;
         }
@@ -178,23 +178,17 @@ public class TestLogDataService {
         return Error.Failure(description: "Station Running flag not cleared and Log was not finalized");
     }
 
-    private async Task LogWaferTest(ObjectId testLogId) {
+    private async Task LogWaferTest(ObjectId testLogId,int initSec,int finalSec) {
         var testLog=await this._testLogCollection.Find(e=>e._id==testLogId)
             .FirstOrDefaultAsync();
         if(testLog != null && testLog.TestSetup?.Count>0) {
             var testSetups = testLog.TestSetup;
-            ulong finalTime = (ulong)(testLog.RunTime-10);
-            Console.WriteLine($"Final Time: {finalTime}");
-            var initFilter=Builders<BurnInTestLogEntry>.Filter.Eq(e => e.TestLogId, testLogId) 
-                & Builders<BurnInTestLogEntry>.Filter.Gte(e => e.Reading.ElapsedSeconds, 5)
-                & Builders<BurnInTestLogEntry>.Filter.Lte(e => e.Reading.ElapsedSeconds, 10);
-            var finalFilter = Builders<BurnInTestLogEntry>.Filter.Eq(e => e.TestLogId, testLogId)
-                              & Builders<BurnInTestLogEntry>.Filter.Gte(e => e.Reading.ElapsedSeconds, 20);
+            this._logger.LogInformation("Parsing WaferTestLog. InitSec:{Init} FinalSec:{Final}",initSec,finalSec);
             
-            var initTestLog = await this._readingsCollection.Find(initFilter)
-                    .Project(e => e.Reading)
-                    .FirstOrDefaultAsync();
-            var finalTestLog = await this._readingsCollection.Find(finalFilter)
+            var initTestLog = await this._readingsCollection.Find(e => e.TestLogId == testLogId && e.Reading.ElapsedSeconds>=(ulong)initSec)
+                .Project(e => e.Reading)
+                .FirstOrDefaultAsync();
+            var finalTestLog = await this._readingsCollection.Find(e => e.TestLogId == testLogId && e.Reading.ElapsedSeconds>=(ulong)finalSec)
                 .Project(e => e.Reading)
                 .FirstOrDefaultAsync();
             
@@ -212,18 +206,22 @@ public class TestLogDataService {
                     waferTest.StartTime = testLog.StartTime;
                     waferTest.StopTime = testLog.StopTime;
                     waferTest.BurnNumber = testSetup.BurnNumber;
-                    
                     if (!string.IsNullOrWhiteSpace(testSetup.Probe1Pad)) {
                         var p1Pad = PadLocation.List.FirstOrDefault(e => testSetup.Probe1Pad.Contains(e.Value));
                         if(p1Pad!=null) {
                             waferTest.Probe1Pad = testSetup.Probe1Pad;
                             waferTest.WaferPadInitialData.Add(p1Pad.Value, new WaferPadData() {
-                                Voltage =initTestLog.Voltages[(pocket.Value*2)],
-                                Current =initTestLog.Currents[(pocket.Value*2)]
+                                Voltage =initTestLog.Voltages[(pocket.Value-1)*2],
+                                Current =initTestLog.Currents[(pocket.Value-1)*2]
                             });
                             waferTest.WaferPadFinalData.Add(p1Pad.Value, new WaferPadData() {
-                                Voltage =finalTestLog.Voltages[(pocket.Value*2)],
-                                Current =finalTestLog.Currents[(pocket.Value*2)]
+                                Voltage =finalTestLog.Voltages[(pocket.Value-1)*2],
+                                Current =finalTestLog.Currents[(pocket.Value-1)*2]
+                            });
+                            waferTest.PocketData.Add(p1Pad.Value, new PocketData() {
+                                Pocket = pocket.Value,
+                                SetCurrent = testLog.SetCurrent.Value,
+                                SetTemperature = testLog.SetTemperature
                             });
                         }
                     }
@@ -232,7 +230,6 @@ public class TestLogDataService {
                         var p2Pad = PadLocation.List.FirstOrDefault(e => testSetup.Probe2Pad.Contains(e.Value));
                         if(p2Pad!=null) {
                             waferTest.Probe2Pad = testSetup.Probe2Pad;
-                            Console.WriteLine($"Probe 2 found in {p2Pad.Name}. Creating WaferPadData");
                             waferTest.WaferPadInitialData.Add(p2Pad.Value, new WaferPadData() {
                                 Voltage =initTestLog.Voltages[((pocket.Value-1)*2)+1],
                                 Current =initTestLog.Currents[((pocket.Value-1)*2)+1]
@@ -241,43 +238,14 @@ public class TestLogDataService {
                                 Voltage =finalTestLog.Voltages[((pocket.Value-1)*2)+1],
                                 Current =finalTestLog.Currents[((pocket.Value-1)*2)+1]
                             });
-                        }
-                    }
-                    var foundPadList=waferTest.WaferPadInitialData.Keys.ToList();
-                    if (foundPadList.Any()) {
-                        foreach(var pad in PadLocation.List.Where(e=>!foundPadList.Contains(e.Value))) {
-                            waferTest.WaferPadInitialData.Add(pad.Value, new WaferPadData() {
-                                Voltage = 0,
-                                Current = 0
-                            });
-                            waferTest.WaferPadFinalData.Add(pad.Value, new WaferPadData() {
-                                Voltage = 0,
-                                Current = 0
-                            });
-                        }
-                    } else {
-                        foreach(var pad in PadLocation.List) {
-                            waferTest.WaferPadInitialData.Add(pad.Value, new WaferPadData() {
-                                Voltage = 0,
-                                Current = 0
-                            });
-                            waferTest.WaferPadFinalData.Add(pad.Value, new WaferPadData() {
-                                Voltage = 0,
-                                Current = 0
+                            waferTest.PocketData.Add(p2Pad.Value, new PocketData() {
+                                Pocket = pocket.Value,
+                                SetCurrent = testLog.SetCurrent.Value,
+                                SetTemperature = testLog.SetTemperature
                             });
                         }
                     }
-                    if (await this._waferTestLogDataService.Exists(testSetup.WaferId)) {
-                        await this._waferTestLogDataService.InsertWaferTest(testSetup.WaferId, waferTest);
-                        this._logger.LogInformation("Added WaferTest to WaferTestLog. Wafer {Wafer}",testSetup.WaferId);
-                    } else {
-                        WaferTestLog waferTesLog= new WaferTestLog() {
-                            WaferId = testSetup.WaferId,
-                            WaferTests = [waferTest]
-                        };
-                        this._logger.LogInformation("WaferTestLog Created. Wafer {Wafer}",waferTesLog.WaferId);
-                        await this._waferTestLogDataService.InsertWaferTestLog(waferTesLog);
-                    }
+                    await this._waferTestLogDataService.Insert(testSetup.WaferId, waferTest);
                 }
             }
         }

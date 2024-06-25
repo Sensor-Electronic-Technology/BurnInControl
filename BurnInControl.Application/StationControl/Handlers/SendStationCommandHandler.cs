@@ -21,6 +21,7 @@ public class SendStationCommandHandler:IRequestHandler<SendStationCommand> {
     public async Task Handle(SendStationCommand command, CancellationToken cancellationToken) {
         if (command.Command == StationCommand.Reset) {
             await this._mediator.Send(new HardStopCommand(), cancellationToken);
+            await Task.Delay(2000, cancellationToken);
             await this._controller.Send(StationMsgPrefix.CommandPrefix, command.Command);
             this._logger.LogInformation("Received reset, sent command and deleted running test");
         }

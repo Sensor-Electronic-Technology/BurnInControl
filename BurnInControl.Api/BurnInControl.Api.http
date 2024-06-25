@@ -2,5 +2,9 @@
 
 GET {{BurnInControl.Api_HostAddress}}/weatherforecast/
 Accept: application/json
-
 ###
+
+GET {{BurnInControl.Api_HostAddress}}//api/burn-in/results/B04-1606-01
+Accept: application/json
+
+

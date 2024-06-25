@@ -53,6 +53,7 @@
     image: containrrr/watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
     command: --cleanup --http-api-update
     labels:
       - "com.centurylinklabs.watchtower.enable=false"

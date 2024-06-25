@@ -6,11 +6,11 @@ namespace BurnInControl.UI.Services;
 public class StationStatusService {
     public event Action<StationState>? OnStationStateChanged;
     public event Action<string>? OnStationIdChanged;
-    public event Action<List<WaferSetup>>? OnTestSetupLoaded;
+    public event Action<List<PocketWaferSetup>>? OnTestSetupLoaded;
 
     private StationState _stationState = StationState.Offline;
     private string _stationId = "S00";
-    private List<WaferSetup> _testSetup = [];
+    private List<PocketWaferSetup> _testSetup = [];
 
     public StationStatusService(string stationId, StationState state) {
         this._stationId = stationId;
@@ -33,7 +33,7 @@ public class StationStatusService {
         }
     }
 
-    public List<WaferSetup> TestSetup {
+    public List<PocketWaferSetup> TestSetup {
         get => this._testSetup;
         set {
             this._testSetup = value;

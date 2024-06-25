@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using BurnInControl.Shared.AppSettings;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 namespace BurnInControl.Shared;
@@ -17,4 +18,14 @@ public static class DependencyInjection {
         services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
         return services;
     }
+    
+    public static IHostApplicationBuilder AddApiSettings(this IHostApplicationBuilder builder) {
+        builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
+        return builder;
+    }
+    
+    /*public static IServiceCollection AddApiSettings(this IServiceCollection services, IHostApplicationBuilder builder) {
+        services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
+        return services;
+    }*/
 }

@@ -7,33 +7,33 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @inject ILogger<LivePlots> Logger
 @inject HubClient HubClient
-
-@if (!this._running) {
-    <p>Waiting for data...</p>
-} else {
-    <RadzenStack>
-        <TemperaturePlot TempData="_tempPlotData"
-                         XAxisName="Time(hrs)"
-                         YAxisName="Temperature(C)"/>
-        <VoltageLiveView VoltageData="_voltagePlotData"
-                         XAxisName="Time(hrs)"
-                         YAxisName="Voltage(V)"/>
-        <CurrentLivePlot CurrentData="_currentPlotData"
-                         XAxisName="Time(hrs)"
-                         YAxisName="Current(mA)"/>
-    </RadzenStack>
-}
-
-
+@rendermode InteractiveServer
+<RadzenStack>
+    <TemperaturePlot XAxisName="Time(hrs)"
+                     YAxisName="Temperature(C)"
+                     PlotAxisOptions="@_tempPlotOptions"
+                     H1Data="@this._h1Data"
+                     H2Data="@this._h2Data"
+                     H3Data="@this._h3Data"
+                     Running="_running"/>
+    @*<VoltageLiveView VoltageData="_voltagePlotData"
+                     XAxisName="Time(hrs)"
+                     YAxisName="Voltage(V)"/>
+    <CurrentLivePlot CurrentData="_currentPlotData"
+                     XAxisName="Time(hrs)"
+                     YAxisName="Current(mA)"/>*@
+</RadzenStack>
 @code {
     private StationSerialData? _data;
-    private Dictionary<string, List<TemperatureLiveData>>? _tempPlotData;
-    private Dictionary<string, List<VoltageData>>? _voltagePlotData;
-    private Dictionary<string, List<CurrentData>>? _currentPlotData;
+    private List<TemperatureLiveData>? _h1Data=new();
+    private List<TemperatureLiveData>? _h2Data=new();
+    private List<TemperatureLiveData>? _h3Data=new();
 
     private PlotAxisOptions _currentPlotOptions=new();
     private PlotAxisOptions _tempPlotOptions=new();
     private PlotAxisOptions _voltagePlotOptions = new();
+    private TimeSpan _interval = new TimeSpan(0, 1, 0);
+    private DateTime _last=DateTime.Now;
 
     private bool _running = false;
 
@@ -43,99 +43,79 @@
         return base.OnInitializedAsync();
     }
     
-    private Task OnSerialComReceived(StationSerialData data) {
+    private async Task OnSerialComReceived(StationSerialData data) {
         this._data = data;
         if(this._running!=data.Running) {
             this.Logger.LogInformation("In OnSerialComReceived, Running Changed");
-            this.ClearPlotData();
+            this.InitPlotData();
             this.InitPlotOptions(data);
             this._running=data.Running;
+            this._h1Data?.Add(new TemperatureLiveData() {
+                TempC = data.Temperatures[0],
+                TimeHrs = (double)data.ElapsedSeconds/60,
+            });
+            this._h2Data?.Add(new TemperatureLiveData() {
+                TempC = data.Temperatures[1],
+                TimeHrs = (double)data.ElapsedSeconds/60,
+            });
+            this._h3Data?.Add(new TemperatureLiveData() {
+                TempC = data.Temperatures[2],
+                TimeHrs = (double)data.ElapsedSeconds/60,
+            });
         }
-        if (this._running) {
-            this.Logger.LogInformation("In OnSerialComReceived, Plotting...");
-            for (int i = 0; i < ControllerHardwareConstants.HEATER_COUNT; i++) {
-                this._tempPlotData?[ControllerHardwareConstants.HeaterNames[i]].Add(new TemperatureLiveData() {
-                    TempC = data.Temperatures[i],
-                    TimeHrs = (double)data.ElapsedSeconds/ 3600,
+        if (data.Running) {
+            Console.WriteLine($"Elapsed: Secs: {data.ElapsedSeconds} Hrs: {System.Math.Round((double)data.ElapsedSeconds/60,2)}");
+            if ((DateTime.Now - this._last) >= this._interval) {
+                this._last= DateTime.Now;
+                this._h1Data?.Add(new TemperatureLiveData() {
+                    TempC = data.Temperatures[0],
+                    TimeHrs = (double)data.ElapsedSeconds/60,
+                });
+                this._h2Data?.Add(new TemperatureLiveData() {
+                    TempC = data.Temperatures[1],
+                    TimeHrs = (double)data.ElapsedSeconds/60,
+                });
+                this._h3Data?.Add(new TemperatureLiveData() {
+                    TempC = data.Temperatures[2],
+                    TimeHrs = (double)data.ElapsedSeconds/60,
                 });
             }
-            for (int i = 0; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
-                this._currentPlotData?[ControllerHardwareConstants.HeaterNames[i]].Add(new CurrentData() {
-                    CurrentMa = data.Currents[i],
-                    TimeHrs = (double)data.ElapsedSeconds/ 3600,
-                });
-                this._voltagePlotData?[ControllerHardwareConstants.HeaterNames[i]].Add(new VoltageData() {
-                    Voltage = data.Voltages[i],
-                    TimeHrs = (double)data.ElapsedSeconds/ 3600,
-                });
-            }
-            return InvokeAsync(StateHasChanged);
-        } else {
-            if (this._running) {
-                this._running = false;
-                this.ClearPlotData();
-            }
-            return InvokeAsync(StateHasChanged);
+            await InvokeAsync(StateHasChanged);
         }
     }
 
     private void InitPlotData() {
-        this._tempPlotData = new Dictionary<string, List<TemperatureLiveData>>();
-        this._voltagePlotData = new Dictionary<string, List<VoltageData>>();
-        this._currentPlotData = new Dictionary<string, List<CurrentData>>();
-        
-        for (int i = 0; i < ControllerHardwareConstants.HEATER_COUNT; i++) {
-            this._tempPlotData.Add(ControllerHardwareConstants.HeaterNames[i], new List<TemperatureLiveData>());
-        }
-        for (int i = 0; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
-            this._currentPlotData.Add(ControllerHardwareConstants.ProbeNames[i], new List<CurrentData>());
-            this._voltagePlotData.Add(ControllerHardwareConstants.ProbeNames[i], new List<VoltageData>());
-        }
+        this._h1Data= new List<TemperatureLiveData>();
+        this._h2Data= new List<TemperatureLiveData>();
+        this._h3Data= new List<TemperatureLiveData>();
     }
-
-    private void ClearPlotData() {
-        this._tempPlotData = new Dictionary<string, List<TemperatureLiveData>>();
-        this._voltagePlotData = new Dictionary<string, List<VoltageData>>();
-        this._currentPlotData = new Dictionary<string, List<CurrentData>>();
-        
-        for (int i = 0; i < ControllerHardwareConstants.HEATER_COUNT; i++) {
-            this._tempPlotData[ControllerHardwareConstants.HeaterNames[i]].Clear();
-        }
-        for (int i = 0; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
-            this._currentPlotData[ControllerHardwareConstants.ProbeNames[i]].Clear();
-            this._voltagePlotData[ControllerHardwareConstants.ProbeNames[i]].Clear();
-        }
-    }
-
+    
     private void InitPlotOptions(StationSerialData data) {
         
         this._currentPlotOptions.YAxisMax = data.CurrentSetPoint + 5;
         this._currentPlotOptions.YAxisMin = data.CurrentSetPoint - 5;
         this._currentPlotOptions.YAxisStep = 1;
         
-        this._currentPlotOptions.XAxisMax=data.CurrentSetPoint==150 ? 7:20;
-        this._currentPlotOptions.XAxisStep=data.CurrentSetPoint==150 ? 1:2;
-        this._currentPlotOptions.XAxisMin = 0;
+        /*this._tempPlotOptions.XAxisMax=data.CurrentSetPoint==150 ? 420:1200;
+        this._tempPlotOptions.XAxisMin = 0;
+        this._tempPlotOptions.XAxisStep=data.CurrentSetPoint==150 ? 20:40;*/
         
         
         this._tempPlotOptions.YAxisMax = 90;
         this._tempPlotOptions.YAxisMin = 20;
         this._tempPlotOptions.YAxisStep = 10;
         
-        this._tempPlotOptions.XAxisMax=data.CurrentSetPoint==150 ? 7:20;
+        /*this._tempPlotOptions.XAxisMax=20000;
         this._tempPlotOptions.XAxisMin = 0;
-        this._tempPlotOptions.XAxisStep=data.CurrentSetPoint==150 ? 1:2;
+        this._tempPlotOptions.XAxisStep=1000;*/
         
         this._voltagePlotOptions.YAxisMax = 105;
         this._voltagePlotOptions.YAxisMin = 35;
         this._voltagePlotOptions.YAxisStep = 10;
         
-        this._voltagePlotOptions.XAxisMax=data.CurrentSetPoint==150 ? 7:20;
-        this._voltagePlotOptions.XAxisStep=data.CurrentSetPoint==150 ? 1:2;
-        this._voltagePlotOptions.XAxisMin = 0;
-        
-
-        
+        this._tempPlotOptions.XAxisMax=data.CurrentSetPoint==150 ? 420:1200;
+        this._tempPlotOptions.XAxisMin = 0;
+        this._tempPlotOptions.XAxisStep=data.CurrentSetPoint==150 ? 20:40;
     }
 
 }

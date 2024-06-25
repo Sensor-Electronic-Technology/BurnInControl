@@ -41,13 +41,13 @@ public class ControllerSavedState:IPacket {
 public class SavedStateLog {
     public ObjectId? _id { get; set; } = default;
     public DateTime TimeStamp { get; set; }
-    public string StationId { get; set; }= "S00";
+    public string StationId { get; set; }= "S99";
     public ObjectId? LogId { get; set; } = default;
     public ControllerSavedState SavedState { get; set; } = new();
     
     public void Reset() {
         this._id = default;
-        this.StationId= "S00";
+        this.StationId= "S99";
         this.LogId = default;
         this.SavedState = default;
         SavedState = new();

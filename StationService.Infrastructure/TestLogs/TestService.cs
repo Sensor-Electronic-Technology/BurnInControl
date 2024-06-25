@@ -28,6 +28,7 @@ public class TestService:ITestService {
     private readonly IMediator _mediator;
     private string? _stationId;
     private DateTime _lastLog;
+    private DateTime _timeStopped;
     private readonly TimeSpan _interval=TimeSpan.FromSeconds(1);
     private readonly ILogger<TestService> _logger;
 
@@ -36,6 +37,7 @@ public class TestService:ITestService {
     private bool _testSetupComplete = false;
     private bool _first = false;
     private bool _testRequested = false;
+    private bool _waitingForComplete = false;
     private string _path = "";
     public bool IsRunning => this._running;
 
@@ -49,7 +51,7 @@ public class TestService:ITestService {
         this._testLogDataService = testLogDataService;
         this._hubContext = hubContext;
         this._savedStateDataService = savedStateDataService;
-        this._stationId=configuration["StationId"] ?? "S01";
+        this._stationId=configuration["StationId"] ?? "S99";
     }
 
     private void Reset() {
@@ -57,9 +59,16 @@ public class TestService:ITestService {
         this._loggingEnabled = false;
         this._paused = false;
         this._running = false;
+        this._testRequested = false;
+        this._testSetupComplete = false;
+        this._waitingForComplete = false;
+        /*this._startTime = DateTime.MinValue;*/
+        this._lastLog = DateTime.MinValue;
+        /*this._targetFinish = DateTime.MinValue;
+        this._timePaused = DateTime.MinValue;*/
+        this._timeStopped = DateTime.MinValue;
         this._runningTest.Reset();
         this._savedStateLog.Reset();
-        this._testSetupComplete = false;
     }
     public async Task SetupTest(TestSetupTransport testSetup) {
         if (!this.IsRunning) {
@@ -67,7 +76,7 @@ public class TestService:ITestService {
             this._runningTest.StartNew(testSetup.WaferSetups,
                 testSetup.SetTemperature,
                 testSetup.SetCurrent);
-            this._runningTest.StationId = this._stationId ?? "S00";
+            this._runningTest.StationId = this._stationId ?? "S99";
             this._logger.LogInformation("TestTransport: Temp: {SetTemp} " +
                                         "Current:{Current}",testSetup.SetTemperature,testSetup.SetCurrent.Name);
             var result = await this._testLogDataService.StartNew(this._runningTest);
@@ -93,14 +102,12 @@ public class TestService:ITestService {
                                                                  "test to complete before starting new test");
         }
     }
-
     public long RemainingTimeSecs() {
         if(!this._running) {
             return 0;
         }
         return this._runningTest.RemainingTimeSecs();
     }
-
     public async Task Start(bool success, string? message) {
         if (success) {
             this._running = true;
@@ -122,7 +129,7 @@ public class TestService:ITestService {
                await this._hubContext.Clients.All.OnTestStartedFrom(new LoadTestSetupTransport() {
                    Success = true,
                    Message = "Received test state,Test already setup and running",
-                   WaferSetups = this._runningTest.TestSetup.Select(e=>e.Value).ToList(),
+                   PocketWaferSetups = this._runningTest.TestSetup.Select(e => e.Value).ToList(),
                    SetTemperature = this._runningTest.SetTemperature,
                    SetCurrent = this._runningTest.SetCurrent
                });
@@ -147,7 +154,7 @@ public class TestService:ITestService {
                     await this._hubContext.Clients.All.OnTestStartedFrom(new LoadTestSetupTransport() {
                         Success = true,
                         Message = "Test loaded from saved state",
-                        WaferSetups = this._runningTest.TestSetup.Select(e=>e.Value).ToList(),
+                        PocketWaferSetups = this._runningTest.TestSetup.Select(e=>e.Value).ToList(),
                         SetTemperature = this._runningTest.SetTemperature,
                         SetCurrent = this._runningTest.SetCurrent
                     });
@@ -168,7 +175,7 @@ public class TestService:ITestService {
                         await this._hubContext.Clients.All.OnTestStartedFrom(new LoadTestSetupTransport() {
                             Success = true,
                             Message = "Test loaded from saved state",
-                            WaferSetups = this._runningTest.TestSetup.Select(e=>e.Value).ToList(),
+                            PocketWaferSetups = this._runningTest.TestSetup.Select(e=>e.Value).ToList(),
                             SetTemperature = this._runningTest.SetTemperature,
                             SetCurrent = this._runningTest.SetCurrent
                         });
@@ -210,7 +217,7 @@ public class TestService:ITestService {
             return this._hubContext.Clients.All.OnRequestRunningTest(new LoadTestSetupTransport() {
                 Success = true,
                 Message = "Running Test",
-                WaferSetups = this._runningTest.TestSetup.Select(e=>e.Value).ToList(),
+                PocketWaferSetups = this._runningTest.TestSetup.Select(e=>e.Value).ToList(),
                 SetTemperature = this._runningTest.SetTemperature,
                 SetCurrent = this._runningTest.SetCurrent
             });
@@ -232,7 +239,7 @@ public class TestService:ITestService {
                 await this._hubContext.Clients.All.OnTestStartedFrom(new LoadTestSetupTransport() {
                     Success = true,
                     Message = "Test loaded from saved state",
-                    WaferSetups = this._runningTest.TestSetup.Select(e=>e.Value).ToList(),
+                    PocketWaferSetups = this._runningTest.TestSetup.Select(e=>e.Value).ToList(),
                     SetTemperature = this._runningTest.SetTemperature,
                     SetCurrent = this._runningTest.SetCurrent
                 });
@@ -249,7 +256,7 @@ public class TestService:ITestService {
         this._savedStateLog.SavedState.TestId=this._runningTest._id.ToString();
         var result=await this._savedStateDataService.UpdateLog(this._savedStateLog._id,this._savedStateLog.SavedState);
         if(result.IsError) {
-            this._logger.LogWarning("Failed to update saved state for station {StationId}",this._stationId ?? "S00");
+            this._logger.LogWarning("Failed to update saved state for station {StationId}",this._stationId ?? "S99");
         }
     }
     private async Task StartFromUnknown(ControllerSavedState savedState) {
@@ -262,7 +269,7 @@ public class TestService:ITestService {
             await this._hubContext.Clients.All.OnTestStartedFromUnknown(new LoadTestSetupTransport() {
                 Success = true,
                 Message = "Saved state was not found.  Started unknown test instead.",
-                WaferSetups = this._runningTest.TestSetup.Select(e=>e.Value).ToList(),
+                PocketWaferSetups = this._runningTest.TestSetup.Select(e=>e.Value).ToList(),
                 SetTemperature = this._runningTest.SetTemperature,
                 SetCurrent = this._runningTest.SetCurrent
             });
@@ -272,21 +279,21 @@ public class TestService:ITestService {
                 Success = false,
                 Message = "Saved state was not found and failed to create unknown test. " +
                           "Test will continue to run but no logs will be available.",
-                WaferSetups = this._runningTest.TestSetup.Select(e=>e.Value).ToList(),
+                PocketWaferSetups = this._runningTest.TestSetup.Select(e=>e.Value).ToList(),
                 SetTemperature = this._runningTest.SetTemperature,
                 SetCurrent = this._runningTest.SetCurrent
             });
         }
     }
     public async Task CompleteTest() {
-        var result=await this._testLogDataService.SetCompleted(this._runningTest._id,
-            this._stationId ?? "S01",DateTime.Now);
+        var result = await this._testLogDataService.SetCompleted(this._runningTest._id,
+            this._stationId ?? "S99", DateTime.Now);
         var delStateResult=await this._savedStateDataService.ClearSavedState(id:this._savedStateLog._id);
         this.Reset();
         if (!result.IsError) {
             await this._hubContext.Clients.All.OnTestCompleted("Test Completed");
         } else {
-            await this._hubContext.Clients.All.OnTestCompleted("Error: Failed to mark test as completed");
+            await this._hubContext.Clients.All.OnTestCompleted("Test completed but Failed to mark test as completed");
         }
         if (!delStateResult.IsError) {
             this._logger.LogInformation("Cleared saved state");
@@ -301,7 +308,7 @@ public class TestService:ITestService {
         this._savedStateLog=new SavedStateLog() {
             _id = ObjectId.GenerateNewId(),
             TimeStamp=DateTime.Now,
-            StationId=this._stationId ?? "S00",
+            StationId=this._stationId ?? "S99",
             LogId=this._runningTest._id,
         };
         this._savedStateLog.SavedState=controllerSavedState;
@@ -315,42 +322,37 @@ public class TestService:ITestService {
     }
     private void CreateUnknownTest(StationCurrent current,int setTemp) {
         BurnInTestLog log=new BurnInTestLog { _id = ObjectId.GenerateNewId() };
-        log.CreateUnknown(current,setTemp,this._stationId ?? "S00");
+        log.CreateUnknown(current,setTemp,this._stationId ?? "S99");
         this._runningTest = log;
     }
     private async Task StartLog(StationSerialData data) {
         await this.SaveState(data);
         await this._testLogDataService.UpdateStartAndRunning(this._runningTest._id,
-            this._stationId ?? "S01",DateTime.Now,data);
+            this._stationId ?? "S99",DateTime.Now,data);
     }
     private async Task UpdateLogs(StationSerialData data) {
         await this._testLogDataService.InsertReading(this._runningTest._id,data);
         await this.UpdateSavedState(data);
     }
-    
     public async Task Stop() {
-        if(this.IsRunning) {
-            this._logger.LogInformation("Deleting test log and saved state");
-            ObjectId? savedStateId = this._savedStateLog._id;
-            ObjectId? logId = this._runningTest._id;
-            ObjectId? logId2 = this._savedStateLog.LogId;
-            this.Reset();
-            var savedStateResult=await this._savedStateDataService.ClearSavedState(id:savedStateId);
+        this._logger.LogInformation("Deleting test log and saved state");
+        ObjectId? savedStateId = this._savedStateLog._id;
+        ObjectId? logId = this._runningTest._id;
+        ObjectId? logId2 = this._savedStateLog.LogId;
+        this.Reset();
+        var savedStateResult=await this._savedStateDataService.ClearSavedState(id:savedStateId);
+        if(savedStateResult.IsError) {
+            this._logger.LogWarning("Failed to clear saved state, Id: {Id}. Trying by log id",savedStateId.ToString());
+            savedStateResult=await this._savedStateDataService.ClearSavedState(logId: logId);
             if(savedStateResult.IsError) {
-                this._logger.LogWarning("Failed to clear saved state, Id: {Id}. Trying by log id",savedStateId.ToString());
-                savedStateResult=await this._savedStateDataService.ClearSavedState(logId: logId);
-                if(savedStateResult.IsError) {
-                    this._logger.LogWarning("Failed to clear saved state by log id, LogId: {Id}",logId.ToString());
-                }
+                this._logger.LogWarning("Failed to clear saved state by log id, LogId: {Id}",logId.ToString());
             }
-            var response=await this._testLogDataService.DeleteTestLog(logId);
-            if (response.IsError) {
-                await this._testLogDataService.DeleteTestLog(logId2);
-            }
-            
+        }
+        var response=await this._testLogDataService.DeleteTestLog(logId);
+        if (response.IsError) {
+            await this._testLogDataService.DeleteTestLog(logId2);
         }
     }
-    
     private void GeneratePath() {
         this._path = "/test-logs/";
         foreach(var setup in this._runningTest.TestSetup) {
@@ -363,7 +365,6 @@ public class TestService:ITestService {
         }
         this._path+=".csv";
     }
-
     private string GenerateRunTimeString(ulong elapsedSecs) {
         ulong hours=elapsedSecs/3600;
         ulong minutes=(elapsedSecs/60)%60;
@@ -388,7 +389,6 @@ public class TestService:ITestService {
         }
         return runtTimeString;
     }
-
     private string GenerateLogLine(StationSerialData data) {
         var now = DateTime.Now;
         string logLine=$"{now:d},{now:h:mm:ss tt zz}," +
@@ -408,7 +408,6 @@ public class TestService:ITestService {
         }
         return logLine;
     }
-
     private async Task LogFile(StationSerialData data,bool first) {
         if (first) {
             GeneratePath();
@@ -425,35 +424,47 @@ public class TestService:ITestService {
             await stream.WriteLineAsync(this.GenerateLogLine(data));
         }
     }
-
-
-
     public async Task Log(StationSerialData data) {
         this._latestData = data;
         if (!this._running && data.Running && !this._testSetupComplete) {
             if (!this._testRequested) {
-                Console.WriteLine("Requesting test");
+                this._logger.LogInformation("Running test requested. Sending request to station");
                 this._testRequested = true;
                 await this._mediator.Send(new SendStationCommand() { Command = StationCommand.RequestRunningTest });
             }
         }
         if (this._loggingEnabled) {
+            if (this._waitingForComplete) {
+                if((DateTime.Now-this._timeStopped).TotalMinutes>=1) {
+                    await this.CompleteTest();
+                }
+                return;
+            }
             if (this._first) {
+                var now = DateTime.Now;
                 this._first = false;
-                this._lastLog = DateTime.Now;
+                this._lastLog = now;
                 await this.StartLog(data);
-                await this.LogFile(data, true);
+                //await this.LogFile(data, true);
             } else {
-                this._running = data.Running;
-                this._paused = data.Paused;
-                if ((DateTime.Now - this._lastLog) >= this._interval) {
+                var now = DateTime.Now;
+                if (this._running != data.Running) {
+                    if (this._running) {
+                        this._timeStopped = now;
+                        this._waitingForComplete = true;
+                    }
+                    this._running = data.Running;
+                }
+                this._paused=data.Paused;
+                if ((now - this._lastLog) >= this._interval) {
                     this._lastLog = DateTime.Now;
                     if (!this._paused) {
                         await this.UpdateLogs(data);
-                        await this.LogFile(data, false);
+                        //await this.LogFile(data, false);
                     }
                 }
             }
+            
         }
     }
 }

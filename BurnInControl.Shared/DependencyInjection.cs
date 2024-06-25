@@ -19,13 +19,13 @@ public static class DependencyInjection {
         return services;
     }
     
-    public static IHostApplicationBuilder AddApiSettings(this IHostApplicationBuilder builder) {
+    /*public static IHostApplicationBuilder AddApiSettings(this IHostApplicationBuilder builder) {
         builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
         return builder;
-    }
+    }*/
     
-    /*public static IServiceCollection AddApiSettings(this IServiceCollection services, IHostApplicationBuilder builder) {
+    public static IServiceCollection AddApiSettings(this IServiceCollection services, IHostApplicationBuilder builder) {
         services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
         return services;
-    }*/
+    }
 }

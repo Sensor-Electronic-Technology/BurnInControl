@@ -8,6 +8,10 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["./NuGet.config", "."]
 COPY ["BurnInControl.Api/BurnInControl.Api.csproj", "BurnInControl.Api/"]
+COPY ["BurnInControl.Data/BurnInControl.Data.csproj", "BurnInControl.Data/"]
+COPY ["BurnInControl.Shared/BurnInControl.Shared.csproj", "BurnInControl.Shared/"]
+COPY ["BurnInControl.Infrastructure/BurnInControl.Infrastructure.csproj", "BurnInControl.Infrastructure/"]
+COPY ["BurnInControl.Api.Data/BurnInControl.Api.Data.csproj", "BurnInControl.Api.Data/"]
 RUN dotnet restore "BurnInControl.Api/BurnInControl.Api.csproj"
 COPY . .
 WORKDIR "/src/BurnInControl.Api"

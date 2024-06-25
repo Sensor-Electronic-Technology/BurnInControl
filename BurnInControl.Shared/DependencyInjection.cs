@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using BurnInControl.Shared.AppSettings;
-using Microsoft.AspNetCore.Builder;
+﻿using BurnInControl.Shared.AppSettings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 namespace BurnInControl.Shared;

@@ -24,4 +24,5 @@ RUN dotnet publish "BurnInControl.Api.csproj" -c $BUILD_CONFIGURATION -o /app/pu
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+USER root
 ENTRYPOINT ["dotnet", "BurnInControl.Api.dll"]

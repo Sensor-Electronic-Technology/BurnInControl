@@ -10,21 +10,14 @@ var connectionStr=builder.Configuration.GetConnectionString("DefaultConnection")
 builder.Services.AddSettings(builder);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddFastEndpoints();
+builder.Services.AddFastEndpoints(o=>o.IncludeAbstractValidators = true);
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(connectionStr));
 builder.Services.AddApiPersistence();
 
 var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseHttpsRedirection();
 app.UseFastEndpoints();
+app.UseHttpsRedirection();
 app.Run();
-/*
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment()) {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-*/
 

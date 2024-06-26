@@ -15,13 +15,16 @@ builder.Services.AddSingleton<IMongoClient>(new MongoClient(connectionStr));
 builder.Services.AddApiPersistence();
 
 var app = builder.Build();
-
+app.UseSwagger();
+app.UseSwaggerUI();
+app.UseHttpsRedirection();
+app.UseFastEndpoints();
+app.Run();
+/*
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+*/
 
-app.UseHttpsRedirection();
-app.UseFastEndpoints();
-app.Run();

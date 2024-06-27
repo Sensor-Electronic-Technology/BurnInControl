@@ -158,14 +158,14 @@ public class TestLogDataService {
         await this._readingsCollection.InsertOneAsync(entry);
         return Result.Created;
     }
-    public async Task<ErrorOr<Success>> SetCompleted(ObjectId id,string stationId,DateTime stop) {
+    public async Task<ErrorOr<Success>> SetCompleted(ObjectId id,string stationId,DateTime stop,ulong runtime) {
         var filter=Builders<BurnInTestLog>.Filter.Eq(e => e._id,id);
         var update = Builders<BurnInTestLog>.Update
             .Set(e => e.StopTime,stop)
             .Set(e=>e.Completed,true);
         var clearResult =await this._stationDataService.ClearRunningTest(stationId);
         var logResult = await this._testLogCollection.UpdateOneAsync(filter, update);
-        await this.LogWaferTest(id,30,110);
+        await this.LogWaferTest(id,60,(int)(runtime-30));
         if (!clearResult.IsError && logResult.IsAcknowledged) {
             return Result.Success;
         }

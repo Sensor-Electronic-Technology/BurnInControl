@@ -39,6 +39,7 @@ public class TestService:ITestService {
     private bool _testRequested = false;
     private bool _waitingForComplete = false;
     private string _path = "";
+    private ulong _runTime = 0ul;
     public bool IsRunning => this._running;
 
     public TestService(TestLogDataService testLogDataService,
@@ -62,6 +63,7 @@ public class TestService:ITestService {
         this._testRequested = false;
         this._testSetupComplete = false;
         this._waitingForComplete = false;
+        this._runTime = 0ul;
         /*this._startTime = DateTime.MinValue;*/
         this._lastLog = DateTime.MinValue;
         /*this._targetFinish = DateTime.MinValue;
@@ -287,7 +289,7 @@ public class TestService:ITestService {
     }
     public async Task CompleteTest() {
         var result = await this._testLogDataService.SetCompleted(this._runningTest._id,
-            this._stationId ?? "S99", DateTime.Now);
+            this._stationId ?? "S99", DateTime.Now,this._runTime);
         var delStateResult=await this._savedStateDataService.ClearSavedState(id:this._savedStateLog._id);
         this.Reset();
         if (!result.IsError) {
@@ -444,8 +446,9 @@ public class TestService:ITestService {
                 var now = DateTime.Now;
                 this._first = false;
                 this._lastLog = now;
+                this._runTime = data.RuntimeSeconds;
                 await this.StartLog(data);
-                //await this.LogFile(data, true);
+                await this.LogFile(data, true);
             } else {
                 var now = DateTime.Now;
                 if (this._running != data.Running) {
@@ -460,7 +463,7 @@ public class TestService:ITestService {
                     this._lastLog = DateTime.Now;
                     if (!this._paused) {
                         await this.UpdateLogs(data);
-                        //await this.LogFile(data, false);
+                        await this.LogFile(data, false);
                     }
                 }
             }

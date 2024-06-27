@@ -11,7 +11,7 @@
     <ItemGroup>
         <PackageReference Include="FastEndpoints" Version="5.25.0" />
         <PackageReference Include="MongoDB.Driver" Version="2.25.0" />
-        <PackageReference Include="QuickTest.Data" Version="1.0.18" />
+        <PackageReference Include="QuickTest.Data" Version="1.0.19" />
         <PackageReference Include="ErrorOr" Version="1.10.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.2" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />

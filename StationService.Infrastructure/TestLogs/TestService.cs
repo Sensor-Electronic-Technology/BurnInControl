@@ -1,6 +1,4 @@
-﻿using System.Text;
-using BurnInControl.Application.BurnInTest.Interfaces;
-using BurnInControl.Application.BurnInTest.Messages;
+﻿using BurnInControl.Application.BurnInTest.Interfaces;
 using BurnInControl.Application.StationControl.Messages;
 using BurnInControl.Data.BurnInTests;
 using BurnInControl.Data.StationModel.Components;
@@ -11,7 +9,6 @@ using BurnInControl.Infrastructure.TestLogs;
 using BurnInControl.Shared;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.ComDefinitions.Station;
-using ErrorOr;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
@@ -32,7 +29,7 @@ public class TestService:ITestService {
     private string? _stationId;
     private DateTime _lastLog;
     private DateTime _timeStopped;
-    private readonly TimeSpan _interval=TimeSpan.FromSeconds(1);
+    private readonly TimeSpan _interval=TimeSpan.FromSeconds(60);
     private readonly ILogger<TestService> _logger;
     private readonly string _path = "/test-logs/";
     private string _filePath = string.Empty;
@@ -290,7 +287,6 @@ public class TestService:ITestService {
         }
         return Task.CompletedTask;
     }
-
     private async Task UpdateSavedState(StationSerialData data) {
         this._savedStateLog.SavedState=new ControllerSavedState(data) {
             TestId = this._runningTest._id.ToString()
@@ -301,20 +297,22 @@ public class TestService:ITestService {
         }
     }
     public async Task CompleteTest() {
-        var result = await this._testLogDataService.SetCompleted(this._runningTest._id,
-            this._stationId ?? "S99", DateTime.Now,this._runTime);
-        var delStateResult=await this._savedStateDataService.ClearSavedState(id:this._savedStateLog._id);
+        if (this._databaseLogEnabled) {
+            var result = await this._testLogDataService.SetCompleted(this._runningTest._id,
+                this._stationId ?? "S99", DateTime.Now,this._runTime);
+            var delStateResult=await this._savedStateDataService.ClearSavedState(id:this._savedStateLog._id);
+            if (!result.IsError) {
+                await this._hubContext.Clients.All.OnTestCompleted("Test Completed");
+            } else {
+                await this._hubContext.Clients.All.OnTestCompleted("Test completed but Failed to mark test as completed");
+            }
+            if (!delStateResult.IsError) {
+                this._logger.LogInformation("Cleared saved state");
+            } else {
+                this._logger.LogWarning("Failed to clear saved state");
+            }
+        }
         this.Reset();
-        if (!result.IsError) {
-            await this._hubContext.Clients.All.OnTestCompleted("Test Completed");
-        } else {
-            await this._hubContext.Clients.All.OnTestCompleted("Test completed but Failed to mark test as completed");
-        }
-        if (!delStateResult.IsError) {
-            this._logger.LogInformation("Cleared saved state");
-        } else {
-            this._logger.LogWarning("Failed to clear saved state");
-        }
         await this._mediator.Send(new SendAckCommand() { AcknowledgeType = AcknowledgeType.TestCompleteAck });
     }
     private async Task SaveState(StationSerialData data) {

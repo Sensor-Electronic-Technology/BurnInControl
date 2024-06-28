@@ -18,9 +18,11 @@ public class SavedStateDataService {
 
     public async Task<ErrorOr<Success>> UpdateLog(ObjectId? logId,ControllerSavedState savedState) {
         if (logId == null) {
-            return Error.NotFound(description:"Log not found,LogId is null");
+            return Error.Validation(description:"LogId is null");
         }
-        var update=Builders<SavedStateLog>.Update.Set(e=>e.SavedState,savedState).Set(e=>e.TimeStamp,DateTime.Now);
+        var update=Builders<SavedStateLog>.Update
+            .Set(e=>e.SavedState,savedState)
+            .Set(e=>e.TimeStamp,DateTime.Now);
         var result=await this._savedStateLogCollection.UpdateOneAsync(e=>e._id==logId,update);
         return result.IsAcknowledged ? Result.Success : Error.Failure(description:$"Failed to update log {logId}");
     }

@@ -46,8 +46,11 @@ public class TestSetupService {
     public bool PocketsLoaded() {
         return this.WaferSetups.All(e=>!e.Loaded);
     }
-    public PocketWaferSetup GetWaferSetup(int index) {
-        return this.WaferSetups[index];
+    public PocketWaferSetup? GetWaferSetup(int index) {
+        if(this.WaferSetups.Any() && index < this.WaferSetups.Count) {
+            return this.WaferSetups[index];
+        }
+        return null;
     }
     
     public SetupAlert GetSetupAlert(int index) {

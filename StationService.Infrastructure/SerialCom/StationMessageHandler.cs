@@ -144,8 +144,6 @@ public class StationMessageHandler : IStationMessageHandler {
     private async Task HandleData(JsonElement element) {
         StationSerialData? serialData=null;
         try {
-            /*Console.WriteLine("In HandleData");
-            Console.WriteLine("Received {0}",element.ToString());*/
             serialData=element.Deserialize<StationSerialData>();
         } catch(Exception e) {
             this._logger.LogError("Error deserializing StationSerialData.\n {ErrMessage}", e.ToErrorMessage());

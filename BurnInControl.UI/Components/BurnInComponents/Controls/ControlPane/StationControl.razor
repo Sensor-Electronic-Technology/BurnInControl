@@ -43,7 +43,8 @@
                            UsbConnected="@this.UsbConnected"
                            Connect="@this.Connect"
                            UsbConnect="@this.UsbConnect"
-                            RestartService="@this.RestartService"
+                           RestartService="@this.RestartService"
+                           RestartServiceBtnVisible="true"
                            UsbVisible="true"/>
 </RadzenStack>
 @code{
@@ -54,7 +55,6 @@
     [Parameter] public EventCallback StartPause { get; set; }
     [Parameter] public EventCallback Reset { get; set; }
     [Parameter] public EventCallback ProbeTest { get; set; }
-    
     
     [Parameter] public EventCallback<StationCurrent> CurrentChanged { get; set; }
     [Parameter] public EventCallback<double> TempChanged { get; set; }

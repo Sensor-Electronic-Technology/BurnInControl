@@ -4,6 +4,7 @@
 @inject TestSetupService TestSetupService
 @inject StationStatusService StationStatusService
 @inject TooltipService ToolTipService
+@inject ILogger<TestSetup> Logger
 @implements IAsyncDisposable
 @rendermode InteractiveServer
 
@@ -135,25 +136,40 @@
     [Parameter] public EventCallback<List<PocketWaferSetup>> Save { get; set; }
     [Parameter] public EventCallback CancelCallback { get; set; }
     [Parameter] public bool TestRunning { get; set; } = false;
-    //[Parameter] public IEnumerable<Pad>? Map { get; set; } = Enumerable.Empty<Pad>();
     private RadzenDataGrid<PocketWaferSetup> _waferSetupGrid;
     private IEnumerable<string>? _waferList=Enumerable.Empty<string>();
     private RadzenTabs _tabs;
-    
     private List<PocketWaferSetup> _selectedItems = new List<PocketWaferSetup>();
-    
     private int _selectedTab = 0;
     private bool _verified = false;
+    private bool _running = false;
     
     protected override async Task OnInitializedAsync() {
         this.StationStatusService.OnTestSetupLoaded += this.OnTestLoadedHandler;
+        this.StationStatusService.OnTestCompleted += this.OnTestCompletedHandler;
         this._waferList = await this.TestSetupService.GetQtList(TimeSpan.FromDays(147));
     }
 
+    protected override Task OnParametersSetAsync() {
+        if(this._running!=this.TestRunning) {
+            this._running = this.TestRunning;
+            if (this.TestRunning) {
+                this._verified = false;
+                this.TestSetupService.Reset();
+            }
+        }
+        return base.OnParametersSetAsync();
+    }
+
     private void OnTestLoadedHandler(List<PocketWaferSetup> testSetup) {
-        this.TestSetupService.WaferSetups.Clear();
+        this.TestSetupService.Reset();
         this.TestSetupService.SetTestSetup(testSetup);
         InvokeAsync(StateHasChanged);
+    }
+
+    private void OnTestCompletedHandler() {
+        this._verified = false;
+        this.TestSetupService.Reset();
     }
     
     async Task EditRow(PocketWaferSetup order) {
@@ -181,7 +197,7 @@
     private async Task SaveHandler() {
         await this.VerifyHandler();
         if (this.TestSetupService.SetupError) {
-            await this.Notify(NotificationSeverity.Error, "Error", "Setup has errors,plesae correct before saving");
+            await this.Notify(NotificationSeverity.Error, "Error", "Setup has errors,please correct before saving");
             return;
         }
         await this.Save.InvokeAsync(this.TestSetupService.WaferSetups);
@@ -206,8 +222,12 @@
     }
     
     private async Task SelectedItemChangedHandler(IList<PocketWaferSetup> obj) {
-        var selected=obj[0];
-        this._selectedTab=this.TestSetupService.WaferSetups.IndexOf(selected);
+        try {
+            var selected = obj[0];
+            this._selectedTab = this.TestSetupService.WaferSetups.IndexOf(selected);
+        } catch(Exception e) {
+            this.Logger.LogError(e,"Index error while switching tabs");
+        }
     }
     
     private Task Notify(NotificationSeverity severity, string summary, string detail) {
@@ -268,6 +288,7 @@
     }
     public ValueTask DisposeAsync() {
         this.StationStatusService.OnTestSetupLoaded -= this.OnTestLoadedHandler;
+        this.StationStatusService.OnTestCompleted -= this.OnTestCompletedHandler;
         return ValueTask.CompletedTask;
     }
 }

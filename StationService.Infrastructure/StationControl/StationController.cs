@@ -130,5 +130,7 @@ public class StationController:IStationController,IDisposable {
     
     public void Dispose() {
         this._usbController.Dispose();
+        this._cancellationTokenSource.Dispose();
+        this._usbController.OnUsbStateChangedHandler-=UsbControllerOnUsbStateChangedHandler;
     }
 }

@@ -31,7 +31,20 @@ var error=checks.Any(e=>!e) || count==0;
 Console.WriteLine($"Error: {error}");*/
 //await CreateDevStationDatabase();
 //await TestParseWaferDataInitFinal();
-await TestGetWaferData();
+//await TestGetWaferData();
+
+List<int> values = [1,2,3];
+
+for(int i=0;i<=values.Count;i++) {
+    if(i<values.Count && values.Count!=0) {
+        Console.WriteLine(values[i]);
+    } else {
+        Console.WriteLine("End");
+    }
+
+}
+
+
 async Task TestGetWaferData() {
     List<string> _pads = [PadLocation.PadLocationA.Value,PadLocation.PadLocationB.Value,
         PadLocation.PadLocationC.Value, PadLocation.PadLocationR.Value,

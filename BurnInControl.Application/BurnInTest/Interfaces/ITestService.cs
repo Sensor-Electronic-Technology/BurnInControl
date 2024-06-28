@@ -15,7 +15,7 @@ public interface ITestService {
     public Task CompleteTest();
     public Task StopAndSaveState();
     public Task SendRunningTest();
-    public Task LoadState(ObjectId logId);
+    public Task LoadState(ObjectId savedStateId);
     public Task Log(StationSerialData data);
     public Task Stop();
 }

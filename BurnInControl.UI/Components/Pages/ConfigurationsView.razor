@@ -69,6 +69,7 @@
                         <RadzenButton Text="Format SD Card"
                                       Click="@this.FormatSdHandler"
                                       ButtonStyle="ButtonStyle.Danger"
+                                      Visible="false"
                                       Style="width: 150px;height: 50px;"/>
                     </RadzenStack>
 
@@ -91,7 +92,7 @@
     private bool Connected => this.HubClient.StationHubIsConnected;
 
     private BurnStationConfiguration? _burnInConfiguration;
-    private string _stationId = "S00";
+    private string _stationId = "S99";
     
     protected override async Task OnInitializedAsync() {
         this.SetupHub();

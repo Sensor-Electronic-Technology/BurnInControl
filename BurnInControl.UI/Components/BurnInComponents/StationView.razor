@@ -290,6 +290,7 @@
 
     private Task OnTestCompletedHandler(string message) {
         this.StationStatusService.StationState = StationState.Idle;
+        this.StationStatusService.NotifyTestCompleted();
         this.Notify("Test Completed", message, NotificationSeverity.Success);
         return Task.CompletedTask;
     }

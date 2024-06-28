@@ -8,8 +8,9 @@ namespace BurnInControl.Application.ProcessSerial.Handlers;
 public class StationSerialMessageHandler:IRequestHandler<StationMessage> {
     private IStationMessageHandler _stationMessageHandler;
     private ILogger<StationSerialMessageHandler> _logger;
-    public StationSerialMessageHandler(IStationMessageHandler stationMessageHandler) {
+    public StationSerialMessageHandler(IStationMessageHandler stationMessageHandler,ILogger<StationSerialMessageHandler> logger) {
         this._stationMessageHandler = stationMessageHandler;
+        this._logger = logger;
     }
     public async Task Handle(StationMessage stationMessage, CancellationToken cancellationToken) {
         try {

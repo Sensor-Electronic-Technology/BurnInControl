@@ -439,7 +439,7 @@ public class TestService:ITestService {
         return logLine;
     }
     private async Task LogFile(StationSerialData data,bool first) {
-        if (Directory.Exists(this._path)) {
+        /*if (Directory.Exists(this._path)) {*/
             if (first) {
                 GeneratePath();
                 var header= "Date,System Time,RunTime,Elapsed(secs)," +
@@ -454,19 +454,12 @@ public class TestService:ITestService {
                 await using StreamWriter stream = File.AppendText(this._path);
                 await stream.WriteLineAsync(this.GenerateLogLine(data));
             }
-        } else {
+        /*} else {
             this._logger.LogWarning("Failed to log data.  Directory does not exist");
-        }
+        }*/
     }
     public async Task Log(StationSerialData data) {
         this._latestData = data;
-        /*if (!this._running && data.Running && !this._testSetupComplete && !this._stopped) {
-            if (!this._testRequested) {
-                this._logger.LogInformation("Running test detected. Sending request to station");
-                this._testRequested = true;
-                await this._mediator.Send(new SendStationCommand() { Command = StationCommand.RequestRunningTest });
-            }
-        }*/
         if (this._loggingEnabled) {
             if (this._first) {
                 var now = DateTime.Now;

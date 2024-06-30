@@ -30,10 +30,10 @@ jobs:
         file: ./BurnInControl.Api/Dockerfile
         push: true
         tags: ${{secrets.Docker_Username}}/burn-in-api:dev
-  # deploy:
-  #   needs: build
-  #   runs-on:
-  #    group: setihost-group
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - run: microk8s.kubectl rollout restart deployment burn-in-api.yaml
+  deploy:
+    needs: build
+    runs-on:
+     group: setihost-group
+    steps:
+      - uses: actions/checkout@v3
+      - run: microk8s.kubectl rollout restart deployment burn-api

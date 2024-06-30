@@ -147,7 +147,7 @@
     protected override async Task OnInitializedAsync() {
         this.StationStatusService.OnTestSetupLoaded += this.OnTestLoadedHandler;
         this.StationStatusService.OnTestCompleted += this.OnTestCompletedHandler;
-        this._waferList = await this.TestSetupService.GetQtList(TimeSpan.FromDays(147));
+        this._waferList = await this.TestSetupService.GetQtList(TimeSpan.FromDays(90));
     }
 
     protected override Task OnParametersSetAsync() {

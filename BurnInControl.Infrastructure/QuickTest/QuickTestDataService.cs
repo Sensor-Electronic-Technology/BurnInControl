@@ -84,13 +84,13 @@ public class QuickTestDataService {
             var result=await this._client.GetFromJsonAsync<GetQuickTestListResponse>($"{QtApiPaths.GetQuickTestListSincePath}{startDate.ToString("yyyy-MM-dd",CultureInfo.InvariantCulture)}");
             if (result == null) {
                 this._logger.LogError("GetQuickTestList request failed, returned null");
-                return Enumerable.Empty<string>();
+                return [];
             }
             return result.WaferList;
         } catch(Exception ex) {
             string msg = ex.ToErrorMessage();
             this._logger.LogError("GetQuickTestList failed, ErrorMessage: {Message}",msg);
-            return Enumerable.Empty<string>();
+            return [];
         }
         
     }

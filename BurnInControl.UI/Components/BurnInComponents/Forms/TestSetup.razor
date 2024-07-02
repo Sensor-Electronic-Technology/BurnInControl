@@ -155,14 +155,14 @@
             this._running = this.TestRunning;
             if (this.TestRunning) {
                 this._verified = false;
-                this.TestSetupService.Reset();
+                //this.TestSetupService.Reset();
             }
         }
         return base.OnParametersSetAsync();
     }
 
     private void OnTestLoadedHandler(List<PocketWaferSetup> testSetup) {
-        this.TestSetupService.Reset();
+        //this.TestSetupService.Reset();
         this.TestSetupService.SetTestSetup(testSetup);
         InvokeAsync(StateHasChanged);
     }

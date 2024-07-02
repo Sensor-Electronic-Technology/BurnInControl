@@ -281,6 +281,7 @@
         //var area = this._waferMap.FirstOrDefault(e => e.AltTex == id);
         var area=this._displayMap?.FirstOrDefault(e => e.AltTex == id);
         if(area != null && (this.Probe1Active || this.Probe2Active)) {
+            //Console.WriteLine($"Selected Pad: {area.Y},{area.X}");
             if (this.Probe1Active) {
                 if (!string.IsNullOrEmpty(this.SelectedPad2)) {
                     if(this.SelectedPad2==id) {

@@ -447,11 +447,11 @@ public class TestService:ITestService {
                             "i11,i12,i21,i22,i31,i32," +
                             "p1,p2,p3,p4,p5,p6," +
                             "Temp1,Temp2,Temp3,CurrentSetPoint(mA)";
-                await using StreamWriter stream = File.AppendText(this._path);
+                await using StreamWriter stream = File.AppendText(this._filePath);
                 await stream.WriteLineAsync(header);
                 await stream.WriteLineAsync(this.GenerateLogLine(data));
             } else {
-                await using StreamWriter stream = File.AppendText(this._path);
+                await using StreamWriter stream = File.AppendText(this._filePath);
                 await stream.WriteLineAsync(this.GenerateLogLine(data));
             }
         /*} else {

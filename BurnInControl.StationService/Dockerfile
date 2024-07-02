@@ -1,5 +1,5 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0.2-alpine3.18-arm64v8 AS base
-USER root
+USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081

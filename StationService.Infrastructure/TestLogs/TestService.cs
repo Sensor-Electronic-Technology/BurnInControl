@@ -439,7 +439,10 @@ public class TestService:ITestService {
         return logLine;
     }
     private async Task LogFile(StationSerialData data,bool first) {
-        /*if (Directory.Exists(this._path)) {*/
+        if (string.IsNullOrWhiteSpace(this._filePath)) {
+            this.GeneratePath();
+        }
+        if (Directory.Exists(this._path)) {
             if (first) {
                 GeneratePath();
                 var header= "Date,System Time,RunTime,Elapsed(secs)," +
@@ -454,9 +457,9 @@ public class TestService:ITestService {
                 await using StreamWriter stream = File.AppendText(this._filePath);
                 await stream.WriteLineAsync(this.GenerateLogLine(data));
             }
-        /*} else {
+        } else {
             this._logger.LogWarning("Failed to log data.  Directory does not exist");
-        }*/
+        }
     }
     public async Task Log(StationSerialData data) {
         this._latestData = data;

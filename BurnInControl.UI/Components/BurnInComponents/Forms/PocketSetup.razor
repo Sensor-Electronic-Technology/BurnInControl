@@ -213,9 +213,9 @@
             var pads= await this.QuickTestDataService.GetAvailablePads(this.PocketWaferSetup.WaferId);
             this._pads = pads.Distinct().ToList();
             var testPads=await this.WaferTestLogDataService.GetTestedPads(this.PocketWaferSetup.WaferId);
-            if (testPads.Any()) {
+            /*if (testPads.Any()) {
                 this._pads.RemoveAll(e => testPads.Contains(e));
-            }
+            }*/
             //await this.NotifyWaferIdChanged.Notify();
             //await InvokeAsync(StateHasChanged);
             

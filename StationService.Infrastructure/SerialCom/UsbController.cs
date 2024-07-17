@@ -178,7 +178,7 @@ public class UsbController:IDisposable {
     }
     private string FindPortWindows() {
         //return "COM3";
-        return "COM4";
+        return "COM19";
     }
     public void Dispose() {
         this._channelWriter.TryComplete();

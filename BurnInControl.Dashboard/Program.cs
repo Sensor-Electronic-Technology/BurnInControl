@@ -1,7 +1,7 @@
 using Radzen;
 using BurnInControl.Dashboard.Components;
 using BurnInControl.Dashboard.Data;
-using BurnInControl.Dashboard.Services;
+using BurnInControl.Infrastructure;
 using BurnInControl.Infrastructure.FirmwareModel;
 using BurnInControl.Shared.AppSettings;
 using MongoDB.Driver;
@@ -22,8 +22,7 @@ Console.WriteLine($"Token {token}");
 builder.Services.AddControllers();
 builder.Services.AddRadzenComponents();
 builder.Services.AddHttpClient();
-builder.Services.AddTransient<FirmwareReleaseService>();
-builder.Services.AddTransient<FirmwareDataService>();
+builder.Services.AddInfrastructure();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();

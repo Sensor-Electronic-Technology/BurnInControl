@@ -17,8 +17,8 @@ public class StationConfiguration:IPacket,IBurnStationConfiguration {
 
     public StationConfiguration() {
         this.BurnTimerConfig = new BurnTimerConfig();
-        this.ComInterval = 1000;
-        this.UpdateInterval = 500;
+        this.ComInterval = 500;
+        this.UpdateInterval = 250;
         this.LogInterval = 300000;
         this.VersionInterval=3600000;
     }

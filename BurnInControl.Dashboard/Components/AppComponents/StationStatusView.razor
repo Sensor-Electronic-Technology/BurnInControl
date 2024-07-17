@@ -1,0 +1,144 @@
+@using System.Text.Json
+@using BurnInControl.Data.StationModel
+@using BurnInControl.HubDefinitions.Hubs
+@using BurnInControl.Shared.ComDefinitions
+@using Microsoft.AspNetCore.SignalR.Client
+@using BurnInControl.Dashboard.Components.AppComponents.Display
+@using BurnInControl.Data.BurnInTests.Wafers
+@using BurnInControl.Infrastructure.StationModel
+@using BurnInControl.Infrastructure.TestLogs
+@inject ILogger<StationStatusView> Logger
+@inject StationDataService StationDataService
+@inject TestLogDataService TestLogDataService
+@implements IAsyncDisposable
+@rendermode InteractiveServer
+
+<style>
+    .rz-alert .rz-alert-title{
+        font-size: medium !important;
+    }
+</style>
+
+<RadzenCard Class="rz-my-12 rz-mx-auto">
+    <RadzenAlert Title="@this._stationText"
+                 Text="@this._stateText"
+                 Shade="Shade.Default"
+                 AlertStyle="@this._alertStyle"
+                 Variant="Variant.Filled"
+                 Size="AlertSize.Small"
+                 AllowClose="false"
+                 Style="width: 300px; margin: 0.5rem; font-size: 18px !important;">
+    </RadzenAlert>
+    <RadzenCard class="rz-shadow-0 rz-border-radius-0 rz-p-8" style="margin: 1rem calc(-1 * var(--rz-card-padding));">
+        @*<RadzenStack Orientation="Orientation.Vertical">
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenFormField Text="Remaining Time">
+                    <RadzenText Text="@this._remaining"></RadzenText>
+                </RadzenFormField>
+            </RadzenStack>
+        </RadzenStack>*@
+
+    </RadzenCard>
+</RadzenCard>
+
+
+
+@code {
+    [Parameter] public string? StationId {get;set;}="S99";
+    [Parameter] public string? StationIpAddress {get;set;}
+    
+    private HubConnection? _hubConnection;
+    private PocketWaferSetup? _waferSetup; 
+    private bool _isConnected=>this._hubConnection?.State==HubConnectionState.Connected;
+    private StationState _state=StationState.Offline;
+    private string _stationText = "StationId: S00";
+    private string _stateText = nameof(StationState.Offline);
+    private AlertStyle _alertStyle=AlertStyle.Danger;
+    private StationSerialData _data = new StationSerialData();
+    private string _remainingTime;
+    
+    private bool _testRunning = false;
+    private bool _testPaused = false;
+
+    protected override async Task OnInitializedAsync() {
+        this._stationText = $"StationId: {this.StationId ?? "S00"}";
+        if (!string.IsNullOrWhiteSpace(this.StationIpAddress)) {
+            this._hubConnection = new HubConnectionBuilder()
+                .WithUrl($"http://{this.StationIpAddress}:5000/hubs/station")
+                .WithAutomaticReconnect()
+                .Build();
+            this._hubConnection.On<StationSerialData>(StationHubConstants.Events.OnStationData, this.OnSerialComReceived);
+            try {
+                await this._hubConnection.StartAsync();
+                this.StationStateChangedHandler(StationState.Idle);
+            } catch (Exception e) {
+                this.Logger.LogError("Failed to connect to station hub: StationId{Id},StationId:{Ip} \n Error:{0}",
+                    this.StationId ?? "S00",this.StationIpAddress ?? "0.0.0.0",e.Message);
+            }
+        }
+    }
+
+    private void StationStateChangedHandler(StationState state) {
+        this._state = state;
+        this._stateText = state.ToString();
+        switch (state) {
+            case StationState.Idle: {
+                this._alertStyle = AlertStyle.Info;
+                break;
+            }
+            case StationState.Running: {
+                this._alertStyle = AlertStyle.Success;
+                break;
+            }
+            case StationState.Paused: {
+                this._alertStyle = AlertStyle.Warning;
+                break;
+            }
+            case StationState.Offline: {
+                this._alertStyle = AlertStyle.Dark;
+                break;
+            }
+            case StationState.Heating: {
+                this._alertStyle = AlertStyle.Danger;
+                break;
+            }    
+            case StationState.Tuning: {
+                this._alertStyle = AlertStyle.Secondary;
+                break;
+            }
+            case StationState.TuningMode: {
+                this._alertStyle = AlertStyle.Base;
+                break;
+            }
+        }
+        InvokeAsync(StateHasChanged);
+    }
+    
+    private Task OnSerialComReceived(StationSerialData data) {
+        this._data = data;
+        if (this._testRunning != data.Running) {
+            if (!this._testRunning) {
+                this.StationStateChangedHandler(StationState.Running);
+            } else {
+                this.StationStateChangedHandler(StationState.Idle);
+            }
+        }
+        if (this._testPaused != data.Paused) {
+            if (!this._testPaused) {
+                this.StationStateChangedHandler(StationState.Paused);
+            } else {
+                this.StationStateChangedHandler(StationState.Running);
+            }
+        }
+        this._testRunning = data.Running;
+        this._testPaused = data.Paused;
+        return Task.CompletedTask;
+    }
+
+    public async ValueTask DisposeAsync() {
+        if (this._hubConnection != null) {
+            await this._hubConnection.DisposeAsync();
+        }
+    }
+
+}

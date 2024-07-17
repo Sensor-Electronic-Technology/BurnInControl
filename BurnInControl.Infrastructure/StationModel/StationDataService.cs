@@ -12,12 +12,9 @@ using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 namespace BurnInControl.Infrastructure.StationModel;
-
 public class StationDataService {
     private readonly IMongoCollection<Station> _stationCollection;
     private readonly IMongoCollection<TestConfiguration> _testConfigurationCollection;
-
-
     public StationDataService(IMongoClient client,IOptions<DatabaseSettings> settings) {
         var database = client.GetDatabase(settings.Value.DatabaseName?? "burn_in_db");
         this._stationCollection = database.GetCollection<Station>(settings.Value.StationCollectionName ?? "stations");
@@ -28,6 +25,10 @@ public class StationDataService {
         var database = client.GetDatabase("burn_in_db");
         this._stationCollection = database.GetCollection<Station>("stations");
         this._testConfigurationCollection = database.GetCollection<TestConfiguration>("test_configurations");
+    }
+    
+    public async Task<IEnumerable<Station>> GetStations() {
+        return await this._stationCollection.Find(_ => true).ToListAsync();
     }
 
     public async Task<bool> SaveTuningResults(string stationId,List<HeaterTuneResult> tuningResults) {

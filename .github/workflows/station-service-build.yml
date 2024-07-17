@@ -1,15 +1,15 @@
 name: Burn-In Deploy
 on:
-  push:
-    branches: [ "master" ]
-    paths:
-    - 'BurnInControl.Data/**'
-    - 'BurnInControl.Infrastructure/**'
-    - 'StationService.Infrastructure/**'
-    - 'BurnInControl.StationService/**'
-    - 'BurnInControl.Application/**'
-    - 'BurnInControl.Shared/**'
-    - 'BurnInControl.UI/**'
+  # push:
+  #   branches: [ "master" ]
+  #   paths:
+  #   - 'BurnInControl.Data/**'
+  #   - 'BurnInControl.Infrastructure/**'
+  #   - 'StationService.Infrastructure/**'
+  #   - 'BurnInControl.StationService/**'
+  #   - 'BurnInControl.Application/**'
+  #   - 'BurnInControl.Shared/**'
+  #   - 'BurnInControl.UI/**'
     # paths-ignore:
     #   - 'BurnInControl.HostRunner/**'
     #   - '.github/workflows/host-service-deploy.yml'

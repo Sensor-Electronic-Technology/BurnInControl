@@ -13,7 +13,7 @@ public class HubClient:IAsyncDisposable {
     public HubClient(IConfiguration configuration,ILogger<HubClient> logger) {
         string hubAddress = configuration["StationHub"] ?? StationHubConstants.HubAddress;
         string hostHubAddress = configuration["HostHub"] ?? HostHubConstants.HostHubAddress;
-        //string hubAddress = "http://localhost:5066/hubs/station";
+        //string hubAddress = "http://172.20.5.31/hubs/station";
         this._logger = logger;
         this.StationHubConnection = new HubConnectionBuilder()
             .WithUrl(hubAddress)

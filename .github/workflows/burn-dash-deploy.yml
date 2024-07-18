@@ -1,13 +1,5 @@
-name: Api Deploy
+name: BurnDash Deploy
 on:
-  # push:
-  #   branches: [ "master" ]
-  #   paths:
-  #   - 'BurnInControl.Data/**'
-  #   - 'BurnInControl.Infrastructure/**'
-  #   - 'BurnInControl.Shared/**'
-  #   - 'BurnInControl.Api/**'
-  #   - 'BurnInControl.Api.Data/**'
   workflow_dispatch:
 jobs:
   build:
@@ -27,13 +19,13 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./BurnInControl.Api/Dockerfile
+        file: ./BurnInControl.Dashboard/Dockerfile
         push: true
-        tags: ${{secrets.Docker_Username}}/burn-in-api:dev
+        tags: ${{secrets.Docker_Username}}/burndash:latest
   deploy:
     needs: build
     runs-on:
      group: setihost-group
     steps:
       - uses: actions/checkout@v3
-      - run: microk8s.kubectl rollout restart deployment burn-api
+      - run: microk8s.kubectl rollout restart deployment burndash

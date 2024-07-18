@@ -1,13 +1,13 @@
 name: Api Deploy
 on:
-  push:
-    branches: [ "master" ]
-    paths:
-    - 'BurnInControl.Data/**'
-    - 'BurnInControl.Infrastructure/**'
-    - 'BurnInControl.Shared/**'
-    - 'BurnInControl.Api/**'
-    - 'BurnInControl.Api.Data/**'
+  # push:
+  #   branches: [ "master" ]
+  #   paths:
+  #   - 'BurnInControl.Data/**'
+  #   - 'BurnInControl.Infrastructure/**'
+  #   - 'BurnInControl.Shared/**'
+  #   - 'BurnInControl.Api/**'
+  #   - 'BurnInControl.Api.Data/**'
   workflow_dispatch:
 jobs:
   build:

@@ -1,4 +1,5 @@
 ﻿using BurnInControl.Data.BurnInTests;
+using BurnInControl.Data.BurnInTests.Wafers;
 using BurnInControl.Data.StationModel.Components;
 using BurnInControl.Infrastructure.StationModel;
 using BurnInControl.Infrastructure.WaferTestLogs;
@@ -176,6 +177,13 @@ public class TestLogDataService {
             return Error.Unexpected(description: "Unknown State. Log was finalize but station Running flag was not cleared");
         }
         return Error.Failure(description: "Station Running flag not cleared and Log was not finalized");
+    }
+    
+    public async Task<Dictionary<string,PocketWaferSetup>> GetLastTestLog(string stationId) {
+        return await this._testLogCollection.Find(e => e.StationId == stationId)
+            .SortByDescending(e => e.StartTime)
+            .Project(e=>e.TestSetup)
+            .FirstOrDefaultAsync();
     }
 
     private async Task LogWaferTest(ObjectId testLogId,int initSec,int finalSec) {

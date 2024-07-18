@@ -1,0 +1,55 @@
+<RadzenRow>
+    <GenericDisplay DisplayLabel="@this.DisplayText" 
+                    DisplayValue="@this.DisplayValue" 
+                    DisplayTextStyle="@this.TextStyle" 
+                    LabelFontSize="@this.LabelFontSize"
+                    Width="@this.Width"/>
+</RadzenRow>
+@code {
+    [Parameter] public string DisplayText {get; set;}="Runtime";
+    [Parameter] public string DisplayValue {get; set;}="5:33:02";
+    [Parameter] public ulong RuntimeSecs { get; set; } = 0;
+    [Parameter] public TextStyle TextStyle {get; set;}=TextStyle.H6;
+    [Parameter] public bool State {get; set;}=false;
+    [Parameter] public string DisplayGap { get; set; }="10";
+    [Parameter] public string LabelFontSize{get;set;}="14";
+    [Parameter] public string Width { get; set; }
+    [Parameter] public bool ShowMins { get; set; }=true;
+    [Parameter] public bool ShowSecs { get; set; } = true;
+
+    protected override Task OnParametersSetAsync() {
+        ulong hours=this.RuntimeSecs/3600;
+        ulong minutes=(this.RuntimeSecs/60)%60;
+        ulong seconds=this.RuntimeSecs%60;
+        string value = "";
+        if ((hours / 10) < 1 || hours==0) {
+            value="0"+hours;
+            value+=this.ShowMins ? ":" : "";
+        } else {
+            value=hours.ToString();
+            value+=this.ShowMins ? ":" : "";
+        }
+
+        if (this.ShowMins) {
+            if ((minutes / 10) < 1 || minutes==0) {
+                value+="0"+minutes;
+                value+=this.ShowSecs ? ":" : "";
+            } else {
+                value+=minutes.ToString();
+                value+=this.ShowSecs ? ":" : "";
+            }
+        }
+
+        if (this.ShowSecs && this.ShowMins) {
+            if ((seconds / 10) < 1 || seconds==0) {
+                value+="0"+seconds;
+            } else {
+                value+=seconds;
+            }
+        }
+
+        this.DisplayValue=value;
+        return base.OnParametersSetAsync();
+    }
+
+}

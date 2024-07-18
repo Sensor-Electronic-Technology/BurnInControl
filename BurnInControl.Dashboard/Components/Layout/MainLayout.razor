@@ -7,36 +7,27 @@
 @inject NotificationService NotificationService
 
 <RadzenComponents />
-<RadzenLayout style="grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body';">
+<RadzenLayout Style="position: relative">
     <RadzenHeader>
         <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
             <RadzenColumn Size="5">
-                <RadzenSidebarToggle Click="@SidebarToggleClick"></RadzenSidebarToggle>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="5">
+                    <RadzenSidebarToggle Click="@SidebarToggleClick"/>
+                    <RadzenImage Path="images/seti_logo.png" style="width: 100px; height: 48px;" AlternateText="Application logo"></RadzenImage>
+                    <RadzenText Text="Burn-in Dashboard" TextStyle="TextStyle.Subtitle1" class="rz-mb-0" style="color: var(--rz-sidebar-color);"/>
+                </RadzenStack>
             </RadzenColumn>
-            <RadzenColumn Size="7">
-                <RadzenStack AlignItems="AlignItems.Center" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End"></RadzenStack>
-            </RadzenColumn>
+
         </RadzenRow>
     </RadzenHeader>
     <RadzenBody Expanded="@sidebarExpanded">
-        <RadzenRow class="rz-mx-auto rz-px-4 rz-pt-2 rz-pt-md-4 rz-pt-lg-6 rz-pt-xl-12 rz-pb-2 rz-pb-lg-12" Style="max-width: 1440px;">
-            <RadzenColumn Size="12">
-            @Body
-            </RadzenColumn>
-        </RadzenRow>
+        @Body
     </RadzenBody>
-    <RadzenSidebar Expanded="@sidebarExpanded" style="z-index: 2">
-        <RadzenStack AlignItems="Radzen.AlignItems.Center" class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding); border-bottom: var(--rz-panel-menu-item-border);">
-            <RadzenImage Path="images/seti_logo.png"  style="width: 48px; height: 48px;" AlternateText="Application logo"></RadzenImage>
-            <RadzenText Text="Burn-in Dashboard" TextStyle="TextStyle.Subtitle1" class="rz-mb-0" style="color: var(--rz-sidebar-color);" />
-        </RadzenStack>
-        <RadzenPanelMenu>
-            <RadzenPanelMenuItem Text="Dashboard" Path="" />
+    <RadzenSidebar style="z-index: 2; width:max-content;">
+        <RadzenPanelMenu DisplayStyle="@(sidebarExpanded ? MenuItemDisplayStyle.IconAndText : MenuItemDisplayStyle.Icon)" ShowArrow="false">
+            <RadzenPanelMenuItem Text="Dashboard" Image="images/seti_logo.png" Path="/"/>
+            <RadzenPanelMenuItem Text="Test Logs" Icon="handyman" Path="config-view" />
         </RadzenPanelMenu>
-        <RadzenStack AlignItems="Radzen.AlignItems.Center" Gap="0" class="rz-py-4 rz-py-lg-6" Style="padding: var(--rz-panel-menu-item-padding);">
-            <RadzenText Text="BurnInControl.Dashboard v1.0.0" TextStyle="TextStyle.Caption" TagName="TagName.P" TextAlign="TextAlign.Center" />
-            <RadzenText Text="Copyright Ⓒ 2024" TextStyle="TextStyle.Caption" class="rz-mb-0" TagName="TagName.P" TextAlign="TextAlign.Center" />
-        </RadzenStack>
     </RadzenSidebar>
 </RadzenLayout>
 

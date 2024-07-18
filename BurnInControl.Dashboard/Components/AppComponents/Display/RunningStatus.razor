@@ -1,0 +1,82 @@
+@using BurnInControl.Shared
+<h3>RunningStatus</h3>
+
+@*<RadzenFieldset Text="Test Status" AllowCollapse="true">
+    <RadzenStack Orientation="Orientation.Vertical"
+                 JustifyContent="JustifyContent.Center"
+                 AlignItems="AlignItems.Center">
+        <RadzenFieldset Text="Running Test">
+            @if (this._pocketWaferSetups.Any()) {
+            <RadzenStack Orientation="Orientation.Horizontal">
+                @foreach (var keyValue in this._pocketWaferSetups) {
+                <RadzenFieldset Text="@keyValue.Key" Style="margin: 10px auto;">
+                    <RadzenText Text="@keyValue.Value.WaferId" TextStyle="TextStyle.H6"/>
+                </RadzenFieldset>
+                }
+            </RadzenStack>
+            }
+        </RadzenFieldset>
+        <RadzenFieldset Text="Time">
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <RuntimeDisplay DisplayText="Runtime"
+                                RuntimeSecs="@(this._data.RuntimeSeconds)"
+                                TextStyle="TextStyle.Body1"
+                                ShowMins="false"
+                                Width="80px"/>
+                <RuntimeDisplay DisplayText="Elapsed"
+                                RuntimeSecs="@(this._data.ElapsedSeconds)"
+                                TextStyle="TextStyle.Body1"
+                                LabelFontSize="12px"
+                                Width="fit-content"/>
+                <RuntimeDisplay DisplayText="Remaining"
+                                RuntimeSecs="@(this._data.RuntimeSeconds - this._data.ElapsedSeconds)"
+                                TextStyle="TextStyle.Body1"
+                                LabelFontSize="12px"
+                                Width="fit-content"/>
+            </RadzenStack>
+        </RadzenFieldset>
+        <RadzenFieldset Text="Test Config">
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <GenericDisplay DisplayLabel="Set Current"
+                                DisplayValue="@this._data.CurrentSetPoint.ToString()"
+                                DisplayTextStyle="TextStyle.H6"
+                                Width="120px"/>
+                <GenericDisplay DisplayLabel="Set Temp"
+                                DisplayValue="@this._data.TemperatureSetPoint.ToString()"
+                                DisplayTextStyle="TextStyle.H6"
+                                Width="120px"/>
+            </RadzenStack>
+        </RadzenFieldset>
+
+        <RadzenFieldset Text="ProbeStatus">
+            <RadzenRow>
+                @for(int i=0;i<ControllerHardwareConstants.PROBE_COUNT;i++) {
+                var probe = this._data.ProbeRunTimeOkay[i];
+                int index = i;
+                <RadzenColumn Size="3">
+                    <RadzenAlert Size="AlertSize.ExtraSmall"
+                                 Text="@this.SetProbeText(index,probe)"
+                                 AlertStyle="@this.GetProbeAlertStyle(probe)"
+                                 ShowIcon="false"
+                                 Shade="Shade.Default"
+                                 AllowClose="false"/>
+                </RadzenColumn>
+                }
+            </RadzenRow>
+        </RadzenFieldset>
+    </RadzenStack>
+</RadzenFieldset>*@
+
+@code {
+    
+    
+    
+    
+    private string SetProbeText(int index,bool okay) {
+        return okay ? $"P{index+1}:Okay" : $"P{index+1}:Alarm";
+    }
+
+    private AlertStyle GetProbeAlertStyle(bool okay) {
+        return okay ? AlertStyle.Success : AlertStyle.Danger;
+    }
+}

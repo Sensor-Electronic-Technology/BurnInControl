@@ -24,6 +24,7 @@
                 <RadzenDropDown TValue="string"
                                 Data="@this._waferSizes"
                                 Value="@this._selectedWaferSize"
+                                Disabled="false"
                                 ValueChanged="@this.SelectedWaferSizeChanged"/>
             </RadzenFieldset>
             <WaferIdInput WaferId="@this.PocketWaferSetup.WaferId"
@@ -97,6 +98,7 @@
         this._waferSizes = new[] { WaferSize.TwoInch.Name, WaferSize.FourInch.Name };
         this._selectedWaferSize = WaferSize.TwoInch.Name;
         this._waferMap = await this.QuickTestDataService.GetWaferMap(WaferSize.TwoInch.Value);
+        this._selectedWaferSize=WaferSize.TwoInch.Name;
     }
 
     private async Task CheckWaferExists() {
@@ -118,7 +120,7 @@
         var size=WaferSize.FromName(waferSize);
         this._waferMap = null;
         await InvokeAsync(StateHasChanged);
-        this._waferMap=await this.QuickTestDataService.GetWaferMap(size.Value);
+        this._waferMap=await this.QuickTestDataService.GetWaferMap(WaferSize.TwoInch.Value);
         this._pads = null;
         this.PocketWaferSetup.Probe1Pad = string.Empty;
         this.PocketWaferSetup.Probe2Pad = string.Empty;

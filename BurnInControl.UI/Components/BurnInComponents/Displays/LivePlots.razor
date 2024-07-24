@@ -64,7 +64,7 @@
             });
         }
         if (data.Running) {
-            Console.WriteLine($"Elapsed: Secs: {data.ElapsedSeconds} Hrs: {System.Math.Round((double)data.ElapsedSeconds/60,2)}");
+            //Console.WriteLine($"Elapsed: Secs: {data.ElapsedSeconds} Hrs: {System.Math.Round((double)data.ElapsedSeconds/60,2)}");
             if ((DateTime.Now - this._last) >= this._interval) {
                 this._last= DateTime.Now;
                 this._h1Data?.Add(new TemperatureLiveData() {

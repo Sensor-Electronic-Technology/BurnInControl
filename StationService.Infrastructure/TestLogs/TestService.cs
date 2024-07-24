@@ -31,7 +31,7 @@ public class TestService:ITestService {
     private DateTime _timeStopped;
     private readonly TimeSpan _interval=TimeSpan.FromSeconds(60);
     private readonly ILogger<TestService> _logger;
-    private readonly string _path = "/test-logs/";
+    private string _path = "/test-logs/";
     private string _filePath = string.Empty;
     private bool _running=false, _paused=false;
     private bool _loggingEnabled = false;
@@ -385,6 +385,7 @@ public class TestService:ITestService {
         }
     }
     private void GeneratePath() {
+        this._filePath = this._path;
         foreach(var setup in this._runningTest.TestSetup) {
             string waferId = string.IsNullOrWhiteSpace(setup.Value.WaferId) ? "Empty" : setup.Value.WaferId;
             if (setup.Key == StationPocket.LeftPocket.Name) {
@@ -439,26 +440,31 @@ public class TestService:ITestService {
         return logLine;
     }
     private async Task LogFile(StationSerialData data,bool first) {
-        if (string.IsNullOrWhiteSpace(this._filePath)) {
-            this.GeneratePath();
-        }
-        if (Directory.Exists(this._path)) {
-            if (first) {
-                GeneratePath();
-                var header= "Date,System Time,RunTime,Elapsed(secs)," +
-                            "V11,V12,V21,V22,V31,V32," +
-                            "i11,i12,i21,i22,i31,i32," +
-                            "p1,p2,p3,p4,p5,p6," +
-                            "Temp1,Temp2,Temp3,CurrentSetPoint(mA)";
+        if (first) {
+            GeneratePath();
+            var header= "Date,System Time,RunTime,Elapsed(secs)," +
+                        "V11,V12,V21,V22,V31,V32," +
+                        "i11,i12,i21,i22,i31,i32," +
+                        "p1,p2,p3,p4,p5,p6," +
+                        "Temp1,Temp2,Temp3,CurrentSetPoint(mA)";
+            try {
                 await using StreamWriter stream = File.AppendText(this._filePath);
                 await stream.WriteLineAsync(header);
                 await stream.WriteLineAsync(this.GenerateLogLine(data));
-            } else {
+            } catch (Exception e) {
+                this._logger.LogError("Error initializing log file.  Error: {Error}",e.ToErrorMessage());
+            }
+
+        } else {
+            if (string.IsNullOrWhiteSpace(this._filePath)) {
+                this.GeneratePath();
+            }
+            try {
                 await using StreamWriter stream = File.AppendText(this._filePath);
                 await stream.WriteLineAsync(this.GenerateLogLine(data));
+            } catch (Exception e) {
+                this._logger.LogError("Error writing to log file.  Error: {Error}",e.ToErrorMessage());
             }
-        } else {
-            this._logger.LogWarning("Failed to log data.  Directory does not exist");
         }
     }
     public async Task Log(StationSerialData data) {
@@ -485,11 +491,9 @@ public class TestService:ITestService {
                     this._lastLog = DateTime.Now;
                     if (!this._paused) {
                         await this.UpdateLogs(data);
-                        
                     }
                 }
             }
-            
         }
     }
 }

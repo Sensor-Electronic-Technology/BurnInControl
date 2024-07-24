@@ -6,6 +6,7 @@
 @using BurnInControl.Infrastructure.StationModel
 @inject StationDataService StationDataService
 @inject StationErrorService StationErrorService
+@implements IAsyncDisposable
 @attribute [StreamRendering]
 
 <PageTitle>Dashboard</PageTitle>
@@ -58,6 +59,8 @@
     
     protected override async Task OnInitializedAsync() {
         this._stations = await this.StationDataService.GetStations();
+        this.StationErrorService.OnErrorResolved += this.AlertsRemovedHandler;
+        this.StationErrorService.OnErrorChanged += this.AlertsChangedHandler;
     }
     
     private string GetAlertText(string stationId) {
@@ -82,8 +85,18 @@
         return Task.CompletedTask;
     }
 
-    private void Callback(bool obj) {
-        Console.WriteLine("Alert Visible Changed");
+    private void AlertsRemovedHandler(string stationId, List<string> probeIds) {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void AlertsChangedHandler() {
+        InvokeAsync(StateHasChanged);
+    }
+    
+    public ValueTask DisposeAsync() {
+        this.StationErrorService.OnErrorResolved -= this.AlertsRemovedHandler;
+        this.StationErrorService.OnErrorChanged -= this.AlertsChangedHandler;
+        return ValueTask.CompletedTask;
     }
 
 }

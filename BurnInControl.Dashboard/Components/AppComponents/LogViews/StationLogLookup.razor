@@ -1,0 +1,73 @@
+@using BurnInControl.Data.BurnInTests
+@using BurnInControl.Data.BurnInTests.DataTransfer
+@using BurnInControl.Infrastructure.StationModel
+@using BurnInControl.Infrastructure.TestLogs
+@inject TestLogDataService TestLogDataService
+@inject StationDataService StationDataService
+
+<RadzenStack Orientation="Orientation.Vertical">
+    <RadzenDropDown TValue="string" Data="@this._stations" 
+                    Value="@this._selectedStation" 
+                    ValueChanged="SelectedStationChanged"/>
+    @if (this._stationTestLogs == null) {
+        <RadzenText Text="Select a station from the dropdown to view logs." TextStyle="TextStyle.H6"/>
+    } else {
+        <RadzenDataGrid TItem="BurnInTestLogDto" 
+                        Data="@this._stationTestLogs" 
+                        AllowGrouping="true" 
+                        AllowPaging="true" PageSize="10"
+                        AllowFiltering="true"
+                        AllowSorting="true"
+                        AllowRowSelectOnRowClick="true"
+                        SelectionMode="DataGridSelectionMode.Single"
+                        ValueChanged="@this.SelectedTestLogChangedHandler"
+                        Value="@this._selectedTestLogs">
+            <Columns>
+                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.StartTime)" Title="Start" />
+                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.StopTime)" Title="Stop" />
+                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.RunTime)" Title="Run Time" />
+                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.SetCurrent)" Title="Set Current" />
+                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.SetTemperature)" Title="Set Temp." />
+                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.ElapsedTime)" Title="Elapsed" />
+                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.LeftPocket)" Title="WaferId(Left)" />
+                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.MiddlePocket)" Title="WaferId(Middle)" />
+                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.RightPocket)" Title="WaferId(Right)" />
+            </Columns>
+        </RadzenDataGrid>
+    }
+    @if (this._waferTestResults?.Any()==true) {
+        <RadzenRow>
+            @foreach(var waferTest in this._waferTestResults) {
+                <RadzenColumn>
+                    <WaferTestResultView WaferTestResult="@waferTest"/>
+                </RadzenColumn>
+            }
+        </RadzenRow>
+    }
+</RadzenStack>
+
+@code {
+    private IEnumerable<string>? _stations;
+    private IEnumerable<BurnInTestLogDto>? _stationTestLogs;
+    private IList<BurnInTestLogDto> _selectedTestLogs=[];
+    private IEnumerable<WaferTestResultDto>? _waferTestResults;
+    private string _selectedStation = string.Empty;
+
+    protected override async Task OnInitializedAsync() {
+        this._stations = await this.StationDataService.GetStationList();
+    }
+
+    private async Task SelectedStationChanged(string station) {
+        this._selectedStation = station;
+        this._stationTestLogs=await this.TestLogDataService.GetRecentStationTests(station);
+    }
+
+    private async Task SelectedTestLogChangedHandler(IList<BurnInTestLogDto> selectedTestLogs) {
+        this._selectedTestLogs = selectedTestLogs;
+        if (selectedTestLogs?.Any() == true) {
+            this._waferTestResults = await this.TestLogDataService.GetWaferTestResultsDto(selectedTestLogs[0]._id);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+}

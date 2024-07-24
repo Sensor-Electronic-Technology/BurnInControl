@@ -1,0 +1,59 @@
+@using System.Globalization
+@using BurnInControl.Data.BurnInTests.DataTransfer
+<RadzenCard Style="background:rgba(110,236,197,0.32)">
+    <RadzenStack Orientation="Orientation.Vertical">
+        @if (this.ProbeData == null) {
+            <RadzenText Text="Not Available"
+                        TextStyle="TextStyle.H6"
+                        TextAlign="TextAlign.Center"/>
+        } else {
+            <RadzenText Text="@GetProbeText(this.ProbeData.PadId)"
+                        TextStyle="TextStyle.H6"
+                        TextAlign="TextAlign.Center"/>
+            <RadzenCard>
+                <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
+                    <RadzenStack Orientation="Orientation.Horizontal"
+                                 AlignItems="AlignItems.Center"
+                                 JustifyContent="JustifyContent.Center">
+                        <RadzenFieldset Text="ProbeRuntime">
+                            <RadzenText Text="@(ProbeData.RunTime.ToString())"/>
+                        </RadzenFieldset>
+                        <RadzenFieldset Text="Need Retest?">
+                            <RadzenAlert AlertStyle="@(this.ProbeData.Okay ? AlertStyle.Success : AlertStyle.Danger)"
+                                         Text="@(this.ProbeData.Okay ? "No Reset Needed" : "Retest Needed!!")"
+                                         Size="AlertSize.Small"
+                                         ShowIcon="false"
+                                         AllowClose="false"/>
+                        </RadzenFieldset>
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal">
+                        <RadzenFieldset Text="Init Current">
+                            <RadzenText Text="@(Math.Round(ProbeData.InitCurrent, 2).ToString(CultureInfo.InvariantCulture))"/>
+                        </RadzenFieldset>
+                        <RadzenFieldset Text="Init Voltage">
+                            <RadzenText Text="@(Math.Round(ProbeData.InitVoltage, 2).ToString(CultureInfo.InvariantCulture))"/>
+                        </RadzenFieldset>
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal">
+                        <RadzenFieldset Text="Final Current">
+                            <RadzenText Text="@(Math.Round(ProbeData.FinalCurrent, 2).ToString(CultureInfo.InvariantCulture))"/>
+                        </RadzenFieldset>
+                        <RadzenFieldset Text="Final Voltage">
+                            <RadzenText Text="@(Math.Round(ProbeData.FinalVoltage, 2).ToString(CultureInfo.InvariantCulture))"/>
+                        </RadzenFieldset>
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        }
+    </RadzenStack>
+
+</RadzenCard>
+
+@code {
+    [Parameter] public WaferProbeData? ProbeData { get; set; }
+    [Parameter] public string ProbeLabel { get; set; } = "";
+    
+    private string GetProbeText(string probePad) {
+        return $"{this.ProbeLabel}: {probePad}";
+    }
+}

@@ -31,6 +31,10 @@ public class StationDataService {
         return await this._stationCollection.Find(_ => true).ToListAsync();
     }
 
+    public async Task<IEnumerable<string>> GetStationList() {
+        return await this._stationCollection.Find(_ => true).Project(e => e.StationId).ToListAsync();
+    }
+
     public async Task<bool> SaveTuningResults(string stationId,List<HeaterTuneResult> tuningResults) {
         var heaterControllerConfig = await this._stationCollection.Find(e => e.StationId == stationId)
             .Project(e=>e.Configuration.HeaterControllerConfig)

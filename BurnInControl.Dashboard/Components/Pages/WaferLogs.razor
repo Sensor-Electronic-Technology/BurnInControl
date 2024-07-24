@@ -2,57 +2,21 @@
 @using BurnInControl.Data.BurnInTests
 @using BurnInControl.Infrastructure.Dashboard
 @using BurnInControl.Infrastructure.QuickTest
-@*@inject QuickTestDataService QtDataService
-@inject DashboardTestService DashboardTestService*@
+@using BurnInControl.Dashboard.Components.AppComponents.LogViews
 
-
-<RadzenText Text="Coming Soon....." TextStyle="TextStyle.H3" TextAlign="TextAlign.Center"></RadzenText>
-
-@*<RadzenStack Orientation="Orientation.Vertical" Gap="5">
-    <RadzenStack Orientation="Orientation.Horizontal" Gap="5">
-        <WaferIdInput @bind-WaferId="@this._waferId"
-                      WaferList="@this._waferList"/>
-        <RadzenButton Text="Fetch"
-                      BusyText="Fetching Data..."
-                      IsBusy="@this._loading"
-                      ButtonStyle="ButtonStyle.Info"
-                      Click="FetchHandler"/>
-    </RadzenStack>
-    <RadzenDataGrid Data="@this._waferTestReadings">
-        <Columns>
-            
-        </Columns>
-
-    </RadzenDataGrid>*@
-    
-    @*<RadzenDataGrid AllowFiltering="true" AllowColumnResize="true" AllowAlternatingRows="false" FilterMode="FilterMode.Advanced" AllowSorting="true" PageSize="5" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true"
-                    Data="@employees" ColumnWidth="300px" LogicalFilterOperator="LogicalFilterOperator.Or" SelectionMode="DataGridSelectionMode.Single" @bind-Value=@selectedEmployees>
-        <Columns>
-            <RadzenDataGridColumn Property="@nameof(Employee.EmployeeID)" Filterable="false" Title="ID" Frozen="true" Width="80px" TextAlign="TextAlign.Center" />
-            <RadzenDataGridColumn Title="Photo" Frozen="true" Sortable="false" Filterable="false" Width="80px" TextAlign="TextAlign.Center" >
-                <Template Context="data">
-                    <RadzenImage Path="@data.Photo" class="rz-gravatar" AlternateText="@(data.FirstName + " " + data.LastName)" />
-                </Template>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn Property="@nameof(Employee.FirstName)" Title="First Name" Frozen="true" Width="160px" />
-            <RadzenDataGridColumn Property="@nameof(Employee.LastName)" Title="Last Name" Width="160px"/>
-            <RadzenDataGridColumn Property="@nameof(Employee.Title)" Title="Job Title" Width="200px" />
-            <RadzenDataGridColumn Property="@nameof(Employee.TitleOfCourtesy)" Title="Title" Width="120px" />
-            <RadzenDataGridColumn Property="@nameof(Employee.BirthDate)" Title="Birth Date" FormatString="{0:d}" Width="160px" />
-            <RadzenDataGridColumn Property="@nameof(Employee.HireDate)" Title="Hire Date" FormatString="{0:d}" Width="160px" />
-            <RadzenDataGridColumn Property="@nameof(Employee.Address)" Title="Address" Width="200px" />
-            <RadzenDataGridColumn Property="@nameof(Employee.City)" Title="City" Width="160px" />
-            <RadzenDataGridColumn Property="@nameof(Employee.Region)" Title="Region" Width="160px" />
-            <RadzenDataGridColumn Property="@nameof(Employee.PostalCode)" Title="Postal Code" Width="160px" />
-            <RadzenDataGridColumn Property="@nameof(Employee.Country)" Title="Country" Width="160px" />
-            <RadzenDataGridColumn Property="@nameof(Employee.HomePhone)" Title="Home Phone" Width="160px" />
-            <RadzenDataGridColumn Property="@nameof(Employee.Extension)" Title="Extension" Width="160px" />
-            <RadzenDataGridColumn Property="@nameof(Employee.Notes)" Title="Notes" Width="300px" />
-        </Columns>
-    </RadzenDataGrid>*@
-@*</RadzenStack>*@
-
-
+<RadzenTabs>
+    <Tabs>
+        <RadzenTabsItem Text="Test Status By Station">
+            <StationLogLookup/>
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Wafer Logs">
+            <RadzenText Text="Coming Soon...." TextStyle="TextStyle.H4"/>
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Test Logs By Station">
+            <RadzenText Text="Coming Soon...." TextStyle="TextStyle.H4"/>
+        </RadzenTabsItem>
+    </Tabs>
+</RadzenTabs>
 
 @code {
     private string? _waferId=string.Empty;

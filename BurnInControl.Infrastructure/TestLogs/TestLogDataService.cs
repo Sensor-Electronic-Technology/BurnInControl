@@ -1,4 +1,5 @@
 ﻿using BurnInControl.Data.BurnInTests;
+using BurnInControl.Data.BurnInTests.DataTransfer;
 using BurnInControl.Data.BurnInTests.Wafers;
 using BurnInControl.Data.StationModel.Components;
 using BurnInControl.Infrastructure.StationModel;
@@ -274,5 +275,92 @@ public class TestLogDataService {
                 }
             }
         }
+    }
+
+    public async Task<IEnumerable<BurnInTestLogDto>> GetRecentStationTests(string stationId,int limit=30) {
+        return await this._testLogCollection.Find(e=>e.StationId==stationId)
+            .SortByDescending(e=>e.StartTime)
+            .Limit(limit)
+            .Project(e=>new BurnInTestLogDto() {
+                _id=e._id,
+                StationId=e.StationId,
+                SetCurrent=e.SetCurrent!.Name ?? "Unknown",
+                SetTemperature=e.SetTemperature,
+                RunTime=e.RunTime,
+                StartTime=e.StartTime,
+                StopTime=e.StopTime,
+                Completed=e.Completed,
+                ElapsedTime=e.ElapsedTime,
+                LeftPocket=e.TestSetup[StationPocket.LeftPocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.LeftPocket.Name].WaferId,
+                MiddlePocket=e.TestSetup[StationPocket.MiddlePocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.LeftPocket.Name].WaferId,
+                RightPocket=e.TestSetup[StationPocket.RightPocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.LeftPocket.Name].WaferId
+            }).ToListAsync(); 
+    }
+
+    public async Task<List<WaferTestResultDto>> GetWaferTestResultsDto(ObjectId id) {
+        var testLog = await this._testLogCollection.Find(e => e._id == id)
+            .FirstOrDefaultAsync();
+        if (testLog != null && testLog.TestSetup?.Count > 0) {
+            var testSetups = testLog.TestSetup;
+            this._logger.LogInformation("Parsing WaferTestLog. InitSec:{Init} FinalSec:{Final}", 60,
+                testLog.RunTime - 60);
+
+            var initTestLog = await this._readingsCollection
+                .Find(e => e.TestLogId == id && e.Reading.ElapsedSeconds >= (ulong)60)
+                .Project(e => e.Reading)
+                .FirstOrDefaultAsync();
+            var finalTestLog = await this._readingsCollection.Find(e =>
+                    e.TestLogId == id && e.Reading.ElapsedSeconds >= (ulong)testLog.RunTime - 60)
+                .Project(e => e.Reading)
+                .FirstOrDefaultAsync();
+
+            if (initTestLog == null || finalTestLog == null) {
+                this._logger.LogWarning("Failed to find initial or final readings for test log {Id}", id.ToString());
+                return [];
+            }
+            List<WaferTestResultDto> waferTests = new();
+            foreach (var pocket in StationPocket.List) {
+                var testSetup = testSetups[pocket.Name];
+                if (testSetup.Loaded) {
+                    WaferTestResultDto waferTest = new WaferTestResultDto { 
+                        TestLogId = id, 
+                        Pocket = pocket.Name,
+                        WaferId = testSetup.WaferId};
+                    if (!string.IsNullOrWhiteSpace(testSetup.Probe1Pad)) {
+                        var p1Pad = PadLocation.List.FirstOrDefault(e => testSetup.Probe1Pad.Contains(e.Value));
+                        if (p1Pad != null) {
+                            WaferProbeData probe1Data = new WaferProbeData() {
+                                PadId = testSetup.Probe1Pad,
+                                RunTime = finalTestLog.ProbeRuntimes[(pocket.Value - 1) * 2],
+                                Okay = finalTestLog.ProbeRunTimeOkay[(pocket.Value - 1) * 2],
+                                InitVoltage = initTestLog.Voltages[(pocket.Value - 1) * 2],
+                                FinalVoltage = finalTestLog.Voltages[(pocket.Value - 1) * 2],
+                                InitCurrent = initTestLog.Currents[(pocket.Value - 1) * 2],
+                                FinalCurrent = finalTestLog.Currents[(pocket.Value - 1) * 2]
+                            };
+                            waferTest.Probe1Data = probe1Data;
+                        }
+                    }
+                    if (!string.IsNullOrWhiteSpace(testSetup.Probe2Pad)) {
+                        var p2Pad = PadLocation.List.FirstOrDefault(e => testSetup.Probe2Pad.Contains(e.Value));
+                        if (p2Pad != null) {
+                            WaferProbeData probe2Data = new WaferProbeData() {
+                                PadId = testSetup.Probe2Pad,
+                                RunTime = finalTestLog.ProbeRuntimes[((pocket.Value - 1) * 2) + 1],
+                                Okay = finalTestLog.ProbeRunTimeOkay[((pocket.Value - 1) * 2) + 1],
+                                InitVoltage = initTestLog.Voltages[((pocket.Value - 1) * 2) + 1],
+                                FinalVoltage = finalTestLog.Voltages[((pocket.Value - 1) * 2) + 1],
+                                InitCurrent = initTestLog.Currents[((pocket.Value - 1) * 2) + 1],
+                                FinalCurrent = finalTestLog.Currents[((pocket.Value - 1) * 2) + 1],
+                            };
+                            waferTest.Probe2Data = probe2Data;
+                        }
+                    }
+                    waferTests.Add(waferTest);
+                }
+            }
+            return waferTests;
+        }
+        return [];
     }
 }

@@ -6,7 +6,10 @@
 @using BurnInControl.Infrastructure.StationModel
 @inject StationDataService StationDataService
 @inject StationErrorService StationErrorService
+@attribute [StreamRendering]
+
 <PageTitle>Dashboard</PageTitle>
+
 @if (this._stations == null) {
     <RadzenStack AlignItems="AlignItems.Center" Class="rz-m-12" Gap="2rem">
         <RadzenProgressBarCircular Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />

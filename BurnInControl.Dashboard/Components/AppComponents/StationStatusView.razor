@@ -49,11 +49,12 @@
                     <RadzenRow>
                         @for(int i=0;i<ControllerHardwareConstants.PROBE_COUNT;i++) {
                             var probe = this._probeAlerts[i].Okay;
+                            var loaded = this._probeAlerts[i].Loaded;
                             int index = i;
                             <RadzenColumn Size="3">
                                 <RadzenAlert Size="AlertSize.ExtraSmall"
-                                             Text="@this.SetProbeText(index,probe)"
-                                             AlertStyle="@this.GetProbeAlertStyle(probe)"
+                                             Text="@this.SetProbeText(index,probe,loaded)"
+                                             AlertStyle="@this.GetProbeAlertStyle(probe,loaded)"
                                              ShowIcon="false"
                                              Shade="Shade.Default"
                                              AllowClose="false"/>
@@ -199,12 +200,20 @@
         }
     }
 
-    private string SetProbeText(int index,bool okay) {
-        return okay ? $"P{index+1}:Okay" : $"P{index+1}:Alarm";
+    private string SetProbeText(int index,bool okay,bool loaded) {
+        if (loaded) {
+            return okay ? $"P{index+1}:Okay" : $"P{index+1}:Alarm";
+        } else {
+            return $"P{index+1}:Empty";
+        }
     }
 
-    private AlertStyle GetProbeAlertStyle(bool okay) {
-        return okay ? AlertStyle.Success : AlertStyle.Danger;
+    private AlertStyle GetProbeAlertStyle(bool okay,bool loaded) {
+        if(loaded) {
+            return okay ? AlertStyle.Success : AlertStyle.Danger;
+        } else {
+            return AlertStyle.Info;
+        }
     }
 
     private AlertStyle GetAlertStyle() {
@@ -280,13 +289,22 @@
         if (data.HeaterStates.Any(e=>e==true) && !this._testRunning) {
             this.StationStateChangedHandler(StationState.Heating);
         }
+        
+        this.ParseProbeErrors(data);
 
-        if (data.Running) {
+        this._testRunning = data.Running;
+        this._testPaused = data.Paused;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void ParseProbeErrors(StationSerialData data) {
+                if (data.Running) {
             if (data.ProbeRunTimeOkay.Any(e => e == false)) {
                 bool sendAlert = false;
                 for(int i=0;i<ControllerHardwareConstants.PROBE_COUNT;i++) {
-                    int probeValue = i>2 ? (i+1*3)-5:(i+1*3)-2;
+                    var probeValue = i % 2==0 ? i/2+1: (i-1)/2+1;
                     if (this._pocketWaferSetups[StationPocket.FromValue(probeValue).Name].Loaded) {
+                        this._probeAlerts[i].Loaded = true;
                         if(!data.ProbeRunTimeOkay[i]) {
                             if(this._probeAlerts[i].Okay) {
                                 this._probeAlerts[i].Okay = false;
@@ -304,6 +322,7 @@
                         this._probeAlerts[i].Okay = true;
                         this._probeAlerts[i].Acknowledged = false;
                         this._alertLatched = false;
+                        this._probeAlerts[i].Loaded = false;
                     }
                 }
                 if (sendAlert) {
@@ -312,6 +331,10 @@
                             this._alertTimer.Start();
                         }
                         var alerts=this._probeAlerts.Where(e => e is { Okay: false, Acknowledged: false }).Select(e=>e.ProbeId).ToList();
+                        foreach (var p in alerts) {
+                            Console.Write($"{p},");
+                        }
+                        Console.WriteLine();
                         if (alerts.Count > 0) {
                             this.StationErrorService.NotifyError(this.StationId ?? "S00",alerts);
                         }
@@ -322,10 +345,6 @@
                 }
             }
         }
-
-        this._testRunning = data.Running;
-        this._testPaused = data.Paused;
-        await InvokeAsync(StateHasChanged);
     }
     
 

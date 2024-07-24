@@ -40,7 +40,6 @@ public class TestLogDataService {
         this._readingsCollection=database.GetCollection<BurnInTestLogEntry>("test_log_entries");
         this._stationDataService = stationDataService;
     }
-
     public async Task<ErrorOr<BurnInTestLog>> LoadSavedLog(ObjectId testId) {
         var log = await this._testLogCollection.Find(e => e._id == testId).Project(e=>new BurnInTestLog() {
                 _id=e._id,
@@ -54,13 +53,11 @@ public class TestLogDataService {
             }).FirstOrDefaultAsync();
         return log != null ? log : Error.NotFound(description: "Log not found");
     }
-    
     public async Task<List<string>> GetNotCompleted(string stationId) {
         return await this._testLogCollection.Find(e=>e.StationId==stationId && !e.Completed)
             .Project(e=>e._id.ToString())
             .ToListAsync();
     }
-    
     public async Task<ErrorOr<BurnInTestLog>> GetTestLogNoReadings(ObjectId? id) {
         if (id == null) {
             return Error.NotFound(description: "BurnInTestLog Not Found, Id is null");
@@ -82,7 +79,6 @@ public class TestLogDataService {
             return log;
         }
     }
-    
     public async Task<ErrorOr<BurnInTestLog>> GetTestLogWithReadings(ObjectId id) {
         var log=await this._testLogCollection.Find(e => e._id == id).FirstOrDefaultAsync();
         if (log == null) {
@@ -91,7 +87,6 @@ public class TestLogDataService {
             return log;
         }
     }
-    
     public Task<bool> LogExists(ObjectId id) {
         return this._testLogCollection.Find(e => e._id == id)
             .AnyAsync();
@@ -178,12 +173,34 @@ public class TestLogDataService {
         }
         return Error.Failure(description: "Station Running flag not cleared and Log was not finalized");
     }
-    
     public async Task<Dictionary<string,PocketWaferSetup>> GetLastTestLog(string stationId) {
         return await this._testLogCollection.Find(e => e.StationId == stationId)
             .SortByDescending(e => e.StartTime)
             .Project(e=>e.TestSetup)
             .FirstOrDefaultAsync();
+    }
+    
+    public async Task<List<WaferTestReading>> GetTestLogReadings(ObjectId id,StationPocket pocket) {
+        var log = await this._testLogCollection.Find(e => e._id == id).FirstOrDefaultAsync();
+        if (log != null) {
+            var readings = await this._readingsCollection.Find(e => e.TestLogId == id)
+                .ToListAsync();
+            List<WaferTestReading> waferReadings = new();
+            foreach (var reading in readings) {
+                var waferReading = new WaferTestReading() {
+                    P1Current = reading.PocketData[pocket.Name].Probe1Data.Current,
+                    P1Voltage = reading.PocketData[pocket.Name].Probe1Data.Voltage,
+                    P1Runtime = reading.PocketData[pocket.Name].Probe1Data.Runtime,
+                    P2Current = reading.PocketData[pocket.Name].Probe2Data.Current,
+                    P2Voltage = reading.PocketData[pocket.Name].Probe2Data.Voltage,
+                    P2Runtime = reading.PocketData[pocket.Name].Probe2Data.Runtime,
+                };
+                waferReading.Temperature = reading.Reading?.Temperatures[pocket.Value-1] ?? 0;
+                waferReadings.Add(waferReading);
+            }
+            return waferReadings;
+        }
+        return [];
     }
 
     private async Task LogWaferTest(ObjectId testLogId,int initSec,int finalSec) {

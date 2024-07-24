@@ -1,6 +1,7 @@
 using Radzen;
 using BurnInControl.Dashboard.Components;
 using BurnInControl.Dashboard.Data;
+using BurnInControl.Dashboard.Services;
 using BurnInControl.Infrastructure;
 using BurnInControl.Infrastructure.FirmwareModel;
 using BurnInControl.Shared.AppSettings;
@@ -11,19 +12,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
       .AddInteractiveServerComponents().AddHubOptions(options => options.MaximumReceiveMessageSize = 10 * 1024 * 1024);
-builder.Services.Configure<GitHubApiOptions>(builder.Configuration.GetSection(nameof(GitHubApiOptions)));
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
-var token=builder.Configuration["GithubApiToken"];
-
-/*var gitHubApiOptions = builder.Configuration.GetSection("GitHubApiOptions").Get<GitHubApiOptions>();*/
-Console.WriteLine($"Token {token}");
-/*builder.Configuration.GetSection("GitHubApiOptions").Bind(gitHubApiOptions);*/
-
 builder.Services.AddControllers();
 builder.Services.AddRadzenComponents();
 builder.Services.AddHttpClient();
 builder.Services.AddInfrastructure();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddSingleton<StationErrorService>();
 
 var app = builder.Build();
 

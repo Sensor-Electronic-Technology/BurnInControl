@@ -1,0 +1,45 @@
+@using BurnInControl.Dashboard.Services
+@inject StationErrorService StationErrorService
+@implements IAsyncDisposable
+@if(this.StationErrorService.Errors.Any(e=>e.Value.Count>0)) {
+    <RadzenAlert Size="AlertSize.Small"
+                 Text="Station has probe errors"
+                 AlertStyle="AlertStyle.Danger"
+                 ShowIcon="false"
+                 Shade="Shade.Default"
+                 AllowClose="false"
+                 Style="width: 150px;"/>
+} else {
+    <RadzenAlert Size="AlertSize.Small"
+                 Text="No Errors"
+                 AlertStyle="AlertStyle.Success"
+                 ShowIcon="false"
+                 Shade="Shade.Default"
+                 AllowClose="false"
+                 Style="width: 150px;"/>
+}
+@code {
+    private Dictionary<string,List<string>> _stationProbeErrors = new Dictionary<string, List<string>>();
+
+    protected override Task OnInitializedAsync() {
+        this.StationErrorService.OnErrorResolved += this.OnErrorsResolved;
+        return base.OnInitializedAsync();
+    }
+
+    private void OnErrorsResolved(string stationId, List<string> probeErrors) {
+        InvokeAsync(StateHasChanged);
+    }
+    
+    private string SetProbeText(string key) {
+        string value=$"{key}: Errors: ";
+        foreach (var probe in this.StationErrorService.Errors[key]) {
+            value+=probe+" ";
+        }
+        return value;
+    }
+
+    public ValueTask DisposeAsync() {
+        this.StationErrorService.OnErrorResolved += this.OnErrorsResolved;
+       return ValueTask.CompletedTask;
+    }
+}

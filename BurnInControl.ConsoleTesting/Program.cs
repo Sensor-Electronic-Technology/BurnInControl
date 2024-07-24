@@ -13,6 +13,9 @@ using BurnInControl.Data.ComponentConfiguration.HeaterController;
 using BurnInControl.Data.ComponentConfiguration.ProbeController;
 using BurnInControl.Data.ComponentConfiguration.StationController;
 using BurnInControl.Data.StationModel.Components;
+using BurnInControl.Infrastructure.Dashboard;
+using BurnInControl.Infrastructure.TestLogs;
+using BurnInControl.Infrastructure.WaferTestLogs;
 using BurnInControl.Shared.ComDefinitions.MessagePacket;
 using BurnInControl.Shared.ComDefinitions.Packets;
 using BurnInControl.Shared.ComDefinitions.Station;
@@ -32,7 +35,9 @@ Console.WriteLine($"Error: {error}");*/
 //await CreateDevStationDatabase();
 //await TestParseWaferDataInitFinal();
 //await TestGetWaferData();
-await CreateStationDatabase();
+//await CreateStationDatabase();
+//await TestDashboardService();
+await GetTestLogs();
 
 /*List<int> values = [1,2,3];
 
@@ -44,6 +49,34 @@ for(int i=0;i<=values.Count;i++) {
     }
 
 }*/
+
+async Task GetTestLogs() {
+    string id = "669fab78323736492ca55665";
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    StationDataService stationDataService = new StationDataService(client);
+    TestLogDataService testLogDataService=new TestLogDataService(client,stationDataService);
+    var readings=await testLogDataService.GetTestLogReadings(ObjectId.Parse(id), StationPocket.LeftPocket);
+    StringBuilder builder = new StringBuilder();
+    foreach (var reading in readings) {
+        builder.AppendLine($"{reading.Temperature}\t{reading.P1Current}\t{reading.P2Current}\t{reading.P1Voltage}\t{reading.P2Voltage}\t{reading.P1Runtime}\t{reading.P2Runtime}\t{reading.P2Runtime}");
+    }
+    File.WriteAllText(@"C:\Users\aelmendo\Documents\Test Logs\test.txt",builder.ToString());
+}
+
+async Task TestDashboardService() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    StationDataService stationDataService = new StationDataService(client);
+    TestLogDataService testLogDataService=new TestLogDataService(client,stationDataService);
+    WaferTestLogDataService waferTestLogDataService=new WaferTestLogDataService(client);
+    DashboardTestService dashboardTestService=new DashboardTestService(testLogDataService,waferTestLogDataService);
+    var readings=await dashboardTestService.GetWaferReadings("B02-3157-13");
+    foreach (var reading in readings) {
+        Console.WriteLine("Start Test");
+        foreach (var data in reading) {
+            Console.WriteLine(JsonSerializer.Serialize(data));
+        }
+    }
+}
 
 
 async Task TestGetWaferData() {

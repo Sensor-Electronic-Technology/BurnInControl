@@ -2,9 +2,10 @@
 @using System.Collections
 @using BurnInControl.Data.StationModel
 @using BurnInControl.Dashboard.Components.AppComponents
+@using BurnInControl.Dashboard.Services
 @using BurnInControl.Infrastructure.StationModel
 @inject StationDataService StationDataService
-
+@inject StationErrorService StationErrorService
 <PageTitle>Dashboard</PageTitle>
 @if (this._stations == null) {
     <RadzenStack AlignItems="AlignItems.Center" Class="rz-m-12" Gap="2rem">
@@ -12,21 +13,75 @@
         <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Loading Station Status</RadzenText>
     </RadzenStack>
 } else {
-    <RadzenRow>
-        @foreach(var station in this._stations) {
-            <RadzenColumn Size="4">
-                <StationStatusView StationId="@station.StationId" 
-                                   StationIpAddress="@station.NetworkConfig.EthernetIp"/>
-            </RadzenColumn>
-        }
-    </RadzenRow>
+    <RadzenSplitter Orientation="Orientation.Horizontal">
+        <RadzenSplitterPane Size="85%" Collapsed="false" Style="overflow: scroll">
+            <RadzenRow>
+                @foreach(var station in this._stations) {
+                    <RadzenColumn Size="4">
+                        <StationStatusView StationId="@station.StationId"
+                                           StationIpAddress="@station.NetworkConfig.EthernetIp"/>
+                    </RadzenColumn>
+                }
+            </RadzenRow>
+        </RadzenSplitterPane>
+        <RadzenSplitterPane Size="15%" Collapsed="@this.IsCollapsed()">
+            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Style="padding: 0.5rem">
+                <RadzenText Text="Station Errors" TextStyle="TextStyle.DisplayH6"/>
+                @foreach (var station in this.StationErrorService.Errors.Keys) {
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                        @if (this.StationErrorService.Errors[station].Count > 0) {
+                            var stationId = station;
+                            <RadzenAlert AlertStyle="AlertStyle.Danger"
+                                         AllowClose="false"
+                                         Size="AlertSize.ExtraSmall"
+                                         Title="@this.GetStationText(stationId)" ShowIcon="false"
+                                         Style="height: 60px;"
+                                         Text="@this.GetAlertText(station)"/>
+                            <RadzenButton Text="Clear"
+                                          ButtonType="ButtonType.Reset"
+                                          Size="ButtonSize.ExtraSmall"
+                                          Click="@(() => this.OnCloseAlert(stationId))"
+                                          Style="height: 60px; width: 120px;"/>
+                        }
+                    </RadzenStack>
+                }
+            </RadzenStack>
+        </RadzenSplitterPane>
+    </RadzenSplitter>
+
 }
-
-
 @code {
     private IEnumerable<Station>? _stations;
+    
     protected override async Task OnInitializedAsync() {
         this._stations = await this.StationDataService.GetStations();
     }
+    
+    private string GetAlertText(string stationId) {
+        string text=$"Probe Errors: ";
+        foreach(var error in this.StationErrorService.Errors[stationId]) {
+            text += error + " ";
+        }
+        return text;
+    }
+    
+    private string GetStationText(string stationId) {
+        return $"Station {stationId}";
+    }
+
+    private bool IsCollapsed() {
+        return !this.StationErrorService.Errors.Any(e => e.Value.Count > 0);
+    }
+    
+    private Task OnCloseAlert(string stationId) {
+        Console.WriteLine($"Closing Alert for {stationId}");
+        this.StationErrorService.NotifyErrorResolved(stationId);
+        return Task.CompletedTask;
+    }
+
+    private void Callback(bool obj) {
+        Console.WriteLine("Alert Visible Changed");
+    }
+
 }
 

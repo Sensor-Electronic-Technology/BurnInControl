@@ -1,29 +1,33 @@
 @using System.Text.Json
+@using System.Timers
 @using BurnInControl.Data.StationModel
 @using BurnInControl.HubDefinitions.Hubs
 @using BurnInControl.Shared.ComDefinitions
 @using Microsoft.AspNetCore.SignalR.Client
 @using BurnInControl.Dashboard.Components.AppComponents.Display
+@using BurnInControl.Dashboard.Data
+@using BurnInControl.Dashboard.Services
 @using BurnInControl.Data.BurnInTests.Wafers
+@using BurnInControl.Data.StationModel.Components
 @using BurnInControl.Infrastructure.StationModel
 @using BurnInControl.Infrastructure.TestLogs
+@using MongoDB.Driver.Linq
 @using BurnInControl.Shared
 @inject ILogger<StationStatusView> Logger
 @inject StationDataService StationDataService
 @inject TestLogDataService TestLogDataService
+@inject StationErrorService StationErrorService
 @implements IAsyncDisposable
-@rendermode InteractiveServer
+@attribute [StreamRendering]
+@*@rendermode InteractiveServer*@
 
 <style>
     .rz-alert .rz-alert-title{
         font-size: large !important;
     }
-    
-    
     .rz-fieldset-content{
         padding: 0.5rem !important;
     }
-    
     .fieldset-padding {
         --rz-fieldset-padding: 0.5rem !important;    
     }
@@ -33,64 +37,18 @@
     <RadzenAlert Title="@this._stationText"
                  Text="@this._stateText"
                  Shade="Shade.Default"
-                 AlertStyle="@this._alertStyle"
+                 AlertStyle="@this.GetAlertStyle()"
                  Variant="Variant.Filled"
                  Size="AlertSize.Medium"
                  AllowClose="false">
     </RadzenAlert>
     <RadzenCard>
         @if (this._data.Running) {
-            <RadzenFieldset Text="Test Status" AllowCollapse="true">
-                <RadzenStack Orientation="Orientation.Vertical"
-                             JustifyContent="JustifyContent.Center"
-                             AlignItems="AlignItems.Center">
-                    <RadzenFieldset Text="Running Test">
-                        @if (this._pocketWaferSetups.Any()) {
-                            <RadzenStack Orientation="Orientation.Horizontal">
-                                @foreach (var keyValue in this._pocketWaferSetups) {
-                                    <RadzenFieldset Text="@keyValue.Key" Style="margin: 10px auto;">
-                                        <RadzenText Text="@keyValue.Value.WaferId" TextStyle="TextStyle.H6"/>
-                                    </RadzenFieldset>
-                                }
-                            </RadzenStack>
-                        }
-                    </RadzenFieldset>
-                    <RadzenFieldset Text="Time">
-                        <RadzenStack Orientation="Orientation.Horizontal">
-                            <RuntimeDisplay DisplayText="Runtime"
-                                            RuntimeSecs="@(this._data.RuntimeSeconds)"
-                                            TextStyle="TextStyle.Body1"
-                                            ShowMins="false"
-                                            Width="80px"/>
-                            <RuntimeDisplay DisplayText="Elapsed"
-                                            RuntimeSecs="@(this._data.ElapsedSeconds)"
-                                            TextStyle="TextStyle.Body1"
-                                            LabelFontSize="12px"
-                                            Width="fit-content"/>
-                            <RuntimeDisplay DisplayText="Remaining"
-                                            RuntimeSecs="@(this._data.RuntimeSeconds - this._data.ElapsedSeconds)"
-                                            TextStyle="TextStyle.Body1"
-                                            LabelFontSize="12px"
-                                            Width="fit-content"/>
-                        </RadzenStack>
-                    </RadzenFieldset>
-                    <RadzenFieldset Text="Test Config">
-                        <RadzenStack Orientation="Orientation.Horizontal">
-                            <GenericDisplay DisplayLabel="Set Current"
-                                            DisplayValue="@this._data.CurrentSetPoint.ToString()"
-                                            DisplayTextStyle="TextStyle.H6"
-                                            Width="120px"/>
-                            <GenericDisplay DisplayLabel="Set Temp"
-                                            DisplayValue="@this._data.TemperatureSetPoint.ToString()"
-                                            DisplayTextStyle="TextStyle.H6"
-                                            Width="120px"/>
-                        </RadzenStack>
-                    </RadzenFieldset>
-
-                    <RadzenFieldset Text="ProbeStatus">
-                        <RadzenRow>
-                            @for(int i=0;i<ControllerHardwareConstants.PROBE_COUNT;i++) {
-                            var probe = this._data.ProbeRunTimeOkay[i];
+            <RadzenStack>
+                <RadzenFieldset Text="ProbeStatus" Collapsed="false" AllowCollapse="true">
+                    <RadzenRow>
+                        @for(int i=0;i<ControllerHardwareConstants.PROBE_COUNT;i++) {
+                            var probe = this._probeAlerts[i].Okay;
                             int index = i;
                             <RadzenColumn Size="3">
                                 <RadzenAlert Size="AlertSize.ExtraSmall"
@@ -100,12 +58,59 @@
                                              Shade="Shade.Default"
                                              AllowClose="false"/>
                             </RadzenColumn>
+                        }
+                    </RadzenRow>
+                </RadzenFieldset>
+                <RadzenFieldset Text="Test Status" AllowCollapse="true" Collapsed="true">
+                    <RadzenStack Orientation="Orientation.Vertical"
+                                 JustifyContent="JustifyContent.Center"
+                                 AlignItems="AlignItems.Center">
+                        <RadzenFieldset Text="Running Test">
+                            @if (this._pocketWaferSetups.Any()) {
+                                <RadzenStack Orientation="Orientation.Horizontal">
+                                    @foreach (var keyValue in this._pocketWaferSetups) {
+                                        <RadzenFieldset Text="@keyValue.Key" Style="margin: 10px auto;">
+                                            <RadzenText Text="@keyValue.Value.WaferId" TextStyle="TextStyle.Body1"/>
+                                        </RadzenFieldset>
+                                    }
+                                </RadzenStack>
                             }
-                        </RadzenRow>
-                    </RadzenFieldset>
-                </RadzenStack>
-            </RadzenFieldset>
+                        </RadzenFieldset>
+                        <RadzenFieldset Text="Time">
+                            <RadzenStack Orientation="Orientation.Horizontal">
+                                <RuntimeDisplay DisplayText="Runtime"
+                                                RuntimeSecs="@(this._data.RuntimeSeconds)"
+                                                TextStyle="TextStyle.Body1"
+                                                ShowMins="false"
+                                                Width="80px"/>
+                                <RuntimeDisplay DisplayText="Elapsed"
+                                                RuntimeSecs="@(this._data.ElapsedSeconds)"
+                                                TextStyle="TextStyle.Body1"
+                                                LabelFontSize="12px"
+                                                Width="fit-content"/>
+                                <RuntimeDisplay DisplayText="Remaining"
+                                                RuntimeSecs="@(this._data.RuntimeSeconds - this._data.ElapsedSeconds)"
+                                                TextStyle="TextStyle.Body1"
+                                                LabelFontSize="12px"
+                                                Width="fit-content"/>
+                            </RadzenStack>
+                        </RadzenFieldset>
+                        <RadzenFieldset Text="Test Config">
+                            <RadzenStack Orientation="Orientation.Horizontal">
+                                <GenericDisplay DisplayLabel="Set Current"
+                                                DisplayValue="@this._data.CurrentSetPoint.ToString()"
+                                                DisplayTextStyle="TextStyle.H6"
+                                                Width="120px"/>
+                                <GenericDisplay DisplayLabel="Set Temp"
+                                                DisplayValue="@this._data.TemperatureSetPoint.ToString()"
+                                                DisplayTextStyle="TextStyle.H6"
+                                                Width="120px"/>
+                            </RadzenStack>
+                        </RadzenFieldset>
 
+                    </RadzenStack>
+                </RadzenFieldset>
+            </RadzenStack>
         } else {
             <RadzenFieldset Text="Last Test">
                 @if (this._pocketWaferSetups.Any()) {
@@ -122,11 +127,15 @@
     </RadzenCard>
 </RadzenCard>
 
-
-
 @code {
     [Parameter] public string? StationId {get;set;}="S99";
     [Parameter] public string? StationIpAddress {get;set;}
+
+    private Shade _alertShade;
+    private AlertStyle _savedStyle;
+    private bool _alertState;
+    private bool _alertLatched;
+    private ProbeAlert[] _probeAlerts = [new(0), new(1), new(2), new(3), new(4), new(5)];
     
     private HubConnection? _hubConnection;
     private PocketWaferSetup? _waferSetup; 
@@ -137,16 +146,24 @@
     private AlertStyle _alertStyle=AlertStyle.Danger;
     private StationSerialData _data = new StationSerialData();
     private Dictionary<string,PocketWaferSetup> _pocketWaferSetups = [];
+    private System.Timers.Timer _alertTimer;
     
     private bool _testRunning = false;
     private bool _testPaused = false;
     private bool _heating = false;
+    private bool _alertAck = false;
 
     private string _runTimeDisplay="";
     private string _remainingTime;
 
     protected override async Task OnInitializedAsync() {
+        this.StationErrorService.OnErrorResolved += this.OnErrorResolvedHandler;
         this._stationText = $"StationId: {this.StationId ?? "S00"}";
+        this._alertTimer = new Timer();
+        this._alertTimer.Interval = 1000;
+        this._alertTimer.AutoReset = true;
+        this._alertTimer.Elapsed += this.AlertTimerHandler;
+        
         if (!string.IsNullOrWhiteSpace(this.StationIpAddress)) {
             this._hubConnection = new HubConnectionBuilder()
                 .WithUrl($"http://{this.StationIpAddress}:5000/hubs/station")
@@ -160,9 +177,26 @@
                     this._pocketWaferSetups = await this.TestLogDataService.GetLastTestLog(this.StationId);
                 }
             } catch (Exception e) {
-                this.Logger.LogError("Failed to connect to station hub: StationId{Id},StationId:{Ip} \n Error:{0}",
+                this.Logger.LogError("Failed to connect to station hub: StationId{Id},Station Ip:{Ip} \n Error:{0}",
                     this.StationId ?? "S00",this.StationIpAddress ?? "0.0.0.0",e.Message);
             }
+        }
+    }
+
+    private void OnErrorResolvedHandler(string stationId,List<string> resolvedErrors) {
+        if(this.StationId==stationId) {
+            foreach(var error in resolvedErrors) {
+                var probeAlert = this._probeAlerts.FirstOrDefault(e => e.ProbeId == error);
+                if (probeAlert != null) {
+                    probeAlert.Acknowledged = true;
+                }
+            }
+            /*Console.WriteLine($"StationStatus: {this.StationId} Received Error Resolved Event for StationId: {stationId}");*/
+            this._alertStyle = this._savedStyle;
+            this._alertShade = Shade.Default;
+            this._alertTimer.Stop();
+            this.StationStateChangedHandler(this._state);
+            StateHasChanged();
         }
     }
 
@@ -172,6 +206,18 @@
 
     private AlertStyle GetProbeAlertStyle(bool okay) {
         return okay ? AlertStyle.Success : AlertStyle.Danger;
+    }
+
+    private AlertStyle GetAlertStyle() {
+        if (this._probeAlerts.Any(e=>!e.Okay && !e.Acknowledged)) {
+            return this._alertState ? AlertStyle.Danger : AlertStyle.Light;
+        } else {
+            return this._alertStyle;
+        }
+    }
+
+    private void AlertTimerHandler(Object? source, ElapsedEventArgs e) {
+        this._alertState=!this._alertState;
     }
 
     private void StationStateChangedHandler(StationState state) {
@@ -236,6 +282,48 @@
             this.StationStateChangedHandler(StationState.Heating);
         }
 
+        if (data.Running) {
+            if (data.ProbeRunTimeOkay.Any(e => e == false)) {
+                bool sendAlert = false;
+                for(int i=0;i<ControllerHardwareConstants.PROBE_COUNT;i++) {
+                    int probeValue = i>2 ? (i+1*3)-5:(i+1*3)-2;
+                    if (this._pocketWaferSetups[StationPocket.FromValue(probeValue).Name].Loaded) {
+                        if(!data.ProbeRunTimeOkay[i]) {
+                            if(this._probeAlerts[i].Okay) {
+                                this._probeAlerts[i].Okay = false;
+                                this._probeAlerts[i].Acknowledged = false;
+                                sendAlert = true;
+                            }
+                        } else {
+                            if(!this._probeAlerts[i].Okay) {
+                                this._probeAlerts[i].Okay = true;
+                                this._probeAlerts[i].Acknowledged = false;
+                                sendAlert = true;
+                            }
+                        }
+                    } else {
+                        this._probeAlerts[i].Okay = true;
+                        this._probeAlerts[i].Acknowledged = false;
+                        this._alertLatched = false;
+                    }
+                }
+                if (sendAlert) {
+                    if (this._probeAlerts.Any(e => e.Okay==false)) {
+                        if (!this._alertTimer.Enabled) {
+                            this._alertTimer.Start();
+                        }
+                        var alerts=this._probeAlerts.Where(e => e is { Okay: false, Acknowledged: false }).Select(e=>e.ProbeId).ToList();
+                        if (alerts.Count > 0) {
+                            this.StationErrorService.NotifyError(this.StationId ?? "S00",alerts);
+                        }
+                    } else {
+                        this._alertTimer.Stop();
+                        this.StationErrorService.NotifyErrorResolved(this.StationId ?? "S00");
+                    }
+                }
+            }
+        }
+
         this._testRunning = data.Running;
         this._testPaused = data.Paused;
         await InvokeAsync(StateHasChanged);
@@ -246,6 +334,7 @@
         if (this._hubConnection != null) {
             await this._hubConnection.DisposeAsync();
         }
+        this.StationErrorService.OnErrorResolved -= this.OnErrorResolvedHandler;
     }
 
 }

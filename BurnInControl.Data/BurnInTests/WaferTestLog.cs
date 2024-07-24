@@ -11,11 +11,9 @@ public class WaferTestLog {
     [BsonRepresentation(BsonType.String)]
     public string WaferId { get; set; } = null!;
     public int WaferSize { get; set; }
-    
     public Dictionary<string, WaferPadData> WaferPadInitialData { get; set; } = new();
     public Dictionary<string, WaferPadData> WaferPadFinalData { get; set; } = new();
     public Dictionary<string,PocketData> PocketData { get; set; } = new();
-    
     public List<WaferTest> WaferTests { get; set; } = new();
 }
 

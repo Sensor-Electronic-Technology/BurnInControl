@@ -24,6 +24,11 @@ public class WaferTestLogDataService {
                                                                             "wafer_test_logs");
         this._logger = logger;
     }
+    
+    public WaferTestLogDataService(IMongoClient mongoClient) {
+        var database= mongoClient.GetDatabase("burn_in_db");
+        this._waferTestLogCollection = database.GetCollection<WaferTestLog>("wafer_test_logs");
+    }
 
     public Task<bool> Exists(string waferId) {
         return this._waferTestLogCollection.Find(e => e.WaferId == waferId).AnyAsync();
@@ -43,7 +48,7 @@ public class WaferTestLogDataService {
                 PocketData = waferTest.PocketData,
                 WaferTests = [waferTest]
             };
-            this._logger.LogInformation("Created new WaferTestLog {WaferId}",waferId);
+            //this._logger.LogInformation("Created new WaferTestLog {WaferId}",waferId);
             await this._waferTestLogCollection.InsertOneAsync(newLog);
             return;
         }
@@ -66,49 +71,9 @@ public class WaferTestLogDataService {
             .Set(e=>e.PocketData,waferTestLog.PocketData)
             .Push(e => e.WaferTests, waferTest);
         var filterTestList=Builders<WaferTestLog>.Filter.Eq(e=>e.WaferId,waferId);
-        this._logger.LogInformation("Updated WaferTestLog {WaferId}",waferId);
+        //this._logger.LogInformation("Updated WaferTestLog {WaferId}",waferId);
         await this._waferTestLogCollection.UpdateOneAsync(filterTestList, updateTestList);
     }
-    
-    /*public async Task InsertInitial(string waferId,WaferTest waferTest) {
-        var waferTestLog =await this._waferTestLogCollection.Find(e => e.WaferId == waferId).FirstOrDefaultAsync();
-        if (waferTestLog is null) {
-            WaferTestLog newLog = new WaferTestLog() {
-                WaferId = waferId, 
-                WaferPadInitialData = waferTest.WaferPadInitialData,
-                WaferTests = [waferTest]
-            };
-            await this._waferTestLogCollection.InsertOneAsync(newLog);
-            return;
-        }
-        
-        var updateTestList=Builders<WaferTestLog>.Update
-            .Set(e=>e.WaferPadInitialData,waferTestLog.WaferPadInitialData)
-            .Push(e => e.WaferTests, waferTest);
-        var filterTestList=Builders<WaferTestLog>.Filter.Eq(e=>e.WaferId,waferId);
-        await this._waferTestLogCollection.UpdateOneAsync(filterTestList, updateTestList);
-    }
-    public async Task InsertFinal(string waferId,WaferTest waferTest) {
-        var waferTestLog =await this._waferTestLogCollection.Find(e => e.WaferId == waferId).FirstOrDefaultAsync();
-        if (waferTestLog is null) {
-            WaferTestLog newLog = new WaferTestLog() {
-                WaferId = waferId, 
-                WaferPadInitialData = waferTest.WaferPadInitialData,
-                WaferPadFinalData = waferTest.WaferPadFinalData,
-                WaferTests = [waferTest]
-            };
-            await this._waferTestLogCollection.InsertOneAsync(newLog);
-            return;
-        }
-        
-        var updateTestList=Builders<WaferTestLog>.Update
-            .Set(e=>e.WaferPadFinalData,waferTestLog.WaferPadFinalData)
-            .Set(e=>e.WaferPadInitialData,waferTestLog.WaferPadInitialData)
-            .Push(e => e.WaferTests,waferTest);
-        var filterTestList=Builders<WaferTestLog>.Filter.Eq(e=>e.WaferId,waferId);
-        await this._waferTestLogCollection.UpdateOneAsync(filterTestList, updateTestList);
-    }*/
-    
     public Task<bool> CheckTested(string waferId,string waferPad) {
         return this._waferTestLogCollection.Find(e=>e.WaferId==waferId &&
                                                     e.WaferTests.Any(e=>e.Probe1Pad==waferPad || 

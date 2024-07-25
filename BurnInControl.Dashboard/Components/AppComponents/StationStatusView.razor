@@ -299,55 +299,26 @@
                 var testLogResult= await this.TestLogDataService.GetLastTestLog(this.StationId);
                 this._pocketWaferSetups=testLogResult.Setup;
                 this._testLogId = testLogResult.Id;
-                Console.WriteLine($"Loaded Running Test: {this._testLogId.ToString()}");
+                /*Console.WriteLine($"Loaded Running Test: {this._testLogId.ToString()}");*/
             }
             this.StationStateChangedHandler(data.Running ? (data.Paused) ? StationState.Paused:StationState.Running : StationState.Idle);
         }
         this._testRunning = data.Running;
         this._testPaused = data.Paused;
-        if (data.HeaterStates.Any(e=>e==true) && !this._testRunning) {
-            this.StationStateChangedHandler(StationState.Heating);
-        }
-        
-        this.ParseProbeErrors(data);
-        /*if (this._testRunning != data.Running) {
-            if (!this._testRunning) {
-                if (!string.IsNullOrWhiteSpace(this.StationId)) {
-                    var testLogResult= await this.TestLogDataService.GetLastTestLog(this.StationId);
-                    
-                    this._pocketWaferSetups=testLogResult.Setup;
-                    this._testLogId = testLogResult.Id;
-                }
-                this.StationStateChangedHandler(StationState.Running);
+        if (!this._testRunning) {
+            if (data.TemperatureSetPoint!=0) {
+                this.StationStateChangedHandler(StationState.Heating);
             } else {
                 this.StationStateChangedHandler(StationState.Idle);
             }
-            this._testRunning = data.Running;
         }
-        if (this._testPaused != data.Paused) {
-            if (!this._testPaused) {
-                this.StationStateChangedHandler(StationState.Paused);
-            } else {
-                this.StationStateChangedHandler(StationState.Running);
-            }
-            this._testPaused = data.Paused;
-        }
-        
-
-        
         this.ParseProbeErrors(data);
-
-        this._testRunning = data.Running;
-        this._testPaused = data.Paused;*/
         await InvokeAsync(StateHasChanged);
     }
 
     private void ParseProbeErrors(StationSerialData data) {
-        
         if (data.Running) {
-            
             if (data.ProbeRunTimeOkay.Any(e => e == false)) {
-                Console.WriteLine($"Station: {this.StationId} Running: {data.Running} Paused: {data.Paused}");
                 bool sendAlert = false;
                 for(int i=0;i<ControllerHardwareConstants.PROBE_COUNT;i++) {
                     var probeValue = i % 2==0 ? i/2+1: (i-1)/2+1;

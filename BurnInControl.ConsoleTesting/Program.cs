@@ -37,7 +37,7 @@ Console.WriteLine($"Error: {error}");*/
 //await TestGetWaferData();
 //await CreateStationDatabase();
 //await TestDashboardService();
-await GetTestLogs();
+//await GetTestLogs();
 
 /*List<int> values = [1,2,3];
 
@@ -49,6 +49,14 @@ for(int i=0;i<=values.Count;i++) {
     }
 
 }*/
+
+TestListCompare();
+
+void TestListCompare() {
+    List<bool> l1 = [true, true, true];
+    List<bool> l2 = [true, true, true];
+    Console.WriteLine($"List Compare: {l1.SequenceEqual(l2)}");
+}
 
 async Task GetTestLogs() {
     string id = "669fab78323736492ca55665";

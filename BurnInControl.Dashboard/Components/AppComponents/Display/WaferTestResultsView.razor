@@ -1,0 +1,25 @@
+@using BurnInControl.Data.BurnInTests.DataTransfer
+@if (this.WaferTestResults?.Any()==true) {
+    @if (this.DialogView) {
+        <RadzenStack Orientation="Orientation.Horizontal">
+            @foreach(var waferTest in this.WaferTestResults) {
+                <WaferTestResultView WaferTestResult="@waferTest"/>
+            }
+        </RadzenStack>
+    } else {
+        <RadzenRow>
+            @foreach(var waferTest in this.WaferTestResults) {
+                <RadzenColumn>
+                    <WaferTestResultView WaferTestResult="@waferTest"/>
+                </RadzenColumn>
+            }
+        </RadzenRow>
+    }
+
+}
+
+@code {
+    [Parameter] public IEnumerable<WaferTestResultDto>? WaferTestResults { get; set; }
+    [Parameter] public bool DialogView { get; set; } = false;
+
+}

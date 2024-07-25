@@ -1,0 +1,145 @@
+@using Blazor.DownloadFileFast.Interfaces
+@using BurnInControl.Data.BurnInTests
+@using ClosedXML.Excel
+@using ClosedXML
+@inject IBlazorDownloadFileService DownloadFileService
+
+<RadzenDataGrid Data="@this.StationTestLogs"
+                AllowVirtualization="true"
+                Style="height:600px"
+                AllowColumnResize="true"
+                AllowSorting="true">
+    <HeaderTemplate>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem;" Wrap="FlexWrap.Wrap">
+            <RadzenButton Text="Export XLS" Icon="grid_on" ButtonStyle="ButtonStyle.Info" Click="@this.Export" />
+        </RadzenStack>
+    </HeaderTemplate>
+    <Columns>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.Elapsed)" Title="Elapsed"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.Temperature)" Title="Temp Sp"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.SetCurrent)" Title="Is"/>
+
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.T1)" Title="T1"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.T2)" Title="T2"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.T3)" Title="T3"/>
+
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.V1)" Title="V1"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.V2)" Title="V2"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.V3)" Title="V3"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.V4)" Title="V4"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.V5)" Title="V5"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.V6)" Title="V6"/>
+
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.I1)" Title="I1"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.I2)" Title="I2"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.I3)" Title="I3"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.I4)" Title="I4"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.I5)" Title="I5"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.I6)" Title="I6"/>
+
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.Pr1)" Title="Pr1"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.Pr2)" Title="Pr2"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.Pr3)" Title="Pr3"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.Pr4)" Title="Pr4"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.Pr5)" Title="Pr5"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.Pr6)" Title="Pr6"/>
+
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.P1Okay)" Title="P1Okay"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.P2Okay)" Title="P2Okay"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.P3Okay)" Title="P3Okay"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.P4Okay)" Title="P4Okay"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.P5Okay)" Title="P5Okay"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.P6Okay)" Title="P6Okay"/>
+
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.H1)" Title="H1"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.H2)" Title="H2"/>
+        <RadzenDataGridColumn Property="@nameof(StationTestReading.H3)" Title="H3"/>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    [Parameter] public IEnumerable<StationTestReading>? StationTestLogs { get; set; }
+    
+    private async Task Export() {
+        if(this.StationTestLogs?.Any()==true) {
+            var wb = new XLWorkbook();
+            var worksheet=wb.Worksheets.Add("Logs");
+            worksheet.Cell(1, 1).Value = "Elapsed";
+            worksheet.Cell(1, 2).Value = "Temperature";
+            worksheet.Cell(1, 3).Value = "SetCurrent";
+            worksheet.Cell(1, 4).Value = "T1";
+            worksheet.Cell(1, 5).Value = "T2";
+            worksheet.Cell(1, 6).Value = "T3";
+            worksheet.Cell(1, 7).Value = "V1";
+            worksheet.Cell(1, 8).Value = "V2";
+            worksheet.Cell(1, 9).Value = "V3";
+            worksheet.Cell(1, 10).Value = "V4";
+            worksheet.Cell(1, 11).Value = "V5";
+            worksheet.Cell(1, 12).Value = "V6";
+            worksheet.Cell(1, 13).Value = "I1";
+            worksheet.Cell(1, 14).Value = "I2";
+            worksheet.Cell(1, 15).Value = "I3";
+            worksheet.Cell(1, 16).Value = "I4";
+            worksheet.Cell(1, 17).Value = "I5";
+            worksheet.Cell(1, 18).Value = "I6";
+            worksheet.Cell(1, 19).Value = "Pr1";
+            worksheet.Cell(1, 20).Value = "Pr2";
+            worksheet.Cell(1, 21).Value = "Pr3";
+            worksheet.Cell(1, 22).Value = "Pr4";
+            worksheet.Cell(1, 23).Value = "Pr5";
+            worksheet.Cell(1, 24).Value = "Pr6";
+            worksheet.Cell(1, 25).Value = "P1Okay";
+            worksheet.Cell(1, 26).Value = "P2Okay";
+            worksheet.Cell(1, 27).Value = "P3Okay";
+            worksheet.Cell(1, 28).Value = "P4Okay";
+            worksheet.Cell(1, 29).Value = "P5Okay";
+            worksheet.Cell(1, 30).Value = "P6Okay";
+            worksheet.Cell(1, 31).Value = "H1";
+            worksheet.Cell(1, 32).Value = "H2";
+            worksheet.Cell(1, 33).Value = "H3";
+
+            int count = 2;
+            foreach (var item in this.StationTestLogs) {
+                worksheet.Cell(count, 1).Value = item.Elapsed;
+                worksheet.Cell(count, 2).Value = item.Temperature;
+                worksheet.Cell(count, 3).Value = item.SetCurrent;
+                worksheet.Cell(count, 4).Value = item.T1;
+                worksheet.Cell(count, 5).Value = item.T2;
+                worksheet.Cell(count, 6).Value = item.T3;
+                worksheet.Cell(count, 7).Value = item.V1;
+                worksheet.Cell(count, 8).Value = item.V2;
+                worksheet.Cell(count, 9).Value = item.V3;
+                worksheet.Cell(count, 10).Value = item.V4;
+                worksheet.Cell(count, 11).Value = item.V5;
+                worksheet.Cell(count, 12).Value = item.V6;
+                worksheet.Cell(count, 13).Value = item.I1;
+                worksheet.Cell(count, 14).Value = item.I2;
+                worksheet.Cell(count, 15).Value = item.I3;
+                worksheet.Cell(count, 16).Value = item.I4;
+                worksheet.Cell(count, 17).Value = item.I5;
+                worksheet.Cell(count, 18).Value = item.I6;
+                worksheet.Cell(count, 19).Value = item.Pr1;
+                worksheet.Cell(count, 20).Value = item.Pr2;
+                worksheet.Cell(count, 21).Value = item.Pr3;
+                worksheet.Cell(count, 22).Value = item.Pr4;
+                worksheet.Cell(count, 23).Value = item.Pr5;
+                worksheet.Cell(count, 24).Value = item.Pr6;
+                worksheet.Cell(count, 25).Value = item.P1Okay;
+                worksheet.Cell(count, 26).Value = item.P2Okay;
+                worksheet.Cell(count, 27).Value = item.P3Okay;
+                worksheet.Cell(count, 28).Value = item.P4Okay;
+                worksheet.Cell(count, 29).Value = item.P5Okay;
+                worksheet.Cell(count, 30).Value = item.P6Okay;
+                worksheet.Cell(count, 31).Value = item.H1;
+                worksheet.Cell(count, 32).Value = item.H2;
+                worksheet.Cell(count, 33).Value = item.H3;
+                count++;
+            }
+            
+            var stream = new MemoryStream();
+            wb.SaveAs(stream);
+            var bytes = stream.ToArray();
+            await this.DownloadFileService.DownloadFileAsync("log.xlsx", bytes);
+        }
+    }
+}

@@ -52,12 +52,28 @@
         case 0:
             <WaferTestResultsView WaferTestResults="@this._waferTestResults"/>
             break;
-        case 1:
-            <RadzenText Text="Raw Log View" TextStyle="TextStyle.H6"/>
-            @*<RawLogView TestLogs="@this._selectedTestLogs"/>*@
+        case 1: {
+            @if (this._loading) {
+                <RadzenStack AlignItems="AlignItems.Center">
+                    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large">
+                        <Template>Loading</Template>
+                    </RadzenProgressBarCircular>
+                </RadzenStack>
+            } else {
+                <RadzenTabs>
+                    <Tabs>
+                        <RadzenTabsItem Text="Table">
+                            <StationLogView StationTestLogs="@this._stationTestLogsReadings"/>
+                        </RadzenTabsItem>
+                        <RadzenTabsItem Text="Plot">
+                            <StationTestPlotView StationTestLogs="@this._stationTestLogsReadings"/>
+                        </RadzenTabsItem>
+                    </Tabs>
+                </RadzenTabs>
+            }
             break;
+        }
     }
-    @*<WaferTestResultsView WaferTestResults="@this._waferTestResults"/>*@
 </RadzenStack>
 
 @code {
@@ -65,13 +81,15 @@
     private IEnumerable<BurnInTestLogDto>? _stationTestLogs;
     private IList<BurnInTestLogDto> _selectedTestLogs=[];
     private IEnumerable<WaferTestResultDto>? _waferTestResults;
+    private IEnumerable<StationTestReading>? _stationTestLogsReadings;
     private List<SelectOption> _selectionOptions = [
         new SelectOption(){Name="Wafers Test Result", Value=0}, 
         new SelectOption(){Name="Raw Log", Value=1}
     ];
     private int _selectedOption;
     private string _selectedStation = string.Empty;
-
+    bool _loading = false;
+    
     protected override async Task OnInitializedAsync() {
         this._stations = await this.StationDataService.GetStationList();
     }
@@ -83,9 +101,25 @@
 
     private async Task SelectedTestLogChangedHandler(IList<BurnInTestLogDto> selectedTestLogs) {
         this._selectedTestLogs = selectedTestLogs;
-        if (selectedTestLogs?.Any() == true) {
-            this._waferTestResults = await this.TestLogDataService.GetWaferTestResultsDto(selectedTestLogs[0]._id);
-            await InvokeAsync(StateHasChanged);
+        switch (this._selectedOption) {
+            case 0: {
+                if (selectedTestLogs?.Any() == true) {
+                    this._waferTestResults = await this.TestLogDataService.GetWaferTestResultsDto(selectedTestLogs[0]._id);
+                    await InvokeAsync(StateHasChanged);
+                }
+                break;
+            }
+            case 1: {
+                if (selectedTestLogs?.Any() == true) {
+                    this._loading = true;
+                    await InvokeAsync(StateHasChanged);
+                    this._stationTestLogsReadings = await this.TestLogDataService.GetStationTestLogReadings(selectedTestLogs[0]._id);
+                    this._loading = false;
+                    await InvokeAsync(StateHasChanged);
+                }
+                break;
+            }
         }
+
     }
 }

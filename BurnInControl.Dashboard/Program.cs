@@ -19,6 +19,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddInfrastructure();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddSingleton<StationErrorService>();
+builder.Services.AddBlazorDownloadFile();
 
 var app = builder.Build();
 

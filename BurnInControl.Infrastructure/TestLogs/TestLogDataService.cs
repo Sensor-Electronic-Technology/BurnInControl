@@ -184,7 +184,6 @@ public class TestLogDataService {
         } else {
             return new (result.Id,result.Setup);
         }
-        
     }
     
     public async Task<List<WaferTestReading>> GetTestLogReadings(ObjectId id,StationPocket pocket) {
@@ -206,6 +205,60 @@ public class TestLogDataService {
                 waferReadings.Add(waferReading);
             }
             return waferReadings;
+        }
+        return [];
+    }
+    
+    public async Task<List<StationTestReading>> GetStationTestLogReadings(ObjectId id) {
+        var log = await this._testLogCollection.Find(e => e._id == id).FirstOrDefaultAsync();
+        if (log != null) {
+            var readings = await this._readingsCollection.Find(e => e.TestLogId == id)
+                .ToListAsync();
+            List<StationTestReading> stationTestReadings = new();
+            foreach (var reading in readings) {
+                StationTestReading stationTestReading = new StationTestReading() {
+                    Temperature = reading.Reading?.TemperatureSetPoint ?? 0,
+                    Elapsed = reading.Reading?.ElapsedSeconds ?? 0,
+                    SetCurrent = reading.Reading?.CurrentSetPoint ?? 0,
+                    V1 = reading.PocketData[StationPocket.LeftPocket.Name].Probe1Data.Voltage,
+                    I1 = reading.PocketData[StationPocket.LeftPocket.Name].Probe1Data.Current,
+                    Pr1 = reading.PocketData[StationPocket.LeftPocket.Name].Probe1Data.Runtime,
+                    P1Okay = reading.PocketData[StationPocket.LeftPocket.Name].Probe1Data.Okay,
+                    
+                    V2 = reading.PocketData[StationPocket.LeftPocket.Name].Probe2Data.Voltage,
+                    I2 = reading.PocketData[StationPocket.LeftPocket.Name].Probe2Data.Current,
+                    Pr2 = reading.PocketData[StationPocket.LeftPocket.Name].Probe2Data.Runtime,
+                    P2Okay = reading.PocketData[StationPocket.LeftPocket.Name].Probe2Data.Okay,
+                    
+                    V3 = reading.PocketData[StationPocket.MiddlePocket.Name].Probe1Data.Voltage,
+                    I3 = reading.PocketData[StationPocket.MiddlePocket.Name].Probe1Data.Current,
+                    Pr3 = reading.PocketData[StationPocket.MiddlePocket.Name].Probe1Data.Runtime,
+                    P3Okay = reading.PocketData[StationPocket.MiddlePocket.Name].Probe1Data.Okay,
+                    
+                    V4 = reading.PocketData[StationPocket.MiddlePocket.Name].Probe2Data.Voltage,
+                    I4 = reading.PocketData[StationPocket.MiddlePocket.Name].Probe2Data.Current,
+                    Pr4 = reading.PocketData[StationPocket.MiddlePocket.Name].Probe2Data.Runtime,
+                    P4Okay = reading.PocketData[StationPocket.MiddlePocket.Name].Probe2Data.Okay,
+                    
+                    V5 = reading.PocketData[StationPocket.RightPocket.Name].Probe1Data.Voltage,
+                    I5 = reading.PocketData[StationPocket.RightPocket.Name].Probe1Data.Current,
+                    Pr5 = reading.PocketData[StationPocket.RightPocket.Name].Probe1Data.Runtime,
+                    P5Okay = reading.PocketData[StationPocket.RightPocket.Name].Probe1Data.Okay,
+                    
+                    V6 = reading.PocketData[StationPocket.RightPocket.Name].Probe2Data.Voltage,
+                    I6 = reading.PocketData[StationPocket.RightPocket.Name].Probe2Data.Current,
+                    Pr6 = reading.PocketData[StationPocket.RightPocket.Name].Probe2Data.Runtime,
+                    P6Okay = reading.PocketData[StationPocket.RightPocket.Name].Probe2Data.Okay,
+                    T1 = reading.Reading?.Temperatures[0] ?? 0,
+                    T2 = reading.Reading?.Temperatures[1] ?? 0,
+                    T3 = reading.Reading?.Temperatures[2] ?? 0,
+                    H1 = reading.Reading?.HeaterStates[0] ?? false,
+                    H2 = reading.Reading?.HeaterStates[1] ?? false,
+                    H3 = reading.Reading?.HeaterStates[2] ?? false,
+                };
+                stationTestReadings.Add(stationTestReading);
+            }
+            return stationTestReadings;
         }
         return [];
     }

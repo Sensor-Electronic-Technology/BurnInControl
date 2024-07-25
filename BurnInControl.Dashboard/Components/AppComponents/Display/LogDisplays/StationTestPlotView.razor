@@ -1,0 +1,188 @@
+@using BurnInControl.Data.BurnInTests
+<RadzenStack Orientation="Orientation.Vertical" Gap="10">
+    <RadzenStack Orientation="Orientation.Vertical">
+        <RadzenText Text="Voltage" TextStyle="TextStyle.H6"/>
+            <RadzenChart Style="height: 400px;">
+                <RadzenLineSeries Smooth="true"
+                                  Data="@this.StationTestLogs"
+                                  CategoryProperty="Elapsed"
+                                  Title="V1"
+                                  LineType="LineType.Solid"
+                                  ValueProperty="V1">
+                    <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                    <RadzenSeriesDataLabels Visible="false"/>
+                </RadzenLineSeries>
+                <RadzenLineSeries Smooth="true"
+                                  Data="@this.StationTestLogs"
+                                  CategoryProperty="Elapsed"
+                                  Title="V2"
+                                  LineType="LineType.Solid"
+                                  ValueProperty="V2">
+                    <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                    <RadzenSeriesDataLabels Visible="false"/>
+                </RadzenLineSeries>
+                <RadzenLineSeries Smooth="true"
+                                  Data="@this.StationTestLogs"
+                                  CategoryProperty="Elapsed"
+                                  Title="V3"
+                                  LineType="LineType.Solid"
+                                  ValueProperty="V3">
+                    <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                    <RadzenSeriesDataLabels Visible="false"/>
+                </RadzenLineSeries>
+                <RadzenLineSeries Smooth="true"
+                                  Data="@this.StationTestLogs"
+                                  CategoryProperty="Elapsed"
+                                  Title="V4"
+                                  LineType="LineType.Solid"
+                                  ValueProperty="V4">
+                    <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                    <RadzenSeriesDataLabels Visible="false"/>
+                </RadzenLineSeries>
+                <RadzenLineSeries Smooth="true"
+                                  Data="@this.StationTestLogs"
+                                  CategoryProperty="Elapsed"
+                                  Title="V5"
+                                  LineType="LineType.Solid"
+                                  ValueProperty="V5">
+                    <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                    <RadzenSeriesDataLabels Visible="false"/>
+                </RadzenLineSeries>
+                <RadzenLineSeries Smooth="true"
+                                  Data="@this.StationTestLogs"
+                                  CategoryProperty="Elapsed"
+                                  Title="V6"
+                                  LineType="LineType.Solid"
+                                  ValueProperty="V6">
+                    <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                    <RadzenSeriesDataLabels Visible="false"/>
+                </RadzenLineSeries>
+
+                <RadzenCategoryAxis LineType="LineType.Solid">
+                    <RadzenAxisTitle Text="Time(s)"/>
+                    <RadzenGridLines Visible="true" StrokeWidth="3"/>
+                </RadzenCategoryAxis>
+                <RadzenValueAxis >
+                    <RadzenGridLines Visible="true" StrokeWidth="3"/>
+                    <RadzenAxisTitle Text="Voltage(v)"/>
+                </RadzenValueAxis>
+
+            </RadzenChart>
+    </RadzenStack>
+    <br/>
+    <RadzenStack Orientation="Orientation.Vertical" Gap="1">
+        <RadzenText Text="Current" TextAlign="TextAlign.Center" TextStyle="TextStyle.H6"/>
+        <RadzenChart Style="height: 400px;">
+            <RadzenLineSeries Smooth="true"
+                              Data="@this.StationTestLogs"
+                              CategoryProperty="Elapsed"
+                              Title="I1"
+                              LineType="LineType.Solid"
+                              ValueProperty="I1">
+                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                <RadzenSeriesDataLabels Visible="false"/>
+            </RadzenLineSeries>
+            <RadzenLineSeries Smooth="true"
+                              Data="@this.StationTestLogs"
+                              CategoryProperty="Elapsed"
+                              Title="I2"
+                              LineType="LineType.Solid"
+                              ValueProperty="I2">
+                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                <RadzenSeriesDataLabels Visible="false"/>
+            </RadzenLineSeries>
+            <RadzenLineSeries Smooth="true"
+                              Data="@this.StationTestLogs"
+                              CategoryProperty="Elapsed"
+                              Title="I3"
+                              LineType="LineType.Solid"
+                              ValueProperty="I3">
+                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                <RadzenSeriesDataLabels Visible="false"/>
+            </RadzenLineSeries>
+            <RadzenLineSeries Smooth="true"
+                              Data="@this.StationTestLogs"
+                              CategoryProperty="Elapsed"
+                              Title="I4"
+                              LineType="LineType.Solid"
+                              ValueProperty="I4">
+                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                <RadzenSeriesDataLabels Visible="false"/>
+            </RadzenLineSeries>
+            <RadzenLineSeries Smooth="true"
+                              Data="@this.StationTestLogs"
+                              CategoryProperty="Elapsed"
+                              Title="I5"
+                              LineType="LineType.Solid"
+                              ValueProperty="I5">
+                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                <RadzenSeriesDataLabels Visible="false"/>
+            </RadzenLineSeries>
+            <RadzenLineSeries Smooth="true"
+                              Data="@this.StationTestLogs"
+                              CategoryProperty="Elapsed"
+                              Title="I6"
+                              LineType="LineType.Solid"
+                              ValueProperty="I6">
+                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                <RadzenSeriesDataLabels Visible="false"/>
+            </RadzenLineSeries>
+
+            <RadzenCategoryAxis LineType="LineType.Solid">
+                <RadzenAxisTitle Text="Time(s)"/>
+                <RadzenGridLines Visible="true" StrokeWidth="3"/>
+            </RadzenCategoryAxis>
+            <RadzenValueAxis >
+                <RadzenGridLines Visible="true" StrokeWidth="3"/>
+                <RadzenAxisTitle Text="Current(mA)"/>
+            </RadzenValueAxis>
+        </RadzenChart>
+    </RadzenStack>
+    <br/>
+    <RadzenStack Orientation="Orientation.Vertical" Gap="1">
+        <RadzenText Text="Temperature" TextAlign="TextAlign.Center" TextStyle="TextStyle.H6"/>
+        <RadzenChart Style="height: 400px;">
+            <RadzenLineSeries Smooth="true"
+                              Data="@this.StationTestLogs"
+                              CategoryProperty="Elapsed"
+                              Title="Left Pocket"
+                              LineType="LineType.Solid"
+                              ValueProperty="T1">
+                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                <RadzenSeriesDataLabels Visible="false"/>
+            </RadzenLineSeries>
+            <RadzenLineSeries Smooth="true"
+                              Data="@this.StationTestLogs"
+                              CategoryProperty="Elapsed"
+                              Title="Right Pocket"
+                              LineType="LineType.Solid"
+                              ValueProperty="T2">
+                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                <RadzenSeriesDataLabels Visible="false"/>
+            </RadzenLineSeries>
+            <RadzenLineSeries Smooth="true"
+                              Data="@this.StationTestLogs"
+                              CategoryProperty="Elapsed"
+                              Title="Middle Pocket"
+                              LineType="LineType.Solid"
+                              ValueProperty="T3">
+                <RadzenMarkers Visible="true" MarkerType="MarkerType.Circle"/>
+                <RadzenSeriesDataLabels Visible="false"/>
+            </RadzenLineSeries>
+            <RadzenCategoryAxis LineType="LineType.Solid">
+                <RadzenAxisTitle Text="Time(s)"/>
+                <RadzenGridLines Visible="true" StrokeWidth="3"/>
+            </RadzenCategoryAxis>
+            <RadzenValueAxis >
+                <RadzenGridLines Visible="true" StrokeWidth="3"/>
+                <RadzenAxisTitle Text="Temperature(C)"/>
+            </RadzenValueAxis>
+        </RadzenChart>
+    </RadzenStack>
+</RadzenStack>
+
+
+@code {
+    [Parameter] public IEnumerable<StationTestReading>? StationTestLogs { get; set; }
+    
+}

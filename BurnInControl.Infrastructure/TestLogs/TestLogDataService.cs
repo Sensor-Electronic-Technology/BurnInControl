@@ -174,11 +174,17 @@ public class TestLogDataService {
         }
         return Error.Failure(description: "Station Running flag not cleared and Log was not finalized");
     }
-    public async Task<Dictionary<string,PocketWaferSetup>> GetLastTestLog(string stationId) {
-        return await this._testLogCollection.Find(e => e.StationId == stationId)
+    public async Task<(ObjectId Id,Dictionary<string,PocketWaferSetup> Setup)> GetLastTestLog(string stationId) {
+        var result = await this._testLogCollection.Find(e => e.StationId == stationId)
             .SortByDescending(e => e.StartTime)
-            .Project(e=>e.TestSetup)
+            .Project(e => new { Id = e._id, Setup = e.TestSetup })
             .FirstOrDefaultAsync();
+        if (result == null) {
+            return new(ObjectId.Empty, []);
+        } else {
+            return new (result.Id,result.Setup);
+        }
+        
     }
     
     public async Task<List<WaferTestReading>> GetTestLogReadings(ObjectId id,StationPocket pocket) {

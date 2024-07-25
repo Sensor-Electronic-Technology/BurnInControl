@@ -1,25 +1,23 @@
-@using System.Text.Json
 @using System.Timers
 @using BurnInControl.Data.StationModel
 @using BurnInControl.HubDefinitions.Hubs
 @using BurnInControl.Shared.ComDefinitions
 @using Microsoft.AspNetCore.SignalR.Client
-@using BurnInControl.Dashboard.Components.AppComponents.Display
 @using BurnInControl.Dashboard.Data
 @using BurnInControl.Dashboard.Services
 @using BurnInControl.Data.BurnInTests.Wafers
 @using BurnInControl.Data.StationModel.Components
 @using BurnInControl.Infrastructure.StationModel
 @using BurnInControl.Infrastructure.TestLogs
-@using MongoDB.Driver.Linq
+@using MongoDB.Bson
 @using BurnInControl.Shared
 @inject ILogger<StationStatusView> Logger
 @inject StationDataService StationDataService
 @inject TestLogDataService TestLogDataService
 @inject StationErrorService StationErrorService
+@inject DialogService DialogService
 @implements IAsyncDisposable
 @attribute [StreamRendering]
-@*@rendermode InteractiveServer*@
 
 <style>
     .rz-alert .rz-alert-title{
@@ -115,12 +113,15 @@
         } else {
             <RadzenFieldset Text="Last Test">
                 @if (this._pocketWaferSetups.Any()) {
-                    <RadzenStack Orientation="Orientation.Horizontal">
-                        @foreach (var keyValue in this._pocketWaferSetups) {
-                            <RadzenFieldset Text="@keyValue.Key" Style="margin: 10px auto;">
-                                <RadzenText Text="@keyValue.Value.WaferId" TextStyle="TextStyle.H6"/>
-                            </RadzenFieldset>
-                        }
+                    <RadzenStack Orientation="Orientation.Vertical">
+                        <RadzenButton Text="View Result" Click="ViewTestResultHandler"/>
+                        <RadzenStack Orientation="Orientation.Horizontal">
+                            @foreach (var keyValue in this._pocketWaferSetups) {
+                                <RadzenFieldset Text="@keyValue.Key" Style="margin: 10px auto;">
+                                    <RadzenText Text="@keyValue.Value.WaferId" TextStyle="TextStyle.H6"/>
+                                </RadzenFieldset>
+                            }
+                        </RadzenStack>
                     </RadzenStack>
                 }
             </RadzenFieldset>
@@ -147,12 +148,14 @@
     private AlertStyle _alertStyle=AlertStyle.Danger;
     private StationSerialData _data = new StationSerialData();
     private Dictionary<string,PocketWaferSetup> _pocketWaferSetups = [];
+    private ObjectId _testLogId;
     private System.Timers.Timer _alertTimer;
     
     private bool _testRunning = false;
     private bool _testPaused = false;
     private bool _heating = false;
     private bool _alertAck = false;
+    private bool _firstRun = true;
 
     private string _runTimeDisplay="";
     private string _remainingTime;
@@ -173,9 +176,12 @@
             this._hubConnection.On<StationSerialData>(StationHubConstants.Events.OnStationData, this.OnSerialComReceived);
             try {
                 await this._hubConnection.StartAsync();
-                this.StationStateChangedHandler(StationState.Idle);
+                /*this.StationStateChangedHandler(StationState.Idle);*/
                 if (!string.IsNullOrWhiteSpace(this.StationId)) {
-                    this._pocketWaferSetups = await this.TestLogDataService.GetLastTestLog(this.StationId);
+                    
+                    var testLogResult= await this.TestLogDataService.GetLastTestLog(this.StationId);
+                    this._pocketWaferSetups=testLogResult.Setup;
+                    this._testLogId = testLogResult.Id;
                 }
             } catch (Exception e) {
                 this.Logger.LogError("Failed to connect to station hub: StationId{Id},Station Ip:{Ip} \n Error:{0}",
@@ -266,10 +272,51 @@
     
     private async Task OnSerialComReceived(StationSerialData data) {
         this._data = data;
+        if (this._firstRun) {
+            this._firstRun = false;
+            this._testRunning = this._data.Running;
+            this._testPaused = this._data.Paused;
+            if (this._data.Running) {
+                if (!string.IsNullOrWhiteSpace(this.StationId)) {
+                    var testLogResult= await this.TestLogDataService.GetLastTestLog(this.StationId);
+                    this._pocketWaferSetups=testLogResult.Setup;
+                    this._testLogId = testLogResult.Id;
+                    Console.WriteLine($"Loaded Running Test: {this._testLogId.ToString()}");
+                }
+                this.StationStateChangedHandler(data.Paused ? StationState.Paused:StationState.Running);
+            } else {
+                if (data.HeaterStates.Any(e=>e==true) && !this._testRunning) {
+                    this.StationStateChangedHandler(StationState.Heating);
+                } else {
+                    this.StationStateChangedHandler(StationState.Idle);
+                }
+            }
+            return;
+        }
+
         if (this._testRunning != data.Running) {
+            if (!string.IsNullOrWhiteSpace(this.StationId)) {
+                var testLogResult= await this.TestLogDataService.GetLastTestLog(this.StationId);
+                this._pocketWaferSetups=testLogResult.Setup;
+                this._testLogId = testLogResult.Id;
+                Console.WriteLine($"Loaded Running Test: {this._testLogId.ToString()}");
+            }
+            this.StationStateChangedHandler(data.Running ? (data.Paused) ? StationState.Paused:StationState.Running : StationState.Idle);
+        }
+        this._testRunning = data.Running;
+        this._testPaused = data.Paused;
+        if (data.HeaterStates.Any(e=>e==true) && !this._testRunning) {
+            this.StationStateChangedHandler(StationState.Heating);
+        }
+        
+        this.ParseProbeErrors(data);
+        /*if (this._testRunning != data.Running) {
             if (!this._testRunning) {
                 if (!string.IsNullOrWhiteSpace(this.StationId)) {
-                    this._pocketWaferSetups = await this.TestLogDataService.GetLastTestLog(this.StationId);
+                    var testLogResult= await this.TestLogDataService.GetLastTestLog(this.StationId);
+                    
+                    this._pocketWaferSetups=testLogResult.Setup;
+                    this._testLogId = testLogResult.Id;
                 }
                 this.StationStateChangedHandler(StationState.Running);
             } else {
@@ -286,24 +333,27 @@
             this._testPaused = data.Paused;
         }
         
-        if (data.HeaterStates.Any(e=>e==true) && !this._testRunning) {
-            this.StationStateChangedHandler(StationState.Heating);
-        }
+
         
         this.ParseProbeErrors(data);
 
         this._testRunning = data.Running;
-        this._testPaused = data.Paused;
+        this._testPaused = data.Paused;*/
         await InvokeAsync(StateHasChanged);
     }
 
     private void ParseProbeErrors(StationSerialData data) {
-                if (data.Running) {
+        
+        if (data.Running) {
+            
             if (data.ProbeRunTimeOkay.Any(e => e == false)) {
+                Console.WriteLine($"Station: {this.StationId} Running: {data.Running} Paused: {data.Paused}");
                 bool sendAlert = false;
                 for(int i=0;i<ControllerHardwareConstants.PROBE_COUNT;i++) {
                     var probeValue = i % 2==0 ? i/2+1: (i-1)/2+1;
+                    Console.WriteLine($"probeValue: {i} ");
                     if (this._pocketWaferSetups[StationPocket.FromValue(probeValue).Name].Loaded) {
+                        Console.WriteLine($"Found Probe: {i} Loaded");
                         this._probeAlerts[i].Loaded = true;
                         if(!data.ProbeRunTimeOkay[i]) {
                             if(this._probeAlerts[i].Okay) {
@@ -343,6 +393,12 @@
                         this.StationErrorService.NotifyErrorResolved(this.StationId ?? "S00");
                     }
                 }
+            } else {
+                foreach(var probeAlert in this._probeAlerts) {
+                    probeAlert.Okay = true;
+                    probeAlert.Acknowledged = false;
+                    probeAlert.Loaded = true;
+                }
             }
         }
     }
@@ -355,4 +411,17 @@
         this.StationErrorService.OnErrorResolved -= this.OnErrorResolvedHandler;
     }
 
+    private async Task ViewTestResultHandler() {
+        if (this._testLogId != ObjectId.Empty) {
+            var waferTestResults=await this.TestLogDataService.GetWaferTestResultsDto(this._testLogId);
+            if (waferTestResults.Any()==true) {
+                this.DialogService.Open<WaferTestResultsView>("Wafer Test Result", new Dictionary<string, object> {
+                    {"WaferTestResults", waferTestResults},
+                    {"DialogView",true}
+                },new DialogOptions { Width = "fit-content", Height = "fit-content" , 
+                    ShowClose = true,CloseDialogOnOverlayClick = true,
+                    CloseDialogOnEsc = true});
+            }
+        }
+    }
 }

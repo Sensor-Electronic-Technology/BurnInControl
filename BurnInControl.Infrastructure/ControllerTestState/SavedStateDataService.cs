@@ -60,6 +60,10 @@ public class SavedStateDataService {
         }
         return this._savedStateLogCollection.Find(e => e.StationId == stationId).ToListAsync();
     } 
+    
+    public Task<List<string>?> GetRunningStations() {
+        return this._savedStateLogCollection.Find(_=>true).Project(e=>e.StationId).ToListAsync();
+    }
 
     public async Task<ErrorOr<Success>> ClearSavedState(string? testId=default,ObjectId? logId=default,ObjectId? id=default) {
         if (!string.IsNullOrEmpty(testId)) {

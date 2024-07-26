@@ -68,7 +68,7 @@
         if(this.StationTestLogs?.Any()==true) {
             var wb = new XLWorkbook();
             var worksheet=wb.Worksheets.Add("Logs");
-            worksheet.Cell(1, 1).Value = "Elapsed";
+            worksheet.Cell(1, 1).Value = "Elapsed(Hrs)";
             worksheet.Cell(1,1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             worksheet.Cell(1,1).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             worksheet.Range(1, 1, 2, 1).Merge();

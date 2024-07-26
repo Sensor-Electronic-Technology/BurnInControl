@@ -16,7 +16,7 @@
         justify-content:center;
     }
 </style>
-<RadzenPanel AllowCollapse="false">
+<RadzenPanel AllowCollapse="false" Style="width: fit-content">
     <HeaderTemplate>
         <RadzenStack Orientation="Orientation.Horizontal">
             <RadzenIcon Icon="all_out"/>
@@ -25,7 +25,7 @@
         
     </HeaderTemplate>
     <ChildContent>
-        <RadzenCard Variant="Variant.Outlined" Style="background:rgba(110,137,183,0.17)">
+        <RadzenCard Variant="Variant.Outlined">
             <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
                 <RadzenStack Orientation="Orientation.Vertical">
                     <ProbeDataView ProbeLabel="Probe 1" ProbeData="@this.WaferTestResult.Probe1Data"/>

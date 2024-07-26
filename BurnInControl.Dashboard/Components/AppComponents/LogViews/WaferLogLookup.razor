@@ -1,0 +1,27 @@
+@*<RadzenStack Orientation="Orientation.Horizontal">
+    <RadzenFieldset Text="Select Station">
+        <WaferIdInput></WaferIdInput>
+    </RadzenFieldset>
+    <RadzenFieldset Text="Select Data Type">
+        <RadzenSelectBar TValue="int"
+                         Size="ButtonSize.Small"
+                         Value="@this._selectedOption"
+                         ValueChanged="@SelectionOptionChanged"
+                         Data="@this._selectionOptions"
+                         ValueProperty="Value"
+                         TextProperty="Name"/>
+    </RadzenFieldset>
+    <RadzenFieldset Text="Select Data Point Density" Visible="@(this._selectedOption==1)">
+        <RadzenSelectBar TValue="int"
+                         Size="ButtonSize.Small"
+                         Value="@this._dataPointCountOption"
+                         Data="@this._dataPointCountOptions"
+                         ValueChanged="DataPointDensityChangedHandler"
+                         ValueProperty="N"
+                         TextProperty="Name"/>
+    </RadzenFieldset>
+</RadzenStack>*@
+
+@code {
+    
+}

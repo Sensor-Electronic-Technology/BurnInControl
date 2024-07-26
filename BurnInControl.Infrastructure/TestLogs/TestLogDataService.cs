@@ -6,6 +6,7 @@ using BurnInControl.Infrastructure.StationModel;
 using BurnInControl.Infrastructure.WaferTestLogs;
 using BurnInControl.Shared.AppSettings;
 using BurnInControl.Shared.ComDefinitions;
+using BurnInControl.Shared.Extensions;
 using ErrorOr;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -209,49 +210,49 @@ public class TestLogDataService {
         return [];
     }
     
-    public async Task<List<StationTestReading>> GetStationTestLogReadings(ObjectId id) {
+    public async Task<List<StationTestReading>> GetStationTestLogReadings(ObjectId id,int n) {
         var log = await this._testLogCollection.Find(e => e._id == id).FirstOrDefaultAsync();
         if (log != null) {
             var readings = await this._readingsCollection.Find(e => e.TestLogId == id)
                 .ToListAsync();
             List<StationTestReading> stationTestReadings = new();
-            foreach (var reading in readings) {
+            foreach (var reading in readings.GetNth(n)) {
                 StationTestReading stationTestReading = new StationTestReading() {
                     Temperature = reading.Reading?.TemperatureSetPoint ?? 0,
-                    Elapsed = reading.Reading?.ElapsedSeconds ?? 0,
+                    Elapsed = reading.Reading!=null ? Math.Round((double)reading.Reading.ElapsedSeconds/3600.00,2) : 0,
                     SetCurrent = reading.Reading?.CurrentSetPoint ?? 0,
-                    V1 = reading.PocketData[StationPocket.LeftPocket.Name].Probe1Data.Voltage,
-                    I1 = reading.PocketData[StationPocket.LeftPocket.Name].Probe1Data.Current,
+                    V1 = Math.Round(reading.PocketData[StationPocket.LeftPocket.Name].Probe1Data.Voltage,2),
+                    I1 = Math.Round(reading.PocketData[StationPocket.LeftPocket.Name].Probe1Data.Current,2),
                     Pr1 = reading.PocketData[StationPocket.LeftPocket.Name].Probe1Data.Runtime,
                     P1Okay = reading.PocketData[StationPocket.LeftPocket.Name].Probe1Data.Okay,
                     
-                    V2 = reading.PocketData[StationPocket.LeftPocket.Name].Probe2Data.Voltage,
-                    I2 = reading.PocketData[StationPocket.LeftPocket.Name].Probe2Data.Current,
+                    V2 = Math.Round(reading.PocketData[StationPocket.LeftPocket.Name].Probe2Data.Voltage,2),
+                    I2 = Math.Round(reading.PocketData[StationPocket.LeftPocket.Name].Probe2Data.Current,2),
                     Pr2 = reading.PocketData[StationPocket.LeftPocket.Name].Probe2Data.Runtime,
                     P2Okay = reading.PocketData[StationPocket.LeftPocket.Name].Probe2Data.Okay,
                     
-                    V3 = reading.PocketData[StationPocket.MiddlePocket.Name].Probe1Data.Voltage,
-                    I3 = reading.PocketData[StationPocket.MiddlePocket.Name].Probe1Data.Current,
+                    V3 = Math.Round(reading.PocketData[StationPocket.MiddlePocket.Name].Probe1Data.Voltage,2),
+                    I3 = Math.Round(reading.PocketData[StationPocket.MiddlePocket.Name].Probe1Data.Current,2),
                     Pr3 = reading.PocketData[StationPocket.MiddlePocket.Name].Probe1Data.Runtime,
                     P3Okay = reading.PocketData[StationPocket.MiddlePocket.Name].Probe1Data.Okay,
                     
-                    V4 = reading.PocketData[StationPocket.MiddlePocket.Name].Probe2Data.Voltage,
-                    I4 = reading.PocketData[StationPocket.MiddlePocket.Name].Probe2Data.Current,
+                    V4 = Math.Round(reading.PocketData[StationPocket.MiddlePocket.Name].Probe2Data.Voltage,2),
+                    I4 = Math.Round(reading.PocketData[StationPocket.MiddlePocket.Name].Probe2Data.Current,2),
                     Pr4 = reading.PocketData[StationPocket.MiddlePocket.Name].Probe2Data.Runtime,
                     P4Okay = reading.PocketData[StationPocket.MiddlePocket.Name].Probe2Data.Okay,
                     
-                    V5 = reading.PocketData[StationPocket.RightPocket.Name].Probe1Data.Voltage,
-                    I5 = reading.PocketData[StationPocket.RightPocket.Name].Probe1Data.Current,
+                    V5 = Math.Round(reading.PocketData[StationPocket.RightPocket.Name].Probe1Data.Voltage,2),
+                    I5 = Math.Round(reading.PocketData[StationPocket.RightPocket.Name].Probe1Data.Current,2),
                     Pr5 = reading.PocketData[StationPocket.RightPocket.Name].Probe1Data.Runtime,
                     P5Okay = reading.PocketData[StationPocket.RightPocket.Name].Probe1Data.Okay,
                     
-                    V6 = reading.PocketData[StationPocket.RightPocket.Name].Probe2Data.Voltage,
-                    I6 = reading.PocketData[StationPocket.RightPocket.Name].Probe2Data.Current,
+                    V6 = Math.Round(reading.PocketData[StationPocket.RightPocket.Name].Probe2Data.Voltage,2),
+                    I6 = Math.Round(reading.PocketData[StationPocket.RightPocket.Name].Probe2Data.Current,2),
                     Pr6 = reading.PocketData[StationPocket.RightPocket.Name].Probe2Data.Runtime,
                     P6Okay = reading.PocketData[StationPocket.RightPocket.Name].Probe2Data.Okay,
-                    T1 = reading.Reading?.Temperatures[0] ?? 0,
-                    T2 = reading.Reading?.Temperatures[1] ?? 0,
-                    T3 = reading.Reading?.Temperatures[2] ?? 0,
+                    T1 =Math.Round( reading.Reading?.Temperatures[0] ?? 0,2),
+                    T2 = Math.Round(reading.Reading?.Temperatures[1] ?? 0,2),
+                    T3 = Math.Round(reading.Reading?.Temperatures[2] ?? 0,2),
                     H1 = reading.Reading?.HeaterStates[0] ?? false,
                     H2 = reading.Reading?.HeaterStates[1] ?? false,
                     H3 = reading.Reading?.HeaterStates[2] ?? false,

@@ -1,0 +1,161 @@
+@using BurnInControl.Data.BurnInTests
+@using System.Reflection
+
+<RadzenSplitter Orientation="Orientation.Horizontal">
+    <RadzenSplitterPane Size="85%" Collapsible="false" Resizable="false" BarVisible="false">
+        <RadzenStack Orientation="Orientation.Vertical" Style="padding: 0.5rem">
+            <RadzenCard Variant="Variant.Outlined" class="rz-background-color-primary-lighter">
+                <RadzenText Text="@this.Title" TextStyle="TextStyle.H5" TextAlign="TextAlign.Center"/>
+            </RadzenCard>
+            <RadzenCard class="rz-background-color-primary-lighter">
+                <RadzenChart Style="height: 400px;">
+                    @foreach (var property in this._plotObjectProperties) {
+                        <RadzenLineSeries Smooth="false"
+                                          Data="@this.StationTestLogs"
+                                          CategoryProperty="Elapsed"
+                                          Title="@this.GetLegendTitle(property)"
+                                          LineType="LineType.Solid"
+                                          ValueProperty="@property">
+                            <RadzenMarkers Visible="true"
+                                           MarkerType="MarkerType.Circle"
+                                           Size="5" StrokeWidth="1"/>
+                            <RadzenSeriesDataLabels Visible="false"/>
+                        </RadzenLineSeries>
+                    }
+                    <RadzenCategoryAxis Max="@this._xAxisMax"
+                                        Min="@this._xAxisMin"
+                                        Step="@this._xAxisStep">
+                        <RadzenAxisTitle Text="@this.CategoryAxisLabel"/>
+                        <RadzenGridLines Visible="true" StrokeWidth="2"/>
+                    </RadzenCategoryAxis>
+                    <RadzenValueAxis Max="@this._yAxisMax"
+                                     Min="@this._yAxisMin"
+                                     Step="@this._yAxisStep">
+                        <RadzenGridLines Visible="true" StrokeWidth="2"/>
+                        <RadzenAxisTitle Text="@this.ValueAxisLabel"/>
+                    </RadzenValueAxis>
+                </RadzenChart>
+            </RadzenCard>
+        </RadzenStack>
+    </RadzenSplitterPane>
+    <RadzenSplitterPane Size="15%">
+        <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" Style="padding: 0.5rem">
+            <RadzenCard Style="background: rgba(26,67,75,0.4)">
+                <RadzenText Text="@($"{this.Title} Axis Controls")" 
+                            TextAlign="TextAlign.Center" 
+                            TextStyle="TextStyle.H6"/>
+            </RadzenCard>
+            <RadzenCard Style="background: rgba(26,67,75,0.4)">
+                <RadzenStack Orientation="Orientation.Horizontal">
+                    <RadzenFieldset Text="X Axis">
+                        <RadzenStack Orientation="Orientation.Vertical">
+                            <RadzenFormField Text="XMin">
+                                <RadzenNumeric TValue="int" @bind-Value="@this._xAxisMin" Min="0"/>
+                            </RadzenFormField>
+                            <RadzenFormField Text="XMax">
+                                <RadzenNumeric TValue="int" @bind-Value="@this._xAxisMax" Min="0"/>
+                            </RadzenFormField>
+                            <RadzenFormField Text="XStep">
+                                <RadzenNumeric TValue="double" @bind-Value="@this._xAxisStep" Min="0"/>
+                            </RadzenFormField>
+                        </RadzenStack>
+                    </RadzenFieldset>
+                    <RadzenFieldset Text="Y Axis">
+                        <RadzenStack Orientation="Orientation.Vertical">
+                            <RadzenFormField Text="YMin">
+                                <RadzenNumeric TValue="int" @bind-Value="@this._yAxisMin" Min="0"/>
+                            </RadzenFormField>
+                            <RadzenFormField Text="YMax">
+                                <RadzenNumeric TValue="int" @bind-Value="@this._yAxisMax" Min="0"/>
+                            </RadzenFormField>
+                            <RadzenFormField Text="YStep">
+                                <RadzenNumeric TValue="int" @bind-Value="@this._yAxisStep" Min="0"/>
+                            </RadzenFormField>
+                        </RadzenStack>
+                    </RadzenFieldset>
+                </RadzenStack>
+
+            </RadzenCard>
+        </RadzenStack>
+    </RadzenSplitterPane>
+</RadzenSplitter>
+@code {
+    [Parameter] public IEnumerable<StationTestReading>? StationTestLogs { get; set; }
+    [Parameter] public string ValueAxisLabel { get; set; }
+    [Parameter] public string CategoryAxisLabel { get; set; }
+    [Parameter] public string Title { get; set; }
+    [Parameter] public int YStep { get; set; }
+    [Parameter] public string PropertySub { get; set; }
+
+    private List<string> _plotObjectProperties = [];
+    private int _xAxisMin = 0;
+    private int _xAxisMax = 7;
+    private double _xAxisStep = 0.5;
+    private int _yAxisMin = 0;
+    private int _yAxisMax = 0;
+    private int _yAxisStep = 10;
+    private bool _first=true;
+
+    protected override Task OnInitializedAsync() {
+        var obj = typeof(StationTestReading);
+        this._plotObjectProperties=obj.GetProperties()
+            .Where(e => e.Name.Contains(this.PropertySub)).Select(e=>e.Name)
+            .ToList();
+        return base.OnInitializedAsync();
+    }
+    
+    private string GetLegendTitle(string property) {
+        if (this.PropertySub == "V") {
+            return property;
+        }else if (this.PropertySub == "I") {
+            return property;
+        }else if (this.PropertySub == "T") {
+            if (property == nameof(StationTestReading.Temperature)) {
+                return "SP";
+            }else if (property == nameof(StationTestReading.T1)) {
+                return "T-LP";
+            }else if (property == nameof(StationTestReading.T2)) {
+                return "T-MP";
+            }else if (property == nameof(StationTestReading.T3)) {
+                return "T-RP";
+            } else {
+                return property;
+            }
+        } else {
+            return property;
+        }
+    }
+
+    protected override Task OnParametersSetAsync() {
+        
+        if (this.StationTestLogs?.Any() == true) {
+            if (this._first) {
+                this._first = false;
+                this._yAxisStep = this.YStep;
+                var setCurrent=this.StationTestLogs.First().SetCurrent;
+                this._xAxisMax = (setCurrent < 150) ? 20 : 7;
+                this._xAxisStep = 1;
+                if(this.PropertySub=="V") {
+                    this._yAxisMax = ((int)this.StationTestLogs.SelectMany(e=>new []{e.V1,e.V2,e.V3,e.V4,e.V5,e.V6}).Max()+10);
+                    this._yAxisMin = ((int)this.StationTestLogs.SelectMany(e=>new []{e.V1,e.V2,e.V3,e.V4,e.V5,e.V6}).Min());
+                    this._yAxisMax=this._yAxisMax % 10==0 ? this._yAxisMax : (10-this._yAxisMax%10)+this._yAxisMax;
+                    this._yAxisMin=this._yAxisMin % 10==0 ? this._yAxisMin : this._yAxisMin-(this._yAxisMin%10);
+                }else if (this.PropertySub == "I") {
+                    /*this._yAxisMax = ((int)this.StationTestLogs.SelectMany(e => new[] { e.I1, e.I2, e.I3, e.I4, e.I5, e.I6 }).Max() + 10);
+                    this._yAxisMin = ((int)this.StationTestLogs.SelectMany(e => new[] { e.I1, e.I2, e.I3, e.I4, e.I5, e.I6 }).Min());*/
+                    this._yAxisMax = setCurrent + 20;
+                    this._yAxisMin=setCurrent-20;
+
+                }else if (this.PropertySub == "T") {
+                    this._yAxisMax = 100;
+                    this._yAxisMin = 25;
+                    this._yAxisStep = 15;
+                }
+
+            }
+
+        }
+        return base.OnParametersSetAsync();
+    }
+
+}

@@ -1,6 +1,6 @@
 @using System.Globalization
 @using BurnInControl.Data.BurnInTests.DataTransfer
-<RadzenCard Style="background:rgba(110,236,197,0.32)">
+<RadzenCard Style="background: rgba(57,152,130,0.71)">
     <RadzenStack Orientation="Orientation.Vertical">
         @if (this.ProbeData == null) {
             <RadzenText Text="Not Available"
@@ -10,7 +10,7 @@
             <RadzenText Text="@GetProbeText(this.ProbeData.PadId)"
                         TextStyle="TextStyle.H6"
                         TextAlign="TextAlign.Center"/>
-            <RadzenCard>
+            <RadzenCard class="rz-background-color-base-800">
                 <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center">
                     <RadzenStack Orientation="Orientation.Horizontal"
                                  AlignItems="AlignItems.Center"

@@ -6,6 +6,7 @@
 
 <RadzenDataGrid Data="@this.StationTestLogs"
                 AllowVirtualization="true"
+                Density="Density.Compact"
                 Style="height:600px"
                 AllowColumnResize="true"
                 AllowSorting="true">
@@ -59,80 +60,124 @@
 
 @code {
     [Parameter] public IEnumerable<StationTestReading>? StationTestLogs { get; set; }
+    [Parameter] public string Pocket1Wafer { get; set; }
+    [Parameter] public string Pocket2Wafer { get; set; }
+    [Parameter] public string Pocket3Wafer { get; set; }
     
     private async Task Export() {
         if(this.StationTestLogs?.Any()==true) {
             var wb = new XLWorkbook();
             var worksheet=wb.Worksheets.Add("Logs");
             worksheet.Cell(1, 1).Value = "Elapsed";
+            worksheet.Cell(1,1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            worksheet.Cell(1,1).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            worksheet.Range(1, 1, 2, 1).Merge();
             worksheet.Cell(1, 2).Value = "Temperature";
+            worksheet.Cell(1,2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            worksheet.Cell(1,2).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            worksheet.Range(1, 2, 2, 2).Merge();
             worksheet.Cell(1, 3).Value = "SetCurrent";
-            worksheet.Cell(1, 4).Value = "T1";
-            worksheet.Cell(1, 5).Value = "T2";
-            worksheet.Cell(1, 6).Value = "T3";
-            worksheet.Cell(1, 7).Value = "V1";
-            worksheet.Cell(1, 8).Value = "V2";
-            worksheet.Cell(1, 9).Value = "V3";
-            worksheet.Cell(1, 10).Value = "V4";
-            worksheet.Cell(1, 11).Value = "V5";
-            worksheet.Cell(1, 12).Value = "V6";
-            worksheet.Cell(1, 13).Value = "I1";
-            worksheet.Cell(1, 14).Value = "I2";
-            worksheet.Cell(1, 15).Value = "I3";
-            worksheet.Cell(1, 16).Value = "I4";
-            worksheet.Cell(1, 17).Value = "I5";
-            worksheet.Cell(1, 18).Value = "I6";
-            worksheet.Cell(1, 19).Value = "Pr1";
-            worksheet.Cell(1, 20).Value = "Pr2";
-            worksheet.Cell(1, 21).Value = "Pr3";
-            worksheet.Cell(1, 22).Value = "Pr4";
-            worksheet.Cell(1, 23).Value = "Pr5";
-            worksheet.Cell(1, 24).Value = "Pr6";
-            worksheet.Cell(1, 25).Value = "P1Okay";
-            worksheet.Cell(1, 26).Value = "P2Okay";
-            worksheet.Cell(1, 27).Value = "P3Okay";
-            worksheet.Cell(1, 28).Value = "P4Okay";
-            worksheet.Cell(1, 29).Value = "P5Okay";
-            worksheet.Cell(1, 30).Value = "P6Okay";
-            worksheet.Cell(1, 31).Value = "H1";
-            worksheet.Cell(1, 32).Value = "H2";
-            worksheet.Cell(1, 33).Value = "H3";
+            worksheet.Cell(1,3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            worksheet.Cell(1,3).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            worksheet.Range(1, 3, 2, 3).Merge();
 
-            int count = 2;
+            worksheet.Cell(1, 4).Value = $"Left Pocket,WaferId:{this.Pocket1Wafer}";
+            worksheet.Cell(1,4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            worksheet.Cell(1,4).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            worksheet.Cell(1, 4).Style.Fill.BackgroundColor = XLColor.LightBlue;
+            worksheet.Range(1,4,1,12).Merge();
+            worksheet.Cell(2, 4).Value = "V1";
+            worksheet.Cell(2, 5).Value = "V2";
+            worksheet.Cell(2, 6).Value = "I1";
+            worksheet.Cell(2, 7).Value = "I2";
+            worksheet.Cell(2, 8).Value = "T1";
+            worksheet.Cell(2, 9).Value = "Pr1";
+            worksheet.Cell(2, 10).Value = "Pr2";
+            worksheet.Cell(2, 11).Value = "P1Okay";
+            worksheet.Cell(2, 12).Value = "P2Okay";
+            
+            worksheet.Cell(1, 13).Value = $"Middle Pocket,WaferId:{this.Pocket2Wafer}";
+            worksheet.Cell(1,13).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            worksheet.Cell(1,13).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            worksheet.Cell(1, 13).Style.Fill.BackgroundColor = XLColor.LightGreen;
+            worksheet.Range(1,13,1,21).Merge();
+            worksheet.Cell(2, 13).Value = "V3";
+            worksheet.Cell(2, 14).Value = "V4";
+            worksheet.Cell(2, 15).Value = "I3";
+            worksheet.Cell(2, 16).Value = "I4";
+            worksheet.Cell(2, 17).Value = "T2";
+            worksheet.Cell(2, 18).Value = "Pr3";
+            worksheet.Cell(2, 19).Value = "Pr4";
+            worksheet.Cell(2, 20).Value = "P3Okay";
+            worksheet.Cell(2, 21).Value = "P5Okay";
+            
+            
+            worksheet.Cell(1, 22).Value = $"Middle Pocket,WaferId:{this.Pocket3Wafer}";
+            worksheet.Cell(1,22).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            worksheet.Cell(1,22).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            worksheet.Cell(1, 22).Style.Fill.BackgroundColor = XLColor.LightSalmon;
+            worksheet.Range(1,22,1,30).Merge();
+            worksheet.Cell(2, 22).Value = "V5";
+            worksheet.Cell(2, 23).Value = "V6";
+            worksheet.Cell(2, 24).Value = "I5";
+            worksheet.Cell(2, 25).Value = "I6";
+            worksheet.Cell(2, 26).Value = "T3";
+            worksheet.Cell(2, 27).Value = "Pr5";
+            worksheet.Cell(2, 28).Value = "Pr6";
+            worksheet.Cell(2, 29).Value = "P5Okay";
+            worksheet.Cell(2, 30).Value = "P6Okay";
+            
+            worksheet.Cell(1, 31).Value = "H1 State";
+            worksheet.Cell(1,31).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            worksheet.Cell(1,31).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            worksheet.Range(1, 31, 2, 31).Merge();
+            worksheet.Cell(1, 32).Value = "H2 State";
+            worksheet.Cell(1,32).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            worksheet.Cell(1,32).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            worksheet.Range(1, 32, 2, 32).Merge();
+            worksheet.Cell(1, 33).Value = "H3 State";
+            worksheet.Cell(1,33).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            worksheet.Cell(1,33).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            worksheet.Range(1, 33, 2, 33).Merge();
+            
+            int count = 3;
             foreach (var item in this.StationTestLogs) {
                 worksheet.Cell(count, 1).Value = item.Elapsed;
                 worksheet.Cell(count, 2).Value = item.Temperature;
                 worksheet.Cell(count, 3).Value = item.SetCurrent;
-                worksheet.Cell(count, 4).Value = item.T1;
-                worksheet.Cell(count, 5).Value = item.T2;
-                worksheet.Cell(count, 6).Value = item.T3;
-                worksheet.Cell(count, 7).Value = item.V1;
-                worksheet.Cell(count, 8).Value = item.V2;
-                worksheet.Cell(count, 9).Value = item.V3;
-                worksheet.Cell(count, 10).Value = item.V4;
-                worksheet.Cell(count, 11).Value = item.V5;
-                worksheet.Cell(count, 12).Value = item.V6;
-                worksheet.Cell(count, 13).Value = item.I1;
-                worksheet.Cell(count, 14).Value = item.I2;
+                worksheet.Cell(count, 4).Value = item.V1;
+                worksheet.Cell(count, 5).Value = item.V2;
+                worksheet.Cell(count, 6).Value = item.I1;
+                worksheet.Cell(count, 7).Value = item.I2;
+                worksheet.Cell(count, 8).Value = item.T1;
+                worksheet.Cell(count, 9).Value = item.Pr1;
+                worksheet.Cell(count, 10).Value = item.Pr2;
+                worksheet.Cell(count, 11).Value = item.P1Okay;
+                worksheet.Cell(count, 12).Value = item.P2Okay;
+                
+                worksheet.Cell(count, 13).Value = item.V3;
+                worksheet.Cell(count, 14).Value = item.V4;
                 worksheet.Cell(count, 15).Value = item.I3;
                 worksheet.Cell(count, 16).Value = item.I4;
-                worksheet.Cell(count, 17).Value = item.I5;
-                worksheet.Cell(count, 18).Value = item.I6;
-                worksheet.Cell(count, 19).Value = item.Pr1;
-                worksheet.Cell(count, 20).Value = item.Pr2;
-                worksheet.Cell(count, 21).Value = item.Pr3;
-                worksheet.Cell(count, 22).Value = item.Pr4;
-                worksheet.Cell(count, 23).Value = item.Pr5;
-                worksheet.Cell(count, 24).Value = item.Pr6;
-                worksheet.Cell(count, 25).Value = item.P1Okay;
-                worksheet.Cell(count, 26).Value = item.P2Okay;
-                worksheet.Cell(count, 27).Value = item.P3Okay;
-                worksheet.Cell(count, 28).Value = item.P4Okay;
+                worksheet.Cell(count, 17).Value = item.T2;
+                worksheet.Cell(count, 18).Value = item.Pr3;
+                worksheet.Cell(count, 19).Value = item.Pr4;
+                worksheet.Cell(count, 20).Value = item.P3Okay;
+                worksheet.Cell(count, 21).Value = item.P4Okay;
+                
+                worksheet.Cell(count, 22).Value = item.V5;
+                worksheet.Cell(count, 23).Value = item.V6;
+                worksheet.Cell(count, 24).Value = item.I5;
+                worksheet.Cell(count, 25).Value = item.I6;
+                worksheet.Cell(count, 26).Value = item.T3;
+                worksheet.Cell(count, 27).Value = item.Pr5;
+                worksheet.Cell(count, 28).Value = item.Pr6;
                 worksheet.Cell(count, 29).Value = item.P5Okay;
                 worksheet.Cell(count, 30).Value = item.P6Okay;
-                worksheet.Cell(count, 31).Value = item.H1;
-                worksheet.Cell(count, 32).Value = item.H2;
-                worksheet.Cell(count, 33).Value = item.H3;
+                
+                worksheet.Cell(count, 31).Value = item.H1 ? "On":"Off";
+                worksheet.Cell(count, 32).Value = item.H2 ? "On":"Off";
+                worksheet.Cell(count, 33).Value = item.H3 ? "On":"Off";
                 count++;
             }
             

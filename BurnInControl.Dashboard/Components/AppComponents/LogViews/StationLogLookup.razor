@@ -6,6 +6,13 @@
 @inject TestLogDataService TestLogDataService
 @inject StationDataService StationDataService
 
+<style>
+    .rz-panel-titlebar {
+        flex-direction: row-reverse !important;
+        justify-content:left !important;
+    }
+</style>
+
 <RadzenStack Orientation="Orientation.Vertical">
     <RadzenStack Orientation="Orientation.Horizontal">
         <RadzenFieldset Text="Select Station">
@@ -13,40 +20,62 @@
                             Value="@this._selectedStation"
                             ValueChanged="SelectedStationChanged"/>
         </RadzenFieldset>
-        <RadzenFieldset Text="Selection Data Option">
+        <RadzenFieldset Text="Select Data Type">
             <RadzenSelectBar TValue="int"
                              Size="ButtonSize.Small"
-                             @bind-Value="@this._selectedOption"
+                             Value="@this._selectedOption"
+                             ValueChanged="@SelectionOptionChanged"
                              Data="@this._selectionOptions"
                              ValueProperty="Value"
+                             TextProperty="Name"/>
+        </RadzenFieldset>
+        <RadzenFieldset Text="Select Data Point Density" Visible="@(this._selectedOption==1)"> 
+            <RadzenSelectBar TValue="int"
+                             Size="ButtonSize.Small"
+                             Value="@this._dataPointCountOption"
+                             Data="@this._dataPointCountOptions"
+                             ValueChanged="DataPointDensityChangedHandler"
+                             ValueProperty="N"
                              TextProperty="Name"/>
         </RadzenFieldset>
     </RadzenStack>
     @if (this._stationTestLogs == null) {
         <RadzenText Text="Select a station from the dropdown to view logs." TextStyle="TextStyle.H6"/>
     } else {
-        <RadzenDataGrid TItem="BurnInTestLogDto"
-                        Data="@this._stationTestLogs"
-                        AllowGrouping="true"
-                        AllowPaging="true" PageSize="10"
-                        AllowFiltering="true"
-                        AllowSorting="true"
-                        AllowRowSelectOnRowClick="true"
-                        SelectionMode="DataGridSelectionMode.Single"
-                        ValueChanged="@this.SelectedTestLogChangedHandler"
-                        Value="@this._selectedTestLogs">
-            <Columns>
-                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.StartTime)" Title="Start"/>
-                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.StopTime)" Title="Stop"/>
-                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.RunTime)" Title="Run Time"/>
-                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.SetCurrent)" Title="Set Current"/>
-                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.SetTemperature)" Title="Set Temp."/>
-                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.ElapsedTime)" Title="Elapsed"/>
-                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.LeftPocket)" Title="WaferId(Left)"/>
-                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.MiddlePocket)" Title="WaferId(Middle)"/>
-                <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.RightPocket)" Title="WaferId(Right)"/>
-            </Columns>
-        </RadzenDataGrid>
+        <RadzenPanel AllowCollapse="true">
+            <HeaderTemplate>
+                <RadzenText TextStyle="TextStyle.H5">
+                    <RadzenIcon Icon="assessment" class="rz-me-1" /><b>@($"{this._selectedStation} Logs")</b>
+                </RadzenText>
+            </HeaderTemplate>
+            <ChildContent>
+                <RadzenCard class="rz-mt-4" Variant="Variant.Outlined">
+                    <RadzenDataGrid TItem="BurnInTestLogDto"
+                                    Data="@this._stationTestLogs"
+                                    AllowGrouping="true"
+                                    AllowPaging="true" PageSize="10"
+                                    AllowFiltering="true"
+                                    AllowSorting="true"
+                                    AllowRowSelectOnRowClick="true"
+                                    SelectionMode="DataGridSelectionMode.Single"
+                                    ValueChanged="@this.SelectedTestLogChangedHandler"
+                                    Density="Density.Compact"
+                                    Value="@this._selectedTestLogs">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.StartTime)" Title="Start"/>
+                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.StopTime)" Title="Stop"/>
+                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.RunTime)" Title="Run Time"/>
+                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.SetCurrent)" Title="Set Current"/>
+                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.SetTemperature)" Title="Set Temp."/>
+                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.ElapsedTime)" Title="Elapsed"/>
+                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.LeftPocket)" Title="WaferId(Left)" />
+                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.MiddlePocket)" Title="WaferId(Middle)"/>
+                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.RightPocket)" Title="WaferId(Right)"/>
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenCard>
+            </ChildContent>
+        </RadzenPanel>
     }
     @switch (this._selectedOption) {
         case 0:
@@ -55,21 +84,31 @@
         case 1: {
             @if (this._loading) {
                 <RadzenStack AlignItems="AlignItems.Center">
-                    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large">
+                    <RadzenProgressBarCircular ShowValue="false" 
+                                               Mode="ProgressBarMode.Indeterminate" 
+                                               Size="ProgressBarCircularSize.Large">
                         <Template>Loading</Template>
                     </RadzenProgressBarCircular>
                 </RadzenStack>
             } else {
-                <RadzenTabs>
-                    <Tabs>
-                        <RadzenTabsItem Text="Table">
-                            <StationLogView StationTestLogs="@this._stationTestLogsReadings"/>
-                        </RadzenTabsItem>
-                        <RadzenTabsItem Text="Plot">
-                            <StationTestPlotView StationTestLogs="@this._stationTestLogsReadings"/>
-                        </RadzenTabsItem>
-                    </Tabs>
-                </RadzenTabs>
+                @if (this.IsDataVisible()) {
+                    <RadzenTabs RenderMode="TabRenderMode.Client">
+                        <Tabs>
+                            <RadzenTabsItem Text="Plot">
+                                <StationTestPlotView StationTestLogs="@this._stationTestLogsReadings"
+                                                     Pocket1Wafer="@this._selectedTestLogs[0]?.LeftPocket"
+                                                     Pocket2Wafer="@this._selectedTestLogs[0]?.MiddlePocket"
+                                                     Pocket3Wafer="@this._selectedTestLogs[0]?.RightPocket"/>
+                            </RadzenTabsItem>
+                            <RadzenTabsItem Text="Table">
+                                <StationLogView StationTestLogs="@this._stationTestLogsReadings"
+                                                Pocket1Wafer="@this._selectedTestLogs[0]?.LeftPocket"
+                                                Pocket2Wafer="@this._selectedTestLogs[0]?.MiddlePocket"
+                                                Pocket3Wafer="@this._selectedTestLogs[0]?.RightPocket"/>
+                            </RadzenTabsItem>
+                        </Tabs>
+                    </RadzenTabs>
+                }
             }
             break;
         }
@@ -86,40 +125,70 @@
         new SelectOption(){Name="Wafers Test Result", Value=0}, 
         new SelectOption(){Name="Raw Log", Value=1}
     ];
+
+    private List<DataPointOption> _dataPointCountOptions = [
+        new DataPointOption(){Name="All", N=0},
+        new DataPointOption(){Name="Every 5th", N=5},
+        new DataPointOption(){Name="Every 10th", N=10},
+        new DataPointOption(){Name="Every 20th", N=20},
+    ];
+
+    private int _dataPointCountOption;
     private int _selectedOption;
     private string _selectedStation = string.Empty;
     bool _loading = false;
     
     protected override async Task OnInitializedAsync() {
         this._stations = await this.StationDataService.GetStationList();
+        this._dataPointCountOption = 5;
     }
 
     private async Task SelectedStationChanged(string station) {
         this._selectedStation = station;
         this._stationTestLogs=await this.TestLogDataService.GetRecentStationTests(station);
+        this._selectedTestLogs = [];
+        this._stationTestLogsReadings = [];
+        this._waferTestResults = [];
+    }
+
+    private bool IsDataVisible() {
+        return this._selectedTestLogs?.Any() == true && this._selectedStation != string.Empty && this._stationTestLogs?.Any() == true;
     }
 
     private async Task SelectedTestLogChangedHandler(IList<BurnInTestLogDto> selectedTestLogs) {
         this._selectedTestLogs = selectedTestLogs;
+        await this.Load();
+    }
+
+    private async Task SelectionOptionChanged(int option) {
+        this._selectedOption = option; 
+        await this.Load();
+    }
+    
+    private async Task DataPointDensityChangedHandler(int n) {
+        this._dataPointCountOption = n;
+        await this.Load();
+    }
+
+    private async Task Load() {
         switch (this._selectedOption) {
             case 0: {
-                if (selectedTestLogs?.Any() == true) {
-                    this._waferTestResults = await this.TestLogDataService.GetWaferTestResultsDto(selectedTestLogs[0]._id);
+                if (this._selectedTestLogs?.Any() == true) {
+                    this._waferTestResults = await this.TestLogDataService.GetWaferTestResultsDto(this._selectedTestLogs[0]._id);
                     await InvokeAsync(StateHasChanged);
                 }
                 break;
             }
             case 1: {
-                if (selectedTestLogs?.Any() == true) {
+                if (this._selectedTestLogs?.Any() == true) {
                     this._loading = true;
                     await InvokeAsync(StateHasChanged);
-                    this._stationTestLogsReadings = await this.TestLogDataService.GetStationTestLogReadings(selectedTestLogs[0]._id);
+                    this._stationTestLogsReadings = await this.TestLogDataService.GetStationTestLogReadings(this._selectedTestLogs[0]._id,this._dataPointCountOption);
                     this._loading = false;
                     await InvokeAsync(StateHasChanged);
                 }
                 break;
             }
         }
-
     }
 }

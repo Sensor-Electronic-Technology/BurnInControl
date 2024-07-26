@@ -2,7 +2,7 @@ namespace BurnInControl.Data.BurnInTests;
 
 public class StationTestReading {
     public double Temperature { get; set; }
-    public ulong Elapsed { get; set; }
+    public double Elapsed { get; set; }
     public int SetCurrent { get; set; }
     public double V1{ get; set; }
     public double V2{ get; set; }

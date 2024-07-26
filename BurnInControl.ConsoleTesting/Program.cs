@@ -53,9 +53,12 @@ for(int i=0;i<=values.Count;i++) {
 TestListCompare();
 
 void TestListCompare() {
-    List<bool> l1 = [true, true, true];
+    /*List<bool> l1 = [true, true, true];
     List<bool> l2 = [true, true, true];
-    Console.WriteLine($"List Compare: {l1.SequenceEqual(l2)}");
+    Console.WriteLine($"List Compare: {l1.SequenceEqual(l2)}");*/
+    for (int i = 0; i < 10; i += 2) {
+        Console.WriteLine(i);
+    }
 }
 
 async Task GetTestLogs() {

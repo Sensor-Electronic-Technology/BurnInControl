@@ -34,7 +34,7 @@
 <RadzenCard Variant="Variant.Outlined">
     <RadzenAlert Title="@this._stationText"
                  Text="@this._stateText"
-                 Shade="Shade.Default"
+                 Shade="@this._alertShade"
                  AlertStyle="@this.GetAlertStyle()"
                  Variant="Variant.Filled"
                  Size="AlertSize.Medium"
@@ -198,7 +198,6 @@
                     probeAlert.Acknowledged = true;
                 }
             }
-            /*Console.WriteLine($"StationStatus: {this.StationId} Received Error Resolved Event for StationId: {stationId}");*/
             this._alertStyle = this._savedStyle;
             this._alertShade = Shade.Default;
             this._alertTimer.Stop();
@@ -240,30 +239,37 @@
         switch (state) {
             case StationState.Idle: {
                 this._alertStyle = AlertStyle.Info;
+                this._alertShade=Shade.Light;
                 break;
             }
             case StationState.Running: {
                 this._alertStyle = AlertStyle.Success;
+                this._alertShade=Shade.Default;
                 break;
             }
             case StationState.Paused: {
                 this._alertStyle = AlertStyle.Warning;
+                this._alertShade=Shade.Default;
                 break;
             }
             case StationState.Offline: {
                 this._alertStyle = AlertStyle.Dark;
+                this._alertShade=Shade.Default;
                 break;
             }
             case StationState.Heating: {
                 this._alertStyle = AlertStyle.Danger;
+                this._alertShade=Shade.Default;
                 break;
             }    
             case StationState.Tuning: {
                 this._alertStyle = AlertStyle.Secondary;
+                this._alertShade=Shade.Default;
                 break;
             }
             case StationState.TuningMode: {
                 this._alertStyle = AlertStyle.Base;
+                this._alertShade=Shade.Default;
                 break;
             }
         }

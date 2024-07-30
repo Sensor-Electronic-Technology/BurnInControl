@@ -1,0 +1,25 @@
+@page "/help"
+<RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+    <RadzenFieldset Text="Dashboard Overview" AllowCollapse="true">
+        <iframe class="pdf"
+                src="images/Burn-in Dashboard.pdf"
+                allow="fullscreen"
+                width="1000"
+                height="800">
+        </iframe>
+    </RadzenFieldset>
+    <RadzenFieldset Text="Logs/Status By Station"  AllowCollapse="true">
+        <video width="800" controls>
+            <source src="images/ByStationVideo.mp4" type="video/mp4">
+        </video>
+    </RadzenFieldset>
+    <RadzenFieldset Text="Wafer Logs"  AllowCollapse="true">
+        <video width="800" controls>
+            <source src="images/WaferLogEx.mp4" type="video/mp4">
+        </video>
+    </RadzenFieldset>
+</RadzenStack>
+
+@code {
+    
+}

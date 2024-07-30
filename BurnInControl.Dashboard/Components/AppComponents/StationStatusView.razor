@@ -133,6 +133,7 @@
 @code {
     [Parameter] public string? StationId {get;set;}="S99";
     [Parameter] public string? StationIpAddress {get;set;}
+    [Parameter] public string? AlternativeIpAddress {get;set;}
 
     private Shade _alertShade;
     private AlertStyle _savedStyle;
@@ -157,6 +158,7 @@
     private bool _heating = false;
     private bool _alertAck = false;
     private bool _firstRun = true;
+    private bool _ipOkay = false;
 
     private string _runTimeDisplay="";
     private string _remainingTime;
@@ -170,24 +172,41 @@
         this._alertTimer.Elapsed += this.AlertTimerHandler;
         
         if (!string.IsNullOrWhiteSpace(this.StationIpAddress)) {
-            this._hubConnection = new HubConnectionBuilder()
-                .WithUrl($"http://{this.StationIpAddress}:5000/hubs/station")
-                .WithAutomaticReconnect()
-                .Build();
-            this._hubConnection.On<StationSerialData>(StationHubConstants.Events.OnStationData, this.OnSerialComReceived);
-            try {
-                await this._hubConnection.StartAsync();
-                /*this.StationStateChangedHandler(StationState.Idle);*/
-                if (!string.IsNullOrWhiteSpace(this.StationId)) {
-                    
-                    var testLogResult= await this.TestLogDataService.GetLastTestLog(this.StationId);
-                    this._pocketWaferSetups=testLogResult.Setup;
-                    this._testLogId = testLogResult.Id;
+            if (PingService.Ping(this.StationIpAddress)) {
+                this._ipOkay = true;
+            }else if(!string.IsNullOrWhiteSpace(this.AlternativeIpAddress)) {
+                if (PingService.Ping(this.AlternativeIpAddress)) {
+                    this.StationIpAddress=this.AlternativeIpAddress;
+                    this._ipOkay = true;
+                } else {
+                    this._ipOkay = false;
                 }
-            } catch (Exception e) {
-                this.Logger.LogError("Failed to connect to station hub: StationId{Id},Station Ip:{Ip} \n Error:{0}",
-                    this.StationId ?? "S00",this.StationIpAddress ?? "0.0.0.0",e.Message);
+            } else {
+                this._ipOkay = false;
             }
+
+            if (this._ipOkay) {
+                this._hubConnection = new HubConnectionBuilder()
+                    .WithUrl($"http://{this.StationIpAddress}:5000/hubs/station")
+                    .WithAutomaticReconnect()
+                    .Build();
+                this._hubConnection.On<StationSerialData>(StationHubConstants.Events.OnStationData, this.OnSerialComReceived);
+                try {
+                    await this._hubConnection.StartAsync();
+                    if (!string.IsNullOrWhiteSpace(this.StationId)) {
+                    
+                        var testLogResult= await this.TestLogDataService.GetLastTestLog(this.StationId);
+                        this._pocketWaferSetups=testLogResult.Setup;
+                        this._testLogId = testLogResult.Id;
+                    }
+                } catch (Exception e) {
+                    this.Logger.LogError("Failed to connect to station hub: StationId{Id},Station Ip:{Ip} \n Error:{0}",
+                        this.StationId ?? "S00",this.StationIpAddress ?? "0.0.0.0",e.Message);
+                }
+            } else {
+                this.StationStateChangedHandler(StationState.Offline);
+            }
+
         }
     }
 

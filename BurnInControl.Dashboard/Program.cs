@@ -5,20 +5,24 @@ using BurnInControl.Dashboard.Services;
 using BurnInControl.Infrastructure;
 using BurnInControl.Infrastructure.FirmwareModel;
 using BurnInControl.Shared.AppSettings;
+using Microsoft.AspNetCore.Components.Server.Circuits;
 using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
-      .AddInteractiveServerComponents().AddHubOptions(options => options.MaximumReceiveMessageSize = 10 * 1024 * 1024);
+      .AddInteractiveServerComponents()
+      .AddHubOptions(options => options.MaximumReceiveMessageSize = 10 * 1024 * 1024);
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
 builder.Services.AddControllers();
 builder.Services.AddRadzenComponents();
 builder.Services.AddHttpClient();
-builder.Services.AddInfrastructure();
+builder.Services.AddDashboardPersistence();
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddSingleton<StationErrorService>();
+builder.Services.AddScoped<StationErrorService>();
+/*builder.Services.AddSingleton<VisitorTrackingService>();
+builder.Services.AddSingleton<CircuitHandler,CircuitHandlerService>();*/
 builder.Services.AddBlazorDownloadFile();
 
 var app = builder.Build();

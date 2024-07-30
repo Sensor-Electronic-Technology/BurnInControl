@@ -23,7 +23,8 @@
                 @foreach(var station in this._stations) {
                     <RadzenColumn Size="4">
                         <StationStatusView StationId="@station.StationId"
-                                           StationIpAddress="@station.NetworkConfig.EthernetIp"/>
+                                           StationIpAddress="@station.NetworkConfig.EthernetIp"
+                                           AlternativeIpAddress="@station.NetworkConfig.WifiIp"/>
                     </RadzenColumn>
                 }
             </RadzenRow>
@@ -33,20 +34,25 @@
                 <RadzenText Text="Station Errors" TextStyle="TextStyle.DisplayH6"/>
                 @foreach (var station in this.StationErrorService.Errors.Keys) {
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
-                        @if (this.StationErrorService.Errors[station].Count > 0) {
-                            var stationId = station;
-                            <RadzenAlert AlertStyle="AlertStyle.Danger"
-                                         AllowClose="false"
-                                         Size="AlertSize.ExtraSmall"
-                                         Title="@this.GetStationText(stationId)" ShowIcon="false"
-                                         Style="height: 60px;"
-                                         Text="@this.GetAlertText(station)"/>
-                            <RadzenButton Text="Clear"
-                                          ButtonType="ButtonType.Reset"
-                                          Size="ButtonSize.ExtraSmall"
-                                          Click="@(() => this.OnCloseAlert(stationId))"
-                                          Style="height: 60px; width: 120px;"/>
+                        @if(this.StationErrorService.Errors.TryGetValue(station, out var errors)) {
+                            @if (errors.Count > 0) {
+                                var stationId = station;
+                                <RadzenAlert AlertStyle="AlertStyle.Danger"
+                                             AllowClose="false"
+                                             Size="AlertSize.ExtraSmall"
+                                             Title="@this.GetStationText(stationId)" 
+                                             ShowIcon="false"
+                                             Style="height: 60px;"
+                                             Text="@this.GetAlertText(station)"/>
+                                <RadzenButton Text="Clear"
+                                              ButtonType="ButtonType.Reset"
+                                              Size="ButtonSize.ExtraSmall"
+                                              Click="@(() => this.OnCloseAlert(stationId))"
+                                              Style="height: 60px; width: 120px;"/>
+                            }
+                            
                         }
+
                     </RadzenStack>
                 }
             </RadzenStack>
@@ -65,7 +71,7 @@
     
     private string GetAlertText(string stationId) {
         string text=$"Probe Errors: ";
-        foreach(var error in this.StationErrorService.Errors[stationId]) {
+        foreach(var error in this.StationErrorService.Errors.TryGetValue(stationId, out var errors) ? errors : new List<string>()) {
             text += error + " ";
         }
         return text;

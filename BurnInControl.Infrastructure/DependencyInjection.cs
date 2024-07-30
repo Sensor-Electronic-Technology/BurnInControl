@@ -34,11 +34,11 @@ public static class DependencyInjection {
     }
     
     public static IServiceCollection AddDashboardPersistence(this IServiceCollection services) {
-        services.AddTransient<SavedStateDataService>();
-        services.AddTransient<StationConfigDataService>();
-        services.AddTransient<WaferTestLogDataService>(); 
-        services.AddTransient<StationDataService>();
-        services.AddTransient<TestLogDataService>();
+        services.AddScoped<SavedStateDataService>();
+        services.AddScoped<StationConfigDataService>();
+        services.AddScoped<WaferTestLogDataService>(); 
+        services.AddScoped<StationDataService>();
+        services.AddScoped<TestLogDataService>();
         return services;
     }
     

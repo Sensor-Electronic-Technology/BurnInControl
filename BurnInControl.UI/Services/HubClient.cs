@@ -1,6 +1,7 @@
 using BurnInControl.HubDefinitions.Hubs;
-namespace BurnInControl.UI.Services;
 using Microsoft.AspNetCore.SignalR.Client;
+namespace BurnInControl.UI.Services;
+
 public class HubClient:IAsyncDisposable {
     private readonly ILogger<HubClient> _logger;
     public HubConnection StationHubConnection { get;}
@@ -11,9 +12,9 @@ public class HubClient:IAsyncDisposable {
     
 
     public HubClient(IConfiguration configuration,ILogger<HubClient> logger) {
-        string hubAddress = configuration["StationHub"] ?? StationHubConstants.HubAddress;
+        //string hubAddress = configuration["StationHub"] ?? StationHubConstants.HubAddress;
         string hostHubAddress = configuration["HostHub"] ?? HostHubConstants.HostHubAddress;
-        //string hubAddress = "http://172.20.5.31/hubs/station";
+        string hubAddress = "http://172.20.5.31:5000/hubs/station/";
         this._logger = logger;
         this.StationHubConnection = new HubConnectionBuilder()
             .WithUrl(hubAddress)
@@ -35,7 +36,7 @@ public class HubClient:IAsyncDisposable {
         }
         
         try {
-            await this.HostHubConnection.StartAsync(cancellation);
+            //await this.HostHubConnection.StartAsync(cancellation);
         } catch (Exception e) {
             this._logger.LogError(e, "Failed to start HostHubConnection");
         }

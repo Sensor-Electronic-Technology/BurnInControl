@@ -30,5 +30,6 @@
     <ProjectReference Include="..\BurnInControl.Data\BurnInControl.Data.csproj" />
     <ProjectReference Include="..\BurnInControl.HubDefinitions\BurnInControl.HubDefinitions.csproj" />
     <ProjectReference Include="..\BurnInControl.Infrastructure\BurnInControl.Infrastructure.csproj" />
+    <ProjectReference Include="..\BurnInControl.UI.Shared\BurnInControl.UI.Shared.csproj" />
   </ItemGroup>
 </Project>

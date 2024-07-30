@@ -1,4 +1,4 @@
-namespace BurnInControl.UI.Data;
+namespace BurnInControl.Shared.UiShared;
 
 public class ProbeState {
     public ulong RunTime { get; set; } = 0;

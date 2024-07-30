@@ -2,6 +2,8 @@ namespace BurnInControl.Dashboard.Data;
 
 public class ProbeAlert {
     public string ProbeId { get; set; }
+    public DateTime LastAlert { get; set; }
+    public bool Latched { get; set; }
     public bool Loaded { get; set; }
     public bool Okay { get; set; }
     public bool Acknowledged { get; set; }

@@ -3,7 +3,9 @@
         <GenericDisplay DisplayLabel="@this.DisplayLabel" 
                         DisplayValue="@this.DisplayValue"
                         Width="180px"/>
-        <LedIndicator State="@this.State" />
+        @if (this.ShowLed) {
+            <LedIndicator State="@this.State" />
+        }
     </RadzenStack>
 </RadzenColumn>
 
@@ -11,4 +13,5 @@
     [Parameter] public string DisplayLabel { get; set; } = "T1";
     [Parameter] public string DisplayValue { get; set; } = "85";
     [Parameter] public bool State { get; set; } = true;
+    [Parameter] public bool ShowLed { get; set; } = true;
 }

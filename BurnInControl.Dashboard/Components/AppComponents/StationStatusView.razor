@@ -45,14 +45,14 @@
             <RadzenStack>
                 <RadzenFieldset Text="ProbeStatus" Collapsed="false" AllowCollapse="true">
                     <RadzenRow>
-                        @for(int i=0;i<ControllerHardwareConstants.PROBE_COUNT;i++) {
+                        @for (int i = 0; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
                             var probe = this._probeAlerts[i].Okay;
                             var loaded = this._probeAlerts[i].Loaded;
                             int index = i;
                             <RadzenColumn Size="3">
                                 <RadzenAlert Size="AlertSize.ExtraSmall"
-                                             Text="@this.SetProbeText(index,probe,loaded)"
-                                             AlertStyle="@this.GetProbeAlertStyle(probe,loaded)"
+                                             Text="@this.SetProbeText(index, probe, loaded)"
+                                             AlertStyle="@this.GetProbeAlertStyle(probe, loaded)"
                                              ShowIcon="false"
                                              Shade="Shade.Default"
                                              AllowClose="false"/>
@@ -64,6 +64,7 @@
                     <RadzenStack Orientation="Orientation.Vertical"
                                  JustifyContent="JustifyContent.Center"
                                  AlignItems="AlignItems.Center">
+                        <RadzenButton Text="Show Live View" Click="ShowLiveViewHandler"/>
                         <RadzenFieldset Text="Running Test">
                             @if (this._pocketWaferSetups.Any()) {
                                 <RadzenStack Orientation="Orientation.Horizontal">
@@ -77,21 +78,21 @@
                         </RadzenFieldset>
                         <RadzenFieldset Text="Time">
                             <RadzenStack Orientation="Orientation.Horizontal">
-                                <RuntimeDisplay DisplayText="Runtime"
-                                                RuntimeSecs="@(this._data.RuntimeSeconds)"
-                                                TextStyle="TextStyle.Body1"
-                                                ShowMins="false"
-                                                Width="80px"/>
-                                <RuntimeDisplay DisplayText="Elapsed"
-                                                RuntimeSecs="@(this._data.ElapsedSeconds)"
-                                                TextStyle="TextStyle.Body1"
-                                                LabelFontSize="12px"
-                                                Width="fit-content"/>
-                                <RuntimeDisplay DisplayText="Remaining"
-                                                RuntimeSecs="@(this._data.RuntimeSeconds - this._data.ElapsedSeconds)"
-                                                TextStyle="TextStyle.Body1"
-                                                LabelFontSize="12px"
-                                                Width="fit-content"/>
+                                <RuntimeDisplayDashboard DisplayText="Runtime"
+                                                         RuntimeSecs="@(this._data.RuntimeSeconds)"
+                                                         TextStyle="TextStyle.Body1"
+                                                         ShowMins="false"
+                                                         Width="80px"/>
+                                <RuntimeDisplayDashboard DisplayText="Elapsed"
+                                                         RuntimeSecs="@(this._data.ElapsedSeconds)"
+                                                         TextStyle="TextStyle.Body1"
+                                                         LabelFontSize="12px"
+                                                         Width="fit-content"/>
+                                <RuntimeDisplayDashboard DisplayText="Remaining"
+                                                         RuntimeSecs="@(this._data.RuntimeSeconds - this._data.ElapsedSeconds)"
+                                                         TextStyle="TextStyle.Body1"
+                                                         LabelFontSize="12px"
+                                                         Width="fit-content"/>
                             </RadzenStack>
                         </RadzenFieldset>
                         <RadzenFieldset Text="Test Config">
@@ -287,7 +288,6 @@
                     var testLogResult= await this.TestLogDataService.GetLastTestLog(this.StationId);
                     this._pocketWaferSetups=testLogResult.Setup;
                     this._testLogId = testLogResult.Id;
-                    Console.WriteLine($"Loaded Running Test: {this._testLogId.ToString()}");
                 }
                 this.StationStateChangedHandler(data.Paused ? StationState.Paused:StationState.Running);
             } else {
@@ -305,7 +305,6 @@
                 var testLogResult= await this.TestLogDataService.GetLastTestLog(this.StationId);
                 this._pocketWaferSetups=testLogResult.Setup;
                 this._testLogId = testLogResult.Id;
-                /*Console.WriteLine($"Loaded Running Test: {this._testLogId.ToString()}");*/
             }
             this.StationStateChangedHandler(data.Running ? (data.Paused) ? StationState.Paused:StationState.Running : StationState.Idle);
         }
@@ -328,23 +327,43 @@
                 bool sendAlert = false;
                 for(int i=0;i<ControllerHardwareConstants.PROBE_COUNT;i++) {
                     var probeValue = i % 2==0 ? i/2+1: (i-1)/2+1;
-                    Console.WriteLine($"probeValue: {i} ");
                     if (this._pocketWaferSetups[StationPocket.FromValue(probeValue).Name].Loaded) {
-                        Console.WriteLine($"Found Probe: {i} Loaded");
-                        this._probeAlerts[i].Loaded = true;
-                        if(!data.ProbeRunTimeOkay[i]) {
-                            if(this._probeAlerts[i].Okay) {
-                                this._probeAlerts[i].Okay = false;
-                                this._probeAlerts[i].Acknowledged = false;
-                                sendAlert = true;
+                        bool loaded = false;
+                        if (i % 2 == 0) {
+                            loaded = !string.IsNullOrWhiteSpace(this._pocketWaferSetups[StationPocket.FromValue(probeValue).Name].Probe2Pad);
+                        } else {
+                            loaded = !string.IsNullOrWhiteSpace(this._pocketWaferSetups[StationPocket.FromValue(probeValue).Name].Probe1Pad);
+                        }
+                        this._probeAlerts[i].Loaded = loaded;
+                        if (loaded) {
+                            if(!data.ProbeRunTimeOkay[i]) {
+                                if (!this._probeAlerts[i].Latched) {
+                                    this._probeAlerts[i].LastAlert = DateTime.Now;
+                                    this._probeAlerts[i].Latched = true;
+                                } else {
+                                    if ((DateTime.Now - this._probeAlerts[i].LastAlert).TotalSeconds >= 5) {
+                                        if(this._probeAlerts[i].Okay) {
+                                            this._probeAlerts[i].Okay = false;
+                                            this._probeAlerts[i].Acknowledged = false;
+                                            sendAlert = true;
+                                        }
+                                    }
+                                }
+                            } else {
+                                this._probeAlerts[i].Latched = false;
+                                if(!this._probeAlerts[i].Okay) {
+                                    this._probeAlerts[i].Okay = true;
+                                    this._probeAlerts[i].Acknowledged = false;
+                                    sendAlert = true;
+                                }
                             }
                         } else {
-                            if(!this._probeAlerts[i].Okay) {
-                                this._probeAlerts[i].Okay = true;
-                                this._probeAlerts[i].Acknowledged = false;
-                                sendAlert = true;
-                            }
+                            this._probeAlerts[i].Okay = true;
+                            this._probeAlerts[i].Acknowledged = false;
+                            this._alertLatched = false;
+                            this._probeAlerts[i].Loaded = false;
                         }
+
                     } else {
                         this._probeAlerts[i].Okay = true;
                         this._probeAlerts[i].Acknowledged = false;
@@ -357,11 +376,9 @@
                         if (!this._alertTimer.Enabled) {
                             this._alertTimer.Start();
                         }
-                        var alerts=this._probeAlerts.Where(e => e is { Okay: false, Acknowledged: false }).Select(e=>e.ProbeId).ToList();
-                        foreach (var p in alerts) {
-                            Console.Write($"{p},");
-                        }
-                        Console.WriteLine();
+                        var alerts=this._probeAlerts
+                            .Where(e => e is { Okay: false, Acknowledged: false })
+                            .Select(e=>e.ProbeId).ToList();
                         if (alerts.Count > 0) {
                             this.StationErrorService.NotifyError(this.StationId ?? "S00",alerts);
                         }
@@ -400,4 +417,15 @@
             }
         }
     }
+
+    private async Task ShowLiveViewHandler() {
+        this.DialogService.Open<LiveView>($"Station <strong>{this.StationId}</strong> Live View", new Dictionary<string, object> {
+            {"Connection", this._hubConnection}
+        },new DialogOptions { Width = "fit-content",
+            Height = "fit-content" , 
+            ShowClose = true,
+            CloseDialogOnOverlayClick = true,
+            CloseDialogOnEsc = true});
+    }
+
 }

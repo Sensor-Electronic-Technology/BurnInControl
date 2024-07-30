@@ -1,0 +1,61 @@
+@using BurnInControl.HubDefinitions.Hubs
+@using BurnInControl.Shared
+@using BurnInControl.Shared.ComDefinitions
+@using BurnInControl.Shared.UiShared
+@using Microsoft.AspNetCore.SignalR.Client
+@inject DialogService DialogService
+
+@if (_data != null) {
+    <RadzenRow Style="background: rgba(110,137,183,0.28); padding: 1rem;">
+        <RadzenSplitter>
+            <RadzenSplitterPane Size="20">
+                <ElapsedView Elapsed="@this._data.ElapsedSeconds"
+                             ProbeStates="@this._probeStates"
+                             Running="@this._data.Running"/>
+            </RadzenSplitterPane>
+            <RadzenSplitterPane Size="80">
+                <StationDisplays Voltages="@this._data.Voltages"
+                                 Currents="@this._data.Currents"
+                                 Temps="@this._data.Temperatures"
+                                 TempStates="@this._data.HeaterStates"/>
+            </RadzenSplitterPane>
+        </RadzenSplitter>
+    </RadzenRow>
+} else {
+    <RadzenStack AlignItems="AlignItems.Center">
+        <RadzenProgressBarCircular ShowValue="false" 
+                                   Mode="ProgressBarMode.Indeterminate" 
+                                   Size="ProgressBarCircularSize.Large">
+            <Template>Loading</Template>
+        </RadzenProgressBarCircular>
+    </RadzenStack>
+}
+
+
+@code {
+    private StationSerialData? _data { get; set; }
+    [Parameter] public HubConnection Connection { get; set; }
+    
+    private List<ProbeState> _probeStates =
+    [new ProbeState() { RunTime = 0, RunTimeOkay = false }, 
+        new ProbeState() { RunTime = 0, RunTimeOkay = false }, 
+        new ProbeState() { RunTime = 0, RunTimeOkay = false }, 
+        new ProbeState() { RunTime = 0, RunTimeOkay = false }, 
+        new ProbeState() { RunTime = 0, RunTimeOkay = false }, 
+        new ProbeState() { RunTime = 0, RunTimeOkay = false }];
+
+    protected override async Task OnInitializedAsync() {
+        this.Connection.On<StationSerialData>(StationHubConstants.Events.OnStationData, this.OnSerialComReceived);
+        
+    }
+
+    private async Task OnSerialComReceived(StationSerialData data) {
+        this._data = data;
+        for (int i = 0; i < ControllerHardwareConstants.PROBE_COUNT; i++) {
+            this._probeStates[i].RunTime = data.ProbeRuntimes[i];
+            this._probeStates[i].RunTimeOkay = data.ProbeRunTimeOkay[i];
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+}

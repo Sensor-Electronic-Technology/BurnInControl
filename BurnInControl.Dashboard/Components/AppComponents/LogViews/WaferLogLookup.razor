@@ -1,27 +1,198 @@
-@*<RadzenStack Orientation="Orientation.Horizontal">
-    <RadzenFieldset Text="Select Station">
-        <WaferIdInput></WaferIdInput>
-    </RadzenFieldset>
-    <RadzenFieldset Text="Select Data Type">
-        <RadzenSelectBar TValue="int"
-                         Size="ButtonSize.Small"
-                         Value="@this._selectedOption"
-                         ValueChanged="@SelectionOptionChanged"
-                         Data="@this._selectionOptions"
-                         ValueProperty="Value"
-                         TextProperty="Name"/>
-    </RadzenFieldset>
-    <RadzenFieldset Text="Select Data Point Density" Visible="@(this._selectedOption==1)">
-        <RadzenSelectBar TValue="int"
-                         Size="ButtonSize.Small"
-                         Value="@this._dataPointCountOption"
-                         Data="@this._dataPointCountOptions"
-                         ValueChanged="DataPointDensityChangedHandler"
-                         ValueProperty="N"
-                         TextProperty="Name"/>
-    </RadzenFieldset>
-</RadzenStack>*@
+@using BurnInControl.Dashboard.Data
+@using BurnInControl.Data.BurnInTests
+@using BurnInControl.Data.BurnInTests.DataTransfer
+@using BurnInControl.Infrastructure.StationModel
+@using BurnInControl.Infrastructure.TestLogs
+@inject TestLogDataService TestLogDataService
+@inject StationDataService StationDataService
+
+<RadzenStack>
+    <RadzenStack Orientation="Orientation.Horizontal">
+        <WaferIdInput WaferList="@this._waferList"
+                      @bind-WaferId="@this._waferId"
+                      FetchWaferData="FetchWaferDataHandler"/>
+        <RadzenFieldset Text="Select Data Type">
+            <RadzenSelectBar TValue="int"
+                             Size="ButtonSize.Small"
+                             Value="@this._selectedOption"
+                             ValueChanged="@SelectionOptionChanged"
+                             Data="@this._selectionOptions"
+                             ValueProperty="Value"
+                             TextProperty="Name"/>
+        </RadzenFieldset>
+        <RadzenFieldset Text="Select Data Point Density" Visible="@(this._selectedOption==1)">
+            <RadzenSelectBar TValue="int"
+                             Size="ButtonSize.Small"
+                             Value="@this._dataPointCountOption"
+                             Data="@this._dataPointCountOptions"
+                             ValueChanged="DataPointDensityChangedHandler"
+                             ValueProperty="N"
+                             TextProperty="Name"/>
+        </RadzenFieldset>
+    </RadzenStack>
+    @if (this._waferTestLogs == null) {
+        <RadzenText Text="Enter a wafer to view logs or results" TextStyle="TextStyle.H6"/>
+    } else {
+        <RadzenPanel AllowCollapse="true">
+            <HeaderTemplate>
+                <RadzenText TextStyle="TextStyle.H5">
+                    <RadzenIcon Icon="assessment" class="rz-me-1"/><b>@($"{this._selectedStation} Logs")</b>
+                </RadzenText>
+            </HeaderTemplate>
+            <ChildContent>
+                <RadzenCard class="rz-mt-4" Variant="Variant.Outlined">
+                    <RadzenDataGrid TItem="WaferTestDto"
+                                    Data="@this._waferTestLogs"
+                                    AllowGrouping="true"
+                                    AllowPaging="true" PageSize="10"
+                                    AllowFiltering="true"
+                                    AllowSorting="true"
+                                    AllowRowSelectOnRowClick="true"
+                                    SelectionMode="DataGridSelectionMode.Single"
+                                    ValueChanged="@this.SelectedTestLogChangedHandler"
+                                    Density="Density.Compact"
+                                    Value="@this._selectedTestLogs">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(WaferTestDto.StationId)" Title="StationId"/>
+                            <RadzenDataGridColumn Property="@nameof(WaferTestDto.StartTime)" Title="Start"/>
+                            <RadzenDataGridColumn Property="@nameof(WaferTestDto.StopTime)" Title="Stop"/>
+                            <RadzenDataGridColumn Property="@nameof(WaferTestDto.Pocket)" Title="Pocket"/>
+                            <RadzenDataGridColumn Property="@nameof(WaferTestDto.Probe1Pad)" Title="P1 Pad"/>
+                            <RadzenDataGridColumn Property="@nameof(WaferTestDto.Probe2Pad)" Title="P2 Pad"/>
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenCard>
+            </ChildContent>
+        </RadzenPanel>
+    }
+    @switch (this._selectedOption) {
+        case 0: {
+            <WaferTestResultsView WaferTestResults="@this._waferTestResults"/>
+            break;
+        }
+        case 1: {
+            @if (this._loading) {
+                <RadzenStack AlignItems="AlignItems.Center">
+                    <RadzenProgressBarCircular ShowValue="false" 
+                                               Mode="ProgressBarMode.Indeterminate" 
+                                               Size="ProgressBarCircularSize.Large">
+                        <Template>Loading</Template>
+                    </RadzenProgressBarCircular>
+                </RadzenStack>
+            } else {
+                @if (this.IsDataVisible()) {
+                    <RadzenTabs RenderMode="TabRenderMode.Client">
+                        <Tabs>
+                            <RadzenTabsItem Text="Plot">
+                                <StationTestPlotView StationTestLogs="@this._stationTestLogsReadings"
+                                                     Pocket1Wafer="@this._lWaferId"
+                                                     Pocket2Wafer="@this._mWaferId"
+                                                     Pocket3Wafer="@this._rWaferId"/>
+                            </RadzenTabsItem>
+                            <RadzenTabsItem Text="Table">
+                                <StationLogView StationTestLogs="@this._stationTestLogsReadings"
+                                                Pocket1Wafer="@this._lWaferId"
+                                                Pocket2Wafer="@this._mWaferId"
+                                                Pocket3Wafer="@this._rWaferId"/>
+                            </RadzenTabsItem>
+                        </Tabs>
+                    </RadzenTabs>
+                }
+            }
+            break;
+        }
+    }
+    
+</RadzenStack>
+
 
 @code {
+    private IEnumerable<WaferTestDto>? _waferTestLogs;
+    private IList<WaferTestDto>? _selectedTestLogs;
+    private IEnumerable<WaferTestResultDto>? _waferTestResults;
+    private IEnumerable<StationTestReading>? _stationTestLogsReadings;
     
+    private List<SelectOption> _selectionOptions = [
+        new SelectOption(){Name="Wafers Test Result", Value=0}, 
+        new SelectOption(){Name="Raw Log", Value=1}
+    ];
+
+    private List<DataPointOption> _dataPointCountOptions = [
+        new DataPointOption(){Name="All", N=1},
+        new DataPointOption(){Name="Every 5th", N=5},
+        new DataPointOption(){Name="Every 10th", N=10},
+        new DataPointOption(){Name="Every 20th", N=20},
+    ];
+    
+    private int _dataPointCountOption=5;
+    private int _selectedOption=0;
+    private string _selectedStation = string.Empty;
+    bool _loading = false;
+    private List<string> _waferList = [];
+    private string? _waferId = string.Empty;
+    
+    private string? _lWaferId=string.Empty,_rWaferId=string.Empty,_mWaferId=string.Empty;
+    
+
+    protected override async Task OnInitializedAsync() {
+        var waferList=await this.TestLogDataService.GetRecentWaferList(60);
+        this._waferList = waferList ?? [];
+        this._dataPointCountOption = 5;
+    }
+
+    private async Task DataPointDensityChangedHandler(int n) {
+        this._dataPointCountOption = n;
+        await this.Load();
+    }
+    
+    private async Task SelectionOptionChanged(int option) {
+        this._selectedOption = option; 
+        await this.Load();
+    }
+    
+    private async Task SelectedTestLogChangedHandler(IList<WaferTestDto> selectedTestLogs) {
+        this._selectedTestLogs = selectedTestLogs;
+        await this.Load();
+    }
+    
+    private bool IsDataVisible() {
+        return this._selectedTestLogs?.Any() == true && this._waferId != string.Empty;
+    }
+    
+    private async Task Load() {
+        switch (this._selectedOption) {
+            case 0: {
+                if (this._selectedTestLogs?.Any()==true) {
+                    this._waferTestResults = await this.TestLogDataService.GetWaferTestResultsDto(this._selectedTestLogs[0].TestId);
+                    await InvokeAsync(StateHasChanged);
+                }
+                break;
+            }
+            case 1: {
+                if (this._selectedTestLogs?.Any() == true) {
+                    Console.WriteLine("test results loaded");
+                    this._loading = true;
+                    await InvokeAsync(StateHasChanged);
+                    var result= await this.TestLogDataService.GetWaferTestLogReadings(this._selectedTestLogs[0].TestId,
+                        this._dataPointCountOption==0 ? 1:this._dataPointCountOption);
+                    this._lWaferId = result.LeftWaferId;
+                    this._mWaferId = result.MiddleWaferId;
+                    this._rWaferId = result.RightWaferId;
+                    this._stationTestLogsReadings = result.readings;
+                    this._loading = false;
+                    await InvokeAsync(StateHasChanged);
+                }
+                break;
+            }
+        }
+    }
+
+    private async Task FetchWaferDataHandler(string waferId) {
+        this._waferId = waferId;
+        this._waferTestLogs = await this.TestLogDataService.GetWaferTests(waferId);
+        this._selectedTestLogs = [];
+        this._stationTestLogsReadings = [];
+        this._waferTestResults = [];
+    }
+
 }

@@ -1,6 +1,8 @@
 @using BurnInControl.Data.BurnInTests.DataTransfer
 @if (this.WaferTestResults?.Any()==true) {
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+    <RadzenStack Orientation="Orientation.Horizontal" 
+                 AlignItems="AlignItems.Center" 
+                 JustifyContent="JustifyContent.Center">
         @foreach(var waferTest in this.WaferTestResults) {
             <WaferTestResultView WaferTestResult="@waferTest"/>
         }

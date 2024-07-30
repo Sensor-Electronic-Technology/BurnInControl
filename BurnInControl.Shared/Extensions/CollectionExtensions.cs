@@ -2,6 +2,7 @@ namespace BurnInControl.Shared.Extensions;
 
 public static class CollectionExtensions {
     public static IEnumerable<T> GetNth<T>(this List<T> list, int n) {
+        n = (n == 0) ? n = 1 : n;
         for (int i=0; i<list.Count; i+=n)
             yield return list[i];
     }

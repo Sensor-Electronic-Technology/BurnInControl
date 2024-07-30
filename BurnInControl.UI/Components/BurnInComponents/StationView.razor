@@ -7,6 +7,7 @@
 @using BurnInControl.HubDefinitions.HubTransports
 @using BurnInControl.Shared
 @using BurnInControl.Shared.ComDefinitions.Packets
+@using BurnInControl.Shared.UiShared
 @using Environment = System.Environment
 @using BurnInControl.UI.Components.BurnInComponents.Controls.ControlPane
 @using BurnInControl.UI.Data
@@ -49,12 +50,6 @@
                                            CancelCallback="@this.CancelTestSetupHandler"
                                            TestRunning="@this._testRunning"/>
                             </RadzenTabsItem>
-                            @*<RadzenTabsItem Text="Plots">
-                                $1$<LivePlots/>#1#
-                                <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
-                                    <RadzenText TextStyle="TextStyle.H4" Text="Coming Soon...."/>
-                                </RadzenRow>
-                            </RadzenTabsItem>*@
                         </Tabs>
                     </RadzenTabs>
                 </RadzenSplitter>

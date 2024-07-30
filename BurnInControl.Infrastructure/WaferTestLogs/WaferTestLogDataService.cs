@@ -1,5 +1,6 @@
 using System.Globalization;
 using BurnInControl.Data.BurnInTests;
+using BurnInControl.Data.BurnInTests.DataTransfer;
 using BurnInControl.Shared.AppSettings;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -36,6 +37,28 @@ public class WaferTestLogDataService {
     
     public async Task<WaferTestLog?> GetWaferTestLog(string waferId) {
         return await this._waferTestLogCollection.Find(e => e.WaferId == waferId).FirstOrDefaultAsync();
+    }
+
+    public async Task<List<WaferTestDto>?> GetWaferTests(string waferId) {
+        var result= await this._waferTestLogCollection
+            .Find(e => e.WaferId == waferId)
+            .Project(e=>e.WaferTests.Select(test=>new WaferTestDto() {
+                TestId = test.TestId,
+                Pocket = test.Pocket.Name,
+                StartTime = test.StartTime,
+                StopTime = test.StopTime,
+                BurnNumber = test.BurnNumber,
+                Probe1Pad = test.Probe1Pad,
+                Probe2Pad = test.Probe2Pad,
+            })).FirstOrDefaultAsync();
+        return result?.ToList();
+    }
+
+    public async Task<List<string>?> GetRecentWaferList(int days) {
+        return await this._waferTestLogCollection
+            .Find(e=>e.WaferTests.Any(t=>t.StartTime>DateTime.Now.AddDays(-days)))
+            .Project(e=>e.WaferId)
+            .ToListAsync();
     }
     
     public async Task Insert(string waferId,WaferTest waferTest) {
@@ -101,7 +124,6 @@ public class WaferTestLogDataService {
     }
 
     public async Task<List<string>> GetWaferBurnInResult(string waferId) {
-        
         var waferTestLog = await this._waferTestLogCollection.Find(e => e.WaferId == waferId).FirstOrDefaultAsync();
         if(waferTestLog is null) {
             return new List<string>();

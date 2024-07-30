@@ -1,25 +1,26 @@
-<RadzenStack Orientation="Orientation.Vertical"
-             JustifyContent="JustifyContent.Center"
-             AlignItems="AlignItems.Center">
-    <RadzenFieldset Text="Wafer">
-        <RadzenAutoComplete FilterOperator="StringFilterOperator.StartsWith" 
-                            FilterDelay="100"
-                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                            Value="@this.WaferId"
-                            Data="@this.WaferList"
-                            ValueChanged="@this.WaferIdChangeHandler"
-                            Style="width: 13rem"/>
-        <RadzenText TextStyle="TextStyle.Body2">Start typing e.g. B01-0001-01</RadzenText>
-    </RadzenFieldset>
-</RadzenStack>
+<RadzenFieldset Text="Wafer">
+    <RadzenStack Orientation="Orientation.Vertical">
+        <RadzenStack Orientation="Orientation.Vertical">
+            <RadzenAutoComplete FilterOperator="StringFilterOperator.StartsWith"
+                                FilterDelay="100"
+                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                @bind-Value="@this.WaferId"
+                                Data="@this.WaferList"
+                                Style="width: 13rem"/>
+            <RadzenText TextStyle="TextStyle.Body2">Start typing e.g. B01-0001-01</RadzenText>
+        </RadzenStack>
+        <RadzenButton Text="Fetch" ButtonStyle="ButtonStyle.Info" Click="Callback"/>
+    </RadzenStack>
+</RadzenFieldset>
+    
+
 
 @code {
     [Parameter] public string? WaferId { get; set; }
     [Parameter] public EventCallback<string> WaferIdChanged { get; set; }
+    [Parameter] public EventCallback<string> FetchWaferData { get; set; }
     [Parameter] public IEnumerable<string> WaferList { get; set; } = [];
-    
-    private async Task WaferIdChangeHandler(string? waferId) {
-        this.WaferId = waferId;
-        await this.WaferIdChanged.InvokeAsync(this.WaferId);
+    private async Task Callback() {
+        await this.FetchWaferData.InvokeAsync(this.WaferId);
     }
 }

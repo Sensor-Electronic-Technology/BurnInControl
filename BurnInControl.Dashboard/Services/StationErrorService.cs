@@ -7,17 +7,13 @@ public class StationErrorService {
     public Dictionary<string,List<string>> Errors { get; } = new();
 
     public StationErrorService() {
-        for(int i=0; i<10; i++) {
-            if ((i+1) < 10) {
-                this.Errors.Add($"S0{i}", new());
-            }else {
-                this.Errors.Add($"S{i}", new());
-            }
+        for(int i=1; i<=10; i++) {
+            string stationId = (i<10) ? $"S0{i}":$"S{i}";
+            this.Errors.Add(stationId,[]);
         }
     }
     
     public void NotifyError(string stationId, List<string> probeIds) {
-        Console.WriteLine($"Station Id: {stationId}");
         if (this.Errors.TryGetValue(stationId, out var error)) {
             error.Clear();
             error.AddRange(probeIds);

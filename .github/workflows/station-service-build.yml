@@ -60,7 +60,8 @@ jobs:
     runs-on: [burn-in]
     strategy:
       matrix:
-        runner: [ S01, S02, S03, S04, S05, S06, S07, S08, S09, S10 ] # Replace with your runner names
+        runner: [ S02 ] # Replace with your runner names
+        #runner: [ S01, S02, S03, S04, S05, S06, S07, S08, S09, S10 ] # Replace with your runner names
     steps:
       - run: |
           cd /home/setitech/Documents/StationSoft/StationService/app/updates/

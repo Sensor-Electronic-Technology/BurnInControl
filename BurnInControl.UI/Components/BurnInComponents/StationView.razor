@@ -456,17 +456,19 @@
         return Task.CompletedTask;
     }
 
-    private Task OnConnectClicked() {
+    private async Task OnConnectClicked() {
         if (this.Connected) {
             this._eventConsole.Log("Disconnect Clicked", AlertStyle.Warning);
             this.StationStatusService.StationState = StationState.Offline;
-            return this.HubClient.StopAsync();
+            await this.HubClient.StopAsync();
         } else {
             this.StationStatusService.StationState = StationState.Idle;
             this._eventConsole.Log("Connect Clicked", AlertStyle.Success);
             //return this.StartConnection();
-            return this.HubClient.StartAsync();
+            await this.HubClient.StartAsync();
         }
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private Task OnUsbConnectClicked() {

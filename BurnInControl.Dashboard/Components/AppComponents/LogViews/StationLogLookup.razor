@@ -3,6 +3,7 @@
 @using BurnInControl.Infrastructure.StationModel
 @using BurnInControl.Infrastructure.TestLogs
 @using BurnInControl.Dashboard.Data
+@using BurnInControl.Shared
 @inject TestLogDataService TestLogDataService
 @inject StationDataService StationDataService
 
@@ -19,6 +20,15 @@
             <RadzenDropDown TValue="string" Data="@this._stations"
                             Value="@this._selectedStation"
                             ValueChanged="SelectedStationChanged"/>
+        </RadzenFieldset>
+        <RadzenFieldset Text="Test Limit">
+            <RadzenSelectBar TValue="TestCountType"
+                             Size="ButtonSize.Small"
+                             Value="@this._selectedTestCountOption"
+                             ValueChanged="@SelectedTestCountOptionChanged"
+                             Data="@this._testCountOptions"
+                             ValueProperty="TestCountType"
+                             TextProperty="Name"/>
         </RadzenFieldset>
         <RadzenFieldset Text="Select Data Type">
             <RadzenSelectBar TValue="int"
@@ -121,6 +131,14 @@
     private IList<BurnInTestLogDto> _selectedTestLogs=[];
     private IEnumerable<WaferTestResultDto>? _waferTestResults;
     private IEnumerable<StationTestReading>? _stationTestLogsReadings;
+    
+    private List<TestCountOption> _testCountOptions = [
+        new TestCountOption(){Name="All", TestCountType= TestCountType.All},
+        new TestCountOption(){Name="Last 60", TestCountType= TestCountType.Last60},
+        new TestCountOption(){Name="Last 100", TestCountType= TestCountType.Last100},
+        new TestCountOption(){Name="Last 200", TestCountType= TestCountType.Last200},
+    ];
+    
     private List<SelectOption> _selectionOptions = [
         new SelectOption(){Name="Wafers Test Result", Value=0}, 
         new SelectOption(){Name="Raw Log", Value=1}
@@ -135,17 +153,19 @@
 
     private int _dataPointCountOption=5;
     private int _selectedOption;
+    private TestCountType _selectedTestCountOption=TestCountType.All;
     private string _selectedStation = string.Empty;
     bool _loading = false;
     
     protected override async Task OnInitializedAsync() {
         this._stations = await this.StationDataService.GetStationList();
         this._dataPointCountOption = 5;
+        this._selectedTestCountOption = TestCountType.All;
     }
 
     private async Task SelectedStationChanged(string station) {
         this._selectedStation = station;
-        this._stationTestLogs=await this.TestLogDataService.GetRecentStationTests(station);
+        this._stationTestLogs=await this.TestLogDataService.GetRecentStationTests(station,this._selectedTestCountOption);
         this._selectedTestLogs = [];
         this._stationTestLogsReadings = [];
         this._waferTestResults = [];
@@ -169,6 +189,20 @@
         this._dataPointCountOption = n;
         await this.Load();
     }
+    
+    private async Task SelectedTestCountOptionChanged(TestCountType testCountType) {
+        this._selectedTestCountOption = testCountType;
+        await this.ReLoadStationLogs();
+    }
+
+    private async Task ReLoadStationLogs() {
+        if (!string.IsNullOrWhiteSpace(this._selectedStation)) {
+            this._stationTestLogs=await this.TestLogDataService.GetRecentStationTests(this._selectedStation,this._selectedTestCountOption);
+            this._selectedTestLogs = [];
+            this._stationTestLogsReadings = [];
+            this._waferTestResults = [];
+        }
+    }
 
     private async Task Load() {
         switch (this._selectedOption) {
@@ -191,4 +225,7 @@
             }
         }
     }
+
+
+
 }

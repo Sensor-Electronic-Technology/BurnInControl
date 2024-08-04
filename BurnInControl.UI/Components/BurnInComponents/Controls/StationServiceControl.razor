@@ -1,18 +1,15 @@
 <RadzenFieldset Text="Station Service" Style="width: fit-content;">
     <RadzenStack>
-        <RadzenToggleButton Value="@this.ServiceConnected"
-                            Text="@(this.ServiceConnected ? "Disconnect Service" : "Connect Service")"
-                            ButtonStyle="ButtonStyle.Secondary"
-                            Size="ButtonSize.Medium"
-                            ToggleButtonStyle="ButtonStyle.Secondary"
-                            Click="@this.Connect" Style="width: 170px; height: 52px"/>
-        <RadzenToggleButton Value="@this.UsbConnected"
-                            Text="@(this.UsbConnected ? "Disconnect Usb" : "Connect Usb")"
-                            ButtonStyle="ButtonStyle.Primary"
-                            Size="ButtonSize.Medium"
-                            Visible="@this.UsbVisible"
-                            ToggleButtonStyle="ButtonStyle.Secondary"
-                            Click="@this.UsbConnect" Style="width: 170px; height: 52px"/>
+        <RadzenButton Text="@(this.ServiceConnected ? "Disconnect Service" : "Connect Service")" 
+                      ButtonStyle="@(this.ServiceConnected ? ButtonStyle.Light : ButtonStyle.Info)" 
+                      Size="ButtonSize.Medium" 
+                      Click="@this.Connect" 
+                      Style="width: 170px; height: 52px"/>
+        <RadzenButton Text="@(this.UsbConnected ? "Disconnect Usb" : "Connect Usb")"
+                      ButtonStyle="@(this.UsbConnected ? ButtonStyle.Light: ButtonStyle.Primary)"
+                      Size="ButtonSize.Medium"
+                      Visible="@this.UsbVisible"
+                      Click="@this.UsbConnect" Style="width: 170px; height: 52px"/>
         <RadzenToggleButton Text="Restart Service"
                             ButtonStyle="ButtonStyle.Warning"
                             Size="ButtonSize.Medium"

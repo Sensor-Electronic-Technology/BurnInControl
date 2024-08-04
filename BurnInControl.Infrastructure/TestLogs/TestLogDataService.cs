@@ -4,6 +4,7 @@ using BurnInControl.Data.BurnInTests.Wafers;
 using BurnInControl.Data.StationModel.Components;
 using BurnInControl.Infrastructure.StationModel;
 using BurnInControl.Infrastructure.WaferTestLogs;
+using BurnInControl.Shared;
 using BurnInControl.Shared.AppSettings;
 using BurnInControl.Shared.ComDefinitions;
 using BurnInControl.Shared.Extensions;
@@ -81,18 +82,6 @@ public class TestLogDataService {
             return log;
         }
     }
-    public async Task<ErrorOr<BurnInTestLog>> GetTestLogWithReadings(ObjectId id) {
-        var log=await this._testLogCollection.Find(e => e._id == id).FirstOrDefaultAsync();
-        if (log == null) {
-            return Error.NotFound(description: "BurnInTestLog Not Found");
-        } else {
-            return log;
-        }
-    }
-    public Task<bool> LogExists(ObjectId id) {
-        return this._testLogCollection.Find(e => e._id == id)
-            .AnyAsync();
-    }
     public async Task<ErrorOr<BurnInTestLog>> StartNew(BurnInTestLog log) {
         log._id = ObjectId.GenerateNewId();
         var result = await this._stationDataService.GetTestConfiguration(log.SetCurrent);
@@ -102,18 +91,6 @@ public class TestLogDataService {
         log.RunTime=result.Value.RunTime;
         await this._testLogCollection.InsertOneAsync(log);
         this._logger.LogInformation("Started new test log. Id: {Id}",log._id.ToString());
-        return log;
-    }
-    public async Task<ErrorOr<BurnInTestLog>> StartNewUnknown(BurnInTestLog log,StationCurrent current) {
-        var result = await this._stationDataService.GetTestConfiguration(current);
-        if (result.IsError) {
-            this._logger.LogWarning("Test configuration for {Value} not found",current.Value);
-            return Error.NotFound(description:$"Test configuration for {current.Value} not found");
-        }
-        log.SetCurrent=result.Value.SetCurrent;
-        log.RunTime=result.Value.RunTime;
-        await this._testLogCollection.InsertOneAsync(log);
-        this._logger.LogInformation("Started new unknown test log. Id: {Id}",log._id.ToString());
         return log;
     }
     public async Task<ErrorOr<Deleted>> DeleteTestLog(ObjectId? id) {
@@ -264,7 +241,7 @@ public class TestLogDataService {
         return [];
     }
     
-        public async Task<(string LeftWaferId,string MiddleWaferId,string RightWaferId,List<StationTestReading> readings)> GetWaferTestLogReadings(ObjectId id,int n) {
+    public async Task<(string LeftWaferId,string MiddleWaferId,string RightWaferId,List<StationTestReading> readings)> GetWaferTestLogReadings(ObjectId id,int n) {
         var log = await this._testLogCollection.Find(e => e._id == id).FirstOrDefaultAsync();
         string lWaferId, rWaferId, mWaferId;
         lWaferId=log.TestSetup[StationPocket.LeftPocket.Name].WaferId;
@@ -395,7 +372,13 @@ public class TestLogDataService {
         }
     }
 
-    public async Task<IEnumerable<BurnInTestLogDto>> GetRecentStationTests(string stationId,int limit=30) {
+    public async Task<IEnumerable<BurnInTestLogDto>> GetRecentStationTests(string stationId,TestCountType countType) {
+        int limit = countType switch {
+            TestCountType.Last60 => 60,
+            TestCountType.Last100 => 100,
+            TestCountType.Last200 => 200,
+            _ => 0
+        };
         return await this._testLogCollection.Find(e=>e.StationId==stationId)
             .SortByDescending(e=>e.StartTime)
             .Limit(limit)

@@ -43,14 +43,14 @@
                 <RadzenCard class="rz-mt-4" Variant="Variant.Outlined">
                     <RadzenDataGrid TItem="WaferTestDto"
                                     Data="@this._waferTestLogs"
-                                    AllowGrouping="true"
+                                    AllowGrouping="false"
                                     AllowPaging="true" PageSize="10"
-                                    AllowFiltering="true"
+                                    AllowFiltering="false"
                                     AllowSorting="true"
                                     AllowRowSelectOnRowClick="true"
                                     SelectionMode="DataGridSelectionMode.Single"
                                     ValueChanged="@this.SelectedTestLogChangedHandler"
-                                    Density="Density.Compact"
+                                    Density="Density.Default"
                                     Value="@this._selectedTestLogs">
                         <Columns>
                             <RadzenDataGridColumn Property="@nameof(WaferTestDto.StationId)" Title="StationId"/>
@@ -135,7 +135,7 @@
     
 
     protected override async Task OnInitializedAsync() {
-        var waferList=await this.TestLogDataService.GetRecentWaferList(60);
+        var waferList=await this.TestLogDataService.GetRecentWaferList(0);
         this._waferList = waferList ?? [];
         this._dataPointCountOption = 5;
     }

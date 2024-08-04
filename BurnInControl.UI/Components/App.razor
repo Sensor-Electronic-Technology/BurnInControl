@@ -8,12 +8,14 @@
     <base href="@NavigationManager.BaseUri" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     @*<link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css">*@
-    <link href="_content/Radzen.Blazor/css/dark-base.css" rel="stylesheet" />
+    @*<link href="_content/Radzen.Blazor/css/dark-base.css" rel="stylesheet" />*@
     @*<link rel="stylesheet" href="_content/Radzen.Blazor/css/software-base.css">*@
     <link href='https://fonts.googleapis.com/css?family=Orbitron' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="css/site.css" />
     <link rel="icon" href="favicon.ico" />
     <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/editor/editor.main.min.css">
+    <RadzenTheme Theme="dark" Wcag="false" @rendermode="@InteractiveServer"/>
+    @*<RadzenTheme Theme="dark" Wcag="false" @rendermode="@InteractiveServer"/>*@
     <HeadOutlet @rendermode="@InteractiveServer" />
     <title>Burn-in Station UI</title>
 </head>
@@ -21,7 +23,7 @@
 <body>
     <Routes @rendermode="@InteractiveServer" />
     <script src="_framework/blazor.web.js"></script>
-    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
     <script>var require = { paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } }</script>
     <script async src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
     <script async src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/editor/editor.main.nls.js"></script>

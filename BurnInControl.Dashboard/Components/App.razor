@@ -7,17 +7,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="@NavigationManager.BaseUri" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
-    <link href="_content/Radzen.Blazor/css/standard-dark.css" rel="stylesheet" />
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/standard-dark-wcag.css">
     <link rel="stylesheet" href="css/site.css" />
     <link rel="icon" href="favicon.ico" />
+    <RadzenTheme Theme="standard-dark" Wcag="true" @rendermode="@InteractiveServer"/>
     <HeadOutlet @rendermode="@InteractiveServer" />
+    <title>Burn-in Dashboard</title>
 </head>
 
 <body>
     <Routes @rendermode="@InteractiveServer" />
     <script src="_framework/blazor.web.js"></script>
-    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
 </body>
 
 </html>

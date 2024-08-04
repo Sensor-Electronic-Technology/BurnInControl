@@ -12,9 +12,9 @@ public class HubClient:IAsyncDisposable {
     
 
     public HubClient(IConfiguration configuration,ILogger<HubClient> logger) {
-        //string hubAddress = configuration["StationHub"] ?? StationHubConstants.HubAddress;
+        string hubAddress = configuration["StationHub"] ?? StationHubConstants.HubAddress;
         string hostHubAddress = configuration["HostHub"] ?? HostHubConstants.HostHubAddress;
-        string hubAddress = "http://172.20.5.31:5000/hubs/station/";
+        //string hubAddress = "http://172.20.5.31:5000/hubs/station/";
         this._logger = logger;
         this.StationHubConnection = new HubConnectionBuilder()
             .WithUrl(hubAddress)
@@ -43,7 +43,7 @@ public class HubClient:IAsyncDisposable {
     }
     
     public async Task StopAsync(CancellationToken cancellation = default) {
-        await StationHubConnection.StopAsync(cancellation);
+        await this.StationHubConnection.StopAsync(cancellation);
         await this.HostHubConnection.StopAsync(cancellation);
         this._started = false;
     }

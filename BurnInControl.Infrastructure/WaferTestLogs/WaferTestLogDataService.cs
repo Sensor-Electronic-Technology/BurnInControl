@@ -55,10 +55,18 @@ public class WaferTestLogDataService {
     }
 
     public async Task<List<string>?> GetRecentWaferList(int days) {
-        return await this._waferTestLogCollection
-            .Find(e=>e.WaferTests.Any(t=>t.StartTime>DateTime.Now.AddDays(-days)))
-            .Project(e=>e.WaferId)
-            .ToListAsync();
+        if (days == 0) {
+            return await this._waferTestLogCollection
+                .Find(_=>true)
+                .Project(e=>e.WaferId)
+                .ToListAsync();
+        } else {
+            return await this._waferTestLogCollection
+                .Find(e=>e.WaferTests.Any(t=>t.StartTime>DateTime.Now.AddDays(-days)))
+                .Project(e=>e.WaferId)
+                .ToListAsync();
+        }
+
     }
     
     public async Task Insert(string waferId,WaferTest waferTest) {

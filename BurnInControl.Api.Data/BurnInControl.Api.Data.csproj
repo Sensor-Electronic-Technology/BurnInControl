@@ -6,4 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\BurnInControl.Data\BurnInControl.Data.csproj" />
+    </ItemGroup>
+
 </Project>

@@ -349,9 +349,9 @@
                     if (this._pocketWaferSetups[StationPocket.FromValue(probeValue).Name].Loaded) {
                         bool loaded = false;
                         if (i % 2 == 0) {
-                            loaded = !string.IsNullOrWhiteSpace(this._pocketWaferSetups[StationPocket.FromValue(probeValue).Name].Probe2Pad);
-                        } else {
                             loaded = !string.IsNullOrWhiteSpace(this._pocketWaferSetups[StationPocket.FromValue(probeValue).Name].Probe1Pad);
+                        } else {
+                            loaded = !string.IsNullOrWhiteSpace(this._pocketWaferSetups[StationPocket.FromValue(probeValue).Name].Probe2Pad);
                         }
                         this._probeAlerts[i].Loaded = loaded;
                         if (loaded) {

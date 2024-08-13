@@ -425,13 +425,20 @@ public class TestLogDataService {
                 testLog.RunTime - 60);
 
             var initTestLog = await this._readingsCollection
-                .Find(e => e.TestLogId == id && e.Reading.ElapsedSeconds >= (ulong)60)
+                .Find(e => e.TestLogId == id && e.Reading.ElapsedSeconds >= (ulong)10)
                 .Project(e => e.Reading)
                 .FirstOrDefaultAsync();
+            
             var finalTestLog = await this._readingsCollection.Find(e =>
                     e.TestLogId == id && e.Reading.ElapsedSeconds >= (ulong)testLog.RunTime - 60)
                 .Project(e => e.Reading)
                 .FirstOrDefaultAsync();
+            
+            /*var finalTestLog = await this._readingsCollection.Find(e =>
+                    e.TestLogId == id)
+                .SortByDescending(e=>e.Reading.ElapsedSeconds)
+                .Project(e => e.Reading)
+                .FirstOrDefaultAsync();*/
 
             if (initTestLog == null || finalTestLog == null) {
                 this._logger.LogWarning("Failed to find initial or final readings for test log {Id}", id.ToString());

@@ -28,7 +28,7 @@ public class TestService:ITestService {
     private readonly IMediator _mediator;
     private string? _stationId;
     private DateTime _lastLog;
-    private DateTime _timeStopped;
+    private DateTime _lastEndingLog;
     private readonly TimeSpan _interval=TimeSpan.FromSeconds(60);
     private readonly ILogger<TestService> _logger;
     private string _path = "/test-logs/";
@@ -71,9 +71,9 @@ public class TestService:ITestService {
         this._runTime = 0ul;
         /*this._startTime = DateTime.MinValue;*/
         this._lastLog = DateTime.MinValue;
+        this._lastEndingLog = DateTime.MinValue;
         /*this._targetFinish = DateTime.MinValue;
         this._timePaused = DateTime.MinValue;*/
-        this._timeStopped = DateTime.MinValue;
         this._runningTest.Reset();
         this._savedStateLog.Reset();
     }
@@ -470,6 +470,7 @@ public class TestService:ITestService {
     public async Task Log(StationSerialData data) {
         this._latestData = data;
         if (this._loggingEnabled) {
+            
             if (this._first) {
                 var now = DateTime.Now;
                 this._first = false;
@@ -481,15 +482,24 @@ public class TestService:ITestService {
                 var now = DateTime.Now;
                 if (this._running != data.Running) {
                     if (this._running) {
-                        this._timeStopped = now;
                         this._waitingForComplete = true;
                     }
                     this._running = data.Running;
                 }
                 this._paused=data.Paused;
                 if ((now - this._lastLog) >= this._interval) {
-                    this._lastLog = DateTime.Now;
+                    this._lastLog = now;
                     if (!this._paused) {
+                        await this.UpdateLogs(data);
+                    }
+                }else if(data.ElapsedSeconds>=(this._runTime-60)) {
+                    if(this._lastEndingLog==DateTime.MinValue) {
+                        this._lastEndingLog = now;
+                        await this.UpdateLogs(data);
+                    }
+                    
+                    if((now-this._lastEndingLog).TotalMilliseconds>=1000) {
+                        this._lastEndingLog = now;
                         await this.UpdateLogs(data);
                     }
                 }

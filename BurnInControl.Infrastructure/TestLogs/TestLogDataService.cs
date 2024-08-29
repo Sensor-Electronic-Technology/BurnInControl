@@ -1,4 +1,5 @@
-﻿using BurnInControl.Data.BurnInTests;
+﻿using System.Globalization;
+using BurnInControl.Data.BurnInTests;
 using BurnInControl.Data.BurnInTests.DataTransfer;
 using BurnInControl.Data.BurnInTests.Wafers;
 using BurnInControl.Data.StationModel.Components;
@@ -23,6 +24,10 @@ public class TestLogDataService {
     private readonly StationDataService _stationDataService;
     private readonly WaferTestLogDataService _waferTestLogDataService;
     private readonly ILogger<TestLogDataService> _logger;
+    private static List<string> _pads = [PadLocation.PadLocationA.Value,PadLocation.PadLocationB.Value,
+        PadLocation.PadLocationC.Value, PadLocation.PadLocationR.Value,
+        PadLocation.PadLocationL.Value,PadLocation.PadLocationT.Value,
+        PadLocation.PadLocationG.Value];
     
     public TestLogDataService(IMongoClient client,
         StationDataService stationDataService,
@@ -434,12 +439,6 @@ public class TestLogDataService {
                 .Project(e => e.Reading)
                 .FirstOrDefaultAsync();
             
-            /*var finalTestLog = await this._readingsCollection.Find(e =>
-                    e.TestLogId == id)
-                .SortByDescending(e=>e.Reading.ElapsedSeconds)
-                .Project(e => e.Reading)
-                .FirstOrDefaultAsync();*/
-
             if (initTestLog == null || finalTestLog == null) {
                 this._logger.LogWarning("Failed to find initial or final readings for test log {Id}", id.ToString());
                 return [];
@@ -488,5 +487,195 @@ public class TestLogDataService {
             return waferTests;
         }
         return [];
+    }
+    
+    public async Task<List<string>> GetExcelBurnInResult(string waferId) {
+        var waferTestLog=await this.GetWaferTestResultExcel(waferId);
+        if (waferTestLog == null) {
+            this._logger.LogWarning("WaferId {waferId} not found,returning empty result",waferId);
+            return [];
+        }
+        List<string> result=new List<string>();
+        List<string> finalResult=new List<string>();
+        List<string> pocketResult=new List<string>();
+        foreach(var pad in _pads) {
+            if (waferTestLog.WaferPadInitialData.ContainsKey(pad)) {
+                result.Add(waferTestLog.WaferPadInitialData[pad].Voltage.ToString("F", CultureInfo.InvariantCulture));
+                result.Add(waferTestLog.WaferPadInitialData[pad].Current.ToString("F", CultureInfo.InvariantCulture));
+            } else {
+                result.Add("0.00");
+                result.Add("0.00");
+            }
+            if (waferTestLog.WaferPadFinalData.ContainsKey(pad)) {
+                finalResult.Add(waferTestLog.WaferPadFinalData[pad].Voltage.ToString("F", CultureInfo.InvariantCulture));
+                finalResult.Add(waferTestLog.WaferPadFinalData[pad].Current.ToString("F", CultureInfo.InvariantCulture));
+                finalResult.Add(waferTestLog.WaferPadFinalData[pad].RunTime.ToString("D", CultureInfo.InvariantCulture));
+                finalResult.Add(waferTestLog.WaferPadFinalData[pad].Okay ? "Okay" : "PFail");
+            } else {
+                finalResult.Add("0.00");
+                finalResult.Add("0.00");
+            }
+            
+            if (waferTestLog.PocketData.ContainsKey(pad)) {
+                pocketResult.Add(waferTestLog.PocketData[pad].StationId);
+                pocketResult.Add(waferTestLog.PocketData[pad].Pocket.ToString("D", CultureInfo.InvariantCulture));
+                pocketResult.Add(waferTestLog.PocketData[pad].SetCurrent.ToString("D", CultureInfo.InvariantCulture));
+                pocketResult.Add(waferTestLog.PocketData[pad].SetTemperature.ToString("D", CultureInfo.InvariantCulture));
+            } else {
+                pocketResult.Add("0");
+                pocketResult.Add("0");
+                pocketResult.Add("0");
+                pocketResult.Add("0");
+            }
+        }
+        result.AddRange(finalResult);
+        result.AddRange(pocketResult);
+
+        /*string pad1 = waferResult.Probe1Data?.PadId ?? "";
+        string pad2 = waferResult.Probe2Data?.PadId ?? "";
+        foreach (var pad in _pads) {
+            if (pad1.Contains(pad) || pad2.Contains(pad)) {
+                if (pad1.Contains(pad)) {
+                    result.Add(waferResult.Probe1Data.InitVoltage.ToString("F", CultureInfo.InvariantCulture));
+                    result.Add(waferResult.Probe1Data.InitCurrent.ToString("F", CultureInfo.InvariantCulture));
+                    finalResult.Add(waferResult.Probe1Data.FinalVoltage.ToString("F", CultureInfo.InvariantCulture));
+                    finalResult.Add(waferResult.Probe1Data.FinalCurrent.ToString("F", CultureInfo.InvariantCulture));
+                    finalResult.Add(waferResult.Probe1Data.RunTime.ToString("D", CultureInfo.InvariantCulture));
+                    finalResult.Add(waferResult.Probe1Data.Okay ? "Okay" : "PFail");
+                    pocketResult.Add(waferResult.Pocket.ToString("D", CultureInfo.InvariantCulture));
+                    pocketResult.Add(waferResult.SetCurrent.ToString("F", CultureInfo.InvariantCulture));
+                    pocketResult.Add(waferResult.SetTemperature.ToString("D", CultureInfo.InvariantCulture));
+                }else if (pad2.Contains(pad)) {
+                    result.Add(waferResult.Probe2Data.InitVoltage.ToString("F", CultureInfo.InvariantCulture));
+                    result.Add(waferResult.Probe2Data.InitCurrent.ToString("F", CultureInfo.InvariantCulture));
+                    finalResult.Add(waferResult.Probe2Data.FinalVoltage.ToString("F", CultureInfo.InvariantCulture));
+                    finalResult.Add(waferResult.Probe2Data.FinalCurrent.ToString("F", CultureInfo.InvariantCulture));
+                    finalResult.Add(waferResult.Probe2Data.RunTime.ToString("D", CultureInfo.InvariantCulture));
+                    finalResult.Add(waferResult.Probe2Data.Okay ? "Okay" : "PFail");
+                    pocketResult.Add(waferResult.Pocket.ToString("D", CultureInfo.InvariantCulture));
+                    pocketResult.Add(waferResult.SetCurrent.ToString("F", CultureInfo.InvariantCulture));
+                    pocketResult.Add(waferResult.SetTemperature.ToString("D", CultureInfo.InvariantCulture));
+                }
+            } else {
+                result.Add("0.00");   //init voltage
+                result.Add("0.00");   //init current
+                finalResult.Add("0.00");//final voltage
+                finalResult.Add("0.00");//final current
+                pocketResult.Add("0");//Pocket
+                pocketResult.Add("0");//Set Current
+                pocketResult.Add("0");//Set Temperature
+            }
+        }
+        result.AddRange(finalResult);
+        result.AddRange(pocketResult);*/
+        return result;
+    }
+    
+    public async Task<WaferTestLogV2?> GetWaferTestResultExcel(string waferId) {
+        var waferTests = await this.GetWaferTests(waferId);
+        if(waferTests==null) {
+            return null;
+        }
+
+        waferTests = waferTests.ToList();
+        if(waferTests.Any()==false) {
+            return null;
+        }
+        
+        WaferTestLogV2 waferTestLog = new WaferTestLogV2();
+        waferTestLog.WaferId = waferId;
+        waferTestLog.WaferPadInitialData = new Dictionary<string, WaferPadData>();
+        waferTestLog.WaferPadFinalData = new Dictionary<string, WaferPadDataV2>();
+        waferTestLog.PocketData = new Dictionary<string, PocketDataV2>();
+        
+        foreach (var waferTest in waferTests.ToList()) {
+            var testLog=await this._testLogCollection.Find(e => e._id == waferTest.TestId).FirstOrDefaultAsync();
+            
+            if (testLog != null && testLog.TestSetup?.Count > 0) {
+                var testSetups = testLog.TestSetup;
+                this._logger.LogInformation("Parsing WaferTestLog. InitSec:{Init} FinalSec:{Final}", 60,
+                    testLog.RunTime - 60);
+
+                var initTestLog = await this._readingsCollection
+                    .Find(e => e.TestLogId == testLog._id && e.Reading.ElapsedSeconds >= (ulong)60)
+                    .Project(e => e.Reading)
+                    .FirstOrDefaultAsync();
+                
+                var finalTestLog = await this._readingsCollection.Find(e =>
+                        e.TestLogId == testLog._id && e.Reading.ElapsedSeconds >= (ulong)testLog.RunTime - 60)
+                    .Project(e => e.Reading)
+                    .FirstOrDefaultAsync();
+                
+                if (initTestLog == null || finalTestLog == null) {
+                    this._logger.LogError("Failed to find initial or final readings for test log {Id}", testLog._id.ToString());
+                    continue;
+                }
+                
+                var pocketKey = testSetups.FirstOrDefault(e => e.Value.WaferId == waferId).Key;
+                if (string.IsNullOrEmpty(pocketKey)) {
+                    this._logger.LogError("Failed to find pocket for wafer {WaferId}", waferId);
+                    continue;
+                }
+
+                if (StationPocket.TryFromName(pocketKey, out var pocket)) {
+                    var testSetup = testSetups[pocket.Name];
+                    if (testSetup.Loaded) {
+                        if (!string.IsNullOrWhiteSpace(testSetup.Probe1Pad)) {
+                            var p1Pad = PadLocation.List.FirstOrDefault(e => testSetup.Probe1Pad.Contains(e.Value));
+                            if (p1Pad != null) {
+                                WaferPadDataV2 pad1FinalData = new WaferPadDataV2() {
+                                    Voltage = finalTestLog.Voltages[(pocket.Value - 1) * 2],
+                                    Current = finalTestLog.Currents[(pocket.Value - 1) * 2],
+                                    RunTime = finalTestLog.ProbeRuntimes[(pocket.Value - 1) * 2],
+                                    Okay = finalTestLog.ProbeRunTimeOkay[(pocket.Value - 1) * 2]
+                                    
+                                };
+                                WaferPadData pad1InitData = new WaferPadData() {
+                                    Voltage = initTestLog.Voltages[(pocket.Value - 1) * 2],
+                                    Current = initTestLog.Currents[(pocket.Value - 1) * 2],
+                                };
+                                PocketDataV2 pad1Data = new PocketDataV2() {
+                                    Pocket = pocket.Value,
+                                    SetCurrent = testLog.SetCurrent?.Value ?? 0,
+                                    SetTemperature = testLog.SetTemperature,
+                                    StationId = testLog.StationId
+                                };
+                                waferTestLog.WaferPadInitialData[p1Pad]=pad1InitData;
+                                waferTestLog.WaferPadFinalData[p1Pad]=pad1FinalData;
+                                waferTestLog.PocketData[p1Pad]=pad1Data;
+                            }
+                        }
+                        if (!string.IsNullOrWhiteSpace(testSetup.Probe2Pad)) {
+                            var p2Pad = PadLocation.List.FirstOrDefault(e => testSetup.Probe2Pad.Contains(e.Value));
+                            if (p2Pad != null) {
+                                WaferPadDataV2 pad2FinalData = new WaferPadDataV2() {
+                                    Voltage = finalTestLog.Voltages[((pocket.Value - 1) * 2) + 1],
+                                    Current = finalTestLog.Currents[((pocket.Value - 1) * 2) + 1],
+                                    RunTime = finalTestLog.ProbeRuntimes[((pocket.Value - 1) * 2) + 1],
+                                    Okay = finalTestLog.ProbeRunTimeOkay[((pocket.Value - 1) * 2) + 1]
+                                    
+                                };
+                                WaferPadData pad2InitData = new WaferPadData() {
+                                    Voltage = initTestLog.Voltages[((pocket.Value - 1) * 2) + 1],
+                                    Current = initTestLog.Currents[((pocket.Value - 1) * 2) + 1],
+                                };
+                                PocketDataV2 pad2Data = new PocketDataV2() {
+                                    Pocket = pocket.Value,
+                                    SetCurrent = testLog.SetCurrent?.Value ?? 0,
+                                    SetTemperature = testLog.SetTemperature,
+                                    StationId = testLog.StationId
+                                };
+                                waferTestLog.WaferPadInitialData[p2Pad]=pad2InitData;
+                                waferTestLog.WaferPadFinalData[p2Pad]=pad2FinalData;
+                                waferTestLog.PocketData[p2Pad]=pad2Data;
+                            }
+                        }
+
+                        return waferTestLog;
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

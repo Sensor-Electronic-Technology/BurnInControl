@@ -17,6 +17,16 @@ public class WaferTestLog {
     public List<WaferTest> WaferTests { get; set; } = new();
 }
 
+public class WaferTestLogV2 {
+    [BsonId]
+    [BsonRepresentation(BsonType.String)]
+    public string WaferId { get; set; } = null!;
+    public int WaferSize { get; set; }
+    public Dictionary<string, WaferPadData> WaferPadInitialData { get; set; } = new();
+    public Dictionary<string, WaferPadDataV2> WaferPadFinalData { get; set; } = new();
+    public Dictionary<string,PocketDataV2> PocketData { get; set; } = new();
+}
+
 public class WaferTest {
     public ObjectId TestId { get; set; }
     public StationPocket Pocket { get; set; }
@@ -52,7 +62,21 @@ public class WaferPadData {
     public double Current { get; set; }
 }
 
+public class WaferPadDataV2 {
+    public double Voltage { get; set; }
+    public double Current { get; set; }
+    public ulong RunTime { get; set; }
+    public bool Okay { get; set; }
+}
+
 public class PocketData {
+    public int Pocket { get; set; }
+    public int SetCurrent { get; set; }
+    public int SetTemperature { get; set; }
+}
+
+public class PocketDataV2 {
+    public string StationId { get; set; }
     public int Pocket { get; set; }
     public int SetCurrent { get; set; }
     public int SetTemperature { get; set; }

@@ -10,6 +10,16 @@ public class WaferTestResultDto {
     public WaferProbeData? Probe2Data { get; set; }
 }
 
+public class WaferTestResultDtoV2 {
+    public ObjectId TestLogId { get; set; }
+    public string WaferId { get; set; }
+    public int Pocket { get; set; }
+    public double SetTemperature { get; set; }
+    public double SetCurrent { get; set; }
+    public WaferProbeData? Probe1Data { get; set; }
+    public WaferProbeData? Probe2Data { get; set; }
+}
+
 public class WaferProbeData {
     public string PadId { get; set; }
     public ulong RunTime { get; set; }
@@ -20,3 +30,4 @@ public class WaferProbeData {
     public bool Okay { get; set; }
     
 }
+

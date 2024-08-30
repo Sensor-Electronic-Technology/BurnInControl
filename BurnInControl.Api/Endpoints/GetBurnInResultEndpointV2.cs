@@ -7,7 +7,6 @@ using FastEndpoints;
 namespace BurnInControl.Api.Endpoints;
 
 public class GetBurnInResultEndpointV2:Endpoint<GetBurnInResultRequest,GetBurnInResultResponse> {
-    
     private TestLogDataService _testLogDataService;
     
     public GetBurnInResultEndpointV2(TestLogDataService testLogDataService) {

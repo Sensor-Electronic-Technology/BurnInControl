@@ -77,6 +77,7 @@ public class PocketData {
 
 public class PocketDataV2 {
     public string StationId { get; set; }
+    public string PadId { get; set; }
     public int Pocket { get; set; }
     public int SetCurrent { get; set; }
     public int SetTemperature { get; set; }

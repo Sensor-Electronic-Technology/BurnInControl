@@ -518,6 +518,7 @@ public class TestLogDataService {
             
             if (waferTestLog.PocketData.ContainsKey(pad)) {
                 pocketResult.Add(waferTestLog.PocketData[pad].StationId);
+                pocketResult.Add(waferTestLog.PocketData[pad].PadId);
                 pocketResult.Add(waferTestLog.PocketData[pad].Pocket.ToString("D", CultureInfo.InvariantCulture));
                 pocketResult.Add(waferTestLog.PocketData[pad].SetCurrent.ToString("D", CultureInfo.InvariantCulture));
                 pocketResult.Add(waferTestLog.PocketData[pad].SetTemperature.ToString("D", CultureInfo.InvariantCulture));
@@ -638,7 +639,8 @@ public class TestLogDataService {
                                     Pocket = pocket.Value,
                                     SetCurrent = testLog.SetCurrent?.Value ?? 0,
                                     SetTemperature = testLog.SetTemperature,
-                                    StationId = testLog.StationId
+                                    StationId = testLog.StationId,
+                                    PadId = testSetup.Probe1Pad
                                 };
                                 waferTestLog.WaferPadInitialData[p1Pad]=pad1InitData;
                                 waferTestLog.WaferPadFinalData[p1Pad]=pad1FinalData;
@@ -663,7 +665,8 @@ public class TestLogDataService {
                                     Pocket = pocket.Value,
                                     SetCurrent = testLog.SetCurrent?.Value ?? 0,
                                     SetTemperature = testLog.SetTemperature,
-                                    StationId = testLog.StationId
+                                    StationId = testLog.StationId,
+                                    PadId = testSetup.Probe2Pad
                                 };
                                 waferTestLog.WaferPadInitialData[p2Pad]=pad2InitData;
                                 waferTestLog.WaferPadFinalData[p2Pad]=pad2FinalData;

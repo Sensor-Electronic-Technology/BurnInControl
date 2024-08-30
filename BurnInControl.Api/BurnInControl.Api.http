@@ -12,4 +12,9 @@ Accept: application/json
 GET http://172.20.4.204/api/burn-in/results/B06-1805-07
 Accept: application/json
 
+###
+
+GET http://172.20.4.204/api/burn-in/results/v2/B06-1805-07
+Accept: application/json
+
 

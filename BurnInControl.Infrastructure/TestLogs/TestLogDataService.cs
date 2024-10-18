@@ -398,8 +398,8 @@ public class TestLogDataService {
                 Completed=e.Completed,
                 ElapsedTime=e.ElapsedTime,
                 LeftPocket=e.TestSetup[StationPocket.LeftPocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.LeftPocket.Name].WaferId,
-                MiddlePocket=e.TestSetup[StationPocket.MiddlePocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.LeftPocket.Name].WaferId,
-                RightPocket=e.TestSetup[StationPocket.RightPocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.LeftPocket.Name].WaferId
+                MiddlePocket=e.TestSetup[StationPocket.MiddlePocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.MiddlePocket.Name].WaferId,
+                RightPocket=e.TestSetup[StationPocket.RightPocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.RightPocket.Name].WaferId
             }).ToListAsync(); 
     }
     
@@ -417,8 +417,8 @@ public class TestLogDataService {
                 Completed=e.Completed,
                 ElapsedTime=e.ElapsedTime,
                 LeftPocket=e.TestSetup[StationPocket.LeftPocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.LeftPocket.Name].WaferId,
-                MiddlePocket=e.TestSetup[StationPocket.MiddlePocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.LeftPocket.Name].WaferId,
-                RightPocket=e.TestSetup[StationPocket.RightPocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.LeftPocket.Name].WaferId
+                MiddlePocket=e.TestSetup[StationPocket.MiddlePocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.MiddlePocket.Name].WaferId,
+                RightPocket=e.TestSetup[StationPocket.RightPocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.RightPocket.Name].WaferId
             }).ToListAsync(); 
     }
 

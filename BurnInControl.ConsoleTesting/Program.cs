@@ -52,7 +52,21 @@ for(int i=0;i<=values.Count;i++) {
 }*/
 
 //TestListCompare();
-PingTest();
+//PingTest();
+
+await TestLogsTesting();
+
+async Task TestLogsTesting() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("burn_in_db");
+    var testLogCollection = database.GetCollection<BurnInTestLog>("test_logs");
+    var testLogs=await testLogCollection.Find(e => e.StationId == "S10").SortByDescending(e=>e.StartTime).Limit(5).ToListAsync();
+    foreach (var log in testLogs) {
+        Console.WriteLine($"Left: {log.TestSetup[StationPocket.MiddlePocket.Name].WaferId}");
+    }
+}
+
+
 
 void PingTest() {
     using var ping = new Ping();
@@ -88,18 +102,7 @@ void TestListCompare() {
     }
 }
 
-async Task GetTestLogs() {
-    string id = "669fab78323736492ca55665";
-    var client = new MongoClient("mongodb://172.20.3.41:27017");
-    StationDataService stationDataService = new StationDataService(client);
-    TestLogDataService testLogDataService=new TestLogDataService(client,stationDataService);
-    var readings=await testLogDataService.GetTestLogReadings(ObjectId.Parse(id), StationPocket.LeftPocket);
-    StringBuilder builder = new StringBuilder();
-    foreach (var reading in readings) {
-        builder.AppendLine($"{reading.Temperature}\t{reading.P1Current}\t{reading.P2Current}\t{reading.P1Voltage}\t{reading.P2Voltage}\t{reading.P1Runtime}\t{reading.P2Runtime}\t{reading.P2Runtime}");
-    }
-    File.WriteAllText(@"C:\Users\aelmendo\Documents\Test Logs\test.txt",builder.ToString());
-}
+
 
 async Task TestDashboardService() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");

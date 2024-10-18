@@ -16,13 +16,13 @@
 
 <RadzenStack Orientation="Orientation.Vertical">
     <RadzenStack Orientation="Orientation.Horizontal">
-        <RadzenFieldset Text="Select Station">
+        <RadzenFieldset Text="Enter Number of Days">
             <RadzenNumeric TValue="int"
                            Value="@this._recentDays"
                            Min="1" Max="20" 
                            ValueChanged="@RecentDaysChangedHandler"/>
         </RadzenFieldset>
-        <RadzenFieldset Text="Enter Number of Days">
+        <RadzenFieldset Text="Select Data Type">
             <RadzenSelectBar TValue="int"
                              Size="ButtonSize.Small"
                              Value="@this._selectedOption"

@@ -1,4 +1,4 @@
-@using BurnInControl.Data.BurnInTests
+﻿@using BurnInControl.Data.BurnInTests
 @using BurnInControl.Data.BurnInTests.DataTransfer
 @using BurnInControl.Infrastructure.StationModel
 @using BurnInControl.Infrastructure.TestLogs
@@ -17,20 +17,12 @@
 <RadzenStack Orientation="Orientation.Vertical">
     <RadzenStack Orientation="Orientation.Horizontal">
         <RadzenFieldset Text="Select Station">
-            <RadzenDropDown TValue="string" Data="@this._stations"
-                            Value="@this._selectedStation"
-                            ValueChanged="SelectedStationChanged"/>
+            <RadzenNumeric TValue="int"
+                           Value="@this._recentDays"
+                           Min="1" Max="20" 
+                           ValueChanged="@RecentDaysChangedHandler"/>
         </RadzenFieldset>
-        <RadzenFieldset Text="Test Limit">
-            <RadzenSelectBar TValue="TestCountType"
-                             Size="ButtonSize.Small"
-                             Value="@this._selectedTestCountOption"
-                             ValueChanged="@SelectedTestCountOptionChanged"
-                             Data="@this._testCountOptions"
-                             ValueProperty="TestCountType"
-                             TextProperty="Name"/>
-        </RadzenFieldset>
-        <RadzenFieldset Text="Select Data Type">
+        <RadzenFieldset Text="Enter Number of Days">
             <RadzenSelectBar TValue="int"
                              Size="ButtonSize.Small"
                              Value="@this._selectedOption"
@@ -52,7 +44,7 @@
     @if (this._stationTestLogs == null) {
         <RadzenText Text="Select a station from the dropdown to view logs." TextStyle="TextStyle.H6"/>
     } else {
-                <RadzenPanel AllowCollapse="true">
+        <RadzenPanel AllowCollapse="true">
             <HeaderTemplate>
                 <RadzenText TextStyle="TextStyle.H5">
                     <RadzenIcon Icon="assessment" class="rz-me-1" /><b>@($"{this._selectedStation} Logs")</b>
@@ -70,6 +62,7 @@
                                     AllowRowSelectOnRowClick="true"
                                     SelectionMode="DataGridSelectionMode.Single"
                                     ValueChanged="@this.SelectedTestLogChangedHandler"
+                                    Render="@this.OnRender"
                                     CellRender="@this.CellRender"
                                     Density="@this._density"
                                     Value="@this._selectedTestLogs">
@@ -118,54 +111,6 @@
                 </RadzenCard>
             </ChildContent>
         </RadzenPanel>
-        @*<RadzenPanel AllowCollapse="true">
-            <HeaderTemplate>
-                <RadzenText TextStyle="TextStyle.H5">
-                    <RadzenIcon Icon="assessment" class="rz-me-1" /><b>@($"{this._selectedStation} Logs")</b>
-                </RadzenText>
-            </HeaderTemplate>
-            <ChildContent>
-                <RadzenCard class="rz-mt-4" Variant="Variant.Outlined">
-                    <RadzenDataGrid TItem="BurnInTestLogDto"
-                                    Data="@this._stationTestLogs"
-                                    AllowGrouping="true"
-                                    AllowPaging="true" PageSize="10"
-                                    AllowFiltering="true"
-                                    AllowSorting="true"
-                                    AllowRowSelectOnRowClick="true"
-                                    SelectionMode="DataGridSelectionMode.Single"
-                                    ValueChanged="@this.SelectedTestLogChangedHandler"
-                                    Density="Density.Compact"
-                                    CellRender="@this.CellRender"
-                                    Value="@this._selectedTestLogs">
-                        <Columns>
-                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.StartTime)" Title="Start"/>
-                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.StopTime)" Title="Stop"/>
-                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.RunTime)" Title="Run Time"/>
-                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.SetCurrent)" Title="Set Current"/>
-                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.SetTemperature)" Title="Set Temp."/>
-                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.Completed)" Title="Completed?">
-                                <Template Context="data">
-                                    @if (data.Completed) {
-                                        <span style='color: var(--rz-text-contrast-color)'>Completed</span>
-                                    } else {
-                                        <span style='color: var(--rz-text-color)'>Not Completed</span>
-                                    }
-                                </Template>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.RunTime)" Title="Run Time">
-                                <Template>
-                                    <span>@this.GetRunTimeStr(context.RunTime)</span>
-                                </Template>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.LeftPocket)" Title="WaferId(Left)" />
-                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.MiddlePocket)" Title="WaferId(Middle)"/>
-                            <RadzenDataGridColumn Property="@nameof(BurnInTestLogDto.RightPocket)" Title="WaferId(Right)"/>
-                        </Columns>
-                    </RadzenDataGrid>
-                </RadzenCard>
-            </ChildContent>
-        </RadzenPanel>*@
     }
     @switch (this._selectedOption) {
         case 0:
@@ -211,13 +156,7 @@
     private IList<BurnInTestLogDto> _selectedTestLogs=[];
     private IEnumerable<WaferTestResultDto>? _waferTestResults;
     private IEnumerable<StationTestReading>? _stationTestLogsReadings;
-    
-    private List<TestCountOption> _testCountOptions = [
-        new TestCountOption(){Name="All", TestCountType= TestCountType.All},
-        new TestCountOption(){Name="Last 60", TestCountType= TestCountType.Last60},
-        new TestCountOption(){Name="Last 100", TestCountType= TestCountType.Last100},
-        new TestCountOption(){Name="Last 200", TestCountType= TestCountType.Last200},
-    ];
+    private int _recentDays = 5;
     
     private List<SelectOption> _selectionOptions = [
         new SelectOption(){Name="Wafers Test Result", Value=0}, 
@@ -239,29 +178,32 @@
     ];
 
     private int _dataPointCountOption=5;
-    private int _pageSizeOption=10;
+    private int _pageSizeOption=5;
     private int _selectedOption;
-    private TestCountType _selectedTestCountOption=TestCountType.All;
     private string _selectedStation = string.Empty;
     bool _loading = false;
     private Density _density = Density.Compact;
     
     protected override async Task OnInitializedAsync() {
-        this._stations = await this.StationDataService.GetStationList();
         this._dataPointCountOption = 5;
-        this._selectedTestCountOption = TestCountType.All;
+        this._recentDays = 5;
+        this._stationTestLogs = await this.TestLogDataService.GetRecentDays(this._recentDays);
+        this._selectedTestLogs = [];
+        this._stationTestLogsReadings = [];
+        this._waferTestResults = [];
+        
     }
-
-    private async Task SelectedStationChanged(string station) {
-        this._selectedStation = station;
-        this._stationTestLogs=await this.TestLogDataService.GetRecentStationTests(station,this._selectedTestCountOption);
+    
+    private async Task RecentDaysChangedHandler(int days) {
+        this._recentDays = days;
+        this._stationTestLogs = await this.TestLogDataService.GetRecentDays(days);
         this._selectedTestLogs = [];
         this._stationTestLogsReadings = [];
         this._waferTestResults = [];
     }
 
     private bool IsDataVisible() {
-        return this._selectedTestLogs?.Any() == true && this._selectedStation != string.Empty && this._stationTestLogs?.Any() == true;
+        return this._selectedTestLogs?.Any() == true  && this._stationTestLogs?.Any() == true;
     }
 
     private async Task SelectedTestLogChangedHandler(IList<BurnInTestLogDto> selectedTestLogs) {
@@ -278,21 +220,7 @@
         this._dataPointCountOption = n;
         await this.Load();
     }
-    
-    private async Task SelectedTestCountOptionChanged(TestCountType testCountType) {
-        this._selectedTestCountOption = testCountType;
-        await this.ReLoadStationLogs();
-    }
 
-    private async Task ReLoadStationLogs() {
-        if (!string.IsNullOrWhiteSpace(this._selectedStation)) {
-            this._stationTestLogs=await this.TestLogDataService.GetRecentStationTests(this._selectedStation,this._selectedTestCountOption);
-            this._selectedTestLogs = [];
-            this._stationTestLogsReadings = [];
-            this._waferTestResults = [];
-        }
-    }
-    
     private string GetRunTimeStr(long runtime) {
         long hours=runtime/3600;
         long minutes=(runtime/60)%60;
@@ -321,6 +249,17 @@
     void CellRender(DataGridCellRenderEventArgs<BurnInTestLogDto> args) {
         if (args.Column.Property == "Completed") {
             args.Attributes.Add("style", $"background-color: {(args.Data.Completed ? "var(--rz-success)" : "var(--rz-base-background-color)")};");
+        }
+    }
+    
+    void OnRender(DataGridRenderEventArgs<BurnInTestLogDto> args) {
+        if(args.FirstRender) {
+            args.Grid.Groups.Add(new GroupDescriptor(){ 
+                Title = "StationId", 
+                Property = nameof(BurnInTestLogDto.StationId), 
+                SortOrder = SortOrder.Ascending 
+            });
+            StateHasChanged();
         }
     }
 

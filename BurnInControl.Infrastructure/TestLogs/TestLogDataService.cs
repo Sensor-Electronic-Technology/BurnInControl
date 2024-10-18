@@ -402,6 +402,25 @@ public class TestLogDataService {
                 RightPocket=e.TestSetup[StationPocket.RightPocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.LeftPocket.Name].WaferId
             }).ToListAsync(); 
     }
+    
+    public async Task<IEnumerable<BurnInTestLogDto>> GetRecentDays(int days) {
+        return await this._testLogCollection.Find(e=>e.StartTime>=DateTime.Now.AddDays(-days))
+            .SortByDescending(e=>e.StartTime)
+            .Project(e=>new BurnInTestLogDto() {
+                _id=e._id,
+                StationId=e.StationId,
+                SetCurrent=e.SetCurrent!.Name ?? "Unknown",
+                SetTemperature=e.SetTemperature,
+                RunTime=e.RunTime,
+                StartTime=e.StartTime,
+                StopTime=e.StopTime,
+                Completed=e.Completed,
+                ElapsedTime=e.ElapsedTime,
+                LeftPocket=e.TestSetup[StationPocket.LeftPocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.LeftPocket.Name].WaferId,
+                MiddlePocket=e.TestSetup[StationPocket.MiddlePocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.LeftPocket.Name].WaferId,
+                RightPocket=e.TestSetup[StationPocket.RightPocket.Name].WaferId=="" ? "Empty":e.TestSetup[StationPocket.LeftPocket.Name].WaferId
+            }).ToListAsync(); 
+    }
 
     public async Task<IEnumerable<WaferTestDto>?> GetWaferTests(string waferId) {
         var tests = await this._waferTestLogDataService.GetWaferTests(waferId);

@@ -2,10 +2,13 @@
 
 <RadzenTabs>
     <Tabs>
-        <RadzenTabsItem Text="Logs/Status By Station">
+        <RadzenTabsItem Text="Recent Logs" Icon="history" Style="background:#4a764a">
+            <RecentLogsView/>
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Logs/Status By Station" Icon="dns" Style="background: #0a53be">
             <StationLogLookup/>
         </RadzenTabsItem>
-        <RadzenTabsItem Text="Wafer Logs">
+        <RadzenTabsItem Text="Wafer Logs" Icon="pageview" Style="background: #cc7119">
             <WaferLogLookup/>
         </RadzenTabsItem>
     </Tabs>

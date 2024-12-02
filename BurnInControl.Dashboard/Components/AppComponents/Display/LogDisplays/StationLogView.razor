@@ -112,7 +112,7 @@
             worksheet.Cell(2, 21).Value = "P5Okay";
             
             
-            worksheet.Cell(1, 22).Value = $"Middle Pocket,WaferId:{this.Pocket3Wafer}";
+            worksheet.Cell(1, 22).Value = $"Right Pocket,WaferId:{this.Pocket3Wafer}";
             worksheet.Cell(1,22).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             worksheet.Cell(1,22).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
             worksheet.Cell(1, 22).Style.Fill.BackgroundColor = XLColor.LightSalmon;
@@ -184,7 +184,7 @@
             var stream = new MemoryStream();
             wb.SaveAs(stream);
             var bytes = stream.ToArray();
-            await this.DownloadFileService.DownloadFileAsync("log.xlsx", bytes);
+            await this.DownloadFileService.DownloadFileAsync($"{this.Pocket1Wafer}-{this.Pocket2Wafer}-{this.Pocket3Wafer}.xlsx", bytes);
         }
     }
 }

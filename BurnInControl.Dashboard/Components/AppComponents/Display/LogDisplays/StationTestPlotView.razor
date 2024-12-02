@@ -1,55 +1,6 @@
 @using BurnInControl.Data.BurnInTests
 
 <RadzenStack Orientation="Orientation.Vertical" Gap="10">
-    @*<RadzenFieldset>
-        <RadzenStack Orientation="Orientation.Horizontal">
-            <RadzenCard>
-                <RadzenCard Variant="Variant.Text">
-                    <RadzenText Text="Left Pocket"/>
-                </RadzenCard>
-                <RadzenCard>
-                    <RadzenStack Orientation="Orientation.Vertical">
-                        <RadzenFieldset Text="WaferId">
-                            <RadzenText Text="@Pocket1Wafer"/>
-                        </RadzenFieldset>
-                        <RadzenFieldset Text="Parameter Key">
-                            <RadzenText Text="Voltages: V1,V2 Currents: I1,I2, Temp: T-LP"/>
-                        </RadzenFieldset>
-                    </RadzenStack>
-                </RadzenCard>
-            </RadzenCard>
-            <RadzenCard>
-                <RadzenCard>
-                    <RadzenText Text="Middle Pocket"/>
-                </RadzenCard>
-                <RadzenCard>
-                    <RadzenStack Orientation="Orientation.Vertical">
-                        <RadzenFieldset Text="WaferId">
-                            <RadzenText Text="@Pocket2Wafer"/>
-                        </RadzenFieldset>
-                        <RadzenFieldset Text="Parameter Key">
-                            <RadzenText Text="Voltages: V3,V4 Currents: I3,I4, Temp: T-MP"/>
-                        </RadzenFieldset>
-                    </RadzenStack>
-                </RadzenCard>
-            </RadzenCard>
-            <RadzenCard>
-                <RadzenCard>
-                    <RadzenText Text="Right Pocket"/>
-                </RadzenCard>
-                <RadzenCard>
-                    <RadzenStack Orientation="Orientation.Vertical">
-                        <RadzenFieldset Text="WaferId">
-                            <RadzenText Text="@Pocket3Wafer"/>
-                        </RadzenFieldset>
-                        <RadzenFieldset Text="Parameter Key">
-                            <RadzenText Text="Voltages: V5,V6 Currents: I5,I6, Temp: T-RP"/>
-                        </RadzenFieldset>
-                    </RadzenStack>
-                </RadzenCard>
-            </RadzenCard>
-        </RadzenStack>
-    </RadzenFieldset>*@
     <LogPlot PropertySub="V"
              Title="Voltage"
              YStep="10"

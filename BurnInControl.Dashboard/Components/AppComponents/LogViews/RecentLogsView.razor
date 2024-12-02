@@ -66,6 +66,12 @@
                                     CellRender="@this.CellRender"
                                     Density="@this._density"
                                     Value="@this._selectedTestLogs">
+                        <GroupHeaderTemplate>
+                            <RadzenAlert Text="@(context.GroupDescriptor.GetTitle() + ":" + context.Data.Key)"
+                                         AlertStyle="AlertStyle.Info"
+                                         AllowClose="false"
+                                         Size="AlertSize.ExtraSmall"/>
+                        </GroupHeaderTemplate>
                         <HeaderTemplate>
                             <RadzenStack Orientation="Orientation.Horizontal" Style="padding: 0.5rem;">
                                 <RadzenFieldset Text="Page Size">
@@ -78,7 +84,7 @@
                                 </RadzenFieldset>
                                 <RadzenFieldset Text="Data Density">
                                     <RadzenSelectBar @bind-Value="@_density" TextProperty="Text" ValueProperty="Value"
-                                                     Data="@(Enum.GetValues(typeof(Density)).Cast<Density>().Select(t => new { Text = $"{t}", Value = t }))" Size="ButtonSize.Small" />
+                                                     Data="@(Enum.GetValues(typeof(Density)).Cast<Density>().Select(t => new { Text = $"{t}", Value = t }))" Size="ButtonSize.Small"/>
                                 </RadzenFieldset>
                             </RadzenStack>
 
@@ -157,6 +163,7 @@
     private IEnumerable<WaferTestResultDto>? _waferTestResults;
     private IEnumerable<StationTestReading>? _stationTestLogsReadings;
     private int _recentDays = 5;
+    
     
     private List<SelectOption> _selectionOptions = [
         new SelectOption(){Name="Wafers Test Result", Value=0}, 

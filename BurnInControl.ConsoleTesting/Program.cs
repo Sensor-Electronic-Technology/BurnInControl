@@ -9,6 +9,7 @@ using BurnInControl.Data.StationModel;
 using BurnInControl.Infrastructure.StationModel;
 using MongoDB.Driver;
 using BurnInControl.Data.BurnInTests;
+using BurnInControl.Data.BurnInTests.Wafers;
 using BurnInControl.Data.ComponentConfiguration;
 using BurnInControl.Data.ComponentConfiguration.HeaterController;
 using BurnInControl.Data.ComponentConfiguration.ProbeController;
@@ -54,7 +55,29 @@ for(int i=0;i<=values.Count;i++) {
 //TestListCompare();
 //PingTest();
 
-await TestLogsTesting();
+//await TestLogsTesting();
+await TestStartStopTest();
+
+async Task TestStartStopTest() {
+    var client = new MongoClient("mongodb://172.20.3.41:27017");
+    var database = client.GetDatabase("burn_in_db");
+    var collection = database.GetCollection<BurnInTestLog>("test_logs");
+    BurnInTestLog testLog = new BurnInTestLog() {
+        _id = ObjectId.GenerateNewId(), Completed = false,TestSetup = new Dictionary<string, PocketWaferSetup>() {
+            {StationPocket.LeftPocket.Name,new PocketWaferSetup(){WaferId = "B03-9991-05"}},
+            {StationPocket.MiddlePocket.Name,new PocketWaferSetup(){WaferId = "B03-9991-09"}},
+            {StationPocket.RightPocket.Name,new PocketWaferSetup(){WaferId = "B01-3710-05"}} 
+        }
+    };
+    Console.WriteLine($"Id: {testLog._id.ToString()}");
+    await collection.InsertOneAsync(testLog);
+    await Task.Delay(2000);
+    var filter = Builders<BurnInTestLog>.Filter.Eq(e => e._id, testLog._id);
+    var update = Builders<BurnInTestLog>.Update.Set(e => e.Completed, true);
+    await collection.UpdateOneAsync(filter, update);
+    await collection.DeleteOneAsync(filter);
+    Console.WriteLine("Test marked completed");
+}
 
 async Task TestLogsTesting() {
     var client = new MongoClient("mongodb://172.20.3.41:27017");

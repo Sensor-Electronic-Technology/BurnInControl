@@ -1,3 +1,4 @@
+using BurnInControl.Api;
 using BurnInControl.Infrastructure;
 using BurnInControl.Shared;
 using FastEndpoints;
@@ -7,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 var connectionStr=builder.Configuration.GetConnectionString("DefaultConnection") ?? "mongodb://172.20.3.41:27017";
+builder.Services.AddHttpClient();
+builder.Services.AddHostedService<BurnInTestMonitor>();
 builder.Services.AddSettings(builder);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

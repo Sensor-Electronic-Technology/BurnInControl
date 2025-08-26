@@ -22,17 +22,15 @@ public class BurnInTestMonitor:BackgroundService {
 
             var pipeline = new EmptyPipelineDefinition<ChangeStreamDocument<BurnInTestLog>>()
                 .Match(change => change.OperationType == ChangeStreamOperationType.Update);
-            var options = new ChangeStreamOptions
-            {
+            var options = new ChangeStreamOptions {
                 FullDocument = ChangeStreamFullDocumentOption.UpdateLookup,
                 FullDocumentBeforeChange = ChangeStreamFullDocumentBeforeChangeOption.WhenAvailable,
             };
             using var changeStream = await collection.WatchAsync(pipeline,options,cancellationToken: stoppingToken);
             foreach (var change in changeStream.ToEnumerable()) {
-                Console.WriteLine("Here");
                 if (change.FullDocument is { Completed: true }) {
                     var httpClient = this._httpFactory.CreateClient();
-                    httpClient.BaseAddress=new Uri("http://localhost:5118/");
+                    httpClient.BaseAddress=new Uri("http://172.20.4.208:34000/");
                     foreach (var test in change.FullDocument.TestSetup) {
                         await httpClient.GetAsync($"api/process/burn-in/{test.Value.WaferId}", stoppingToken);
                         this._logger.LogInformation("Send burn-in process complete notification for Wafer: {WaferId}",test.Value.WaferId);

@@ -65,7 +65,7 @@ async Task TestStartStopTest() {
     BurnInTestLog testLog = new BurnInTestLog() {
         _id = ObjectId.GenerateNewId(), Completed = false,TestSetup = new Dictionary<string, PocketWaferSetup>() {
             {StationPocket.LeftPocket.Name,new PocketWaferSetup(){WaferId = "B03-9991-05"}},
-            {StationPocket.MiddlePocket.Name,new PocketWaferSetup(){WaferId = "B03-9991-09"}},
+            {StationPocket.MiddlePocket.Name,new PocketWaferSetup(){WaferId = "B03-9991-07"}},
             {StationPocket.RightPocket.Name,new PocketWaferSetup(){WaferId = "B01-3710-05"}} 
         }
     };

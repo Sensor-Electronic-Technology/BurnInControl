@@ -56,6 +56,7 @@ for(int i=0;i<=values.Count;i++) {
 //PingTest();
 
 //await TestLogsTesting();
+
 await TestStartStopTest();
 
 async Task TestStartStopTest() {
@@ -64,7 +65,7 @@ async Task TestStartStopTest() {
     var collection = database.GetCollection<BurnInTestLog>("test_logs");
     BurnInTestLog testLog = new BurnInTestLog() {
         _id = ObjectId.GenerateNewId(), Completed = false,TestSetup = new Dictionary<string, PocketWaferSetup>() {
-            {StationPocket.LeftPocket.Name,new PocketWaferSetup(){WaferId = "B03-9991-05"}},
+            {StationPocket.LeftPocket.Name,new PocketWaferSetup(){WaferId = "B03-9991-01"}},
             {StationPocket.MiddlePocket.Name,new PocketWaferSetup(){WaferId = "B03-9991-07"}},
             {StationPocket.RightPocket.Name,new PocketWaferSetup(){WaferId = "B01-3710-05"}} 
         }
@@ -75,7 +76,10 @@ async Task TestStartStopTest() {
     var filter = Builders<BurnInTestLog>.Filter.Eq(e => e._id, testLog._id);
     var update = Builders<BurnInTestLog>.Update.Set(e => e.Completed, true);
     await collection.UpdateOneAsync(filter, update);
+    Console.WriteLine("Test marked completed, press any key to delete the test");
+    Console.ReadKey();
     await collection.DeleteOneAsync(filter);
+    
     Console.WriteLine("Test marked completed");
 }
 
